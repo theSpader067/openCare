@@ -545,7 +545,7 @@ export default function ComptesRendusPage() {
                     >
                       <div className="flex items-center justify-between">
                         <Badge
-                          variant="secondary"
+                          variant="muted"
                           className={cn(
                             "rounded-full px-3 py-1 text-xs font-medium",
                             reportStatusBadgeMap[report.status],

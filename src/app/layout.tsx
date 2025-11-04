@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -27,12 +26,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" data-theme="light" suppressHydrationWarning>
-      <body
-        data-theme="light"
-        className={`${inter.variable} ${manrope.variable} font-sans antialiased`}
-      >
-        <ThemeProvider>{children}</ThemeProvider>
+    <html lang="fr" suppressHydrationWarning>
+      <body className={`${inter.variable} ${manrope.variable} font-sans antialiased`}>
+        {children}
       </body>
     </html>
   );

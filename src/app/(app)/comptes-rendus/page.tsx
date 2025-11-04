@@ -507,7 +507,7 @@ export default function ComptesRendusPage() {
             </div>
           </div>
 
-          <ScrollArea className="flex-1 border-none bg-transparent p-0 shadow-none" height="calc(100vh - 260px)">
+          <ScrollArea className="flex-1 border-none bg-transparent p-0 shadow-none xl:max-h-[calc(100vh-280px)]">
             <div className="flex flex-col gap-3 pb-2">
               {filteredReports.length === 0 ? (
                 <EmptyState

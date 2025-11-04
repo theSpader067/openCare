@@ -1,23 +1,25 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import {
+  Beaker,
   Bell,
   CalendarDays,
   ChevronDown,
+  ListChecks,
   Loader2,
   LogOut,
   Menu,
-  Moon,
   Search,
-  Sun,
+  Sparkles,
+  Stethoscope,
+  X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
-import { useTheme } from "@/components/theme-provider";
 import { patientsSeed } from "@/app/(app)/patients/data";
 
 interface SearchSuggestion {
@@ -112,6 +114,81 @@ const formatBirthDate = (value: string) => {
   }).format(new Date(value));
 };
 
+type NotificationType = "avis" | "task" | "bilan";
+
+interface NotificationItem {
+  id: string;
+  type: NotificationType;
+  title: string;
+  description: string;
+  time: string;
+  source: string;
+}
+
+const NOTIFICATION_META: Record<
+  NotificationType,
+  {
+    label: string;
+    icon: ComponentType<{ className?: string }>;
+    badgeClass: string;
+    iconClass: string;
+  }
+> = {
+  avis: {
+    label: "Avis",
+    icon: Stethoscope,
+    badgeClass: "bg-emerald-100 text-emerald-700",
+    iconClass: "bg-emerald-500/15 text-emerald-600",
+  },
+  task: {
+    label: "Tâche",
+    icon: ListChecks,
+    badgeClass: "bg-indigo-100 text-indigo-700",
+    iconClass: "bg-indigo-500/15 text-indigo-600",
+  },
+  bilan: {
+    label: "Bilan",
+    icon: Beaker,
+    badgeClass: "bg-amber-100 text-amber-700",
+    iconClass: "bg-amber-500/15 text-amber-600",
+  },
+};
+
+const NOTIFICATIONS_SEED: NotificationItem[] = [
+  {
+    id: "notif-avis-01",
+    type: "avis",
+    title: "Avis cardiologie validé",
+    description: "Dr. Rahmani confirme l'ajustement du bêtabloquant pour Mme Messaoui.",
+    time: "Il y a 8 minutes",
+    source: "Service cardiologie",
+  },
+  {
+    id: "notif-task-01",
+    type: "task",
+    title: "Nouvelle consigne déléguée",
+    description: "Résident bloc B a assigné la préparation du staff du soir.",
+    time: "Il y a 21 minutes",
+    source: "Bloc opératoire B",
+  },
+  {
+    id: "notif-bilan-01",
+    type: "bilan",
+    title: "Bilan biologique complet",
+    description: "Les résultats de Mme Laurier sont synchronisés et prêts à valider.",
+    time: "Il y a 1 heure",
+    source: "Laboratoire central",
+  },
+  {
+    id: "notif-avis-02",
+    type: "avis",
+    title: "Avis infectiologie en attente",
+    description: "Prise en charge antibiotique demandée pour Mr. Zouhair (lit 512).",
+    time: "Il y a 2 heures",
+    source: "Service infectiologie",
+  },
+];
+
 interface AppHeaderProps {
   onToggleSidebar: () => void;
 }
@@ -123,9 +200,6 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
     month: "long",
   }).format(new Date());
   const router = useRouter();
-  const { theme, toggleTheme, isReady: isThemeReady } = useTheme();
-  const isDarkMode = theme === "dark";
-
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -134,6 +208,10 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
   const rdvSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement | null>(null);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const notificationsRef = useRef<HTMLDivElement | null>(null);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const mobileSearchInputRef = useRef<HTMLInputElement | null>(null);
   const [rdvPatients, setRdvPatients] = useState<PatientOption[]>(() =>
     patientsSeed.map((patient) => ({
       id: patient.id,
@@ -148,6 +226,9 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
   const [isRdvModalOpen, setIsRdvModalOpen] = useState(false);
   const [isSavingRdv, setIsSavingRdv] = useState(false);
   const [rdvSuccess, setRdvSuccess] = useState<string | null>(null);
+  const notifications = NOTIFICATIONS_SEED;
+  const unreadCount = notifications.length;
+  const unreadBadge = unreadCount > 9 ? "9+" : `${unreadCount}`;
 
   const clearPendingSearch = () => {
     if (searchTimeoutRef.current) {
@@ -188,12 +269,39 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
   }, [profileOpen]);
 
   useEffect(() => {
+    if (!notificationsOpen) {
+      return undefined;
+    }
+    const handleClick = (event: MouseEvent) => {
+      if (
+        notificationsRef.current &&
+        !notificationsRef.current.contains(event.target as Node)
+      ) {
+        setNotificationsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [notificationsOpen]);
+
+  useEffect(() => {
     if (!rdvSuccess) {
       return;
     }
     const timer = window.setTimeout(() => setRdvSuccess(null), 3800);
     return () => window.clearTimeout(timer);
   }, [rdvSuccess]);
+
+  useEffect(() => {
+    if (isMobileSearchOpen) {
+      mobileSearchInputRef.current?.focus();
+      setShowSuggestions(Boolean(searchQuery.trim()));
+      setNotificationsOpen(false);
+      setProfileOpen(false);
+    } else {
+      setShowSuggestions(false);
+    }
+  }, [isMobileSearchOpen, searchQuery]);
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
@@ -339,111 +447,240 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
   return (
     <>
       <header className="sticky top-0 z-30 border-b border-violet-200/60 bg-white/70 backdrop-blur-xl">
-      <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="lg:hidden"
-            onClick={onToggleSidebar}
-            aria-label="Ouvrir le menu de navigation"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-          <div className="hidden flex-col lg:flex">
-            <span className="text-xs font-semibold uppercase tracking-wide text-blue-600">
-              Centre Hospitalier Moulay Youssef
-            </span>
-            <h1 className="text-lg font-semibold text-slate-900">
-              Bonjour Dr. Bouziane
-            </h1>
+        <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="lg:hidden"
+              onClick={onToggleSidebar}
+              aria-label="Ouvrir le menu de navigation"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <div className="flex flex-col">
+              <span className="text-xs font-semibold uppercase tracking-wide text-blue-600">
+                Centre Hospitalier Moulay Youssef
+              </span>
+              <h1 className="text-sm font-semibold text-slate-900 sm:text-base">
+                Bonjour Dr. Bouziane
+              </h1>
+            </div>
           </div>
-        </div>
 
-        <div className="flex flex-1 items-center justify-end gap-3">
-          <div className="relative hidden w-full max-w-md md:block">
-            <div className="flex items-center gap-2 rounded-full border border-violet-200/70 bg-white/50 px-4 py-2 text-sm text-[#6157b0] shadow-inner shadow-white/60">
-              <Search className="h-4 w-4 text-[#8a81d6]" />
-              <input
-                type="search"
-                placeholder="Rechercher un patient, une analyse, un message..."
-                value={searchQuery}
-                onChange={(event) => handleSearchChange(event.target.value)}
-                onFocus={() => setShowSuggestions(true)}
-                onBlur={() => {
-                  setTimeout(() => setShowSuggestions(false), 120);
-                }}
-                className="w-full bg-transparent text-sm text-[#403b78] placeholder:text-[#8a81d6] focus:outline-none"
-              />
-              {isSearching ? <Loader2 className="h-4 w-4 animate-spin text-[#8a81d6]" /> : null}
+          <div className="flex flex-1 items-center justify-end gap-3">
+            <div className="relative hidden w-full max-w-md lg:block">
+              <div className="flex items-center gap-2 rounded-full border border-violet-200/70 bg-white/50 px-4 py-2 text-sm text-[#6157b0] shadow-inner shadow-white/60">
+                <Search className="h-4 w-4 text-[#8a81d6]" />
+                <input
+                  type="search"
+                  placeholder="Rechercher un patient, une analyse, un message..."
+                  value={searchQuery}
+                  onChange={(event) => handleSearchChange(event.target.value)}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => {
+                    setTimeout(() => setShowSuggestions(false), 120);
+                  }}
+                  className="w-full bg-transparent text-sm text-[#403b78] placeholder:text-[#8a81d6] focus:outline-none"
+                />
+                {isSearching ? <Loader2 className="h-4 w-4 animate-spin text-[#8a81d6]" /> : null}
+              </div>
+
+              {showSuggestions && (isSearching || searchQuery.trim()) ? (
+                <div className="absolute left-0 right-0 top-full z-20 mt-2 max-h-56 overflow-y-auto rounded-2xl border border-violet-200/70 bg-white/95 p-2 shadow-xl backdrop-blur">
+                  {isSearching ? (
+                    <div className="flex items-center justify-center gap-2 py-6 text-sm text-[#6157b0]">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Recherche en cours...</span>
+                    </div>
+                  ) : suggestions.length === 0 ? (
+                    <div className="py-4 text-center text-sm text-slate-500">
+                      Aucun résultat pour « {searchQuery} »
+                    </div>
+                  ) : (
+                    <ul className="space-y-1">
+                      {suggestions.map((item) => (
+                        <li key={item.id}>
+                          <button
+                            type="button"
+                            className="w-full rounded-xl px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-violet-50"
+                            onMouseDown={(event) => event.preventDefault()}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium text-[#352f72]">{item.title}</span>
+                              <span
+                                className={cn(
+                                  "rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                                  suggestionBadge[item.category],
+                                )}
+                              >
+                                {item.category}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-xs text-[#6b63b5]">{item.subtitle}</p>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ) : null}
             </div>
 
-            {showSuggestions && (isSearching || searchQuery.trim()) ? (
-              <div className="absolute left-0 right-0 top-full z-20 mt-2 max-h-56 overflow-y-auto rounded-2xl border border-violet-200/70 bg-white/95 p-2 shadow-xl backdrop-blur">
-                {isSearching ? (
-                  <div className="flex items-center justify-center gap-2 py-6 text-sm text-[#6157b0]">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Recherche en cours...</span>
-                  </div>
-                ) : suggestions.length === 0 ? (
-                  <div className="py-4 text-center text-sm text-slate-500">
-                    Aucun résultat pour « {searchQuery} »
-                  </div>
-                ) : (
-                  <ul className="space-y-1">
-                    {suggestions.map((item) => (
-                      <li key={item.id}>
-                        <button
-                          type="button"
-                          className="w-full rounded-xl px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-violet-50"
-                          onMouseDown={(event) => event.preventDefault()}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium text-[#352f72]">{item.title}</span>
-                            <span
-                              className={cn(
-                                "rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                                suggestionBadge[item.category],
-                              )}
-                            >
-                              {item.category}
-                            </span>
-                          </div>
-                          <p className="mt-1 text-xs text-[#6b63b5]">{item.subtitle}</p>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            ) : null}
-          </div>
-
-          <div className="hidden items-center gap-3 md:flex">
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handleOpenRdvModal}
+            <button
+              type="button"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-violet-200/60 bg-white text-[#5f5aa5] shadow-sm shadow-indigo-100 transition hover:border-violet-300 hover:bg-indigo-50/70 focus:outline-none focus:ring-2 focus:ring-violet-200/70 lg:hidden"
+              onClick={() => setIsMobileSearchOpen((previous) => !previous)}
+              aria-label={isMobileSearchOpen ? "Fermer la recherche" : "Ouvrir la recherche"}
             >
-              <CalendarDays className="mr-2 h-4 w-4" />
-              Nouveau rendez-vous
+              {isMobileSearchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+            </button>
+
+            <div className="hidden items-center gap-3 xl:flex">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleOpenRdvModal}
+              >
+                <CalendarDays className="mr-2 h-4 w-4" />
+                Nouveau rendez-vous
+              </Button>
+              {rdvSuccess ? (
+                <div className="rounded-full border border-emerald-200/70 bg-emerald-50/80 px-3 py-1 text-xs font-semibold text-emerald-700 shadow-sm shadow-emerald-100/60">
+                  {rdvSuccess}
+                </div>
+              ) : null}
+            </div>
+
+          <div className="relative" ref={notificationsRef}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "relative text-[#5f5aa5]",
+                notificationsOpen && "bg-indigo-50/80 text-[#4338ca]",
+              )}
+              onClick={() => {
+                setNotificationsOpen((open) => !open);
+                setProfileOpen(false);
+                setIsMobileSearchOpen(false);
+                setShowSuggestions(false);
+              }}
+              aria-haspopup="menu"
+              aria-expanded={notificationsOpen}
+              aria-label="Notifications"
+            >
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 ? (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold uppercase tracking-wide text-white">
+                  {unreadBadge}
+                </span>
+              ) : null}
             </Button>
-            {rdvSuccess ? (
-              <div className="rounded-full border border-emerald-200/70 bg-emerald-50/80 px-3 py-1 text-xs font-semibold text-emerald-700 shadow-sm shadow-emerald-100/60 dark:border-emerald-400/40 dark:bg-emerald-500/15 dark:text-emerald-100">
-                {rdvSuccess}
+
+            {notificationsOpen ? (
+              <div className="absolute right-0 top-full z-40 mt-3 w-80 rounded-3xl border border-violet-200/70 bg-white/95 p-4 shadow-2xl shadow-indigo-200/60 backdrop-blur">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[#8a81d6]">
+                      Notifications
+                    </p>
+                    <p className="text-sm font-semibold text-[#1f184f]">
+                      Flux d&apos;équipe en direct
+                    </p>
+                  </div>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-3 py-1 text-[11px] font-semibold text-[#4338ca]">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Temps réel
+                  </span>
+                </div>
+                <div className="mt-3 max-h-72 overflow-y-auto pr-1">
+                  {notifications.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-violet-200/70 bg-white/80 px-4 py-10 text-center text-sm text-slate-500">
+                      <Bell className="h-5 w-5 text-slate-400" />
+                      Aucun nouveau signal, tout est sous contrôle.
+                    </div>
+                  ) : (
+                    <ul className="space-y-2.5">
+                      {notifications.map((notification) => {
+                        const meta = NOTIFICATION_META[notification.type];
+                        const Icon = meta.icon;
+                        return (
+                          <li key={notification.id}>
+                            <div className="flex items-start gap-3 rounded-2xl border border-violet-100/70 bg-white/90 p-3 shadow-sm shadow-indigo-100/40 transition hover:border-violet-200 hover:shadow-indigo-100/60">
+                              <span
+                                className={cn(
+                                  "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl",
+                                  meta.iconClass,
+                                )}
+                              >
+                                <Icon className="h-5 w-5" />
+                              </span>
+                              <div className="flex flex-1 flex-col gap-1">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <p className="text-sm font-semibold text-[#1f184f]">
+                                    {notification.title}
+                                  </p>
+                                  <span
+                                    className={cn(
+                                      "rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                                      meta.badgeClass,
+                                    )}
+                                  >
+                                    {meta.label}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-[#5f5aa5]">
+                                  {notification.description}
+                                </p>
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-[#8a81d6]">
+                                  <span>{notification.time}</span>
+                                  <span className="flex items-center gap-1 text-[#6157b0]">
+                                    <Sparkles className="h-3 w-3" />
+                                    {notification.source}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    className="text-xs font-semibold uppercase tracking-wide text-[#5f5aa5] transition hover:text-[#4338ca]"
+                    onClick={() => setNotificationsOpen(false)}
+                  >
+                    Marquer tout comme lu
+                  </button>
+                  <button
+                    type="button"
+                    className="flex items-center gap-1 text-xs font-semibold text-[#4338ca] transition hover:text-[#2d2674]"
+                    onClick={() => {
+                      setNotificationsOpen(false);
+                      router.push("/messages");
+                    }}
+                  >
+                    Voir tout
+                    <ChevronDown className="h-3.5 w-3.5 -rotate-90" />
+                  </button>
+                </div>
               </div>
             ) : null}
           </div>
-
-          <Button variant="ghost" size="sm" className="relative">
-            <Bell className="h-5 w-5 text-[#5f5aa5]" />
-            <span className="absolute -right-1 -top-1 block h-2.5 w-2.5 rounded-full bg-rose-500"></span>
-          </Button>
 
           <div className="relative hidden md:flex" ref={profileRef}>
             <button
               type="button"
-              onClick={() => setProfileOpen((open) => !open)}
+              onClick={() => {
+                setProfileOpen((open) => !open);
+                setNotificationsOpen(false);
+                setIsMobileSearchOpen(false);
+                setShowSuggestions(false);
+              }}
               className={cn(
                 "flex items-center gap-3 rounded-full border border-violet-200/60 bg-white/60 px-4 py-1.5 text-left shadow-inner shadow-white/70 transition",
                 "hover:border-violet-300 hover:bg-white/80 focus:outline-none focus:ring-2 focus:ring-violet-200/80",
@@ -470,88 +707,134 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
               />
             </button>
 
-            {profileOpen ? (
-              <div className="absolute right-0 top-full z-40 mt-3 w-72 rounded-3xl border border-violet-200/60 bg-gradient-to-br from-white via-[#f8f7ff] to-[#ede9ff] p-4 shadow-2xl shadow-indigo-200/50 backdrop-blur">
-                <div className="flex items-center gap-3 border-b border-violet-100/70 pb-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#a855f7] via-[#6366f1] to-[#4f46e5] text-lg font-semibold text-white shadow-md shadow-indigo-300/40">
-                    DD
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-[#2f2961]">
-                      Dr. Bouziane
-                    </p>
-                    <p className="text-xs text-[#6a66b1]">
-                      Urologie @ CHU Ibn Sina
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-4 space-y-3">
-                  <div className="rounded-2xl border border-violet-200/70 bg-white/70 p-3 shadow-inner shadow-white/60">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-[#6a66b1]">
-                          Apparence
-                        </p>
-                       
-                      </div>
-                      <button
-                        type="button"
-                        onClick={toggleTheme}
-                        disabled={!isThemeReady}
-                        className={cn(
-                          "group relative flex h-11 w-24 shrink-0 items-center rounded-full border border-violet-200/70 bg-white/80 p-1 text-xs font-semibold text-[#352f72] shadow-sm transition",
-                          "hover:border-violet-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-violet-200/60",
-                          !isThemeReady && "cursor-wait opacity-70",
-                        )}
-                        aria-label="Basculer le thème clair/sombre"
-                      >
-                        <span
-                          className={cn(
-                            "absolute inset-y-1 w-1/2 rounded-full bg-gradient-to-r from-[#7c3aed]/80 to-[#6366f1]/80 shadow-sm transition-all",
-                            isDarkMode ? "right-1" : "left-1",
-                          )}
-                        />
-                        <span className="relative flex h-9 w-1/2 items-center justify-center text-white">
-                          <Sun
-                            className={cn(
-                              "h-4 w-4 transition-opacity",
-                              isDarkMode ? "opacity-40" : "opacity-100",
-                            )}
-                          />
-                        </span>
-                        <span className="relative flex h-9 w-1/2 items-center justify-center text-white">
-                          <Moon
-                            className={cn(
-                              "h-4 w-4 transition-opacity",
-                              isDarkMode ? "opacity-100" : "opacity-30",
-                            )}
-                          />
-                        </span>
-                      </button>
+              {profileOpen ? (
+                <div className="absolute right-0 top-full z-40 mt-3 w-72 rounded-3xl border border-violet-200/60 bg-gradient-to-br from-white via-[#f8f7ff] to-[#ede9ff] p-4 shadow-2xl shadow-indigo-200/50 backdrop-blur">
+                  <div className="flex items-center gap-3 border-b border-violet-100/70 pb-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#a855f7] via-[#6366f1] to-[#4f46e5] text-lg font-semibold text-white shadow-md shadow-indigo-300/40">
+                      DD
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-[#2f2961]">
+                        Dr. Bouziane
+                      </p>
+                      <p className="text-xs text-[#6a66b1]">
+                        Urologie @ CHU Ibn Sina
+                      </p>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    className="flex w-full items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-rose-500/90 via-rose-500/80 to-rose-500/90 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-rose-300/40 transition hover:shadow-rose-400/50 focus:outline-none focus:ring-2 focus:ring-rose-200/80"
-                    onClick={() => {
-                      setProfileOpen(false);
-                      router.push("/login");
-                    }}
-                  >
-                    <span className="flex items-center gap-3">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/20">
-                        <LogOut className="h-4 w-4" />
+                  <div className="mt-4 space-y-3">
+                    <div className="rounded-2xl border border-violet-200/70 bg-white/80 p-3 shadow-inner shadow-white/70">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#6a66b1]">
+                        Votre journée
+                      </p>
+                      <p className="mt-1 text-sm text-[#352f72]">
+                        3 rendez-vous restants et 1 compte rendu à finaliser.
+                      </p>
+                    </div>
+                    <div className="grid gap-2">
+                      <button
+                        type="button"
+                        className="flex w-full items-center justify-between gap-3 rounded-2xl border border-violet-200/70 bg-white px-4 py-3 text-sm font-semibold text-[#352f72] shadow-sm transition hover:border-violet-300 hover:bg-indigo-50/70 focus:outline-none focus:ring-2 focus:ring-violet-200/70"
+                      >
+                        Mon profil
+                        <ChevronDown className="h-4 w-4 -rotate-90 text-[#8a81d6]" />
+                      </button>
+                      <button
+                        type="button"
+                        className="flex w-full items-center justify-between gap-3 rounded-2xl border border-violet-200/70 bg-white px-4 py-3 text-sm font-semibold text-[#352f72] shadow-sm transition hover:border-violet-300 hover:bg-indigo-50/70 focus:outline-none focus:ring-2 focus:ring-violet-200/70"
+                      >
+                        Paramètres
+                        <ChevronDown className="h-4 w-4 -rotate-90 text-[#8a81d6]" />
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      className="flex w-full items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-rose-500/90 via-rose-500/80 to-rose-500/90 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-rose-300/40 transition hover:shadow-rose-400/50 focus:outline-none focus:ring-2 focus:ring-rose-200/80"
+                      onClick={() => {
+                        setProfileOpen(false);
+                        router.push("/login");
+                      }}
+                    >
+                      <span className="flex items-center gap-3">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/20">
+                          <LogOut className="h-4 w-4" />
+                        </span>
+                        Déconnexion
                       </span>
-                      Déconnexion
-                    </span>
-                  </button>
+                    </button>
+                  </div>
                 </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+        {isMobileSearchOpen ? (
+          <div className="border-t border-violet-200/60 bg-white/95 px-4 pb-4 pt-3 shadow-inner shadow-violet-100/70 lg:hidden">
+            <div className="flex items-center gap-2 rounded-full border border-violet-200/70 bg-white px-4 py-2 text-sm text-[#6157b0] shadow-sm shadow-indigo-100/60">
+              <Search className="h-4 w-4 text-[#8a81d6]" />
+              <input
+                ref={mobileSearchInputRef}
+                type="search"
+                placeholder="Rechercher un patient, une analyse, un message..."
+                value={searchQuery}
+                onChange={(event) => handleSearchChange(event.target.value)}
+                className="w-full bg-transparent text-sm text-[#403b78] placeholder:text-[#8a81d6] focus:outline-none"
+              />
+              {isSearching ? <Loader2 className="h-4 w-4 animate-spin text-[#8a81d6]" /> : null}
+              <button
+                type="button"
+                className="ml-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-indigo-50/70 text-[#5f5aa5] shadow-sm transition hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-violet-200/70"
+                onClick={() => {
+                  setIsMobileSearchOpen(false);
+                  setShowSuggestions(false);
+                }}
+                aria-label="Fermer la recherche mobile"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            {showSuggestions && (isSearching || searchQuery.trim()) ? (
+              <div className="mt-3 max-h-64 overflow-y-auto rounded-3xl border border-violet-200/70 bg-white/95 p-3 shadow-xl">
+                {isSearching ? (
+                  <div className="flex items-center justify-center gap-2 py-10 text-sm text-[#6157b0]">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Recherche en cours...</span>
+                  </div>
+                ) : suggestions.length === 0 ? (
+                  <div className="py-6 text-center text-sm text-slate-500">
+                    Aucun résultat pour « {searchQuery} »
+                  </div>
+                ) : (
+                  <ul className="space-y-2">
+                    {suggestions.map((item) => (
+                      <li key={item.id}>
+                        <button
+                          type="button"
+                          className="w-full rounded-2xl border border-transparent px-3 py-3 text-left text-sm text-slate-700 transition hover:border-violet-200 hover:bg-violet-50"
+                          onMouseDown={(event) => event.preventDefault()}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-semibold text-[#352f72]">{item.title}</span>
+                            <span
+                              className={cn(
+                                "rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                                suggestionBadge[item.category],
+                              )}
+                            >
+                              {item.category}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs text-[#6b63b5]">{item.subtitle}</p>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             ) : null}
           </div>
-        </div>
-      </div>
-    </header>
+        ) : null}
+      </header>
       <Modal
         open={isRdvModalOpen}
         onClose={handleCloseRdvModal}

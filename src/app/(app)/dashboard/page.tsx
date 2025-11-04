@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
   type ComponentType,
+  type CSSProperties,
 } from "react";
 import {
   Activity,
@@ -20,6 +21,7 @@ import {
   Plus,
   Trash2,
   UsersRound,
+  X,
 } from "lucide-react";
 import {
   Card,
@@ -128,11 +130,10 @@ const statsSummary: Stat[] = [
     icon: UsersRound,
     hint: "Cabinet et téléconsultations",
     theme: {
-      card:
-        "bg-gradient-to-br from-[#e0f2ff] via-[#ecf3ff] to-white dark:from-[#0f172a] dark:via-[#102a52] dark:to-[#0b1223]",
-      icon: "bg-white text-[#0f62fe] dark:bg-[#1a2f55] dark:text-[#7fb7ff]",
-      accent: "text-[#0f62fe] dark:text-[#7fb7ff]",
-      text: "text-[#09356f] dark:text-[#dbeafe]",
+      card: "bg-gradient-to-br from-[#e0f2ff] via-[#ecf3ff] to-white",
+      icon: "bg-white text-[#0f62fe]",
+      accent: "text-[#0f62fe]",
+      text: "text-[#09356f]",
     },
   },
   {
@@ -143,11 +144,10 @@ const statsSummary: Stat[] = [
     icon: HeartPulse,
     hint: "Blocs 2 · 5 · 7 · 8",
     theme: {
-      card:
-        "bg-gradient-to-br from-[#fee2f2] via-[#fff1f7] to-white dark:from-[#2f0c1b] dark:via-[#491326] dark:to-[#1b0b17]",
-      icon: "bg-white text-[#d61f69] dark:bg-[#3c1323] dark:text-[#f990b5]",
-      accent: "text-[#d61f69] dark:text-[#f990b5]",
-      text: "text-[#8a1547] dark:text-[#fecdd7]",
+      card: "bg-gradient-to-br from-[#fee2f2] via-[#fff1f7] to-white",
+      icon: "bg-white text-[#d61f69]",
+      accent: "text-[#d61f69]",
+      text: "text-[#8a1547]",
     },
   },
   {
@@ -158,11 +158,10 @@ const statsSummary: Stat[] = [
     icon: ClipboardList,
     hint: "Laboratoire central",
     theme: {
-      card:
-        "bg-gradient-to-br from-[#f7f3ff] via-[#f1f5ff] to-white dark:from-[#22113f] dark:via-[#1b1b42] dark:to-[#121326]",
-      icon: "bg-white text-[#7c3aed] dark:bg-[#2d1b5f] dark:text-[#c4b5fd]",
-      accent: "text-[#7c3aed] dark:text-[#c4b5fd]",
-      text: "text-[#43338b] dark:text-[#e7d9ff]",
+      card: "bg-gradient-to-br from-[#f7f3ff] via-[#f1f5ff] to-white",
+      icon: "bg-white text-[#7c3aed]",
+      accent: "text-[#7c3aed]",
+      text: "text-[#43338b]",
     },
   },
   {
@@ -173,11 +172,10 @@ const statsSummary: Stat[] = [
       icon: Activity,
       hint: "Post-op + surveillance",
     theme: {
-      card:
-        "bg-gradient-to-br from-[#dcfce7] via-[#f1fff5] to-white dark:from-[#062e24] dark:via-[#0f3a29] dark:to-[#071b16]",
-      icon: "bg-white text-[#059669] dark:bg-[#0b3b2e] dark:text-[#7dd3a1]",
-      accent: "text-[#059669] dark:text-[#7dd3a1]",
-      text: "text-[#0f5132] dark:text-[#d1fae5]",
+      card: "bg-gradient-to-br from-[#dcfce7] via-[#f1fff5] to-white",
+      icon: "bg-white text-[#059669]",
+      accent: "text-[#059669]",
+      text: "text-[#0f5132]",
     },
   },
 ];
@@ -190,25 +188,25 @@ const activityTypeMeta: Record<
     label: "Consultation",
     icon: UsersRound,
     badgeClass:
-      "bg-gradient-to-br from-[#93c5fd] via-[#60a5fa] to-[#3b82f6] text-white shadow-inner shadow-blue-200/60 dark:from-[#1e3a8a] dark:via-[#2563eb] dark:to-[#1d4ed8] dark:text-[#dbeafe]",
+      "bg-gradient-to-br from-[#93c5fd] via-[#60a5fa] to-[#3b82f6] text-white shadow-inner shadow-blue-200/60",
   },
   chirurgie: {
     label: "Bloc opératoire",
     icon: HeartPulse,
     badgeClass:
-      "bg-gradient-to-br from-[#fda4af] via-[#fb7185] to-[#f43f5e] text-white shadow-inner shadow-rose-200/60 dark:from-[#881337] dark:via-[#be123c] dark:to-[#f43f5e] dark:text-[#fecdd3]",
+      "bg-gradient-to-br from-[#fda4af] via-[#fb7185] to-[#f43f5e] text-white shadow-inner shadow-rose-200/60",
   },
   staff: {
     label: "Staff multidisciplinaire",
     icon: ClipboardList,
     badgeClass:
-      "bg-gradient-to-br from-[#bae6fd] via-[#67e8f9] to-[#22d3ee] text-[#0c4a6e] shadow-inner shadow-sky-200/60 dark:from-[#0e7490] dark:via-[#0891b2] dark:to-[#06b6d4] dark:text-[#cffafe]",
+      "bg-gradient-to-br from-[#bae6fd] via-[#67e8f9] to-[#22d3ee] text-[#0c4a6e] shadow-inner shadow-sky-200/60",
   },
   tournee: {
     label: "Tournée secteur",
     icon: ListChecks,
     badgeClass:
-      "bg-gradient-to-br from-[#fcd34d] via-[#f59e0b] to-[#f97316] text-[#78350f] shadow-inner shadow-amber-200/60 dark:from-[#713f12] dark:via-[#b45309] dark:to-[#ea580c] dark:text-[#fde68a]",
+      "bg-gradient-to-br from-[#fcd34d] via-[#f59e0b] to-[#f97316] text-[#78350f] shadow-inner shadow-amber-200/60",
   },
 };
 
@@ -228,22 +226,22 @@ const patientStatusMeta: Record<
 > = {
   "Pré-op": {
     badgeClass:
-      "bg-gradient-to-r from-[#facc15] via-[#fbbf24] to-[#f97316] text-[#7c2d12] shadow-inner shadow-amber-200/60 dark:from-[#78350f] dark:via-[#d97706] dark:to-[#ea580c] dark:text-[#fde68a]",
+      "bg-gradient-to-r from-[#facc15] via-[#fbbf24] to-[#f97316] text-[#7c2d12] shadow-inner shadow-amber-200/60",
     label: "Pré-op",
   },
   "Post-op": {
     badgeClass:
-      "bg-gradient-to-r from-[#22c55e] via-[#10b981] to-[#14b8a6] text-white shadow-inner shadow-emerald-200/60 dark:from-[#064e3b] dark:via-[#047857] dark:to-[#0f766e] dark:text-[#bbf7d0]",
+      "bg-gradient-to-r from-[#22c55e] via-[#10b981] to-[#14b8a6] text-white shadow-inner shadow-emerald-200/60",
     label: "Post-op",
   },
   Surveillance: {
     badgeClass:
-      "bg-gradient-to-r from-[#60a5fa] via-[#3b82f6] to-[#2563eb] text-white shadow-inner shadow-sky-200/60 dark:from-[#1e3a8a] dark:via-[#1d4ed8] dark:to-[#1e40af] dark:text-[#c7d2fe]",
+      "bg-gradient-to-r from-[#60a5fa] via-[#3b82f6] to-[#2563eb] text-white shadow-inner shadow-sky-200/60",
     label: "Surveillance",
   },
   Rééducation: {
     badgeClass:
-      "bg-gradient-to-r from-[#c084fc] via-[#a855f7] to-[#7c3aed] text-white shadow-inner shadow-violet-200/60 dark:from-[#4c1d95] dark:via-[#6d28d9] dark:to-[#7c3aed] dark:text-[#ede9fe]",
+      "bg-gradient-to-r from-[#c084fc] via-[#a855f7] to-[#7c3aed] text-white shadow-inner shadow-violet-200/60",
     label: "Rééducation",
   },
 };
@@ -254,17 +252,17 @@ const labStatusMeta: Record<
 > = {
   pending: {
     badgeClass:
-      "bg-gradient-to-r from-[#f97316]/90 to-[#f59e0b]/90 text-white shadow-inner shadow-amber-200/60 dark:from-[#9a3412] dark:to-[#f97316] dark:text-[#fffbeb]",
+      "bg-gradient-to-r from-[#f97316]/90 to-[#f59e0b]/90 text-white shadow-inner shadow-amber-200/60",
     label: "En attente",
   },
   completed: {
     badgeClass:
-      "bg-gradient-to-r from-[#34d399]/90 to-[#22c55e]/90 text-white shadow-inner shadow-emerald-200/60 dark:from-[#047857] dark:to-[#15803d] dark:text-[#bbf7d0]",
+      "bg-gradient-to-r from-[#34d399]/90 to-[#22c55e]/90 text-white shadow-inner shadow-emerald-200/60",
     label: "Dernier résultat",
   },
   na: {
     badgeClass:
-      "bg-gradient-to-r from-[#e2e8f0]/90 to-[#cbd5f5]/90 text-[#1e293b] shadow-inner shadow-slate-200/60 dark:from-[#1e293b] dark:to-[#334155] dark:text-[#e2e8f0]",
+      "bg-gradient-to-r from-[#e2e8f0]/90 to-[#cbd5f5]/90 text-[#1e293b] shadow-inner shadow-slate-200/60",
     label: "N/A",
   },
 };
@@ -632,11 +630,18 @@ export default function DashboardPage() {
     createEmptyPatientForm(),
   );
   const [activityTab, setActivityTab] = useState<ActivityTabKey>("activites");
+  const [isMobileToolkitOpen, setIsMobileToolkitOpen] = useState(false);
+  const [isStatsInteracting, setIsStatsInteracting] = useState(false);
 
   const timersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
+  const statsInteractionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
+      if (statsInteractionTimeoutRef.current) {
+        clearTimeout(statsInteractionTimeoutRef.current);
+        statsInteractionTimeoutRef.current = null;
+      }
       timersRef.current.forEach((timer) => clearTimeout(timer));
       timersRef.current = [];
     };
@@ -738,6 +743,27 @@ export default function DashboardPage() {
         }),
       };
     });
+  };
+
+  const handleStatsInteractionStart = () => {
+    if (statsInteractionTimeoutRef.current) {
+      clearTimeout(statsInteractionTimeoutRef.current);
+      statsInteractionTimeoutRef.current = null;
+    }
+    if (!isStatsInteracting) {
+      setIsStatsInteracting(true);
+    }
+  };
+
+  const handleStatsInteractionEnd = (delay = 1400) => {
+    if (statsInteractionTimeoutRef.current) {
+      clearTimeout(statsInteractionTimeoutRef.current);
+    }
+    statsInteractionTimeoutRef.current = window.setTimeout(async () => {
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      setIsStatsInteracting(false);
+      statsInteractionTimeoutRef.current = null;
+    }, delay) as unknown as ReturnType<typeof setTimeout>;
   };
 
   const handleSelectDate = (date: Date) => {
@@ -922,6 +948,10 @@ export default function DashboardPage() {
   const taskFormIsValid = Boolean(taskForm.title.trim());
   const statsList = statsSummary;
   const hasStats = statsList.length > 0;
+  const marqueeStats = useMemo(
+    () => (hasStats ? [...statsList, ...statsList] : []),
+    [hasStats, statsList],
+  );
   const activityGroups = useMemo(() => {
     const groups: Record<ActivityTabKey, ActivityItem[]> = {
       activites: [],
@@ -958,223 +988,306 @@ export default function DashboardPage() {
   const activeActivityTab =
     activityTabsConfig.find((tab) => tab.key === activityTab) ?? activityTabsConfig[0];
 
+  const renderCalendarCard = (
+    cardClassName?: string,
+    contentClassName?: string,
+  ) => (
+    <Card className={cn("border-none bg-white/90", cardClassName)}>
+      <CardContent className={cn("pt-0", contentClassName)}>
+        <Calendar
+          selected={selectedDateObj}
+          onSelect={handleSelectDate}
+          month={calendarMonth}
+          onMonthChange={(date) =>
+            setCalendarMonth(new Date(date.getFullYear(), date.getMonth(), 1))
+          }
+        />
+      </CardContent>
+    </Card>
+  );
+
+  const renderTasksCard = (options?: {
+    cardClassName?: string;
+    headerClassName?: string;
+    contentClassName?: string;
+  }) => (
+    <Card
+      className={cn(
+        "flex min-h-0 flex-1 flex-col border-none bg-white/90 min-h-[500px]",
+        options?.cardClassName,
+      )}
+    >
+      <CardHeader
+        className={cn(
+          "flex flex-wrap items-center justify-between gap-3 pb-4",
+          options?.headerClassName,
+        )}
+      >
+        <div>
+          <CardTitle>Consignes du jour</CardTitle>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge
+            variant="muted"
+            className="bg-indigo-100 text-indigo-700"
+          >
+            Terminé : {completedTasks}/{tasksCount}
+          </Badge>
+          <Button
+            variant="primary"
+            size="sm"
+            className="h-9 w-9 rounded-full p-0"
+            onClick={handleOpenCreateTask}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent
+        className={cn(
+          "flex-1 min-h-0 overflow-hidden pt-0",
+          options?.contentClassName,
+        )}
+      >
+        {isTasksLoading ? (
+          <div className="flex h-full items-center justify-center">
+            <Spinner label="Chargement des consignes..." />
+          </div>
+        ) : tasks.length === 0 ? (
+          <EmptyState
+            icon={ClipboardList}
+            title="Aucune consigne enregistrée"
+            description="Ajoutez vos actions quotidiennes pour garder un suivi partagé avec votre équipe."
+            action={
+              <Button variant="outline" onClick={handleOpenCreateTask}>
+                <Plus className="mr-2 h-4 w-4" />
+                Ajouter une consigne
+              </Button>
+            }
+          />
+        ) : (
+          <div className="h-full min-h-0 overflow-y-auto pr-1">
+            <div className="space-y-3">
+              {tasks.map((task) => {
+                const isDone = task.done;
+                return (
+                  <div
+                    key={task.id}
+                    role="checkbox"
+                    tabIndex={0}
+                    aria-checked={isDone}
+                    onClick={() => handleToggleTaskDone(task.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        handleToggleTaskDone(task.id);
+                      }
+                    }}
+                    className={cn(
+                      "group flex cursor-pointer flex-col gap-4 rounded-2xl border px-4 py-3 shadow-sm transition sm:flex-row sm:items-start sm:gap-6",
+                      "focus:outline-none focus:ring-2 focus:ring-indigo-200/70 focus:ring-offset-1",
+                      isDone
+                        ? "border-emerald-200/80 bg-emerald-50/70 text-emerald-700 shadow-emerald-100/60"
+                        : "border-slate-200 bg-white/85 hover:border-indigo-200",
+                    )}
+                  >
+                    <div className="flex items-start gap-3 sm:flex-1">
+                      <span
+                        className={cn(
+                          "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border transition",
+                          isDone
+                            ? "border-emerald-300 bg-emerald-500/20 text-emerald-600 shadow-inner shadow-emerald-200/50"
+                            : "border-indigo-200 bg-white text-indigo-500 shadow-inner shadow-indigo-100/70",
+                        )}
+                        aria-hidden="true"
+                      >
+                        {isDone ? (
+                          <CheckCircle2 className="h-4 w-4" />
+                        ) : (
+                          <Circle className="h-4 w-4" />
+                        )}
+                      </span>
+                      <div className="flex flex-1 flex-col gap-1">
+                        <p
+                          className={cn(
+                            "text-sm font-semibold transition",
+                            isDone
+                              ? "text-emerald-700 line-through decoration-emerald-400/80"
+                              : "text-slate-800",
+                          )}
+                        >
+                          {task.title}
+                        </p>
+                        <p
+                          className={cn(
+                            "text-sm leading-relaxed",
+                            isDone ? "text-emerald-600/80" : "text-[#5f5aa5]",
+                          )}
+                        >
+                          {task.details}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 w-9 rounded-full border-indigo-200 text-indigo-600 transition hover:bg-indigo-50/80"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleOpenEditTask(task);
+                        }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 w-9 rounded-full text-rose-600 transition hover:bg-rose-50/80"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleRequestDeleteTask(task);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  const renderStatCard = (
+    stat: Stat,
+    options?: { key?: string; className?: string },
+  ) => {
+    const Icon = stat.icon;
+    const trendColor =
+      stat.trend === "up"
+        ? "text-emerald-600"
+        : stat.trend === "down"
+        ? "text-rose-600"
+        : stat.theme.accent;
+    const isEmpty = stat.value === "0" || stat.value.trim() === "";
+
+    return (
+      <Card
+        key={options?.key ?? stat.label}
+        className={cn("border-none", stat.theme.card, options?.className)}
+      >
+        <CardHeader className="flex flex-row items-start justify-between pb-3">
+          <div className="space-y-1">
+            <CardDescription className="text-xs uppercase tracking-wide text-slate-500">
+              {stat.label}
+            </CardDescription>
+            <CardTitle
+              className={cn(
+                "text-3xl font-semibold",
+                isEmpty ? "text-slate-400" : stat.theme.text,
+              )}
+            >
+              {isEmpty ? "—" : stat.value}
+            </CardTitle>
+            <p className={cn("text-sm", trendColor)}>
+              {isEmpty ? "Pas de données pour cette période" : stat.variation}
+            </p>
+          </div>
+          <span
+            className={cn(
+              "flex h-11 w-11 items-center justify-center rounded-2xl shadow-inner",
+              stat.theme.icon,
+            )}
+          >
+            <Icon className="h-5 w-5" />
+          </span>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <p
+            className={cn(
+              "text-sm",
+              isEmpty ? "text-slate-400" : "text-slate-600",
+            )}
+          >
+            {isEmpty
+              ? "Synchronisez vos données pour activer cet indicateur."
+              : stat.hint}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <div className="flex h-full flex-col overflow-auto">
-      <section className="grid shrink-0 grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="shrink-0">
         {!hasStats ? (
           <Card className="border-dashed border-slate-200 bg-white/70 p-6 text-center text-sm text-slate-500">
             Aucun indicateur disponible pour le moment. Connectez vos flux opérationnels pour activer cette section.
           </Card>
         ) : (
-          statsList.map((stat) => {
-            const Icon = stat.icon;
-            const trendColor =
-              stat.trend === "up"
-                ? "text-emerald-600"
-                : stat.trend === "down"
-                ? "text-rose-600"
-                : stat.theme.accent;
-
-            const isEmpty = stat.value === "0" || stat.value.trim() === "";
-
-            return (
-              <Card key={stat.label} className={cn("border-none", stat.theme.card)}>
-                <CardHeader className="flex flex-row items-start justify-between pb-3">
-                  <div className="space-y-1">
-                    <CardDescription className="text-xs uppercase tracking-wide text-slate-500">
-                      {stat.label}
-                    </CardDescription>
-                    <CardTitle
-                      className={cn(
-                        "text-3xl font-semibold",
-                        isEmpty ? "text-slate-400" : stat.theme.text,
-                      )}
-                    >
-                      {isEmpty ? "—" : stat.value}
-                    </CardTitle>
-                    <p className={cn("text-sm", trendColor)}>
-                      {isEmpty ? "Pas de données pour cette période" : stat.variation}
-                    </p>
-                  </div>
-                  <span
-                    className={cn(
-                      "flex h-11 w-11 items-center justify-center rounded-2xl shadow-inner",
-                      stat.theme.icon,
-                    )}
-                  >
-                    <Icon className="h-5 w-5" />
-                  </span>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <p
-                    className={cn("text-sm", isEmpty ? "text-slate-400" : "text-slate-600")}
-                  >
-                    {isEmpty
-                      ? "Synchronisez vos données pour activer cet indicateur."
-                      : stat.hint}
-                  </p>
-                </CardContent>
-              </Card>
-            );
-          })
+          <>
+            <div className="hidden grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4 xl:grid">
+              {statsList.map((stat) => renderStatCard(stat))}
+            </div>
+            <div className="relative -mx-4 mt-1 pb-4 sm:-mx-6 sm:px-6 xl:hidden">
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-white via-white/70 to-transparent" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white via-white/70 to-transparent" />
+              <div
+                className="no-scrollbar overflow-x-auto pb-1 pl-1 pr-4 snap-x snap-mandatory"
+                onPointerDown={handleStatsInteractionStart}
+                onPointerUp={() => handleStatsInteractionEnd()}
+                onPointerLeave={() => handleStatsInteractionEnd()}
+                onPointerCancel={() => handleStatsInteractionEnd()}
+                onScroll={() => {
+                  handleStatsInteractionStart();
+                  handleStatsInteractionEnd(1200);
+                }}
+                onWheel={() => {
+                  handleStatsInteractionStart();
+                  handleStatsInteractionEnd(1200);
+                }}
+              >
+                <div
+                  className={cn(
+                    "dashboard-marquee-track flex w-max gap-4 pb-0",
+                    isStatsInteracting && "dashboard-marquee-track--paused",
+                  )}
+                  style={
+                    {
+                      "--marquee-duration": `${Math.max(
+                        statsList.length * 12,
+                        40,
+                      )}s`,
+                    } as CSSProperties
+                  }
+                >
+                  {marqueeStats.map((stat, index) =>
+                    renderStatCard(stat, {
+                      key: `${stat.label}-${index}`,
+                      className:
+                        "min-w-[15rem] max-w-[15rem] snap-start sm:min-w-[18rem] sm:max-w-[18rem]",
+                    }),
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
         )}
       </section>
 
-      <div className="mt-6 flex-1 min-h-0 overflow-auto">
-        <div className="grid h-full min-h-0 grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)]">
-          <div className="flex h-full min-h-0 flex-col gap-6">
-            <Card className="shrink-0 border-none bg-white/90">
-              <CardHeader className="pb-2">
-                
-              </CardHeader>
-              <CardContent className="pt-0">
-                <Calendar
-                  selected={selectedDateObj}
-                  onSelect={handleSelectDate}
-                  month={calendarMonth}
-                  onMonthChange={(date) =>
-                    setCalendarMonth(new Date(date.getFullYear(), date.getMonth(), 1))
-                  }
-                />
-              </CardContent>
-            </Card>
-
-            <Card className="flex min-h-0 flex-1 flex-col border-none bg-white/90 min-h-[500px]">
-              <CardHeader className="flex flex-wrap items-center justify-between gap-3 pb-4">
-                <div>
-                  <CardTitle>Consignes du jour</CardTitle>
-                  
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant="muted"
-                    className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-200"
-                  >
-                    Terminé : {completedTasks}/{tasksCount}
-                  </Badge>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    className="h-9 w-9 rounded-full p-0"
-                    onClick={handleOpenCreateTask}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="flex-1 min-h-0 overflow-hidden pt-0">
-                {isTasksLoading ? (
-                  <div className="flex h-full items-center justify-center">
-                    <Spinner label="Chargement des consignes..." />
-                  </div>
-                ) : tasks.length === 0 ? (
-                  <EmptyState
-                    icon={ClipboardList}
-                    title="Aucune consigne enregistrée"
-                    description="Ajoutez vos actions quotidiennes pour garder un suivi partagé avec votre équipe."
-                    action={
-                      <Button variant="outline" onClick={handleOpenCreateTask}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Ajouter une consigne
-                      </Button>
-                    }
-                  />
-                ) : (
-                  <div className="h-full min-h-0 overflow-y-auto pr-1">
-                    <div className="space-y-3">
-                      {tasks.map((task) => {
-                        const isDone = task.done;
-                        return (
-                          <div
-                            key={task.id}
-                            role="checkbox"
-                            tabIndex={0}
-                            aria-checked={isDone}
-                            onClick={() => handleToggleTaskDone(task.id)}
-                            onKeyDown={(event) => {
-                              if (event.key === "Enter" || event.key === " ") {
-                                event.preventDefault();
-                                handleToggleTaskDone(task.id);
-                              }
-                            }}
-                            className={cn(
-                              "group flex cursor-pointer items-start gap-4 rounded-2xl border px-4 py-3 shadow-sm transition",
-                              "focus:outline-none focus:ring-2 focus:ring-indigo-200/70 focus:ring-offset-1",
-                              isDone
-                                ? "border-emerald-200/80 bg-emerald-50/70 text-emerald-700 shadow-emerald-100/60 dark:bg-emerald-500/20 dark:text-emerald-200"
-                                : "border-slate-200 bg-white/85 hover:border-indigo-200",
-                            )}
-                          >
-                            <span
-                              className={cn(
-                                "mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border transition",
-                                isDone
-                                  ? "border-emerald-300 bg-emerald-500/20 text-emerald-600 shadow-inner shadow-emerald-200/50 dark:bg-emerald-500/30 dark:text-emerald-100"
-                                  : "border-indigo-200 bg-white text-indigo-500 shadow-inner shadow-indigo-100/70 dark:bg-[rgba(37,41,63,0.9)]",
-                              )}
-                              aria-hidden="true"
-                            >
-                              {isDone ? (
-                                <CheckCircle2 className="h-4 w-4" />
-                              ) : (
-                                <Circle className="h-4 w-4" />
-                              )}
-                            </span>
-                            <div className="flex flex-1 flex-col gap-1">
-                              <p
-                                className={cn(
-                                  "text-sm font-semibold transition",
-                                  isDone
-                                    ? "text-emerald-700 line-through decoration-emerald-400/80"
-                                    : "text-slate-800",
-                                )}
-                              >
-                                {task.title}
-                              </p>
-                              <p
-                                className={cn(
-                                  "text-sm",
-                                  isDone ? "text-emerald-600/80" : "text-[#5f5aa5]",
-                                )}
-                              >
-                                {task.details}
-                              </p>
-                            </div>
-                            <div className="flex flex-shrink-0 items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-9 w-9 rounded-full border-indigo-200 text-indigo-600 transition hover:bg-indigo-50/80 dark:border-indigo-400/40 dark:text-indigo-200"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  handleOpenEditTask(task);
-                                }}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-9 w-9 rounded-full text-rose-600 transition hover:bg-rose-50/80 dark:text-rose-200 dark:hover:bg-rose-500/20"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  handleRequestDeleteTask(task);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+      <div className="mt-6 flex-1 min-h-0 lg:w-full">
+        <div className="grid h-full min-h-0 grid-cols-1 gap-6 xl:grid-cols-3">
+          <div className="hidden h-full min-h-0 flex-col gap-6 xl:flex">
+            {renderCalendarCard()}
+            {renderTasksCard()}
           </div>
 
-          <Card className="flex h-full min-h-0 flex-col border-none bg-white/90 dark:bg-[rgba(26,29,45,0.85)]">
+          <Card className="flex h-full min-h-0 flex-col border-none bg-white/90">
             <CardHeader className="flex flex-col gap-4 pb-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
@@ -1184,7 +1297,7 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-2">
                   <Badge
                     variant="muted"
-                    className="bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-200"
+                    className="bg-indigo-100 text-indigo-800"
                   >
                     {selectedDayData.activities.length} activité(s)
                   </Badge>
@@ -1209,8 +1322,8 @@ export default function DashboardPage() {
                       className={cn(
                         "rounded-full px-3 py-1.5 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-indigo-200/70 focus:ring-offset-1",
                         isActive
-                          ? "bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#ec4899] text-white shadow-lg shadow-indigo-200/50 dark:from-[#4338ca] dark:via-[#7c3aed] dark:to-[#db2777]"
-                          : "border border-violet-200/60 bg-white/70 text-[#5f5aa5] hover:border-violet-300 hover:bg-indigo-50/70 dark:border-indigo-500/30 dark:bg-[rgba(28,32,51,0.85)] dark:text-indigo-200",
+                          ? "bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#ec4899] text-white shadow-lg shadow-indigo-200/50"
+                          : "border border-violet-200/60 bg-white/70 text-[#5f5aa5] hover:border-violet-300 hover:bg-indigo-50/70",
                       )}
                     >
                       {tab.label} ({tab.count})
@@ -1260,44 +1373,44 @@ export default function DashboardPage() {
                         <li key={activity.id}>
                           <div
                             className={cn(
-                              "flex items-start justify-between gap-3 rounded-2xl border bg-white/80 p-4 shadow-sm transition dark:bg-[rgba(23,26,39,0.85)]",
+                              "flex flex-col gap-4 rounded-2xl border bg-white/80 p-4 shadow-sm transition sm:flex-row sm:items-start sm:justify-between",
                               done
-                                ? "border-emerald-200 bg-emerald-50/80 shadow-emerald-100/60 dark:border-emerald-500/35 dark:bg-emerald-500/20 dark:shadow-emerald-900/30"
-                                : "border-transparent hover:-translate-y-[1px] hover:border-slate-200 dark:hover:border-indigo-500/40",
+                                ? "border-emerald-200 bg-emerald-50/80 shadow-emerald-100/60"
+                                : "border-transparent hover:-translate-y-[1px] hover:border-slate-200",
                             )}
                           >
-                            <div className="flex flex-1 gap-3">
+                            <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
                               <span
                                 className={cn(
-                                  "flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl shadow-inner shadow-white/60 dark:shadow-indigo-900/40",
+                                  "flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl shadow-inner shadow-white/60",
                                   meta.badgeClass,
                                 )}
                               >
                                 <Icon className="h-5 w-5" />
                               </span>
-                              <div className="flex flex-1 flex-col gap-2">
-                                <div className="flex flex-wrap items-center justify-between gap-2">
-                                  <div>
+                              <div className="flex flex-1 flex-col gap-3">
+                                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                  <div className="space-y-1">
                                     <h3
                                       className={cn(
-                                        "text-sm font-semibold text-[#1f184f] dark:text-slate-100",
+                                        "text-sm font-semibold text-[#1f184f]",
                                         done && "line-through opacity-70",
                                       )}
                                     >
                                       {activity.title}
                                     </h3>
-                                    <p className="text-xs text-[#5f5aa5] dark:text-indigo-200">
+                                    <p className="text-xs text-[#5f5aa5]">
                                       {activity.description}
                                     </p>
                                   </div>
                                   <Badge
                                     variant="muted"
-                                    className="bg-[#f1f0ff] text-[#4338ca] dark:bg-[#312e81]/40 dark:text-[#c7d2fe]"
+                                    className="self-start bg-[#f1f0ff] text-[#4338ca]"
                                   >
                                     {activity.time}
                                   </Badge>
                                 </div>
-                                <div className="flex flex-wrap items-center gap-3 text-xs text-[#6f66c4] dark:text-indigo-200/80">
+                                <div className="flex flex-wrap items-center gap-3 text-xs text-[#6f66c4]">
                                   {activity.location ? (
                                     <span className="flex items-center gap-1">
                                       <MapPin className="h-3.5 w-3.5" />
@@ -1317,7 +1430,7 @@ export default function DashboardPage() {
                                 </div>
                               </div>
                             </div>
-                            <div className="flex flex-col items-end gap-2">
+                            <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:items-end">
                               <button
                                 type="button"
                                 onClick={() => handleToggleActivity(activity.id)}
@@ -1350,7 +1463,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="flex h-full min-h-0 flex-col border-none bg-white/90">
+          <Card className="flex h-full min-h-0 flex-col border-none bg-white/90 hidden xl:block">
             <CardHeader className="flex flex-wrap items-center justify-between gap-3 pb-4">
               <div>
                 <CardTitle>Patients du Service</CardTitle>
@@ -1375,17 +1488,17 @@ export default function DashboardPage() {
                   }
                 />
               ) : (
-                <div className="h-full min-h-0 overflow-y-auto">
+                <div className="h-full min-h-0 overflow-y-auto overflow-x-auto">
                   <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
-                    <thead className="sticky top-0 z-10 bg-white/90 backdrop-blur dark:bg-[rgba(20,23,37,0.92)]">
+                    <thead className="sticky top-0 z-10 bg-white/90 backdrop-blur">
                       <tr>
-                        <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-200">
+                        <th className="px-4 py-3 font-semibold text-slate-500">
                           Patient
                         </th>
-                        <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-200">
+                        <th className="px-4 py-3 font-semibold text-slate-500">
                           Diagnostic
                         </th>
-                        <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-200">
+                        <th className="px-4 py-3 font-semibold text-slate-500">
                           Statut
                         </th>
                       </tr>
@@ -1394,16 +1507,16 @@ export default function DashboardPage() {
                       {servicePatients.map((patient) => (
                         <tr
                           key={patient.id}
-                          className="hover:bg-slate-50/70 dark:hover:bg-indigo-500/10"
+                          className="hover:bg-slate-50/70"
                         >
                           <td className="px-4 py-3">
                             <div className="flex flex-col">
-                              <span className="font-semibold text-slate-800 dark:text-slate-100">
+                              <span className="font-semibold text-slate-800">
                                 {patient.name}
                               </span>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
+                          <td className="px-4 py-3 text-sm text-slate-600">
                             {patient.diagnosis}
                           </td>
                           <td className="px-4 py-3">
@@ -1425,6 +1538,58 @@ export default function DashboardPage() {
               )}
             </CardContent>
           </Card>
+      </div>
+      </div>
+
+      {!isMobileToolkitOpen ? (
+        <button
+          type="button"
+          onClick={() => setIsMobileToolkitOpen(true)}
+          className="fixed bottom-24 right-5 z-40 flex items-center gap-2 rounded-full bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#22d3ee] px-4 py-3 text-sm font-semibold text-white shadow-xl shadow-indigo-200/60 transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-indigo-200/70 xl:hidden"
+        >
+          <ListChecks className="h-4 w-4" />
+          Planning & consignes
+        </button>
+      ) : null}
+      <div
+        className={cn(
+          "fixed inset-0 z-40 bg-slate-900/20 backdrop-blur-[2px] transition-opacity duration-300 xl:hidden",
+          isMobileToolkitOpen ? "opacity-100" : "pointer-events-none opacity-0",
+        )}
+        onClick={() => setIsMobileToolkitOpen(false)}
+      />
+      <div
+        className={cn(
+          "fixed inset-x-4 bottom-4 z-50 rounded-3xl border border-violet-200/60 bg-white/95 p-4 shadow-2xl shadow-indigo-200/60 transition-transform duration-300 xl:hidden",
+          isMobileToolkitOpen
+            ? "translate-y-0"
+            : "pointer-events-none translate-y-[120%]",
+        )}
+      >
+        <div className="flex items-center justify-between gap-4 border-b border-violet-100/70 pb-3">
+          <div className="flex items-center gap-2 text-sm font-semibold text-[#352f72]">
+            <ListChecks className="h-4 w-4 text-indigo-500" />
+            Vos outils rapides
+          </div>
+          <button
+            type="button"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
+            onClick={() => setIsMobileToolkitOpen(false)}
+            aria-label="Fermer le panneau"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="mt-4 space-y-4">
+          {renderCalendarCard(
+            "border border-slate-200/70 bg-white/95 shadow-md shadow-indigo-100/50",
+            "pt-0",
+          )}
+          {renderTasksCard({
+            cardClassName:
+              "border border-slate-200/70 bg-white/95 shadow-md shadow-indigo-100/50 min-h-0",
+            contentClassName: "max-h-72 overflow-y-auto",
+          })}
         </div>
       </div>
 

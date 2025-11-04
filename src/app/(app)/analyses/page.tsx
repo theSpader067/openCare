@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ComponentType } from "react";
-import { Activity, Beaker, Download, FlaskConical, List } from "lucide-react";
+import { Activity, Beaker, Download, FlaskConical, List, Search } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -76,9 +76,9 @@ function formatAnalyseDateTime(date: string) {
 }
 
 const statusBadgeMap: Record<Analyse["status"], string> = {
-  "En cours": "bg-sky-500/15 text-sky-700 dark:bg-sky-500/20 dark:text-sky-200",
-  Terminée: "bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200",
-  Urgent: "bg-rose-500/15 text-rose-700 dark:bg-rose-500/20 dark:text-rose-200",
+  "En cours": "bg-sky-500/15 text-sky-700",
+  Terminée: "bg-emerald-500/15 text-emerald-700",
+  Urgent: "bg-rose-500/15 text-rose-700",
 };
 
 const pendingSeed: Analyse[] = [
@@ -532,7 +532,7 @@ export default function AnalysesPage() {
         completed: 0,
         icon: Beaker,
         gradient: "from-sky-400/15 via-sky-400/5 to-transparent",
-        iconBg: "bg-sky-500/15 text-sky-600 dark:bg-sky-500/20 dark:text-sky-200",
+        iconBg: "bg-sky-500/15 text-sky-600",
       },
       imagerie: {
         label: "Imagerie",
@@ -540,7 +540,7 @@ export default function AnalysesPage() {
         completed: 0,
         icon: Activity,
         gradient: "from-amber-400/15 via-amber-400/5 to-transparent",
-        iconBg: "bg-amber-500/15 text-amber-600 dark:bg-amber-500/20 dark:text-amber-200",
+        iconBg: "bg-amber-500/15 text-amber-600",
       },
       anapath: {
         label: "Anapath",
@@ -548,7 +548,7 @@ export default function AnalysesPage() {
         completed: 0,
         icon: List,
         gradient: "from-rose-400/15 via-rose-400/5 to-transparent",
-        iconBg: "bg-rose-500/15 text-rose-600 dark:bg-rose-500/20 dark:text-rose-200",
+        iconBg: "bg-rose-500/15 text-rose-600",
       },
     };
 
@@ -602,29 +602,29 @@ export default function AnalysesPage() {
             <div
               key={card.key}
               className={cn(
-                "relative overflow-hidden rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm dark:border-slate-700/60 dark:bg-slate-900/40",
+                "relative overflow-hidden rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm",
                 "bg-gradient-to-br",
                 card.gradient,
               )}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                     {card.label}
                   </p>
                   <div className="mt-4 grid gap-2">
-                    <div className="rounded-xl border border-slate-200/70 bg-white/75 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-700/60 dark:bg-slate-900/50 dark:text-slate-300">
+                    <div className="rounded-xl border border-slate-200/70 bg-white/75 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
                       <div className="flex items-center justify-between">
                         <span>En cours</span>
-                        <span className="text-sm text-slate-900 dark:text-slate-50">
+                        <span className="text-sm text-slate-900">
                           {card.ongoing}
                         </span>
                       </div>
                     </div>
-                    <div className="rounded-xl border border-slate-200/70 bg-white/75 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-700/60 dark:bg-slate-900/50 dark:text-slate-300">
+                    <div className="rounded-xl border border-slate-200/70 bg-white/75 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
                       <div className="flex items-center justify-between">
                         <span>Récupérés</span>
-                        <span className="text-sm text-slate-900 dark:text-slate-50">
+                        <span className="text-sm text-slate-900">
                           {card.completed}
                         </span>
                       </div>
@@ -640,7 +640,7 @@ export default function AnalysesPage() {
                   <Icon className="h-5 w-5" />
                 </span>
               </div>
-              <p className="mt-4 text-xs text-slate-500 dark:text-slate-300">
+              <p className="mt-4 text-xs text-slate-500">
                 {card.ongoing + card.completed === 0
                   ? "Aucune demande suivie actuellement."
                   : `${card.ongoing + card.completed} demandes suivies dans cette spécialité.`}
@@ -661,13 +661,14 @@ export default function AnalysesPage() {
             </div>
           </CardHeader>
           <CardContent className="flex-1 p-0">
-            <div className="border-b border-slate-200 bg-slate-50/70 px-4 py-3">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                <div className="grid w-full gap-2 md:grid-cols-2 lg:grid-cols-[minmax(0,260px)_minmax(0,220px)_repeat(2,minmax(0,190px))]">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Patient / identifiant
-                    </label>
+            <div className="border-b border-slate-200 bg-slate-50/70 px-4 py-4">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div className="flex w-full flex-col gap-2 lg:max-w-[360px]">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Patient / identifiant
+                  </label>
+                  <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm">
+                    <Search className="h-4 w-4 text-slate-400" />
                     <input
                       type="search"
                       value={historyFilters.query}
@@ -675,10 +676,12 @@ export default function AnalysesPage() {
                         handleHistoryFilterChange("query", event.target.value)
                       }
                       placeholder="Rechercher un patient ou un numéro"
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                      className="w-full bg-transparent text-slate-700 placeholder:text-slate-400 focus:outline-none"
                     />
                   </div>
-                  <div className="flex flex-col gap-1">
+                </div>
+                <div className="grid w-full gap-3 sm:grid-cols-2 lg:max-w-xl lg:grid-cols-3">
+                  <div className="flex flex-col gap-2">
                     <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Type de bilan
                     </label>
@@ -687,7 +690,7 @@ export default function AnalysesPage() {
                       onChange={(event) =>
                         handleHistoryFilterChange("type", event.target.value)
                       }
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                      className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
                     >
                       <option value="all">Tous les types</option>
                       {uniqueHistoryTypes.map((type) => (
@@ -697,7 +700,7 @@ export default function AnalysesPage() {
                       ))}
                     </select>
                   </div>
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-2">
                     <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Du
                     </label>
@@ -707,10 +710,10 @@ export default function AnalysesPage() {
                       onChange={(event) =>
                         handleHistoryFilterChange("from", event.target.value)
                       }
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                      className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
                     />
                   </div>
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-2">
                     <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Au
                     </label>
@@ -720,16 +723,17 @@ export default function AnalysesPage() {
                       onChange={(event) =>
                         handleHistoryFilterChange("to", event.target.value)
                       }
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                      className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
                     />
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex w-full flex-col items-stretch gap-2 sm:flex-row sm:justify-end sm:gap-3 lg:w-auto">
                   <Button
                     variant="ghost"
                     size="sm"
                     disabled={!isHistoryFilterActive}
                     onClick={resetHistoryFilters}
+                    className="h-11 rounded-2xl border border-transparent text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50/60"
                   >
                     Réinitialiser
                   </Button>
@@ -753,7 +757,7 @@ export default function AnalysesPage() {
                   }
                 />
               ) : (
-                <div className="flex h-48 items-center justify-center px-6 py-10 text-sm text-slate-500 dark:text-slate-300">
+                <div className="flex h-48 items-center justify-center px-6 py-10 text-sm text-slate-500">
                   <div className="text-center">
                     <p>Aucun résultat ne correspond à ces critères.</p>
                     <Button
@@ -794,19 +798,19 @@ export default function AnalysesPage() {
                       {paginatedHistory.map((analyse) => (
                         <tr
                           key={analyse.id}
-                          className="cursor-pointer transition hover:bg-slate-50/70 dark:hover:bg-slate-800/60"
+                          className="cursor-pointer transition hover:bg-slate-50/70"
                           onClick={() => setSelectedBilan(analyse)}
                         >
-                          <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-100">
+                          <td className="px-4 py-3 font-semibold text-slate-800">
                             {analyse.id}
                           </td>
-                          <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-200">
+                          <td className="px-4 py-3 text-sm text-slate-700">
                             {analyse.patient}
                           </td>
-                          <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
+                          <td className="px-4 py-3 text-sm text-slate-600">
                             {analyse.type}
                           </td>
-                          <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
+                          <td className="px-4 py-3 text-sm text-slate-600">
                             {formatAnalyseDateTime(analyse.requestedDate)}
                           </td>
                           <td className="px-4 py-3">
@@ -824,7 +828,7 @@ export default function AnalysesPage() {
                     </tbody>
                   </table>
                 </div>
-                <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-4 py-4 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-4 py-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
                   <span>
                     {startItem === 0
                       ? "Aucune analyse à afficher"
@@ -842,7 +846,7 @@ export default function AnalysesPage() {
                     >
                       Précédent
                     </Button>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                    <span className="text-xs text-slate-500">
                       Page {filteredHistoryAnalyses.length === 0 ? 0 : currentPage} /{" "}
                       {filteredHistoryAnalyses.length === 0 ? 0 : totalPages}
                     </span>
@@ -895,14 +899,11 @@ export default function AnalysesPage() {
                   {pendingAnalyses.map((analyse) => {
                     const isUrgent = analyse.status === "Urgent";
                     const ticketBorder = isUrgent
-                      ? "border-rose-200/80 shadow-rose-200/60 dark:border-rose-400/45 dark:shadow-rose-500/20"
-                      : "border-indigo-100 shadow-indigo-100/60 dark:border-indigo-400/40 dark:shadow-indigo-500/20";
+                      ? "border-rose-200/80 shadow-rose-200/60"
+                      : "border-indigo-100 shadow-indigo-100/60";
                     const ticketGradient = isUrgent
-                      ? "from-[#fff1f2] via-[#ffe4e6] to-[#fff7f7] dark:from-[#3f1622]/80 dark:via-[#4f1b2c]/70 dark:to-[#2b0d1b]/75"
-                      : "from-white/95 via-indigo-50/40 to-white/95 dark:from-[#1f2437]/85 dark:via-[#1b2136]/80 dark:to-[#111827]/85";
-                    const perforationBorder = isUrgent
-                      ? "border-rose-200/70 dark:border-rose-400/40"
-                      : "border-indigo-200/70 dark:border-indigo-400/40";
+                      ? "from-[#fff1f2] via-[#ffe4e6] to-[#fff7f7]"
+                      : "from-white/95 via-indigo-50/40 to-white/95";
                     const statusBadge = statusBadgeMap[analyse.status];
 
                     return (
@@ -914,33 +915,14 @@ export default function AnalysesPage() {
                           ticketGradient,
                         )}
                       >
-                        <span
-                          className={cn(
-                            "pointer-events-none absolute inset-y-4 left-[calc(100%-11rem)] w-px border-l border-dashed",
-                            perforationBorder,
-                          )}
-                        />
-                        <span
-                          className={cn(
-                            "pointer-events-none absolute left-[calc(100%-11rem)] top-4 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full border bg-[color:var(--ticket-hole-bg)]",
-                            perforationBorder,
-                          )}
-                        />
-                        <span
-                          className={cn(
-                            "pointer-events-none absolute left-[calc(100%-11rem)] bottom-4 h-6 w-6 -translate-x-1/2 translate-y-1/2 rounded-full border bg-[color:var(--ticket-hole-bg)]",
-                            perforationBorder,
-                          )}
-                        />
-
-                        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_11rem]">
-                          <div className="space-y-4 p-5 pr-8">
+                        <div className="flex flex-col gap-4 p-5 md:grid md:grid-cols-[minmax(0,1fr)_215px] md:items-start md:gap-0 md:pr-0">
+                          <div className="space-y-4 md:pr-6">
                             <div className="flex flex-wrap items-start justify-between gap-3">
                               <div className="space-y-1">
-                                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                                <p className="text-sm font-semibold text-slate-800">
                                   {analyse.patient}
                                 </p>
-                                <p className="text-xs text-slate-500 dark:text-slate-300">
+                                <p className="text-xs text-slate-500">
                                   Responsable : {analyse.requester}
                                 </p>
                               </div>
@@ -948,39 +930,41 @@ export default function AnalysesPage() {
                                 {analyse.status}
                               </span>
                             </div>
-                            <div className="text-sm text-slate-700 dark:text-slate-200">
+                            <div className="text-sm text-slate-700">
                               {analyse.type}
                             </div>
-                            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-300">
-                              <span className="rounded-full bg-slate-100 px-2.5 py-1 font-semibold text-slate-600 dark:bg-slate-800/60 dark:text-slate-200">
+                            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                              <span className="rounded-full bg-slate-100 px-2.5 py-1 font-semibold text-slate-600">
                                 ID labo : {analyse.id}
                               </span>
                               <span>{formatAnalyseDateTime(analyse.requestedDate)}</span>
                             </div>
                           </div>
 
-                          <div className="flex min-h-full flex-col justify-between border-l border-transparent bg-white/65 px-4 py-5 text-right dark:bg-white/5">
-                            <div className="space-y-1 text-xs text-slate-500 dark:text-slate-300">
-                              <p className="font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-200">
+                          <div className="flex flex-col gap-3 rounded-2xl border border-white/70 bg-white/80 p-4 text-left shadow-inner shadow-white/30 md:min-h-full md:justify-between md:rounded-none md:border-l md:border-transparent md:bg-white/65 md:px-4 md:py-5 md:text-right md:shadow-none">
+                            <div className="space-y-2 text-xs text-slate-500 md:space-y-1">
+                              <p className="font-semibold uppercase tracking-wide text-slate-500">
                                 Patient / ID
                               </p>
-                              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                              <p className="text-sm font-semibold text-slate-800">
                                 {analyse.patient}
                               </p>
-                              <p>ID : {analyse.id}</p>
+                              <p className="font-semibold text-indigo-600">
+                                {analyse.id}
+                              </p>
                             </div>
-                            <div className="flex flex-col items-end gap-2">
+                            <div className="flex flex-col gap-2 md:items-end">
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-9 w-full justify-center rounded-full text-indigo-600 transition hover:bg-indigo-50/80 dark:text-indigo-200 dark:hover:bg-indigo-500/20"
+                                className="h-10 w-full justify-center rounded-full text-indigo-600 transition hover:bg-indigo-50/80 md:w-auto"
                               >
                                 Détails
                               </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-9 w-full justify-center rounded-full border-indigo-200 text-slate-700 hover:bg-indigo-50/80 dark:border-indigo-400/40 dark:text-slate-100"
+                                className="h-10 w-full justify-center rounded-full border-indigo-200 text-slate-700 hover:bg-indigo-50/80 md:w-auto"
                               >
                                 <Download className="mr-2 h-4 w-4" />
                                 Télécharger

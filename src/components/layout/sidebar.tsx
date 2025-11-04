@@ -48,7 +48,7 @@ export const primaryNav = [
   },
 ];
 
-const bottomNav = {
+export const bottomNav = {
   href: "/settings",
   label: "Paramètres",
   icon: Settings2,

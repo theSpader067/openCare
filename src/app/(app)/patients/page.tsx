@@ -9,6 +9,7 @@ import {
   Plus,
   Trash2,
   UserRound,
+  X,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +18,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
-import { Patient, PatientStatus, patientsSeed } from "./data";
+import { Patient, PatientStatus, RiskLevel, patientsSeed } from "./data";
 import { ObservationTimeline } from "./observation-timeline";
 
 function useSectionData<T>(seed: T[], delay = 650) {
@@ -39,14 +40,37 @@ function useSectionData<T>(seed: T[], delay = 650) {
 const PAGE_SIZE = 10;
 
 const TAG_COLOR_CLASSES = [
-  "bg-slate-100 text-slate-700 ring-slate-200 dark:bg-slate-800/50 dark:text-slate-200 dark:ring-slate-600/60",
-  "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-100 dark:ring-emerald-500/40",
-  "bg-sky-50 text-sky-700 ring-sky-200 dark:bg-sky-500/15 dark:text-sky-100 dark:ring-sky-500/40",
-  "bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/15 dark:text-amber-100 dark:ring-amber-400/40",
-  "bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-500/15 dark:text-rose-100 dark:ring-rose-400/40",
-  "bg-indigo-50 text-indigo-700 ring-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-100 dark:ring-indigo-400/40",
-  "bg-violet-50 text-violet-700 ring-violet-200 dark:bg-violet-500/15 dark:text-violet-100 dark:ring-violet-400/40",
+  "bg-rose-100 text-rose-700 ring-rose-200",
+  "bg-sky-100 text-sky-700 ring-sky-200",
+  "bg-lime-100 text-lime-700 ring-lime-200",
+  "bg-amber-100 text-amber-800 ring-amber-200",
+  "bg-fuchsia-100 text-fuchsia-700 ring-fuchsia-200",
+  "bg-emerald-100 text-emerald-700 ring-emerald-200",
+  "bg-violet-100 text-violet-700 ring-violet-200",
 ];
+
+const STATUS_BADGE_CLASSES: Record<PatientStatus, string> = {
+  Hospitalisé:
+    "bg-gradient-to-r from-[#fecaca] via-[#fda4af] to-[#fb7185] text-[#7f1d1d] shadow-sm shadow-rose-200/60",
+  Consultation:
+    "bg-gradient-to-r from-[#bfdbfe] via-[#93c5fd] to-[#60a5fa] text-[#1d4ed8] shadow-sm shadow-sky-200/60",
+  Suivi:
+    "bg-gradient-to-r from-[#bbf7d0] via-[#86efac] to-[#4ade80] text-[#166534] shadow-sm shadow-emerald-200/60",
+};
+
+const RISK_BADGE_CLASSES: Record<RiskLevel, string> = {
+  Élevé:
+    "bg-gradient-to-r from-[#fed7aa] via-[#fb923c] to-[#f97316] text-[#7c2d12]",
+  Modéré:
+    "bg-gradient-to-r from-[#fde68a] via-[#facc15] to-[#fbbf24] text-[#78350f]",
+  Standard:
+    "bg-gradient-to-r from-[#bfdbfe] via-[#93c5fd] to-[#60a5fa] text-[#1d4ed8]",
+};
+
+const SERVICE_BADGE_CLASS =
+  "border border-sky-200 bg-sky-100 text-sky-700 shadow-sm shadow-sky-200/60";
+const PATIENT_ID_BADGE_CLASS =
+  "border border-violet-200 bg-gradient-to-r from-[#ede9fe] via-[#ddd6fe] to-[#e9d5ff] text-[#4c1d95] shadow-sm shadow-violet-100/70";
 
 function formatFullDate(dateString: string) {
   return new Intl.DateTimeFormat("fr-FR", {
@@ -99,6 +123,7 @@ export default function PatientsPage() {
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(
     null,
   );
+  const [isMobilePreviewOpen, setIsMobilePreviewOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [editPatient, setEditPatient] = useState<Patient | null>(null);
   const [editForm, setEditForm] = useState<Patient | null>(null);
@@ -118,6 +143,12 @@ export default function PatientsPage() {
       setSelectedPatientId(null);
     }
   }, [patientsData, selectedPatientId]);
+
+  useEffect(() => {
+    if (!selectedPatientId) {
+      setIsMobilePreviewOpen(false);
+    }
+  }, [selectedPatientId]);
 
   const totalPages = Math.max(
     1,
@@ -193,6 +224,238 @@ export default function PatientsPage() {
       ? 0
       : Math.min(currentPage * PAGE_SIZE, patientsData.length);
 
+  const renderPreviewContent = (variant: "desktop" | "mobile") => {
+    if (patientsLoading) {
+      return (
+        <div className="flex h-64 items-center justify-center">
+          <Spinner label="Analyse du dossier patient..." />
+        </div>
+      );
+    }
+
+    if (patientsData.length === 0) {
+      return (
+        <EmptyState
+          icon={UserRound}
+          title="Aucun profil disponible"
+          description="Importez ou créez un dossier patient pour afficher les informations détaillées."
+          action={
+            variant === "desktop" ? (
+              <Button
+                variant="primary"
+                onClick={() => router.push("/patients/dossier?mode=create")}
+              >
+                Créer un patient
+              </Button>
+            ) : null
+          }
+        />
+      );
+    }
+
+    if (!selectedPatient) {
+      return (
+        <EmptyState
+          icon={UserRound}
+          title="Sélectionnez un patient"
+          description="Choisissez un dossier dans la liste pour afficher sa synthèse."
+        />
+      );
+    }
+
+    const statusBadgeClass = STATUS_BADGE_CLASSES[selectedPatient.status];
+    const riskBadgeClass = RISK_BADGE_CLASSES[selectedPatient.riskLevel];
+
+    return (
+      <div className="flex flex-col gap-6 pb-6">
+        <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-5">
+            <div className="flex items-start gap-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#22d3ee] text-white shadow-lg shadow-indigo-200/60">
+                <UserRound className="h-8 w-8" />
+              </div>
+              <div className="flex flex-col gap-2">
+                <h2 className="text-xl font-semibold text-slate-900">
+                  {selectedPatient.name}
+                </h2>
+                <p className="text-sm text-slate-600">
+                  {formatFullDate(selectedPatient.birthDate)} · {selectedPatient.age} ans
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Badge className="bg-indigo-100 text-indigo-700">
+                    {selectedPatient.id}
+                  </Badge>
+                  <Badge
+                    className={cn(
+                      "px-3 py-1 text-xs font-semibold",
+                      SERVICE_BADGE_CLASS,
+                    )}
+                  >
+                    {selectedPatient.service}
+                  </Badge>
+                  <Badge
+                    className={cn(
+                      "px-3 py-1 text-xs font-semibold",
+                      statusBadgeClass,
+                    )}
+                  >
+                    {selectedPatient.status}
+                  </Badge>
+                  <Badge
+                    className={cn(
+                      "px-3 py-1 text-xs font-semibold",
+                      riskBadgeClass,
+                    )}
+                  >
+                    Risque {selectedPatient.riskLevel}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-full border border-indigo-200 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700"
+                onClick={() =>
+                  router.push(`/patients/dossier?id=${selectedPatient.id}`)
+                }
+              >
+                Visiter dossier
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-3xl border border-slate-200/70 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-5">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-indigo-500">
+                Diagnostic principal
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Badge className="bg-indigo-100 text-indigo-700">
+                  {selectedPatient.diagnosis.code}
+                </Badge>
+                <span className="text-base text-slate-700">
+                  {selectedPatient.diagnosis.label}
+                </span>
+              </div>
+            </div>
+            <div className="space-y-4 text-sm text-slate-700">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-500">
+                  Identifiant patient
+                </p>
+                <p className="mt-1 text-sm font-semibold text-slate-800">
+                  {selectedPatient.id}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-500">
+                  Suivi prévu
+                </p>
+                <p className="mt-1 text-sm font-semibold text-slate-800">
+                  {selectedPatient.nextVisit}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="space-y-6">
+          <HistorySection
+            title="ATCDs médicaux"
+            tags={selectedPatient.histories.medical}
+          />
+          <HistorySection
+            title="ATCDs chirurgicaux"
+            tags={selectedPatient.histories.surgical}
+          />
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-slate-800">
+              Autres éléments
+            </h3>
+            <div className="mt-4 space-y-4">
+              {selectedPatient.histories.other.map((group) => (
+                <div key={group.label} className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {group.label}
+                  </p>
+                  <TagGroup tags={group.values} emptyLabel="Non renseigné" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+            <header className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+                <CalendarDays className="h-4 w-4 text-indigo-500" />
+                Observations
+              </div>
+              <span className="text-xs text-slate-500">
+                {sortedObservations.length} entrée(s)
+              </span>
+            </header>
+            {latestObservation ? (
+              <div className="mt-4 rounded-2xl border border-indigo-100 bg-indigo-50/70 p-4 text-sm text-slate-700 shadow-inner">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wide text-indigo-600">
+                  <span>{formatObservationDate(latestObservation.timestamp)}</span>
+                  <span className="text-indigo-400">
+                    {formatRelativeTimeFromNow(latestObservation.timestamp)}
+                  </span>
+                </div>
+                <p className="mt-3 whitespace-pre-line leading-relaxed">
+                  {latestObservation.note}
+                </p>
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-slate-500">
+                Aucune observation enregistrée pour ce patient.
+              </p>
+            )}
+            {otherObservations.length > 0 ? (
+              <div className="mt-4">
+                <ObservationTimeline
+                  entries={otherObservations}
+                  className="max-h-52 rounded-xl border border-slate-200/80 bg-white/70 px-4 py-4"
+                  emptyMessage="Pas d'autres observations."
+                />
+              </div>
+            ) : null}
+          </section>
+
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-slate-800">
+              Consignes et actions
+            </h3>
+            {selectedPatient.instructions.length > 0 ? (
+              <ul className="mt-4 space-y-3 text-sm text-slate-700">
+                {selectedPatient.instructions.map((instruction) => (
+                  <li
+                    key={instruction}
+                    className="flex items-start gap-3 rounded-lg bg-slate-50/80 px-3.5 py-2.5 leading-relaxed"
+                  >
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                    <span>{instruction}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-3 text-sm text-slate-500">
+                Aucune consigne particulière pour le moment.
+              </p>
+            )}
+          </section>
+        </div>
+      </div>
+    );
+  };
+
+
   return (
     <div className="space-y-6">
       <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -219,7 +482,38 @@ export default function PatientsPage() {
         </div>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[3fr_2fr]">
+      <div
+        className={cn(
+          "fixed inset-0 z-40 bg-slate-900/20 backdrop-blur-[2px] transition-opacity duration-300 xl:hidden",
+          isMobilePreviewOpen ? "opacity-100" : "pointer-events-none opacity-0",
+        )}
+        onClick={() => setIsMobilePreviewOpen(false)}
+      />
+      <div
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex w-full max-w-md flex-col rounded-r-3xl border border-violet-200/60 bg-white shadow-2xl shadow-indigo-200/60 transition-transform duration-300 xl:hidden",
+          isMobilePreviewOpen
+            ? "translate-x-0"
+            : "pointer-events-none -translate-x-full",
+        )}
+      >
+        <div className="flex items-center justify-between border-b border-violet-100/70 px-5 py-4">
+          <p className="text-sm font-semibold text-[#352f72]">Dossier patient</p>
+          <button
+            type="button"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
+            onClick={() => setIsMobilePreviewOpen(false)}
+            aria-label="Fermer l&apos;aperçu patient"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto px-5 py-4">
+          {renderPreviewContent("mobile")}
+        </div>
+      </div>
+
+      <section className="grid gap-6 xl:grid-cols-[3fr_2fr]">
         <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-md">
           {patientsLoading ? (
             <div className="flex h-64 items-center justify-center">
@@ -243,7 +537,7 @@ export default function PatientsPage() {
             </div>
           ) : (
             <>
-              <div className="flex-1 overflow-auto">
+              <div className="flex-1 overflow-x-auto overflow-y-auto">
                 <table className="min-w-full divide-y divide-slate-200 bg-white text-left text-sm">
                   <thead className="bg-slate-50">
                     <tr>
@@ -251,16 +545,13 @@ export default function PatientsPage() {
                         Patient
                       </th>
                       <th className="px-4 py-3 font-medium text-slate-500">
-                        Service
+                        ID patient
                       </th>
                       <th className="px-4 py-3 font-medium text-slate-500">
                         Statut
                       </th>
                       <th className="px-4 py-3 font-medium text-slate-500">
                         CIM
-                      </th>
-                      <th className="px-4 py-3 font-medium text-slate-500">
-                        Prochain contact
                       </th>
                       <th className="px-4 py-3 text-right font-medium text-slate-500">
                         Actions
@@ -271,34 +562,51 @@ export default function PatientsPage() {
                     {paginatedPatients.map((patient) => (
                       <tr
                         key={patient.id}
-                        onClick={() => setSelectedPatientId(patient.id)}
+                        onClick={() => {
+                          setSelectedPatientId(patient.id);
+                          if (typeof window !== "undefined" && window.innerWidth < 1280) {
+                            setIsMobilePreviewOpen(true);
+                          }
+                        }}
                         className={cn(
                           "cursor-pointer transition hover:bg-indigo-50/60",
                           selectedPatientId === patient.id && "bg-indigo-50/80",
                         )}
                       >
                         <td className="px-4 py-3">
-                          <div className="flex flex-col">
+                          <div className="flex flex-col gap-2">
                             <span className="font-medium text-slate-800">
                               {patient.name}
                             </span>
-                            <span className="text-xs text-slate-500">
-                              {patient.age} ans · {patient.id}
-                            </span>
+                            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                              <span>{patient.age} ans</span>
+                              <Badge
+                                className={cn(
+                                  "px-2.5 py-1 text-[11px] font-semibold",
+                                  SERVICE_BADGE_CLASS,
+                                )}
+                              >
+                                {patient.service}
+                              </Badge>
+                            </div>
                           </div>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-slate-600">
-                          {patient.service}
                         </td>
                         <td className="px-4 py-3">
                           <Badge
-                            variant={
-                              patient.status === "Hospitalisé"
-                                ? "warning"
-                                : patient.status === "Suivi"
-                                ? "success"
-                                : "muted"
-                            }
+                            className={cn(
+                              "px-3 py-1 text-xs font-semibold",
+                              PATIENT_ID_BADGE_CLASS,
+                            )}
+                          >
+                            {patient.id}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge
+                            className={cn(
+                              "px-3 py-1 text-xs font-semibold",
+                              STATUS_BADGE_CLASSES[patient.status],
+                            )}
                           >
                             {patient.status}
                           </Badge>
@@ -312,9 +620,6 @@ export default function PatientsPage() {
                               {patient.diagnosis.label}
                             </span>
                           </div>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-slate-600">
-                          {patient.nextVisit}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-end gap-2">
@@ -390,240 +695,9 @@ export default function PatientsPage() {
           )}
         </div>
 
-        <Card className="h-full">
-          <CardContent className="flex h-full flex-col gap-6 pt-6">
-            {patientsLoading ? (
-              <div className="flex h-64 items-center justify-center">
-                <Spinner label="Analyse du dossier patient..." />
-              </div>
-            ) : patientsData.length === 0 ? (
-              <EmptyState
-                icon={UserRound}
-                title="Aucun profil disponible"
-                description="Importez ou créez un dossier patient pour afficher les informations détaillées."
-                action={
-                  <Button
-                    variant="primary"
-                    onClick={() => router.push("/patients/dossier?mode=create")}
-                  >
-                    Créer un patient
-                  </Button>
-                }
-              />
-            ) : !selectedPatient ? (
-              <EmptyState
-                icon={UserRound}
-                title="Sélectionnez un patient"
-                description="Cliquez sur une ligne du tableau pour prévisualiser le dossier détaillé."
-              />
-            ) : (
-              <>
-                <div className="flex flex-col gap-8">
-                  <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-700/60 dark:bg-slate-900/40 sm:p-7">
-                    <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                      <div className="flex items-center gap-5">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 shadow-inner shadow-indigo-200 dark:bg-indigo-500/20 dark:text-indigo-100">
-                          <UserRound className="h-8 w-8" />
-                        </div>
-                        <div className="space-y-2">
-                          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
-                            {selectedPatient.name}
-                          </h2>
-                          <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
-                            <span>
-                              {formatFullDate(selectedPatient.birthDate)} · {selectedPatient.age} ans
-                            </span>
-                            <Badge
-                              variant="muted"
-                              className="border border-indigo-100 bg-indigo-50 text-indigo-700 dark:border-indigo-500/40 dark:bg-indigo-500/15 dark:text-indigo-100"
-                            >
-                              {selectedPatient.id}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-3 text-sm text-slate-600 dark:text-slate-300 sm:flex-row sm:items-center sm:gap-4 lg:items-end lg:text-right">
-                        <div className="flex flex-col gap-1 sm:text-right">
-                          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                            Prochain contact
-                          </span>
-                          <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
-                            {selectedPatient.nextVisit}
-                          </span>
-                        </div>
-                        <span className="hidden h-5 w-px bg-slate-200 sm:block dark:bg-slate-700" />
-                        <div className="flex items-center gap-2">
-                          <Badge
-                            variant={
-                              selectedPatient.status === "Hospitalisé"
-                                ? "warning"
-                                : selectedPatient.status === "Suivi"
-                                ? "success"
-                                : "muted"
-                            }
-                          >
-                            {selectedPatient.status}
-                          </Badge>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-9 px-3 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 dark:text-indigo-200 dark:hover:bg-indigo-500/20"
-                            onClick={() =>
-                              router.push(`/patients/dossier?id=${selectedPatient.id}`)
-                            }
-                          >
-                            Visiter dossier
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-6 grid gap-5 md:grid-cols-2">
-                      <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-5 dark:border-slate-700/60 dark:bg-slate-900/60">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-indigo-500 dark:text-indigo-200">
-                          Diagnostic principal
-                        </p>
-                        <div className="mt-3 flex flex-wrap items-center gap-3">
-                          <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-100">
-                            {selectedPatient.diagnosis.code}
-                          </Badge>
-                          <span className="text-base text-slate-700 dark:text-slate-200">
-                            {selectedPatient.diagnosis.label}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="grid gap-4 rounded-2xl border border-slate-200/70 bg-white/90 p-5 text-sm text-slate-700 dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-slate-200">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                              Service référent
-                            </p>
-                            <p className="mt-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
-                              {selectedPatient.service}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                              Niveau de risque
-                            </p>
-                            <p className="mt-2 inline-flex items-center gap-2 font-medium">
-                              <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs text-amber-800 dark:bg-amber-500/20 dark:text-amber-100">
-                                {selectedPatient.riskLevel}
-                              </span>
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                              Identifiant
-                            </p>
-                            <p className="mt-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
-                              {selectedPatient.id}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                              Statut clinique
-                            </p>
-                            <p className="mt-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
-                              {selectedPatient.status}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </section>
-
-                  <div className="grid gap-6 lg:grid-cols-2">
-                    <HistorySection
-                      title="ATCDs médicaux"
-                      tags={selectedPatient.histories.medical}
-                    />
-                    <HistorySection
-                      title="ATCDs chirurgicaux"
-                      tags={selectedPatient.histories.surgical}
-                    />
-                    <div className="rounded-2xl border border-slate-200/80 bg-white/95 p-5 shadow-sm dark:border-slate-700/60 dark:bg-slate-900/40">
-                      <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                        Autres éléments
-                      </h3>
-                      <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                        {selectedPatient.histories.other.map((group) => (
-                          <div key={group.label} className="space-y-2">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                              {group.label}
-                            </p>
-                            <TagGroup tags={group.values} emptyLabel="Non renseigné" />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-                    <section className="rounded-2xl border border-slate-200/80 bg-white/95 p-5 shadow-sm dark:border-slate-700/60 dark:bg-slate-900/40">
-                      <header className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
-                          <CalendarDays className="h-4 w-4 text-indigo-500 dark:text-indigo-200" />
-                          Observations
-                        </div>
-                        <span className="text-xs text-slate-500 dark:text-slate-300">
-                          {sortedObservations.length} entrée(s)
-                        </span>
-                      </header>
-                      {latestObservation ? (
-                        <div className="mt-4 rounded-2xl border border-indigo-100 bg-indigo-50/70 p-4 text-sm text-slate-700 shadow-inner dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-slate-200">
-                          <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-200">
-                            <span>{formatObservationDate(latestObservation.timestamp)}</span>
-                            <span className="text-indigo-400 dark:text-indigo-200/80">
-                              {formatRelativeTimeFromNow(latestObservation.timestamp)}
-                            </span>
-                          </div>
-                          <p className="mt-3 whitespace-pre-line leading-relaxed">
-                            {latestObservation.note}
-                          </p>
-                        </div>
-                      ) : (
-                        <p className="mt-3 text-sm text-slate-500 dark:text-slate-300">
-                          Aucune observation enregistrée pour ce patient.
-                        </p>
-                      )}
-                      {otherObservations.length > 0 ? (
-                        <div className="mt-4">
-                          <ObservationTimeline
-                            entries={otherObservations}
-                            className="max-h-52 rounded-xl border border-slate-200/80 bg-white/70 px-4 py-4 dark:border-slate-700/60 dark:bg-slate-900/50"
-                            emptyMessage="Pas d'autres observations."
-                          />
-                        </div>
-                      ) : null}
-                    </section>
-
-                    <section className="rounded-2xl border border-slate-200/80 bg-white/95 p-5 shadow-sm dark:border-slate-700/60 dark:bg-slate-900/40">
-                      <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                        Consignes et actions
-                      </h3>
-                      {selectedPatient.instructions.length > 0 ? (
-                        <ul className="mt-4 space-y-3 text-sm text-slate-700 dark:text-slate-200">
-                          {selectedPatient.instructions.map((instruction) => (
-                            <li
-                              key={instruction}
-                              className="flex items-start gap-3 rounded-lg bg-slate-50/80 px-3.5 py-2.5 leading-relaxed dark:bg-slate-800/50"
-                            >
-                              <span className="mt-1 h-1.5 w-1.5 rounded-full bg-indigo-500 dark:bg-indigo-300" />
-                              <span>{instruction}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="mt-3 text-sm text-slate-500 dark:text-slate-300">
-                          Aucune consigne particulière pour le moment.
-                        </p>
-                      )}
-                    </section>
-                  </div>
-                </div>
-              </>
-            )}
+        <Card className="hidden h-full xl:block">
+          <CardContent className="h-full overflow-y-auto pt-6">
+            {renderPreviewContent("desktop")}
           </CardContent>
         </Card>
       </section>
@@ -681,7 +755,7 @@ export default function PatientsPage() {
                 }
               />
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <label
                   htmlFor="edit-status"
@@ -708,26 +782,6 @@ export default function PatientsPage() {
                   <option value="Consultation">Consultation</option>
                   <option value="Suivi">Suivi</option>
                 </select>
-              </div>
-              <div className="space-y-2">
-                <label
-                  htmlFor="edit-next-visit"
-                  className="text-sm font-medium text-[#221b5b]"
-                >
-                  Prochain contact
-                </label>
-                <input
-                  id="edit-next-visit"
-                  className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-[#7c3aed] focus:outline-none focus:ring-2 focus:ring-[#dcd0ff]"
-                  value={editForm.nextVisit}
-                  onChange={(event) =>
-                    setEditForm((previous) =>
-                      previous
-                        ? { ...previous, nextVisit: event.target.value }
-                        : previous,
-                    )
-                  }
-                />
               </div>
             </div>
             <div className="space-y-2">
@@ -837,8 +891,8 @@ function HistorySection({
   tags: string[];
 }) {
   return (
-    <section className="rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-sm dark:border-slate-700/60 dark:bg-slate-900/40">
-      <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+    <section className="rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-sm">
+      <h3 className="text-sm font-semibold text-slate-800">
         {title}
       </h3>
       <TagGroup tags={tags} emptyLabel="Aucun antécédent déclaré" />

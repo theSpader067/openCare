@@ -9,6 +9,7 @@ import {
   Search,
   Send,
   Stethoscope,
+  X,
 } from "lucide-react";
 import {
   Card,
@@ -237,6 +238,8 @@ export default function AvisPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [replyDraft, setReplyDraft] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
+  const [mobilePanelMode, setMobilePanelMode] = useState<"view" | "create" | null>(null);
   const [createForm, setCreateForm] = useState({
     patientId: "",
     service: serviceOptions[0] ?? "",
@@ -343,8 +346,29 @@ export default function AvisPage() {
     }
   };
 
+  const closeMobilePanel = () => {
+    setIsMobilePanelOpen(false);
+    setMobilePanelMode(null);
+  };
+
+  const openMobilePanel = (mode: "view" | "create") => {
+    setMobilePanelMode(mode);
+    setIsMobilePanelOpen(true);
+  };
+
+  const handleSelectAvis = (avisId: string) => {
+    setActiveAvisId(avisId);
+    if (typeof window !== "undefined" && window.innerWidth < 1280) {
+      openMobilePanel("view");
+    }
+  };
+
   const handleOpenCreateModal = () => {
     setCreateForm({ patientId: "", service: serviceOptions[0] ?? "", context: "", request: "" });
+    if (typeof window !== "undefined" && window.innerWidth < 1280) {
+      openMobilePanel("create");
+      return;
+    }
     setIsCreateModalOpen(true);
   };
 
@@ -372,11 +396,243 @@ export default function AvisPage() {
     setTimeout(() => {
       setAvisItems((previous) => [newAvis, ...previous]);
       setAvisMessages((previous) => ({ ...previous, [newAvis.id]: [] }));
+      if (typeof window !== "undefined" && window.innerWidth < 1280) {
+        setMobilePanelMode("view");
+        setIsMobilePanelOpen(true);
+      }
       setActiveAvisId(newAvis.id);
       setIsSubmitting(false);
       setIsCreateModalOpen(false);
     }, 350);
   };
+
+  const renderCreateFormContent = () => (
+    <div className="grid gap-4">
+      <div className="grid gap-2">
+        <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Patient
+        </label>
+        <select
+          value={createForm.patientId}
+          onChange={(event) =>
+            setCreateForm((prev) => ({ ...prev, patientId: event.target.value }))
+          }
+          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        >
+          <option value="">Sélectionner un patient…</option>
+          {patientsDirectory.map((patient) => (
+            <option key={patient.id} value={patient.id}>
+              {patient.name} · {patient.id}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="grid gap-2">
+        <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Service sollicité
+        </label>
+        <select
+          value={createForm.service}
+          onChange={(event) =>
+            setCreateForm((prev) => ({ ...prev, service: event.target.value }))
+          }
+          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        >
+          {serviceOptions.map((service) => (
+            <option key={service} value={service}>
+              {service}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="grid gap-2">
+        <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Contexte clinique
+        </label>
+        <textarea
+          value={createForm.context}
+          onChange={(event) =>
+            setCreateForm((prev) => ({ ...prev, context: event.target.value }))
+          }
+          rows={4}
+          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+          placeholder="Résumer les éléments clés du dossier : chronologie, examens déjà réalisés, points d'alerte…"
+        />
+      </div>
+
+      <div className="grid gap-2">
+        <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Question formulée
+        </label>
+        <textarea
+          value={createForm.request}
+          onChange={(event) =>
+            setCreateForm((prev) => ({ ...prev, request: event.target.value }))
+          }
+          rows={4}
+          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+          placeholder="Précisez l'avis attendu : option opératoire, adaptation thérapeutique, coordination avec un plateau technique, etc."
+        />
+      </div>
+    </div>
+  );
+
+  const detailView = !activeAvis ? (
+    <CardContent className="flex flex-1 items-center justify-center">
+      <EmptyState
+        icon={Stethoscope}
+        title="Sélectionnez un avis"
+        description="Choisissez une demande d'avis pour afficher le dossier associé et répondre."
+      />
+    </CardContent>
+  ) : (
+    <>
+      <CardHeader className="pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <CardTitle className="text-lg">
+              {activeAvis.patient.name} · {activeAvis.patient.id}
+            </CardTitle>
+            <CardDescription>
+              {activeAvis.service} — {formatDateTime(activeAvis.requestedAt)}
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push(`/patients/dossier?id=${activeAvis.patient.id}`)}
+            >
+              Voir dossier
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="flex flex-1 flex-col gap-5 pt-0">
+        <section className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
+          <header className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <ArrowLeftRight className="h-4 w-4" />
+            Informations patient
+          </header>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">
+                Service référent
+              </p>
+              <p className="mt-1 text-sm font-medium text-slate-800">
+                {activeAvis.patient.service}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">
+                Diagnostic
+              </p>
+              <p className="mt-1 text-sm font-medium text-slate-800">
+                {activeAvis.patient.diagnosis}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">
+                Sollicité par
+              </p>
+              <p className="mt-1 text-sm font-medium text-slate-800">
+                {activeAvis.direction === "incoming" ? activeAvis.requestedBy : "Notre service"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">
+                Dernière mise à jour
+              </p>
+              <p className="mt-1 text-sm font-medium text-slate-800">
+                {formatDateTime(activeAvis.seenAt ?? activeAvis.requestedAt)}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-2xl bg-white p-4 shadow-sm">
+          <header className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Contexte clinique
+          </header>
+          <p className="text-sm leading-relaxed text-slate-700">
+            {activeAvis.context}
+          </p>
+        </section>
+
+        <section className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
+          <header className="mb-2 text-xs font-semibold uppercase tracking-wide text-indigo-600">
+            Demande
+          </header>
+          <p className="text-sm leading-relaxed text-slate-700">
+            {activeAvis.request}
+          </p>
+        </section>
+
+        <section className="flex flex-1 flex-col rounded-2xl bg-amber-50/60 p-4 shadow-inner">
+          <header className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-700">
+            Réponse
+          </header>
+          {activeThread.length === 0 ? (
+            <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-amber-200/80 bg-white/70 px-4 py-6 text-sm text-amber-700">
+              Aucun échange enregistré pour l&apos;instant.
+            </div>
+          ) : (
+            <div className="flex-1 space-y-3 overflow-y-auto pr-1">
+              {activeThread.map((message) => {
+                const isOutgoing = message.direction === "outgoing";
+                return (
+                  <div
+                    key={message.id}
+                    className={cn(
+                      "max-w-[75%] rounded-2xl px-3 py-2 text-sm leading-relaxed shadow-sm",
+                      isOutgoing
+                        ? "ml-auto bg-indigo-600 text-white"
+                        : "mr-auto bg-white text-slate-700",
+                    )}
+                  >
+                    <div className="flex items-center justify-between gap-3 text-xs">
+                      <span className="font-semibold">
+                        {message.author}
+                      </span>
+                      <span className={cn(isOutgoing ? "text-indigo-100" : "text-slate-400")}>
+                        {formatDateTime(message.sentAt)}
+                      </span>
+                    </div>
+                    <p className={cn("mt-1", isOutgoing ? "text-indigo-100" : "text-slate-700")}>
+                      {message.content}
+                    </p>
+                  </div>
+                );
+              })}
+              <div ref={threadEndRef} />
+            </div>
+          )}
+        </section>
+
+        <div className="mt-auto space-y-3 rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
+          <textarea
+            value={replyDraft}
+            onChange={(event) => setReplyDraft(event.target.value)}
+            onKeyDown={handleReplyKeyDown}
+            className="min-h-[120px] w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            placeholder="Répondez à la demande : examens complémentaires, conduite à tenir, points de vigilance…"
+          />
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Button variant="ghost" size="sm">
+              <Paperclip className="mr-2 h-4 w-4" />
+              Joindre un document
+            </Button>
+            <Button variant="primary" size="sm" onClick={handleSubmitReply} disabled={!replyDraft.trim()}>
+              <Send className="mr-2 h-4 w-4" />
+              Envoyer la réponse
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </>
+  );
 
   return (
     <div className="flex h-full flex-col gap-6">
@@ -398,7 +654,7 @@ export default function AvisPage() {
       </section>
 
       <section className="grid flex-1 gap-6 xl:grid-cols-[1.3fr_2fr]">
-        <Card className="flex h-full flex-col border-none bg-white/95 dark:bg-slate-900/40">
+        <Card className="flex h-full flex-col border-none bg-white/95">
           <CardHeader className="space-y-4 pb-2">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2">
@@ -411,18 +667,18 @@ export default function AvisPage() {
                       "rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition",
                       filter === tab
                         ? "bg-indigo-600 text-white shadow"
-                        : "border border-slate-200 bg-white text-slate-600 hover:border-indigo-200 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-200",
+                        : "border border-slate-200 bg-white text-slate-600 hover:border-indigo-200",
                     )}
                   >
                     {tab === "all" ? "Tous" : tab === "incoming" ? "Reçus" : "Émis"}
                   </button>
                 ))}
               </div>
-              <Badge variant="muted" className="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-200">
+              <Badge variant="muted" className="bg-slate-100 text-slate-600">
                 {filteredAvis.length} avis
               </Badge>
             </div>
-            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200">
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
               <Search className="h-4 w-4 text-slate-400" />
               <input
                 value={searchTerm}
@@ -456,32 +712,32 @@ export default function AvisPage() {
                             "w-full rounded-2xl border px-4 py-4 text-left shadow-sm transition",
                             "hover:-translate-y-[1px] hover:shadow-md",
                             isActive
-                              ? "border-indigo-200 bg-indigo-50/80 dark:border-indigo-500/40 dark:bg-indigo-500/10"
-                              : "border-slate-200 bg-white dark:border-slate-700/60 dark:bg-slate-900/40",
+                              ? "border-indigo-200 bg-indigo-50/80"
+                              : "border-slate-200 bg-white",
                           )}
                         >
                           <div className="flex flex-wrap items-start justify-between gap-3">
                             <div className="space-y-1">
-                              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                              <p className="text-sm font-semibold text-slate-800">
                                 {avis.service}
                               </p>
-                              <p className="text-xs text-slate-500 dark:text-slate-300">
+                              <p className="text-xs text-slate-500">
                                 {directionLabel} {avis.direction === "incoming" ? avis.requestedBy : ""}
                               </p>
                             </div>
-                            <span className="text-xs text-slate-400 dark:text-slate-300">
+                            <span className="text-xs text-slate-400">
                               {formatDateTime(avis.requestedAt)}
                             </span>
                           </div>
-                          <div className="mt-3 rounded-xl border border-slate-200/70 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-300">
-                            <p className="font-semibold text-slate-700 dark:text-slate-200">
+                          <div className="mt-3 rounded-xl border border-slate-200/70 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                            <p className="font-semibold text-slate-700">
                               {avis.patient.name} · {avis.patient.id}
                             </p>
-                            <p className="text-xs text-slate-500 dark:text-slate-300">
+                            <p className="text-xs text-slate-500">
                               {avis.patient.diagnosis}
                             </p>
                           </div>
-                          <p className="mt-3 text-sm text-slate-600 dark:text-slate-200">
+                          <p className="mt-3 text-sm text-slate-600">
                             {avis.summary}
                           </p>
                         </button>
@@ -494,7 +750,7 @@ export default function AvisPage() {
           </CardContent>
         </Card>
 
-        <Card className="flex h-full flex-col border-none bg-white/95 dark:bg-slate-900/40">
+        <Card className="flex h-full flex-col border-none bg-white/95">
           {!activeAvis ? (
             <CardContent className="flex flex-1 items-center justify-center">
               <EmptyState
@@ -527,71 +783,71 @@ export default function AvisPage() {
                 </div>
               </CardHeader>
               <CardContent className="flex flex-1 flex-col gap-5 pt-0">
-                <section className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm dark:border-slate-700/60 dark:bg-slate-900/40">
-                  <header className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+                <section className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
+                  <header className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
                     <ArrowLeftRight className="h-4 w-4" />
                     Informations patient
                   </header>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      <p className="text-xs uppercase tracking-wide text-slate-500">
                         Service référent
                       </p>
-                      <p className="mt-1 text-sm font-medium text-slate-800 dark:text-slate-100">
+                      <p className="mt-1 text-sm font-medium text-slate-800">
                         {activeAvis.patient.service}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      <p className="text-xs uppercase tracking-wide text-slate-500">
                         Diagnostic
                       </p>
-                      <p className="mt-1 text-sm font-medium text-slate-800 dark:text-slate-100">
+                      <p className="mt-1 text-sm font-medium text-slate-800">
                         {activeAvis.patient.diagnosis}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      <p className="text-xs uppercase tracking-wide text-slate-500">
                         Sollicité par
                       </p>
-                      <p className="mt-1 text-sm font-medium text-slate-800 dark:text-slate-100">
+                      <p className="mt-1 text-sm font-medium text-slate-800">
                         {activeAvis.direction === "incoming" ? activeAvis.requestedBy : "Notre service"}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      <p className="text-xs uppercase tracking-wide text-slate-500">
                         Dernière mise à jour
                       </p>
-                      <p className="mt-1 text-sm font-medium text-slate-800 dark:text-slate-100">
+                      <p className="mt-1 text-sm font-medium text-slate-800">
                         {formatDateTime(activeAvis.seenAt ?? activeAvis.requestedAt)}
                       </p>
                     </div>
                   </div>
                 </section>
 
-                <section className="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-900/40">
-                  <header className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+                <section className="rounded-2xl bg-white p-4 shadow-sm">
+                  <header className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
                     Contexte clinique
                   </header>
-                  <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-200">
+                  <p className="text-sm leading-relaxed text-slate-700">
                     {activeAvis.context}
                   </p>
                 </section>
 
-                <section className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm dark:border-slate-700/60 dark:bg-slate-900/40">
-                  <header className="mb-2 text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-200">
+                <section className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
+                  <header className="mb-2 text-xs font-semibold uppercase tracking-wide text-indigo-600">
                     Demande
                   </header>
-                  <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-200">
+                  <p className="text-sm leading-relaxed text-slate-700">
                     {activeAvis.request}
                   </p>
                 </section>
 
-                <section className="flex flex-1 flex-col rounded-2xl bg-amber-50/60 p-4 shadow-inner dark:bg-amber-500/15">
-                  <header className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-200">
+                <section className="flex flex-1 flex-col rounded-2xl bg-amber-50/60 p-4 shadow-inner">
+                  <header className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-700">
                     Réponse
                   </header>
                   {activeThread.length === 0 ? (
-                    <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-amber-200/80 bg-white/70 px-4 py-6 text-sm text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-100">
+                    <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-amber-200/80 bg-white/70 px-4 py-6 text-sm text-amber-700">
                       Aucun échange enregistré pour l&apos;instant.
                     </div>
                   ) : (
@@ -605,18 +861,18 @@ export default function AvisPage() {
                               "max-w-[75%] rounded-2xl px-3 py-2 text-sm leading-relaxed shadow-sm",
                               isOutgoing
                                 ? "ml-auto bg-indigo-600 text-white"
-                                : "mr-auto bg-white text-slate-700 dark:bg-slate-800/80 dark:text-slate-200",
+                                : "mr-auto bg-white text-slate-700",
                             )}
                           >
                             <div className="flex items-center justify-between gap-3 text-xs">
                               <span className="font-semibold">
                                 {message.author}
                               </span>
-                              <span className={cn(isOutgoing ? "text-indigo-100" : "text-slate-400 dark:text-slate-400")}>
+                              <span className={cn(isOutgoing ? "text-indigo-100" : "text-slate-400")}>
                                 {formatDateTime(message.sentAt)}
                               </span>
                             </div>
-                            <p className={cn("mt-1", isOutgoing ? "text-indigo-100" : "text-slate-700 dark:text-slate-200")}>{message.content}</p>
+                            <p className={cn("mt-1", isOutgoing ? "text-indigo-100" : "text-slate-700")}>{message.content}</p>
                           </div>
                         );
                       })}
@@ -625,12 +881,12 @@ export default function AvisPage() {
                   )}
                 </section>
 
-                <div className="mt-auto space-y-3 rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm dark:border-slate-700/60 dark:bg-slate-900/40">
+                <div className="mt-auto space-y-3 rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
                   <textarea
                     value={replyDraft}
                     onChange={(event) => setReplyDraft(event.target.value)}
                     onKeyDown={handleReplyKeyDown}
-                    className="min-h-[120px] w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-200"
+                    className="min-h-[120px] w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                     placeholder="Répondez à la demande : examens complémentaires, conduite à tenir, points de vigilance…"
                   />
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -673,7 +929,7 @@ export default function AvisPage() {
       >
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Patient
             </label>
             <select
@@ -681,7 +937,7 @@ export default function AvisPage() {
               onChange={(event) =>
                 setCreateForm((prev) => ({ ...prev, patientId: event.target.value }))
               }
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-200"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
             >
               <option value="">Sélectionner un patient…</option>
               {patientsDirectory.map((patient) => (
@@ -693,7 +949,7 @@ export default function AvisPage() {
           </div>
 
           <div className="grid gap-2">
-            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Service sollicité
             </label>
             <select
@@ -701,7 +957,7 @@ export default function AvisPage() {
               onChange={(event) =>
                 setCreateForm((prev) => ({ ...prev, service: event.target.value }))
               }
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-200"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
             >
               {serviceOptions.map((service) => (
                 <option key={service} value={service}>
@@ -712,7 +968,7 @@ export default function AvisPage() {
           </div>
 
           <div className="grid gap-2">
-            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Contexte clinique
             </label>
             <textarea
@@ -721,13 +977,13 @@ export default function AvisPage() {
                 setCreateForm((prev) => ({ ...prev, context: event.target.value }))
               }
               rows={4}
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-200"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
               placeholder="Résumer les éléments clés du dossier : chronologie, examens déjà réalisés, points d'alerte…"
             />
           </div>
 
           <div className="grid gap-2">
-            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Question formulée
             </label>
             <textarea
@@ -736,7 +992,7 @@ export default function AvisPage() {
                 setCreateForm((prev) => ({ ...prev, request: event.target.value }))
               }
               rows={4}
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-200"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
               placeholder="Précisez l&apos;avis attendu : option opératoire, adaptation thérapeutique, coordination avec un plateau technique, etc."
             />
           </div>

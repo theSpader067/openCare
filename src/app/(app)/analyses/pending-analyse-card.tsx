@@ -1,8 +1,9 @@
 "use client";
 
-import { Clock, Download, User } from "lucide-react";
+import { Clock, Download, User, Camera, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 type Analyse = {
   id: string;
@@ -12,6 +13,12 @@ type Analyse = {
   requestedDate: string;
   requester: string;
   status: "En cours" | "Terminée" | "Urgent";
+  bilanCategory: "bilan" | "imagerie" | "anapath" | "autres";
+  pendingTests?: Array<{
+    id: string;
+    label: string;
+    value?: string;
+  }>;
 };
 
 const statusConfig: Record<
@@ -44,80 +51,264 @@ function formatAnalyseDateTime(date: string) {
   }).format(new Date(date));
 }
 
-export function PendingAnalyseCard({ analyse }: { analyse: Analyse }) {
+export function PendingAnalyseCard({
+  analyse,
+  onCompleted,
+}: {
+  analyse: Analyse;
+  onCompleted?: (analyse: Analyse, testValues: Record<string, string>) => void;
+}) {
   const config = statusConfig[analyse.status];
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [testValues, setTestValues] = useState<Record<string, string>>(
+    analyse.pendingTests?.reduce((acc, test) => {
+      acc[test.id] = test.value || "";
+      return acc;
+    }, {} as Record<string, string>) || {}
+  );
+  const [textareaResults, setTextareaResults] = useState("");
+
+  const handleTestValueChange = (testId: string, value: string) => {
+    setTestValues((prev) => ({ ...prev, [testId]: value }));
+  };
+
+  const categoryBadgeMap: Record<"bilan" | "imagerie" | "anapath" | "autres", { label: string; color: string }> = {
+    bilan: { label: "Bilan", color: "bg-violet-500/15 text-violet-700" },
+    imagerie: { label: "Imagerie", color: "bg-blue-500/15 text-blue-700" },
+    anapath: { label: "Anapath", color: "bg-pink-500/15 text-pink-700" },
+    autres: { label: "Autres", color: "bg-slate-500/15 text-slate-700" },
+  };
 
   return (
-    <div
-      className={cn(
-        "group relative overflow-hidden rounded-2xl border border-slate-200/80 shadow-sm transition-all duration-200",
-        config.bg,
-      )}
-    >
-      {/* Status Indicator Bar */}
-      <div className={cn("absolute left-0 top-0 h-full w-1", config.indicator)} />
+    <>
+      <div
+        className={cn(
+          "group relative overflow-hidden rounded-2xl border border-slate-200/80 shadow-sm transition-all duration-200 hover:shadow-md",
+          config.bg,
+        )}
+      >
+        {/* Status Indicator Bar */}
+        <div className={cn("absolute left-0 top-0 h-full w-1", config.indicator)} />
 
-      <div className="pl-5 pr-4 py-4">
-        {/* Header */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex-1 space-y-2">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
-                <User className="h-5 w-5" />
+        <div className="px-4 py-3">
+          {/* Main Content */}
+          <div className="flex items-center justify-between gap-3">
+            {/* Patient and Type */}
+            <div className="flex-1 min-w-0 space-y-1">
+              <h3 className="text-sm font-semibold text-slate-900 truncate">
+                {analyse.patient}
+              </h3>
+              <p className="text-xs text-slate-500 truncate">
+                {analyse.type}
+              </p>
+            </div>
+
+            {/* Date and Status */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="text-right">
+                <p className="text-xs text-slate-500">
+                  {formatAnalyseDateTime(analyse.requestedDate)}
+                </p>
               </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-base font-semibold text-slate-900 truncate">
-                  {analyse.patient}
-                </h3>
-                <p className="text-sm text-slate-600 mt-0.5">{analyse.type}</p>
-              </div>
+              <span
+                className={cn(
+                  "inline-flex items-center rounded-full border px-2 py-1 text-xs font-semibold whitespace-nowrap",
+                  config.badge,
+                )}
+              >
+                {analyse.status}
+              </span>
             </div>
           </div>
 
-          <span
-            className={cn(
-              "inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold whitespace-nowrap",
-              config.badge,
-            )}
-          >
-            {analyse.status}
-          </span>
-        </div>
-
-        {/* Info Grid */}
-        <div className="mt-4 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100">
-            <Clock className="h-5 w-5 text-indigo-600" />
+          {/* Actions */}
+          <div className="mt-3 flex justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 rounded-full text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 text-xs"
+              onClick={() => setIsModalOpen(true)}
+            >
+              Voir détails
+            </Button>
           </div>
-          <div className="flex-1 min-w-0 space-y-0.5">
-            <p className="text-sm font-semibold text-indigo-600">
-              {analyse.id}
-            </p>
-            <p className="text-sm text-slate-600 truncate">
-              {formatAnalyseDateTime(analyse.requestedDate)}
-            </p>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="mt-4 flex flex-col gap-2 border-t border-slate-200/60 pt-4 sm:flex-row sm:justify-end">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-9 rounded-full text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700"
-          >
-            Voir détails
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 rounded-full border-slate-300 text-slate-700 hover:bg-slate-50"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Télécharger
-          </Button>
         </div>
       </div>
-    </div>
+
+      {/* Modal - Portal to body */}
+      {isModalOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-[60] bg-slate-900/20 backdrop-blur-sm"
+            onClick={() => setIsModalOpen(false)}
+          />
+
+          {/* Modal */}
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-1.5 sm:p-4 pointer-events-auto">
+            <div className="w-full max-w-2xl rounded-3xl bg-white shadow-2xl flex flex-col max-h-80vh h-80vh">
+              {/* Header */}
+              <div className="flex items-start justify-between border-b border-slate-200 px-3 py-2 sm:px-6 sm:py-4">
+                <div>
+                  <h2 className="text-base sm:text-lg font-semibold text-slate-900">
+                    Détails de l'analyse
+                  </h2>
+                </div>
+                <div className="flex items-center gap-1 sm:gap-2">
+
+                  <button
+                    type="button"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition"
+                    onClick={() => setIsModalOpen(false)}
+                    aria-label="Fermer"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto px-3 py-2 sm:px-6 sm:py-4 space-y-2 sm:space-y-4 sm:space-y-6">
+                {/* Order Details */}
+                <div className="space-y-2 sm:space-y-3 sm:space-y-4 pb-2 sm:pb-4 border-b border-slate-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 sm:gap-4">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
+                        Patient
+                      </p>
+                      <p className="text-xs sm:text-sm font-semibold text-slate-900 mt-1">
+                        {analyse.patient}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
+                        Titre
+                      </p>
+                      <p className="text-xs sm:text-sm font-semibold text-slate-900 mt-1">
+                        {analyse.type}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
+                        Date de demande
+                      </p>
+                      <p className="text-xs sm:text-sm font-semibold text-slate-900 mt-1">
+                        {formatAnalyseDateTime(analyse.requestedDate)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
+                        Numéro d'ordre
+                      </p>
+                      <p className="text-xs sm:text-sm font-semibold text-slate-900 mt-1">
+                        {analyse.id}
+                      </p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
+                        Type
+                      </p>
+                      <div className="mt-1">
+                        <span className={cn(
+                          "inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold",
+                          categoryBadgeMap[analyse.bilanCategory].color,
+                        )}>
+                          {categoryBadgeMap[analyse.bilanCategory].label}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Saisie des résultats - Adapted to type */}
+                <div>
+                  <div className="flex justify-between items-center w-full gap-2">
+                    <h3 className="text-xs sm:text-sm font-semibold text-slate-900">
+                      Saisie des résultats
+                    </h3>
+                    <button
+                      onClick={() => {}}
+                      className="inline-flex align-end h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition flex-shrink-0"
+                      title="Prendre une photo"
+                    >
+                      <Camera className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <hr className="my-2 sm:my-3" />
+
+                  {/* Bilan: Test inputs */}
+                  {analyse.bilanCategory === "bilan" ? (
+                    analyse.pendingTests && analyse.pendingTests.length > 0 ? (
+                      <div className="space-y-2 sm:space-y-3 sm:space-y-4">
+                        {analyse.pendingTests.map((test) => (
+                          <div key={test.id} className="flex items-center gap-2 sm:gap-3">
+                            <label className="flex-1 text-xs sm:text-sm font-medium text-slate-700">
+                              {test.label}
+                            </label>
+                            <input
+                              type="text"
+                              value={testValues[test.id] || ""}
+                              onChange={(e) =>
+                                handleTestValueChange(test.id, e.target.value)
+                              }
+                              placeholder="–"
+                              maxLength={4}
+                              className="w-12 sm:w-16 border-b border-slate-300 bg-transparent px-2 py-1 text-xs sm:text-sm text-slate-700 focus:outline-none focus:border-indigo-500 focus:border-b-2 transition"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-slate-600">Aucun test en attente</p>
+                    )
+                  ) : (
+                    // Imagerie or Anapath: Textarea
+                    <textarea
+                      value={textareaResults}
+                      onChange={(e) => setTextareaResults(e.target.value)}
+                      placeholder="Décrivez les résultats et observations..."
+                      rows={4}
+                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs sm:text-sm text-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition"
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="border-t border-slate-200 px-3 py-2 sm:px-6 sm:py-4 flex gap-2 justify-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={
+                    analyse.bilanCategory === "bilan"
+                      ? !analyse.pendingTests ||
+                        analyse.pendingTests.some((test) => !testValues[test.id]?.trim())
+                      : !textareaResults.trim()
+                  }
+                  onClick={() => {
+                    if (onCompleted) {
+                      const resultsToPass = analyse.bilanCategory === "bilan"
+                        ? testValues
+                        : { results: textareaResults };
+                      onCompleted(analyse, resultsToPass);
+                    }
+                    setIsModalOpen(false);
+                  }}
+                >
+                  Enregistrer
+                </Button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </>
   );
 }

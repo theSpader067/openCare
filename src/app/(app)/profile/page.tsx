@@ -53,6 +53,50 @@ interface TeamMember {
   teamMembers?: TeamMemberUser[];
 }
 
+interface JoinRequest {
+  id: string;
+  residentId: string;
+  residentName: string;
+  residentAvatar: string;
+  residentRole: string;
+  teamId: string;
+  teamName: string;
+  requestDate: string;
+}
+
+const pendingJoinRequests: JoinRequest[] = [
+  {
+    id: "REQ-001",
+    residentId: "RES-01",
+    residentName: "Dr. Léa Martin",
+    residentAvatar: "LM",
+    residentRole: "Interne",
+    teamId: "TEAM-001",
+    teamName: "Service Urologie B",
+    requestDate: "2024-11-05",
+  },
+  {
+    id: "REQ-002",
+    residentId: "RES-03",
+    residentName: "Dr. Hugo Tessier",
+    residentAvatar: "HT",
+    residentRole: "Interne senior",
+    teamId: "TEAM-002",
+    teamName: "Chirurgie digestive",
+    requestDate: "2024-11-04",
+  },
+  {
+    id: "REQ-003",
+    residentId: "RES-05",
+    residentName: "Dr. Maxime Benali",
+    residentAvatar: "MB",
+    residentRole: "Interne",
+    teamId: "TEAM-001",
+    teamName: "Service Urologie B",
+    requestDate: "2024-11-03",
+  },
+];
+
 const availableTeams: TeamMember[] = [
   {
     id: "TEAM-001",
@@ -229,10 +273,15 @@ export default function ProfilePage() {
 
   // Create team modal
   const [isCreateTeamOpen, setIsCreateTeamOpen] = useState(false);
+  const [selectedTeamName, setSelectedTeamName] = useState("");
   const [selectedHospital, setSelectedHospital] = useState("");
   const [selectedService, setSelectedService] = useState("");
   const [isCreatingTeam, setIsCreatingTeam] = useState(false);
   const [teamCreated, setTeamCreated] = useState(false);
+
+  // Join requests
+  const [joinRequests, setJoinRequests] = useState(pendingJoinRequests);
+  const [isRequestsPanelOpen, setIsRequestsPanelOpen] = useState(false);
 
   // Personal info form
   const [personalInfo, setPersonalInfo] = useState(userProfile);
@@ -251,7 +300,7 @@ export default function ProfilePage() {
   };
 
   const handleCreateTeam = async () => {
-    if (!selectedHospital || !selectedService) return;
+    if (!selectedTeamName || !selectedHospital || !selectedService) return;
 
     setIsCreatingTeam(true);
     // Simulate API call to check if service exists
@@ -259,11 +308,10 @@ export default function ProfilePage() {
 
     // Simulate successful team creation
     const serviceName = services.find((s) => s.id === selectedService)?.name || "";
-    const hospitalName = hospitals.find((h) => h.id === selectedHospital)?.name || "";
 
     const newTeam: TeamMember = {
       id: `TEAM-${Date.now()}`,
-      name: `${serviceName} - ${hospitalName}`,
+      name: selectedTeamName,
       description: `Équipe créée pour ${serviceName}`,
       members: 1,
       joined: true,
@@ -279,11 +327,21 @@ export default function ProfilePage() {
 
     // Reset form after 1.5 seconds
     setTimeout(() => {
+      setSelectedTeamName("");
       setSelectedHospital("");
       setSelectedService("");
       setTeamCreated(false);
       setIsCreateTeamOpen(false);
     }, 1500);
+  };
+
+  const handleAcceptJoinRequest = (requestId: string) => {
+    setJoinRequests(joinRequests.filter((req) => req.id !== requestId));
+    // In a real app, this would add the resident to the team
+  };
+
+  const handleDeclineJoinRequest = (requestId: string) => {
+    setJoinRequests(joinRequests.filter((req) => req.id !== requestId));
   };
 
   const filteredTeams = teams.filter(
@@ -518,6 +576,281 @@ export default function ProfilePage() {
       {/* Équipes Tab */}
       {activeTab === "equipes" && (
         <div className="space-y-6">
+          {/* Create Team Button - Top */}
+          <div className="flex gap-3">
+            <Button
+              variant="primary"
+              onClick={() => setIsCreateTeamOpen(true)}
+              className="h-10 flex-shrink-0"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Créer une équipe
+            </Button>
+          </div>
+
+          {/* Mobile Search Bar - Always visible */}
+          <div className="lg:hidden">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Rechercher une équipe..."
+                value={searchTeams}
+                onChange={(e) => setSearchTeams(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              />
+            </div>
+
+            {/* Mobile Search Results */}
+            {searchTeams && (
+              <div className="space-y-4 mt-4">
+                {filteredTeams
+                  .filter((team) => !team.joined)
+                  .length > 0 ? (
+                  filteredTeams
+                    .filter((team) => !team.joined)
+                    .map((team) => (
+                    <div
+                      key={team.id}
+                      className="rounded-2xl border border-slate-200 hover:border-indigo-300 transition overflow-hidden"
+                    >
+                      <div className="p-4 flex items-start justify-between">
+                        <div>
+                          <p className="font-medium text-slate-900">{team.name}</p>
+                          <p className="text-sm text-slate-600">{team.description}</p>
+                          <p className="text-xs text-slate-500 mt-2">{team.members} membres</p>
+                        </div>
+                        {team.requestPending ? (
+                          <Badge className="bg-amber-100 text-amber-700 border-amber-200 h-fit flex-shrink-0">
+                            <Clock className="h-3 w-3 mr-1" />
+                            En attente
+                          </Badge>
+                        ) : (
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => handleJoinTeam(team.id)}
+                            className="h-8 flex-shrink-0"
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Rejoindre
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    ))
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <p className="text-sm">Aucune équipe trouvée</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Large Screen Dynamic Search */}
+          <div className="hidden lg:block">
+            <Card className="border-none bg-white/90">
+              <CardHeader>
+                <CardTitle>Rechercher des équipes</CardTitle>
+                <CardDescription>Trouvez et rejoignez d'autres équipes (tapez pour rechercher)</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Rechercher une équipe..."
+                    value={searchTeams}
+                    onChange={(e) => setSearchTeams(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                  />
+                </div>
+
+                {/* Large Screen Search Results - Only show when searching */}
+                {searchTeams && (
+                  <div className="space-y-4">
+                    {filteredTeams
+                      .filter((team) => !team.joined)
+                      .length > 0 ? (
+                      filteredTeams
+                        .filter((team) => !team.joined)
+                        .map((team) => (
+                          <div
+                            key={team.id}
+                            className="rounded-2xl border border-slate-200 hover:border-indigo-300 transition overflow-hidden"
+                          >
+                            <div className="p-4 flex items-start justify-between">
+                              <div>
+                                <p className="font-medium text-slate-900">{team.name}</p>
+                                <p className="text-sm text-slate-600">{team.description}</p>
+                                <p className="text-xs text-slate-500 mt-2">{team.members} membres</p>
+                              </div>
+                              {team.requestPending ? (
+                                <Badge className="bg-amber-100 text-amber-700 border-amber-200 h-fit flex-shrink-0">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  En attente
+                                </Badge>
+                              ) : (
+                                <Button
+                                  variant="primary"
+                                  size="sm"
+                                  onClick={() => handleJoinTeam(team.id)}
+                                  className="h-8 flex-shrink-0"
+                                >
+                                  <Plus className="h-3 w-3 mr-1" />
+                                  Rejoindre
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                    ) : (
+                      <div className="text-center py-8 text-slate-500">
+                        <p className="text-sm">Aucune équipe trouvée</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {!searchTeams && (
+                  <div className="text-center py-8 text-slate-500">
+                    <p className="text-sm">Commencez à taper pour rechercher des équipes</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Pending Join Requests Panel - Large Screen */}
+          {joinRequests.length > 0 && (
+            <div className="hidden lg:block">
+              <Card className="border-none bg-white/90 border-l-4 border-l-amber-500">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-amber-600" />
+                    Demandes d'adhésion en attente
+                  </CardTitle>
+                  <CardDescription>Residents demandant à rejoindre votre équipe</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {joinRequests.map((request) => (
+                    <div
+                      key={request.id}
+                      className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-amber-200 hover:bg-amber-50/50 transition"
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
+                          {request.residentAvatar}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-900 truncate">
+                            {request.residentName}
+                          </p>
+                          <p className="text-xs text-slate-600">
+                            {request.residentRole} • {request.teamName}
+                          </p>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            Demandé le {new Date(request.requestDate).toLocaleDateString("fr-FR")}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 flex-shrink-0">
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleAcceptJoinRequest(request.id)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeclineJoinRequest(request.id)}
+                          className="h-8 w-8 p-0 text-rose-600 hover:bg-rose-50"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Sliding Panel for Requests - Mobile */}
+          {isRequestsPanelOpen && joinRequests.length > 0 && (
+            <div className="lg:hidden space-y-3 p-4 rounded-2xl border border-amber-200 bg-amber-50">
+              <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+                <Clock className="h-4 w-4 text-amber-600" />
+                Demandes d'adhésion ({joinRequests.length})
+              </h3>
+              {joinRequests.map((request) => (
+                <div
+                  key={request.id}
+                  className="flex flex-col gap-2 p-3 rounded-lg bg-white border border-amber-100"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
+                      {request.residentAvatar}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-slate-900 truncate">
+                        {request.residentName}
+                      </p>
+                      <p className="text-xs text-slate-600">
+                        {request.residentRole}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-600 pl-10">
+                    {request.teamName}
+                  </p>
+                  <div className="flex gap-2 mt-2">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => handleAcceptJoinRequest(request.id)}
+                      className="flex-1 h-8"
+                    >
+                      <Check className="h-3 w-3 mr-1" />
+                      Accepter
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeclineJoinRequest(request.id)}
+                      className="flex-1 h-8 text-rose-600 hover:bg-rose-50"
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Refuser
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Join Requests Badge for Mobile - Collapsible trigger */}
+          {joinRequests.length > 0 && (
+            <div className="lg:hidden">
+              <button
+                onClick={() => setIsRequestsPanelOpen(!isRequestsPanelOpen)}
+                className="w-full flex items-center justify-between p-4 rounded-2xl border border-amber-200 bg-amber-50 hover:bg-amber-100 transition"
+              >
+                <div className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-amber-600" />
+                  <span className="font-medium text-amber-900">
+                    {joinRequests.length} demande{joinRequests.length > 1 ? "s" : ""} en attente
+                  </span>
+                </div>
+                <span className="text-amber-600">{isRequestsPanelOpen ? "▼" : "▶"}</span>
+              </button>
+            </div>
+          )}
+
           {/* My Teams */}
           {userTeams.map((team) => (
             <Card key={team.id} className="border-none bg-white/90">
@@ -571,72 +904,6 @@ export default function ProfilePage() {
             </Card>
           ))}
 
-          {/* Lookup Teams */}
-          <Card className="border-none bg-white/90">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Rechercher des équipes</CardTitle>
-                <CardDescription>Trouvez et rejoignez d'autres équipes</CardDescription>
-              </div>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => setIsCreateTeamOpen(true)}
-                className="h-9 flex-shrink-0"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Créer
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Rechercher une équipe..."
-                  value={searchTeams}
-                  onChange={(e) => setSearchTeams(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                />
-              </div>
-
-              <div className="space-y-4">
-                {filteredTeams
-                  .filter((team) => !team.joined)
-                  .map((team) => (
-                    <div
-                      key={team.id}
-                      className="rounded-2xl border border-slate-200 hover:border-indigo-300 transition overflow-hidden"
-                    >
-                      <div className="p-4 flex items-start justify-between">
-                        <div>
-                          <p className="font-medium text-slate-900">{team.name}</p>
-                          <p className="text-sm text-slate-600">{team.description}</p>
-                          <p className="text-xs text-slate-500 mt-2">{team.members} membres</p>
-                        </div>
-                        {team.requestPending ? (
-                          <Badge className="bg-amber-100 text-amber-700 border-amber-200 h-fit flex-shrink-0">
-                            <Clock className="h-3 w-3 mr-1" />
-                            En attente
-                          </Badge>
-                        ) : (
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => handleJoinTeam(team.id)}
-                            className="h-8 flex-shrink-0"
-                          >
-                            <Plus className="h-3 w-3 mr-1" />
-                            Rejoindre
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Create Team Modal */}
           {isCreateTeamOpen && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
@@ -646,6 +913,7 @@ export default function ProfilePage() {
                   <button
                     onClick={() => {
                       setIsCreateTeamOpen(false);
+                      setSelectedTeamName("");
                       setSelectedHospital("");
                       setSelectedService("");
                       setTeamCreated(false);
@@ -678,6 +946,17 @@ export default function ProfilePage() {
                   {/* Form State */}
                   {!isCreatingTeam && !teamCreated && (
                     <>
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-slate-700">Nom de l'équipe</label>
+                        <input
+                          type="text"
+                          value={selectedTeamName}
+                          onChange={(e) => setSelectedTeamName(e.target.value)}
+                          placeholder="Ex. Chirurgie B"
+                          className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                        />
+                      </div>
+
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-slate-700">Hôpital</label>
                         <select
@@ -715,6 +994,7 @@ export default function ProfilePage() {
                           variant="ghost"
                           onClick={() => {
                             setIsCreateTeamOpen(false);
+                            setSelectedTeamName("");
                             setSelectedHospital("");
                             setSelectedService("");
                           }}
@@ -725,7 +1005,7 @@ export default function ProfilePage() {
                         <Button
                           variant="primary"
                           onClick={handleCreateTeam}
-                          disabled={!selectedHospital || !selectedService}
+                          disabled={!selectedTeamName || !selectedHospital || !selectedService}
                           className="flex-1"
                         >
                           Créer l'équipe

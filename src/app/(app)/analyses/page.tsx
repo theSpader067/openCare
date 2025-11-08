@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ComponentType } from "react";
-import { Activity, Beaker, Download, FlaskConical, List, Search, ClipboardList, X } from "lucide-react";
+import { Activity, Beaker, Download, FlaskConical, List, Search, ClipboardList, X, Plus } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -15,6 +15,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
+import type { Patient } from "@/types/document";
 
 import { HistoryFilters } from "./history-filters";
 import { PendingAnalyseCard } from "./pending-analyse-card";
@@ -27,6 +28,12 @@ type Analyse = {
   requestedDate: string;
   requester: string;
   status: "En cours" | "Terminée" | "Urgent";
+  bilanCategory: "bilan" | "imagerie" | "anapath" | "autres";
+  pendingTests?: Array<{
+    id: string;
+    label: string;
+    value?: string;
+  }>;
 };
 
 type AnalyseDetail = {
@@ -69,10 +76,11 @@ function deriveRequestedDate(label: string): string {
   return base.toISOString();
 }
 
-function withRequestedDate(data: Omit<Analyse, "requestedDate">): Analyse {
+function withRequestedDate(data: Omit<Analyse, "requestedDate" | "bilanCategory">): Analyse {
   return {
     ...data,
     requestedDate: deriveRequestedDate(data.requestedAt),
+    bilanCategory: bilanTypeMap[data.type] || "bilan",
   };
 }
 
@@ -91,6 +99,42 @@ const statusBadgeMap: Record<Analyse["status"], string> = {
   Urgent: "bg-rose-500/15 text-rose-700",
 };
 
+const bilanTypeMap: Record<string, "bilan" | "imagerie" | "anapath"> = {
+  // Bilans - Blood tests
+  "Gaz du sang artériel": "bilan",
+  "Bilan de coagulation": "bilan",
+  "Groupage sanguin": "bilan",
+  "Lactates sanguins": "bilan",
+  "Dosage protéinurie": "bilan",
+  "Fer sérique + Ferritine": "bilan",
+  "Bilan hépatique": "bilan",
+  "HbA1c": "bilan",
+  "Bilan ionogramme": "bilan",
+  "NFS": "bilan",
+  "CRP": "bilan",
+  "Dosage INR": "bilan",
+  "Test allergologique": "bilan",
+  "Bilan pré-chimiothérapie": "bilan",
+  "Numération plaquettaire": "bilan",
+  // Imagerie - Imaging
+  "TDM TAP": "imagerie",
+  "TDM abdominopelvien": "imagerie",
+  "Rx thorax": "imagerie",
+  "Échographie abdominale": "imagerie",
+  "Radiographie": "imagerie",
+  // Anapath - Anatomical pathology
+  "Biopsie": "anapath",
+  "Cytoponction": "anapath",
+  "Analyse histologique": "anapath",
+};
+
+const bilanCategoryBadgeMap: Record<"bilan" | "imagerie" | "anapath" | "autres", { label: string; color: string }> = {
+  bilan: { label: "Bilan", color: "bg-violet-500/15 text-violet-700" },
+  imagerie: { label: "Imagerie", color: "bg-blue-500/15 text-blue-700" },
+  anapath: { label: "Anapath", color: "bg-pink-500/15 text-pink-700" },
+  autres: { label: "Autres", color: "bg-slate-500/15 text-slate-700" },
+};
+
 const pendingSeed: Analyse[] = [
   withRequestedDate({
     id: "LAB-00093",
@@ -99,6 +143,12 @@ const pendingSeed: Analyse[] = [
     requestedAt: "Aujourd'hui · 08:45",
     requester: "Dr. Dupont",
     status: "Urgent",
+    pendingTests: [
+      { id: "test-1", label: "pH" },
+      { id: "test-2", label: "pO2" },
+      { id: "test-3", label: "pCO2" },
+      { id: "test-4", label: "HCO3-" },
+    ],
   }),
   withRequestedDate({
     id: "LAB-00094",
@@ -107,6 +157,11 @@ const pendingSeed: Analyse[] = [
     requestedAt: "Aujourd'hui · 09:05",
     requester: "Dr. Lambert",
     status: "En cours",
+    pendingTests: [
+      { id: "test-5", label: "TP/INR" },
+      { id: "test-6", label: "TCA" },
+      { id: "test-7", label: "Fibrinogène" },
+    ],
   }),
   withRequestedDate({
     id: "LAB-00095",
@@ -115,6 +170,11 @@ const pendingSeed: Analyse[] = [
     requestedAt: "Aujourd'hui · 07:25",
     requester: "Bloc opératoire",
     status: "En cours",
+    pendingTests: [
+      { id: "test-8", label: "Groupe ABO" },
+      { id: "test-9", label: "Rhésus D" },
+      { id: "test-10", label: "Anticorps irréguliers" },
+    ],
   }),
   withRequestedDate({
     id: "LAB-00096",
@@ -123,6 +183,10 @@ const pendingSeed: Analyse[] = [
     requestedAt: "Aujourd'hui · 09:40",
     requester: "Réanimation",
     status: "Urgent",
+    pendingTests: [
+      { id: "test-11", label: "Lactate" },
+      { id: "test-12", label: "Pyruvate" },
+    ],
   }),
   withRequestedDate({
     id: "LAB-00097",
@@ -131,6 +195,11 @@ const pendingSeed: Analyse[] = [
     requestedAt: "Aujourd'hui · 06:55",
     requester: "Maternité",
     status: "En cours",
+    pendingTests: [
+      { id: "test-13", label: "Protéinurie 24h" },
+      { id: "test-14", label: "Créatinine urinaire" },
+      { id: "test-15", label: "Rapport protéines/créatinine" },
+    ],
   }),
   withRequestedDate({
     id: "LAB-00098",
@@ -139,6 +208,12 @@ const pendingSeed: Analyse[] = [
     requestedAt: "Hier · 23:15",
     requester: "Médecine interne",
     status: "En cours",
+    pendingTests: [
+      { id: "test-16", label: "Fer sérique" },
+      { id: "test-17", label: "Ferritine" },
+      { id: "test-18", label: "Transferrine" },
+      { id: "test-19", label: "Coefficient de saturation" },
+    ],
   }),
 ];
 
@@ -427,10 +502,27 @@ function useSectionData<T>(seed: T[], delay = 600) {
 }
 
 export default function AnalysesPage() {
-  const { data: pendingAnalyses, isLoading: pendingLoading } =
-    useSectionData(pendingSeed, 700);
-  const { data: historyAnalyses, isLoading: historyLoading } =
-    useSectionData(historySeed, 900);
+  const [pendingAnalyses, setPendingAnalyses] = useState<Analyse[]>([]);
+  const [historyAnalyses, setHistoryAnalyses] = useState<Analyse[]>([]);
+  const [pendingLoading, setPendingLoading] = useState(true);
+  const [historyLoading, setHistoryLoading] = useState(true);
+
+  useEffect(() => {
+    const pendingTimer = setTimeout(() => {
+      setPendingAnalyses(pendingSeed);
+      setPendingLoading(false);
+    }, 700);
+
+    const historyTimer = setTimeout(() => {
+      setHistoryAnalyses(historySeed);
+      setHistoryLoading(false);
+    }, 900);
+
+    return () => {
+      clearTimeout(pendingTimer);
+      clearTimeout(historyTimer);
+    };
+  }, []);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [historyFilters, setHistoryFilters] = useState({
@@ -440,6 +532,24 @@ export default function AnalysesPage() {
     to: "",
   });
   const PAGE_SIZE = 8;
+
+  const handleAnalysisCompleted = (analyse: Analyse, testValues: Record<string, string>) => {
+    // Move from pending to history with Terminée status
+    const completedAnalysis: Analyse = {
+      ...analyse,
+      status: "Terminée",
+      pendingTests: analyse.pendingTests?.map((test) => ({
+        ...test,
+        value: testValues[test.id],
+      })),
+    };
+
+    // Remove from pending
+    setPendingAnalyses((prev) => prev.filter((a) => a.id !== analyse.id));
+
+    // Add to history
+    setHistoryAnalyses((prev) => [completedAnalysis, ...prev]);
+  };
 
   const uniqueHistoryTypes = useMemo(
     () => Array.from(new Set(historyAnalyses.map((analyse) => analyse.type))).sort(),
@@ -513,13 +623,104 @@ export default function AnalysesPage() {
   const [selectedBilan, setSelectedBilan] = useState<Analyse | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [isPendingPanelOpen, setIsPendingPanelOpen] = useState(false);
+  const [patientMode, setPatientMode] = useState<"select" | "new">("select");
+  const [patientSearch, setPatientSearch] = useState("");
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [newPatientForm, setNewPatientForm] = useState({
+    fullName: "",
+    histoire: "",
+  });
   const [newRequestForm, setNewRequestForm] = useState({
-    type: "",
+    category: "" as "bilan" | "imagerie" | "anapath" | "autres" | "",
+    name: "",
     patient: "",
-    priority: "En cours" as Analyse["status"],
-    requester: "",
     comment: "",
   });
+
+  // Mock patient data
+  const mockPatients: Patient[] = [
+    { id: "P-001", fullName: "Fatou Diop", histoire: "Patiente hospitalisée pour obésité morbide." },
+    { id: "P-002", fullName: "Louis Martin", histoire: "Patient suivi pour diabète type 2." },
+    { id: "P-003", fullName: "Maria Alvarez", histoire: "Patiente en suivi cardiaque régulier." },
+    { id: "P-004", fullName: "Jules Bernard", histoire: "Patient en réanimation, critères SOFA élevés." },
+    { id: "P-005", fullName: "Awa Ndiaye", histoire: "Patiente enceinte, suivi régulier." },
+    { id: "P-006", fullName: "Inès Boucher", histoire: "Patiente avec anémie ferriprive." },
+  ];
+
+  const filteredPatients = useMemo(() => {
+    const query = patientSearch.trim().toLowerCase();
+    if (!query) {
+      return mockPatients;
+    }
+    return mockPatients.filter((patient) => {
+      return (
+        patient.fullName.toLowerCase().includes(query) ||
+        patient.histoire.toLowerCase().includes(query)
+      );
+    });
+  }, [patientSearch]);
+
+  const handleSelectPatient = (patient: Patient) => {
+    setSelectedPatient(patient);
+    setNewRequestForm((prev) => ({ ...prev, patient: patient.fullName }));
+    setPatientMode("select");
+    setPatientSearch("");
+  };
+
+  const handleCreateNewPatient = () => {
+    if (!newPatientForm.fullName.trim()) {
+      return;
+    }
+    const newPatient: Patient = {
+      id: `P-${Date.now()}`,
+      fullName: newPatientForm.fullName,
+      histoire: newPatientForm.histoire,
+    };
+    setSelectedPatient(newPatient);
+    setNewRequestForm((prev) => ({ ...prev, patient: newPatient.fullName }));
+    setNewPatientForm({ fullName: "", histoire: "" });
+    setPatientMode("select");
+  };
+
+  const handleSaveNewDemande = () => {
+    if (!newRequestForm.category || !newRequestForm.name || !newRequestForm.patient) {
+      return;
+    }
+
+    // Create new analysis record
+    const newAnalyse: Analyse = {
+      id: `LAB-${String(Math.floor(Math.random() * 100000)).padStart(5, "0")}`,
+      patient: newRequestForm.patient,
+      type: newRequestForm.name,
+      requestedAt: "Aujourd'hui",
+      requestedDate: new Date().toISOString(),
+      requester: "Current User",
+      status: "En cours",
+      bilanCategory: newRequestForm.category as "bilan" | "imagerie" | "anapath" | "autres",
+      pendingTests: newRequestForm.category === "bilan"
+        ? [
+            { id: "test-1", label: "Test 1" },
+            { id: "test-2", label: "Test 2" },
+          ]
+        : undefined,
+    };
+
+    // Add to pending analyses
+    setPendingAnalyses((prev) => [newAnalyse, ...prev]);
+
+    // Close modal and reset form
+    setCreateModalOpen(false);
+    setPatientMode("select");
+    setPatientSearch("");
+    setNewPatientForm({ fullName: "", histoire: "" });
+    setSelectedPatient(null);
+    setNewRequestForm({
+      category: "",
+      name: "",
+      patient: "",
+      comment: "",
+    });
+  };
 
   const selectedDetails = selectedBilan
     ? analyseDetails[selectedBilan.id]
@@ -640,55 +841,6 @@ export default function AnalysesPage() {
         </div>
       </section>
 
-      <section className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        {statsByCategory.map((card) => {
-          const Icon = card.icon;
-          return (
-            <div
-              key={card.key}
-              className={cn(
-                "relative flex flex-col justify-between overflow-hidden rounded-xl sm:rounded-2xl border border-slate-200 bg-white/95 p-3 sm:p-4 md:p-5 shadow-sm",
-                "bg-gradient-to-br",
-                card.gradient,
-              )}
-            >
-              <div className="flex items-start sm:items-center gap-2 sm:gap-3">
-                <span
-                  className={cn(
-                    "flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-xl shadow-inner flex-shrink-0",
-                    card.iconBg,
-                  )}
-                >
-                  <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
-                </span>
-                <div className="text-xs sm:text-sm font-semibold uppercase tracking-wide text-slate-500 line-clamp-2">
-                  {card.label}
-                </div>
-              </div>
-              <div className="mt-3 sm:mt-4 md:mt-5 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4">
-                <div className="flex-1">
-                  <p className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
-                    {card.ongoing + card.completed}
-                  </p>
-                  <p className="text-xs text-slate-500 leading-snug mt-1 line-clamp-2">
-                    {card.ongoing + card.completed === 0
-                      ? "Aucune demande suivie actuellement."
-                      : `${card.ongoing + card.completed} demandes suivies dans cette spécialité.`}
-                  </p>
-                </div>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs font-semibold text-slate-500 flex-shrink-0">
-                  <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-sky-700 whitespace-nowrap">
-                    {card.ongoing} en cours
-                  </span>
-                  <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-emerald-700 whitespace-nowrap">
-                    {card.completed} récupérés
-                  </span>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </section>
 
       <section className="grid gap-6 xl:grid-cols-[3fr_1fr]">
         <Card className="flex h-fit flex-col overflow-hidden">
@@ -755,7 +907,10 @@ export default function AnalysesPage() {
                           Type
                         </th>
                         <th className="px-4 py-3 font-medium text-slate-500">
-                          Demande
+                          Type de bilan
+                        </th>
+                        <th className="px-4 py-3 font-medium text-slate-500">
+                          Date
                         </th>
                       </tr>
                     </thead>
@@ -774,6 +929,14 @@ export default function AnalysesPage() {
                           </td>
                           <td className="px-4 py-3 text-sm text-slate-600">
                             {analyse.type}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-slate-600">
+                            <span className={cn(
+                              "inline-flex items-center rounded-full border px-2 py-1 text-xs font-semibold",
+                              bilanCategoryBadgeMap[analyse.bilanCategory].color,
+                            )}>
+                              {bilanCategoryBadgeMap[analyse.bilanCategory].label}
+                            </span>
                           </td>
                           <td className="px-4 py-3 text-sm text-slate-600">
                             {formatAnalyseDateTime(analyse.requestedDate)}
@@ -852,7 +1015,11 @@ export default function AnalysesPage() {
               <div className="flex h-full flex-col overflow-hidden">
                 <div className="flex-1 space-y-3 overflow-y-auto pr-1">
                   {pendingAnalyses.map((analyse) => (
-                    <PendingAnalyseCard key={analyse.id} analyse={analyse} />
+                    <PendingAnalyseCard
+                      key={analyse.id}
+                      analyse={analyse}
+                      onCompleted={handleAnalysisCompleted}
+                    />
                   ))}
                 </div>
               </div>
@@ -874,7 +1041,7 @@ export default function AnalysesPage() {
       <div
         className={cn(
           "fixed inset-0 z-40 bg-slate-900/20 backdrop-blur-sm transition-opacity duration-300 xl:hidden",
-          isPendingPanelOpen ? "opacity-100" : "pointer-events-none opacity-0",
+          isPendingPanelOpen ? "opacity-100 pointer-events-auto" : "pointer-events-none opacity-0",
         )}
         onClick={() => setIsPendingPanelOpen(false)}
       />
@@ -882,7 +1049,7 @@ export default function AnalysesPage() {
       {/* Slide-in panel */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-full max-w-md flex-col rounded-r-3xl border-r border-slate-200 bg-white shadow-2xl transition-transform duration-300 xl:hidden",
+          "fixed inset-y-0 left-0 z-50 flex w-full max-w-md flex-col rounded-r-3xl border-r border-slate-200 bg-white shadow-2xl transition-transform duration-300 xl:hidden pointer-events-auto",
           isPendingPanelOpen
             ? "translate-x-0"
             : "pointer-events-none -translate-x-full",
@@ -904,7 +1071,7 @@ export default function AnalysesPage() {
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="flex-1 overflow-y-auto px-6 py-4 pb-24">
           {pendingLoading ? (
             <div className="flex h-64 items-center justify-center">
               <Spinner label="Connexion au laboratoire..." />
@@ -926,7 +1093,11 @@ export default function AnalysesPage() {
           ) : (
             <div className="space-y-3">
               {pendingAnalyses.map((analyse) => (
-                <PendingAnalyseCard key={analyse.id} analyse={analyse} />
+                <PendingAnalyseCard
+                  key={analyse.id}
+                  analyse={analyse}
+                  onCompleted={handleAnalysisCompleted}
+                />
               ))}
             </div>
           )}
@@ -949,121 +1120,149 @@ export default function AnalysesPage() {
         }
       >
         {selectedBilan ? (
-          <div className="space-y-4">
+          <div className="space-y-4 h-[65vh] overflow-y-auto flex flex-col">
             <div className="grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
               <p>
                 <span className="font-semibold text-slate-800">Demande :</span>{" "}
                 {formatAnalyseDateTime(selectedBilan.requestedDate)}
               </p>
-              <p>
-                <span className="font-semibold text-slate-800">Médecin :</span>{" "}
-                {selectedBilan.requester}
-              </p>
-              <p>
-                <span className="font-semibold text-slate-800">Statut :</span>{" "}
-                {selectedBilan.status}
-              </p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white/80 p-4">
-              <h3 className="text-sm font-semibold text-slate-800">
-                Résultats
-              </h3>
-              {selectedDetails ? (
-                <ul className="mt-3 space-y-2 text-sm text-slate-700">
-                  {selectedDetails.results.map((item) => (
-                    <li
-                      key={`${selectedBilan.id}-${item.label}`}
-                      className="flex items-center justify-between rounded-xl bg-indigo-50/40 px-3 py-2"
-                    >
-                      <span className="font-medium text-slate-800">
-                        {item.label}
-                      </span>
-                      <div className="text-right text-sm">
-                        <p className="font-semibold text-indigo-700">
-                          {item.value}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          Référence : {item.reference}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-3 text-sm text-slate-500">
-                  Les résultats détaillés ne sont pas disponibles pour ce bilan.
-                </p>
-              )}
-            </div>
-            {selectedDetails ? (
-              <div className="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-4 text-sm text-slate-700">
-                <h4 className="text-sm font-semibold text-indigo-700">
-                  Interprétation
-                </h4>
-                <p className="mt-2 leading-relaxed">
-                  {selectedDetails.interpretation}
-                </p>
-              </div>
-            ) : null}
-            {selectedDetails?.historicalValues && selectedDetails.historicalValues.length > 0 ? (
-              <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
-                <h3 className="text-sm font-semibold text-slate-800">
-                  Anciens résultats
-                </h3>
-                <div className="mt-3 space-y-3">
-                  {selectedDetails.historicalValues.map((history, index) => (
-                    <div
-                      key={`history-${index}`}
-                      className="rounded-xl border border-slate-200 bg-white p-3"
-                    >
-                      <p className="text-xs font-semibold text-slate-600 mb-2">
-                        {formatAnalyseDateTime(history.date)}
-                      </p>
-                      <ul className="space-y-1 text-xs">
-                        {history.results.map((item) => (
-                          <li
-                            key={`${index}-${item.label}`}
-                            className="flex items-center justify-between text-slate-700"
-                          >
-                            <span className="text-slate-600">{item.label}</span>
-                            <span className="font-medium text-slate-800">
+
+            {/* Content adapted by type */}
+            {selectedBilan.bilanCategory === "bilan" ? (
+              <>
+                {/* BILAN: Results table view */}
+                <div className="rounded-2xl border border-slate-200 bg-white/80 p-4">
+                  <h3 className="text-sm font-semibold text-slate-800">
+                    Résultats
+                  </h3>
+                  {selectedDetails ? (
+                    <ul className="mt-3 space-y-2 text-sm text-slate-700">
+                      {selectedDetails.results.map((item) => (
+                        <li
+                          key={`${selectedBilan.id}-${item.label}`}
+                          className="flex items-center justify-between rounded-xl bg-indigo-50/40 px-3 py-2"
+                        >
+                          <span className="font-medium text-slate-800">
+                            {item.label}
+                          </span>
+                          <div className="text-right text-sm">
+                            <p className="font-semibold text-indigo-700">
                               {item.value}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              Référence : {item.reference}
+                            </p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-3 text-sm text-slate-500">
+                      Les résultats détaillés ne sont pas disponibles pour ce bilan.
+                    </p>
+                  )}
                 </div>
-              </div>
-            ) : null}
+                {selectedDetails ? (
+                  <div className="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-4 text-sm text-slate-700">
+                    <h4 className="text-sm font-semibold text-indigo-700">
+                      Interprétation
+                    </h4>
+                    <p className="mt-2 leading-relaxed">
+                      {selectedDetails.interpretation}
+                    </p>
+                  </div>
+                ) : null}
+                {selectedDetails?.historicalValues && selectedDetails.historicalValues.length > 0 ? (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+                    <h3 className="text-sm font-semibold text-slate-800">
+                      Anciens résultats
+                    </h3>
+                    <div className="mt-3 space-y-3">
+                      {selectedDetails.historicalValues.map((history, index) => (
+                        <div
+                          key={`history-${index}`}
+                          className="rounded-xl border border-slate-200 bg-white p-3"
+                        >
+                          <p className="text-xs font-semibold text-slate-600 mb-2">
+                            {formatAnalyseDateTime(history.date)}
+                          </p>
+                          <ul className="space-y-1 text-xs">
+                            {history.results.map((item) => (
+                              <li
+                                key={`${index}-${item.label}`}
+                                className="flex items-center justify-between text-slate-700"
+                              >
+                                <span className="text-slate-600">{item.label}</span>
+                                <span className="font-medium text-slate-800">
+                                  {item.value}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <>
+                {/* IMAGERIE/ANAPATH/AUTRES: Report textarea view */}
+                <div className="flex-1 flex flex-col">
+                  <label className="text-sm font-semibold text-slate-800 mb-2">
+                    Rapport d'analyse
+                  </label>
+                  <textarea
+                    disabled
+                    value={selectedDetails?.interpretation || "Aucun rapport disponible pour le moment."}
+                    className="flex-1 w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 resize-none focus:outline-none"
+                  />
+                </div>
+              </>
+            )}
           </div>
         ) : null}
       </Modal>
 
       <Modal
         open={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
+        onClose={() => {
+          setCreateModalOpen(false);
+          setPatientMode("select");
+          setPatientSearch("");
+          setNewPatientForm({ fullName: "", histoire: "" });
+          setSelectedPatient(null);
+          setNewRequestForm({
+            category: "",
+            name: "",
+            patient: "",
+            comment: "",
+          });
+        }}
         title="Nouvelle demande d'analyse"
         description="Renseignez les informations nécessaires pour envoyer l'échantillon au laboratoire."
         footer={
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => setCreateModalOpen(false)}>
+            <Button variant="outline" onClick={() => {
+              setCreateModalOpen(false);
+              setPatientMode("select");
+              setPatientSearch("");
+              setNewPatientForm({ fullName: "", histoire: "" });
+              setSelectedPatient(null);
+              setNewRequestForm({
+                category: "",
+                name: "",
+                patient: "",
+                comment: "",
+              });
+            }}>
               Annuler
             </Button>
             <Button
               variant="primary"
-              onClick={() => {
-                setCreateModalOpen(false);
-                setNewRequestForm({
-                  type: "",
-                  patient: "",
-                  priority: "En cours",
-                  requester: "",
-                  comment: "",
-                });
-              }}
-              disabled={!newRequestForm.type || !newRequestForm.patient}
+              onClick={handleSaveNewDemande}
+              disabled={!newRequestForm.category || !newRequestForm.name || !newRequestForm.patient}
             >
               Enregistrer la demande
             </Button>
@@ -1071,92 +1270,186 @@ export default function AnalysesPage() {
         }
       >
         <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <label
-                htmlFor="new-request-type"
-                className="text-sm font-semibold text-[#221b5b]"
-              >
-                Type d&apos;analyse
-              </label>
-              <input
-                id="new-request-type"
-                className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-[#7c3aed] focus:outline-none focus:ring-2 focus:ring-[#dcd0ff]"
-                value={newRequestForm.type}
-                onChange={(event) =>
-                  setNewRequestForm((previous) => ({
-                    ...previous,
-                    type: event.target.value,
-                  }))
-                }
-                placeholder="Ex. Gaz du sang artériel"
-              />
-            </div>
-            <div className="space-y-2">
-              <label
-                htmlFor="new-request-patient"
-                className="text-sm font-semibold text-[#221b5b]"
-              >
-                Patient
-              </label>
-              <input
-                id="new-request-patient"
-                className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-[#7c3aed] focus:outline-none focus:ring-2 focus:ring-[#dcd0ff]"
-                value={newRequestForm.patient}
-                onChange={(event) =>
-                  setNewRequestForm((previous) => ({
-                    ...previous,
-                    patient: event.target.value,
-                  }))
-                }
-                placeholder="Nom et prénom"
-              />
-            </div>
+          {/* Category Selection */}
+          <div className="space-y-2">
+            <label
+              htmlFor="new-request-category"
+              className="text-sm font-semibold text-[#221b5b]"
+            >
+              Type d&apos;analyse
+            </label>
+            <select
+              id="new-request-category"
+              className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-[#7c3aed] focus:outline-none focus:ring-2 focus:ring-[#dcd0ff]"
+              value={newRequestForm.category}
+              onChange={(event) =>
+                setNewRequestForm((previous) => ({
+                  ...previous,
+                  category: event.target.value as "bilan" | "imagerie" | "anapath" | "autres" | "",
+                }))
+              }
+            >
+              <option value="">Sélectionner une catégorie</option>
+              <option value="bilan">Bilan</option>
+              <option value="imagerie">Imagerie</option>
+              <option value="anapath">Anapath</option>
+              <option value="autres">Autres</option>
+            </select>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <label
-                htmlFor="new-request-priority"
-                className="text-sm font-semibold text-[#221b5b]"
-              >
-                Priorité
-              </label>
-              <select
-                id="new-request-priority"
-                className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-[#7c3aed] focus:outline-none focus:ring-2 focus:ring-[#dcd0ff]"
-                value={newRequestForm.priority}
-                onChange={(event) =>
-                  setNewRequestForm((previous) => ({
-                    ...previous,
-                    priority: event.target.value as Analyse["status"],
-                  }))
-                }
-              >
-                <option value="En cours">Standard</option>
-                <option value="Urgent">Urgent</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label
-                htmlFor="new-request-owner"
-                className="text-sm font-semibold text-[#221b5b]"
-              >
-                Prescripteur
-              </label>
-              <input
-                id="new-request-owner"
-                className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-[#7c3aed] focus:outline-none focus:ring-2 focus:ring-[#dcd0ff]"
-                value={newRequestForm.requester}
-                onChange={(event) =>
-                  setNewRequestForm((previous) => ({
-                    ...previous,
-                    requester: event.target.value,
-                  }))
-                }
-                placeholder="Service ou médecin"
-              />
-            </div>
+
+          {/* Name d'analyse */}
+          <div className="space-y-2">
+            <label
+              htmlFor="new-request-name"
+              className="text-sm font-semibold text-[#221b5b]"
+            >
+              Nom de l&apos;analyse
+            </label>
+            <input
+              id="new-request-name"
+              className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-[#7c3aed] focus:outline-none focus:ring-2 focus:ring-[#dcd0ff]"
+              value={newRequestForm.name}
+              onChange={(event) =>
+                setNewRequestForm((previous) => ({
+                  ...previous,
+                  name: event.target.value,
+                }))
+              }
+              placeholder="Ex. Gaz du sang artériel"
+            />
           </div>
+
+          {/* Patient Selection */}
+          <div className="space-y-3">
+            <label className="text-sm font-semibold text-[#221b5b]">
+              Patient
+            </label>
+
+            {/* Mode Tabs */}
+            <div className="flex gap-2 border-b border-slate-200">
+              <button
+                type="button"
+                onClick={() => setPatientMode("select")}
+                className={cn(
+                  "px-4 py-2 text-sm font-medium border-b-2 transition",
+                  patientMode === "select"
+                    ? "border-indigo-600 text-indigo-600"
+                    : "border-transparent text-slate-600"
+                )}
+              >
+                Existants
+              </button>
+              <button
+                type="button"
+                onClick={() => setPatientMode("new")}
+                className={cn(
+                  "px-4 py-2 text-sm font-medium border-b-2 transition",
+                  patientMode === "new"
+                    ? "border-indigo-600 text-indigo-600"
+                    : "border-transparent text-slate-600"
+                )}
+              >
+                Nouveau
+              </button>
+            </div>
+
+            {/* Patient Mode Content */}
+            {patientMode === "select" ? (
+              <div className="space-y-3">
+                {/* Search Input */}
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-slate-50">
+                  <Search className="h-4 w-4 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Rechercher un patient..."
+                    value={patientSearch}
+                    onChange={(e) => setPatientSearch(e.target.value)}
+                    className="flex-1 bg-transparent text-sm text-slate-600 outline-none placeholder:text-slate-400"
+                  />
+                </div>
+                {/* Patients List */}
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {filteredPatients.length > 0 ? (
+                    filteredPatients.map((patient) => (
+                      <button
+                        key={patient.id}
+                        type="button"
+                        onClick={() => handleSelectPatient(patient)}
+                        className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition"
+                      >
+                        <p className="font-medium text-slate-900">
+                          {patient.fullName}
+                        </p>
+                        <p className="text-xs text-slate-500 line-clamp-2">
+                          {patient.histoire}
+                        </p>
+                      </button>
+                    ))
+                  ) : (
+                    <p className="text-center text-sm text-slate-500 py-4">
+                      Aucun patient trouvé
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase text-slate-600">
+                    Nom et prénom
+                  </label>
+                  <input
+                    type="text"
+                    value={newPatientForm.fullName}
+                    onChange={(e) =>
+                      setNewPatientForm((prev) => ({
+                        ...prev,
+                        fullName: e.target.value,
+                      }))
+                    }
+                    placeholder="Entrez le nom et prénom..."
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase text-slate-600">
+                    Historique / Notes
+                  </label>
+                  <textarea
+                    value={newPatientForm.histoire}
+                    onChange={(e) =>
+                      setNewPatientForm((prev) => ({
+                        ...prev,
+                        histoire: e.target.value,
+                      }))
+                    }
+                    placeholder="Entrez l'historique..."
+                    rows={2}
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                  />
+                </div>
+                <Button
+                  onClick={handleCreateNewPatient}
+                  disabled={!newPatientForm.fullName?.trim()}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Créer et sélectionner
+                </Button>
+              </div>
+            )}
+
+            {/* Selected Patient Display */}
+            {selectedPatient && (
+              <div className="p-3 rounded-lg border border-indigo-200 bg-indigo-50">
+                <p className="text-sm font-medium text-indigo-900">
+                  ✓ {selectedPatient.fullName}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Comment */}
           <div className="space-y-2">
             <label
               htmlFor="new-request-comment"

@@ -39,6 +39,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { TasksSection } from "@/components/tasks/TasksSection";
+import type { TaskItem } from "@/types/tasks";
 
 type ActivityType = "consultation" | "chirurgie" | "staff" | "tournee";
 
@@ -55,13 +57,6 @@ interface ActivityItem {
   status: ActivityStatus;
 }
 
-interface TaskItem {
-  id: string;
-  title: string;
-  details: string;
-  done: boolean;
-  delegatedTo?: string;
-}
 
 interface PatientItem {
   id: string;
@@ -110,10 +105,6 @@ interface ActivityFormState {
   team: string;
 }
 
-interface TaskFormState {
-  title: string;
-  details: string;
-}
 
 interface PatientFormState {
   name: string;
@@ -123,64 +114,6 @@ interface PatientFormState {
   labsStatus: PatientItem["labs"]["status"];
   labsNote: string;
 }
-
-interface Resident {
-  id: string;
-  name: string;
-  role: string;
-  service: string;
-}
-
-const residentsData: Resident[] = [
-  {
-    id: "RES-01",
-    name: "Dr. Léa Martin",
-    role: "Interne",
-    service: "Chirurgie digestive",
-  },
-  {
-    id: "RES-02",
-    name: "Claire Dupont",
-    role: "IDE",
-    service: "Chirurgie générale",
-  },
-  {
-    id: "RES-03",
-    name: "Dr. Hugo Tessier",
-    role: "Interne senior",
-    service: "Chirurgie cardiaque",
-  },
-  {
-    id: "RES-04",
-    name: "Sarah Lemoine",
-    role: "IDE",
-    service: "Anesthésie",
-  },
-  {
-    id: "RES-05",
-    name: "Dr. Maxime Benali",
-    role: "Interne",
-    service: "Orthopédie",
-  },
-  {
-    id: "RES-06",
-    name: "Amélie Bernard",
-    role: "Coordinatrice",
-    service: "Hôpital de jour",
-  },
-  {
-    id: "RES-07",
-    name: "Dr. Thomas Nguyen",
-    role: "Chef de clinique",
-    service: "Chirurgie digestive",
-  },
-  {
-    id: "RES-08",
-    name: "Sophie Mercier",
-    role: "IDE",
-    service: "Réanimation",
-  },
-];
 
 const statsSummary: Stat[] = [
   {
@@ -239,6 +172,30 @@ const statsSummary: Stat[] = [
       text: "text-[#0f5132]",
     },
   },
+];
+
+// Mock data for patients
+const mockPatients = [
+  { id: "PAT-001", name: "Fatou Diop" },
+  { id: "PAT-002", name: "Jean Dupont" },
+  { id: "PAT-003", name: "Marie Martin" },
+  { id: "PAT-004", name: "Louis Mercier" },
+  { id: "PAT-005", name: "Amina Sow" },
+  { id: "PAT-006", name: "Pierre Leclerc" },
+  { id: "PAT-007", name: "Sophie Renard" },
+  { id: "PAT-008", name: "Ahmed Hassan" },
+];
+
+// Mock favorite tasks for quick selection
+const mockFavoriteTasks = [
+  "Vérifier l'analgésie",
+  "Changer le pansement",
+  "Évaluer les signes vitaux",
+  "Mobilisation passive",
+  "Suivi tension artérielle",
+  "Contrôle drains",
+  "Évaluation cicatrisation",
+  "Bilan de sortie",
 ];
 
 const activityTypeMeta: Record<
@@ -341,11 +298,6 @@ const createEmptyActivityForm = (): ActivityFormState => ({
   description: "",
   location: "",
   team: "",
-});
-
-const createEmptyTaskForm = (): TaskFormState => ({
-  title: "",
-  details: "",
 });
 
 const createEmptyPatientForm = (): PatientFormState => ({
@@ -681,11 +633,6 @@ export default function DashboardPage() {
     createEmptyActivityForm(),
   );
   const [activityDetail, setActivityDetail] = useState<ActivityItem | null>(null);
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [taskModalMode, setTaskModalMode] = useState<"create" | "edit">("create");
-  const [taskForm, setTaskForm] = useState<TaskFormState>(() => createEmptyTaskForm());
-  const [taskToEdit, setTaskToEdit] = useState<TaskItem | null>(null);
-  const [taskToDelete, setTaskToDelete] = useState<TaskItem | null>(null);
   const [isAddPatientModalOpen, setIsAddPatientModalOpen] = useState(false);
   const [patientForm, setPatientForm] = useState<PatientFormState>(() =>
     createEmptyPatientForm(),
@@ -693,7 +640,6 @@ export default function DashboardPage() {
   const [activityTab, setActivityTab] = useState<ActivityTabKey>("activites");
   const [isMobileToolkitOpen, setIsMobileToolkitOpen] = useState(false);
   const [isStatsInteracting, setIsStatsInteracting] = useState(false);
-  const [openDelegateDropdown, setOpenDelegateDropdown] = useState<string | null>(null);
 
   const timersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
   const statsInteractionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -716,37 +662,10 @@ export default function DashboardPage() {
   }, [isAddActivityModalOpen]);
 
   useEffect(() => {
-    if (!isTaskModalOpen) {
-      setTaskForm(createEmptyTaskForm());
-      setTaskToEdit(null);
-      setTaskModalMode("create");
-    }
-  }, [isTaskModalOpen]);
-
-  useEffect(() => {
     if (!isAddPatientModalOpen) {
       setPatientForm(createEmptyPatientForm());
     }
   }, [isAddPatientModalOpen]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (openDelegateDropdown) {
-        const target = event.target as HTMLElement;
-        if (!target.closest('[data-dropdown]')) {
-          setOpenDelegateDropdown(null);
-        }
-      }
-    };
-
-    if (openDelegateDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [openDelegateDropdown]);
 
   const selectedDayData = scheduleData[selectedDate] ?? createEmptyDay();
   const selectedDateObj = useMemo(() => parseKeyToDate(selectedDate), [selectedDate]);
@@ -939,82 +858,6 @@ export default function DashboardPage() {
     }, 360);
   };
 
-  const handleOpenCreateTask = () => {
-    setTaskModalMode("create");
-    setTaskForm(createEmptyTaskForm());
-    setTaskToEdit(null);
-    setIsTaskModalOpen(true);
-  };
-
-  const handleOpenEditTask = (task: TaskItem) => {
-    setTaskModalMode("edit");
-    setTaskToEdit(task);
-    setTaskForm({
-      title: task.title,
-      details: task.details,
-    });
-    setIsTaskModalOpen(true);
-  };
-
-  const handleSaveTask = () => {
-    if (!taskFormIsValid) {
-      return;
-    }
-
-    if (taskModalMode === "create") {
-      const newTask: TaskItem = {
-        id: `TASK-${Date.now()}`,
-        title: taskForm.title.trim(),
-        details:
-          taskForm.details.trim() ||
-          "Aucun détail supplémentaire pour cette consigne.",
-        done: false,
-      };
-
-      runAsyncUpdate(["tasks"], () => {
-        updateDayData(selectedDate, (day) => ({
-          ...day,
-          tasks: [newTask, ...day.tasks],
-        }));
-        setIsTaskModalOpen(false);
-      });
-    } else if (taskToEdit) {
-      runAsyncUpdate(["tasks"], () => {
-        updateDayData(selectedDate, (day) => ({
-          ...day,
-          tasks: day.tasks.map((task) =>
-            task.id === taskToEdit.id
-              ? {
-                  ...task,
-                  title: taskForm.title.trim(),
-                  details:
-                    taskForm.details.trim() ||
-                    "Aucun détail supplémentaire pour cette consigne.",
-                }
-              : task,
-          ),
-        }));
-        setIsTaskModalOpen(false);
-      });
-    }
-  };
-
-  const handleRequestDeleteTask = (task: TaskItem) => {
-    setTaskToDelete(task);
-  };
-
-  const handleConfirmDeleteTask = () => {
-    if (!taskToDelete) return;
-    const taskId = taskToDelete.id;
-    runAsyncUpdate(["tasks"], () => {
-      updateDayData(selectedDate, (day) => ({
-        ...day,
-        tasks: day.tasks.filter((item) => item.id !== taskId),
-      }));
-      setTaskToDelete(null);
-    });
-  };
-
   const handleReloadTasks = () => {
     setIsTasksLoading(true);
     const timer = window.setTimeout(() => {
@@ -1022,28 +865,6 @@ export default function DashboardPage() {
       timersRef.current = timersRef.current.filter((item) => item !== timer as unknown as ReturnType<typeof setTimeout>);
     }, 2000);
     timersRef.current.push(timer as unknown as ReturnType<typeof setTimeout>);
-  };
-
-  const handleOpenDelegateDropdown = (taskId: string) => {
-    setOpenDelegateDropdown(taskId);
-  };
-
-  const handleCloseDelegateDropdown = () => {
-    setOpenDelegateDropdown(null);
-  };
-
-  const handleDelegateTask = (taskId: string, residentId: string) => {
-    updateDayData(selectedDate, (day) => ({
-      ...day,
-      tasks: day.tasks.map((task) =>
-        task.id === taskId ? { ...task, delegatedTo: residentId } : task,
-      ),
-    }));
-    setOpenDelegateDropdown(null);
-  };
-
-  const getResidentById = (residentId: string): Resident | undefined => {
-    return residentsData.find((resident) => resident.id === residentId);
   };
 
   const tasks = selectedDayData.tasks;
@@ -1057,7 +878,6 @@ export default function DashboardPage() {
       patientForm.diagnosis.trim() &&
       patientForm.service.trim(),
   );
-  const taskFormIsValid = Boolean(taskForm.title.trim());
   const statsList = statsSummary;
   const hasStats = statsList.length > 0;
   const marqueeStats = useMemo(
@@ -1123,236 +943,55 @@ export default function DashboardPage() {
     headerClassName?: string;
     contentClassName?: string;
   }) => (
-    <Card
-      className={cn(
+    <TasksSection
+      tasks={tasks}
+      isLoading={isTasksLoading}
+      title="Consignes du jour"
+      showReloadButton={true}
+      onReload={handleReloadTasks}
+      onTaskToggle={handleToggleTaskDone}
+      onTaskAdd={(newTask) => {
+        runAsyncUpdate(["tasks"], () => {
+          updateDayData(selectedDate, (day) => ({
+            ...day,
+            tasks: [newTask, ...day.tasks],
+          }));
+        });
+      }}
+      onTaskEdit={(updatedTask) => {
+        runAsyncUpdate(["tasks"], () => {
+          updateDayData(selectedDate, (day) => ({
+            ...day,
+            tasks: day.tasks.map((task) =>
+              task.id === updatedTask.id ? updatedTask : task,
+            ),
+          }));
+        });
+      }}
+      onTaskDelete={(taskId) => {
+        runAsyncUpdate(["tasks"], () => {
+          updateDayData(selectedDate, (day) => ({
+            ...day,
+            tasks: day.tasks.filter((item) => item.id !== taskId),
+          }));
+        });
+      }}
+      patients={mockPatients}
+      favoriteTasks={mockFavoriteTasks}
+      cardClassName={cn(
         "flex min-h-0 flex-1 flex-col border-none bg-white/90 min-h-[500px]",
-        options?.cardClassName,
+        options?.cardClassName
       )}
-    >
-      <CardHeader
-        className={cn(
-          "flex flex-wrap items-center justify-between gap-3 pb-4",
-          options?.headerClassName,
-        )}
-      >
-        <div>
-          <CardTitle>Consignes du jour</CardTitle>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge
-            variant="muted"
-            className="bg-indigo-100 text-indigo-700"
-          >
-            Terminé : {completedTasks}/{tasksCount}
-          </Badge>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 w-9 rounded-full p-0 border-indigo-200 text-indigo-600 hover:bg-indigo-50"
-            onClick={handleReloadTasks}
-            disabled={isTasksLoading}
-          >
-            <RotateCw className={cn("h-4 w-4", isTasksLoading && "animate-spin")} />
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            className="h-9 w-9 rounded-full p-0"
-            onClick={handleOpenCreateTask}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent
-        className={cn(
-          "flex-1 min-h-0 overflow-hidden pt-0",
-          options?.contentClassName,
-        )}
-      >
-        {isTasksLoading ? (
-          <div className="flex h-full items-center justify-center">
-            <Spinner label="Chargement des consignes..." />
-          </div>
-        ) : tasks.length === 0 ? (
-          <EmptyState
-            icon={ClipboardList}
-            title="Aucune consigne enregistrée"
-            description="Ajoutez vos actions quotidiennes pour garder un suivi partagé avec votre équipe."
-            action={
-              <Button variant="outline" onClick={handleOpenCreateTask}>
-                <Plus className="mr-2 h-4 w-4" />
-                Ajouter une consigne
-              </Button>
-            }
-          />
-        ) : (
-          <div className="h-full min-h-0 overflow-y-auto pr-1">
-            <div className="space-y-3">
-              {tasks.map((task) => {
-                const isDone = task.done;
-                const isDelegated = Boolean(task.delegatedTo);
-                const delegatedResident = task.delegatedTo ? getResidentById(task.delegatedTo) : undefined;
-                const isDropdownOpen = openDelegateDropdown === task.id;
-                return (
-                  <div
-                    key={task.id}
-                    role="checkbox"
-                    tabIndex={0}
-                    aria-checked={isDone}
-                    onClick={() => handleToggleTaskDone(task.id)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        handleToggleTaskDone(task.id);
-                      }
-                    }}
-                    className={cn(
-                      "group flex cursor-pointer flex-col gap-4 rounded-2xl border px-4 py-3 shadow-sm transition sm:flex-row sm:items-start sm:gap-6",
-                      "focus:outline-none focus:ring-2 focus:ring-indigo-200/70 focus:ring-offset-1",
-                      isDone
-                        ? "border-emerald-200/80 bg-emerald-50/70 text-emerald-700 shadow-emerald-100/60"
-                        : isDelegated
-                        ? "border-violet-300 bg-white/85 hover:border-violet-400"
-                        : "border-slate-200 bg-white/85 hover:border-indigo-200",
-                    )}
-                  >
-                    <div className="flex items-start gap-3 sm:flex-1">
-                      <span
-                        className={cn(
-                          "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border transition",
-                          isDone
-                            ? "border-emerald-300 bg-emerald-500/20 text-emerald-600 shadow-inner shadow-emerald-200/50"
-                            : "border-indigo-200 bg-white text-indigo-500 shadow-inner shadow-indigo-100/70",
-                        )}
-                        aria-hidden="true"
-                      >
-                        {isDone ? (
-                          <CheckCircle2 className="h-4 w-4" />
-                        ) : (
-                          <Circle className="h-4 w-4" />
-                        )}
-                      </span>
-                      <div className="flex flex-1 flex-col gap-1">
-                        <p
-                          className={cn(
-                            "text-sm font-semibold transition",
-                            isDone
-                              ? "text-emerald-700 line-through decoration-emerald-400/80"
-                              : "text-slate-800",
-                          )}
-                        >
-                          {task.title}
-                        </p>
-                        <p
-                          className={cn(
-                            "text-sm leading-relaxed",
-                            isDone ? "text-emerald-600/80" : "text-[#5f5aa5]",
-                          )}
-                        >
-                          {task.details}
-                        </p>
-                        {delegatedResident && (
-                          <>
-                            <div className="mt-2 border-t border-slate-200" />
-                            <div className="mt-2 flex items-center gap-2 text-xs">
-                              <Users className="h-3.5 w-3.5 text-violet-600" />
-                              <span className="text-violet-700">
-                                Délégué à:
-                              </span>
-                              <span className="inline-flex items-center rounded-full bg-violet-100 px-2.5 py-0.5 font-medium text-violet-800 border border-violet-200">
-                                {delegatedResident.name}
-                              </span>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
-                      <div className="relative">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-9 w-9 rounded-full border-violet-200 text-violet-600 transition hover:bg-violet-50/80"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            handleOpenDelegateDropdown(task.id);
-                          }}
-                        >
-                          <Users className="h-4 w-4" />
-                        </Button>
-                        {isDropdownOpen && (
-                          <div
-                            data-dropdown
-                            className="absolute right-0 top-full z-10 mt-2 w-64 rounded-xl border border-violet-200 bg-white shadow-lg"
-                            onClick={(event) => event.stopPropagation()}
-                          >
-                            <div className="flex items-center justify-between border-b border-violet-100 px-3 py-2">
-                              <span className="text-xs font-semibold text-violet-900">
-                                Déléguer à
-                              </span>
-                              <button
-                                type="button"
-                                onClick={handleCloseDelegateDropdown}
-                                className="text-slate-400 hover:text-slate-600"
-                              >
-                                <X className="h-4 w-4" />
-                              </button>
-                            </div>
-                            <div className="max-h-64 overflow-y-auto">
-                              {residentsData.map((resident) => (
-                                <button
-                                  key={resident.id}
-                                  type="button"
-                                  onClick={() => handleDelegateTask(task.id, resident.id)}
-                                  className={cn(
-                                    "flex w-full flex-col gap-1 px-3 py-2 text-left transition hover:bg-violet-50",
-                                    task.delegatedTo === resident.id && "bg-violet-50",
-                                  )}
-                                >
-                                  <span className="text-sm font-medium text-slate-800">
-                                    {resident.name}
-                                  </span>
-                                  <span className="text-xs text-slate-600">
-                                    {resident.role} · {resident.service}
-                                  </span>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-9 w-9 rounded-full border-indigo-200 text-indigo-600 transition hover:bg-indigo-50/80"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          handleOpenEditTask(task);
-                        }}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-9 w-9 rounded-full text-rose-600 transition hover:bg-rose-50/80"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          handleRequestDeleteTask(task);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      headerClassName={cn(
+        "flex flex-wrap items-center justify-between gap-3 pb-4",
+        options?.headerClassName
+      )}
+      contentClassName={cn(
+        "flex-1 min-h-0 overflow-hidden pt-0",
+        options?.contentClassName
+      )}
+      enableSwipeActions={true}
+    />
   );
 
   const renderStatCard = (
@@ -1371,7 +1010,7 @@ export default function DashboardPage() {
     return (
       <Card
         key={options?.key ?? stat.label}
-        className={cn("border-none", stat.theme.card, options?.className)}
+        className={cn("border-none hidden lg: flex", stat.theme.card, options?.className)}
       >
         <CardHeader className="flex flex-row items-start justify-between pb-3">
           <div className="space-y-1">
@@ -1417,7 +1056,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex h-full flex-col overflow-auto pb-20 lg:pb-0">
-      <section className="shrink-0">
+      <section className="shrink-0 hidden lg:flex">
         {!hasStats ? (
           <Card className="border-dashed border-slate-200 bg-white/70 p-6 text-center text-sm text-slate-500">
             Aucun indicateur disponible pour le moment. Connectez vos flux opérationnels pour activer cette section.
@@ -1903,86 +1542,6 @@ export default function DashboardPage() {
         </div>
       </Modal>
 
-      <Modal
-        open={isTaskModalOpen}
-        onClose={() => setIsTaskModalOpen(false)}
-        title={taskModalMode === "create" ? "Nouvelle consigne" : "Modifier la consigne"}
-        description="Définissez les actions prioritaires à partager avec votre équipe."
-        size="md"
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setIsTaskModalOpen(false)}>
-              Annuler
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleSaveTask}
-              disabled={!taskFormIsValid}
-            >
-              Enregistrer
-            </Button>
-          </>
-        }
-      >
-        <div className="grid gap-4">
-          <div className="grid gap-2">
-            <label className="text-sm font-semibold text-[#1f184f]">Intitulé</label>
-            <input
-              value={taskForm.title}
-              onChange={(event) =>
-                setTaskForm((prev) => ({
-                  ...prev,
-                  title: event.target.value,
-                }))
-              }
-              placeholder="Ex. Vérifier l&apos;analgésie secteur 5"
-              className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-            />
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-semibold text-[#1f184f]">Détails</label>
-            <textarea
-              rows={3}
-              value={taskForm.details}
-              onChange={(event) =>
-                setTaskForm((prev) => ({
-                  ...prev,
-                  details: event.target.value,
-                }))
-              }
-              placeholder="Précisez les informations importantes ou les équipes concernées."
-              className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-            />
-          </div>
-        </div>
-      </Modal>
-
-      <Modal
-        open={Boolean(taskToDelete)}
-        onClose={() => setTaskToDelete(null)}
-        title="Supprimer la consigne ?"
-        description="Cette action retirera la consigne de votre liste quotidienne."
-        size="sm"
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setTaskToDelete(null)}>
-              Annuler
-            </Button>
-            <Button
-              className="bg-rose-600 text-white hover:bg-rose-700 focus-visible:ring-rose-300"
-              onClick={handleConfirmDeleteTask}
-            >
-              Supprimer
-            </Button>
-          </>
-        }
-      >
-        {taskToDelete ? (
-          <p className="text-sm text-[#5f5aa5]">
-            Confirmez-vous la suppression de la consigne « {taskToDelete.title} » ?
-          </p>
-        ) : null}
-      </Modal>
 
       <Modal
         open={Boolean(activityDetail)}

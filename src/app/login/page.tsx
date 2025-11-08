@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, ShieldCheck, LogIn, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signIn } from "next-auth/react"
+import { getLoginRedirectUrl } from "@/lib/utils";
 
 function LoginPageContent() {
   const router = useRouter();
@@ -15,6 +16,7 @@ function LoginPageContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [callbackUrl, setCallbackUrl] = useState<string>("/dashboard");
 
   useEffect(() => {
     // Check for verification success
@@ -34,6 +36,12 @@ function LoginPageContent() {
     }
   }, [searchParams])
 
+  useEffect(() => {
+    // Detect device type and set appropriate callback URL
+    const redirectUrl = getLoginRedirectUrl();
+    setCallbackUrl(redirectUrl);
+  }, [])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
@@ -43,7 +51,7 @@ function LoginPageContent() {
       const res = await signIn('credentials', {
         email,
         password,
-        callbackUrl: '/dashboard',
+        callbackUrl: callbackUrl,
       })
 
       if (res?.error) {
@@ -214,7 +222,7 @@ function LoginPageContent() {
                   type="button"
                   variant="outline"
                   className="mt-4 w-full border-slate-200 py-3 text-sm font-semibold text-slate-700 hover:border-indigo-200 hover:bg-indigo-50"
-                  onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+                  onClick={() => signIn("google", { callbackUrl: callbackUrl })}
                 >
                   <span className="mr-3 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white">
                     <span className="text-lg font-bold text-indigo-600">G</span>

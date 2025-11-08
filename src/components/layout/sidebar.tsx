@@ -41,7 +41,7 @@ export const primaryNav = [
         icon: FlaskConical,
       },
       {
-        href: "/messages",
+        href: "/avis",
         label: "Avis",
         icon: Stethoscope,
       },

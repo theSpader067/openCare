@@ -36,6 +36,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { TasksSection } from "@/components/tasks/TasksSection";
+import type { TaskItem } from "@/types/tasks";
 
 function SimpleDatePicker({
   date,
@@ -101,13 +103,6 @@ interface ActivityItem {
   status: ActivityStatus;
 }
 
-interface TaskItem {
-  id: string;
-  title: string;
-  details: string;
-  done: boolean;
-  delegatedTo?: string;
-}
 
 type ActivityTabKey = "activites" | "bloc" | "divers";
 
@@ -348,6 +343,30 @@ type ActivityFormState = {
   team: string;
 };
 
+// Mock data for patients
+const mockPatients = [
+  { id: "PAT-001", name: "Fatou Diop" },
+  { id: "PAT-002", name: "Jean Dupont" },
+  { id: "PAT-003", name: "Marie Martin" },
+  { id: "PAT-004", name: "Louis Mercier" },
+  { id: "PAT-005", name: "Amina Sow" },
+  { id: "PAT-006", name: "Pierre Leclerc" },
+  { id: "PAT-007", name: "Sophie Renard" },
+  { id: "PAT-008", name: "Ahmed Hassan" },
+];
+
+// Mock favorite tasks for quick selection
+const mockFavoriteTasks = [
+  "Vérifier l'analgésie",
+  "Changer le pansement",
+  "Évaluer les signes vitaux",
+  "Mobilisation passive",
+  "Suivi tension artérielle",
+  "Contrôle drains",
+  "Évaluation cicatrisation",
+  "Bilan de sortie",
+];
+
 export default function TasksPage() {
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [selectedTab, setSelectedTab] = useState<"activites" | "taches">(
@@ -363,17 +382,7 @@ export default function TasksPage() {
     generateActivitiesForDate(new Date())
   );
 
-  // Task management
-  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
-  const [isEditTaskModalOpen, setIsEditTaskModalOpen] = useState(false);
-  const [isDeleteTaskModalOpen, setIsDeleteTaskModalOpen] = useState(false);
-  const [taskForm, setTaskForm] = useState<TaskFormState>({
-    title: "",
-    details: "",
-  });
-  const [taskToEdit, setTaskToEdit] = useState<TaskItem | null>(null);
-  const [taskToDelete, setTaskToDelete] = useState<TaskItem | null>(null);
-  const [swipedTaskId, setSwipedTaskId] = useState<string | null>(null);
+  // Task management - simplified since TasksSection handles modals
 
   // Activity management
   const [isAddActivityModalOpen, setIsAddActivityModalOpen] = useState(false);
@@ -396,12 +405,11 @@ export default function TasksPage() {
   );
   const [swipedActivityId, setSwipedActivityId] = useState<string | null>(null);
 
-  // Touch handling for swipe
+  // Touch handling for swipe (for activities)
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
 
-  const completedTasks = tasks.filter((task) => task.done).length;
-  const tasksCount = tasks.length;
+  // Activity stats
   const completedActivities = activities.filter(
     (act) => act.status === "done"
   ).length;
@@ -421,68 +429,35 @@ export default function TasksPage() {
     const newActivities = generateActivitiesForDate(newDate);
     setTasks(newTasks);
     setActivities(newActivities);
-    setSwipedTaskId(null);
     setSwipedActivityId(null);
   };
 
-  // Task handlers
-  const handleOpenAddTaskModal = () => {
-    setTaskForm({ title: "", details: "" });
-    setTaskToEdit(null);
-    setIsAddTaskModalOpen(true);
-  };
-
-  const handleOpenEditTaskModal = (task: TaskItem) => {
-    setTaskForm({ title: task.title, details: task.details });
-    setTaskToEdit(task);
-    setIsEditTaskModalOpen(true);
-    setSwipedTaskId(null);
-  };
-
-  const handleOpenDeleteTaskModal = (task: TaskItem) => {
-    setTaskToDelete(task);
-    setIsDeleteTaskModalOpen(true);
-    setSwipedTaskId(null);
-  };
-
-  const handleSaveTask = () => {
-    if (!taskForm.title.trim()) return;
-
-    if (taskToEdit) {
-      // Edit existing task
-      setTasks(
-        tasks.map((t) =>
-          t.id === taskToEdit.id
-            ? { ...t, title: taskForm.title, details: taskForm.details }
-            : t
-        )
-      );
-      setIsEditTaskModalOpen(false);
-    } else {
-      // Add new task
-      const newTask: TaskItem = {
-        id: `TASK-${Date.now()}`,
-        title: taskForm.title,
-        details: taskForm.details,
-        done: false,
-      };
-      setTasks([...tasks, newTask]);
-      setIsAddTaskModalOpen(false);
-    }
-  };
-
-  const handleConfirmDeleteTask = () => {
-    if (taskToDelete) {
-      setTasks(tasks.filter((t) => t.id !== taskToDelete.id));
-      setIsDeleteTaskModalOpen(false);
-      setTaskToDelete(null);
-    }
-  };
-
-  const handleToggleTask = (taskId: string) => {
+  // Task handlers - delegated to TasksSection component
+  const handleTaskToggle = (taskId: string) => {
     setTasks(
       tasks.map((t) => (t.id === taskId ? { ...t, done: !t.done } : t))
     );
+  };
+
+  const handleTaskAdd = (newTask: TaskItem) => {
+    setTasks((prevTasks) => [...prevTasks, newTask]);
+  };
+
+  const handleTaskEdit = (updatedTask: TaskItem) => {
+    setTasks(
+      tasks.map((t) => (t.id === updatedTask.id ? updatedTask : t))
+    );
+  };
+
+  const handleTaskDelete = (taskId: string) => {
+    setTasks(tasks.filter((t) => t.id !== taskId));
+  };
+
+  const handleReloadTasks = () => {
+    setIsTasksLoading(true);
+    setTimeout(() => {
+      setIsTasksLoading(false);
+    }, 2000);
   };
 
   // Activity handlers
@@ -578,17 +553,13 @@ export default function TasksPage() {
     );
   };
 
-  // Touch handlers for swipe
-  const handleTouchStart = (e: React.TouchEvent, type: "task" | "activity") => {
+  // Touch handlers for swipe (activities only)
+  const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
   };
 
-  const handleTouchEnd = (
-    e: React.TouchEvent,
-    id: string,
-    type: "task" | "activity"
-  ) => {
+  const handleTouchEnd = (e: React.TouchEvent, id: string) => {
     const touchEndX = e.changedTouches[0].clientX;
     const touchEndY = e.changedTouches[0].clientY;
     const deltaX = touchEndX - touchStartX.current;
@@ -596,18 +567,10 @@ export default function TasksPage() {
 
     // Swipe left detection (right to left, negative deltaX) - only if vertical movement is minimal
     if (deltaX < -50 && deltaY < 30) {
-      if (type === "task") {
-        setSwipedTaskId(id);
-      } else {
-        setSwipedActivityId(id);
-      }
+      setSwipedActivityId(id);
     } else {
       // Click anywhere else to hide buttons
-      if (type === "task") {
-        setSwipedTaskId(null);
-      } else {
-        setSwipedActivityId(null);
-      }
+      setSwipedActivityId(null);
     }
   };
 
@@ -655,135 +618,25 @@ export default function TasksPage() {
 
         {/* Tasks Tab */}
         {selectedTab === "taches" && (
-          <Card className="flex min-h-0 flex-1 flex-col border-none bg-white/90">
-            <CardHeader className="flex flex-wrap items-center justify-between gap-3 pb-4">
-              <div>
-                <CardTitle>Consignes du jour</CardTitle>
-                <CardDescription>{selectedDateLabel}</CardDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge
-                  variant="muted"
-                  className="bg-indigo-100 text-indigo-700"
-                >
-                  Terminé : {completedTasks}/{tasksCount}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="flex-1 min-h-0 overflow-hidden pt-0">
-              {tasks.length === 0 ? (
-                <EmptyState
-                  icon={ClipboardList}
-                  title="Aucune consigne enregistrée"
-                  description="Ajoutez vos actions quotidiennes pour garder un suivi partagé avec votre équipe."
-                  action={
-                    <Button
-                      variant="primary"
-                      onClick={handleOpenAddTaskModal}
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Ajouter une consigne
-                    </Button>
-                  }
-                />
-              ) : (
-                <div className="h-full min-h-0 overflow-y-auto pr-1">
-                  <div className="space-y-3">
-                    {tasks.map((task) => (
-                      <div
-                        key={task.id}
-                        className="relative"
-                        onTouchStart={(e) => handleTouchStart(e, "task")}
-                        onTouchEnd={(e) => handleTouchEnd(e, task.id, "task")}
-                      >
-                        <div
-                          className={cn(
-                            "flex flex-col gap-3 rounded-2xl border px-4 py-3 shadow-sm sm:flex-row sm:items-start sm:gap-4 transition-transform duration-300 ease-out",
-                            task.done
-                              ? "border-emerald-200/80 bg-emerald-50/70"
-                              : "border-slate-200 bg-white/85 hover:border-indigo-200"
-                          )}
-                          style={{
-                            transform: swipedTaskId === task.id ? "translateX(-96px)" : "translateX(0)",
-                          }}
-                        >
-                          <div className="flex items-start gap-3 sm:flex-1">
-                            <button
-                              onClick={() => handleToggleTask(task.id)}
-                              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border transition hover:bg-slate-100"
-                              type="button"
-                            >
-                              <span
-                                className={cn(
-                                  "flex h-full w-full items-center justify-center rounded-full",
-                                  task.done
-                                    ? "border-emerald-300 bg-emerald-500/20 text-emerald-600"
-                                    : "border-indigo-200 bg-white text-indigo-500"
-                                )}
-                              >
-                                {task.done ? (
-                                  <CheckCircle2 className="h-4 w-4" />
-                                ) : (
-                                  <Circle className="h-4 w-4" />
-                                )}
-                              </span>
-                            </button>
-                            <div className="flex flex-1 flex-col gap-1">
-                              <p
-                                className={cn(
-                                  "text-sm font-semibold",
-                                  task.done
-                                    ? "text-emerald-700 line-through"
-                                    : "text-slate-800"
-                                )}
-                              >
-                                {task.title}
-                              </p>
-                              <p
-                                className={cn(
-                                  "text-sm",
-                                  task.done
-                                    ? "text-emerald-600/80"
-                                    : "text-[#5f5aa5]"
-                                )}
-                              >
-                                {task.details}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Swipe action buttons */}
-                        <div
-                          className={cn(
-                            "absolute right-2 top-1/2 -translate-y-1/2 flex gap-2 transition-all duration-300 ease-out",
-                            swipedTaskId === task.id
-                              ? "opacity-100 pointer-events-auto"
-                              : "opacity-0 pointer-events-none"
-                          )}
-                        >
-                          <button
-                            onClick={() => handleOpenEditTaskModal(task)}
-                            className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-md"
-                            type="button"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => handleOpenDeleteTaskModal(task)}
-                            className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-600 text-white hover:bg-rose-700 transition shadow-md"
-                            type="button"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <TasksSection
+            tasks={tasks}
+            isLoading={isTasksLoading}
+            title="Consignes du jour"
+            dateLabel={selectedDateLabel}
+            showDateLabel={true}
+            showReloadButton={true}
+            onReload={handleReloadTasks}
+            onTaskToggle={handleTaskToggle}
+            onTaskAdd={handleTaskAdd}
+            onTaskEdit={handleTaskEdit}
+            onTaskDelete={handleTaskDelete}
+            enableSwipeActions={true}
+            patients={mockPatients}
+            favoriteTasks={mockFavoriteTasks}
+            cardClassName="flex min-h-0 flex-1 flex-col border-none bg-white/90 min-h-[500px]"
+            headerClassName="flex flex-wrap items-center justify-between gap-3 pb-4"
+            contentClassName="flex-1 min-h-0 overflow-hidden pt-0"
+          />
         )}
 
         {/* Activities Tab */}
@@ -794,9 +647,19 @@ export default function TasksPage() {
                 <CardTitle>Historique des activités</CardTitle>
                 <CardDescription>{selectedDateLabel}</CardDescription>
               </div>
-              <Badge variant="muted" className="bg-indigo-100 text-indigo-800">
-                {activitiesCount} activité(s)
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="muted" className="bg-indigo-100 text-indigo-800">
+                  {activitiesCount} activité(s)
+                </Badge>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="h-9 w-9 rounded-full p-0"
+                  onClick={handleOpenAddActivityModal}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="flex-1 min-h-0 overflow-hidden pt-0">
               {activities.length === 0 ? (
@@ -826,11 +689,9 @@ export default function TasksPage() {
                         <li
                           key={activity.id}
                           className="relative"
-                          onTouchStart={(e) =>
-                            handleTouchStart(e, "activity")
-                          }
+                          onTouchStart={handleTouchStart}
                           onTouchEnd={(e) =>
-                            handleTouchEnd(e, activity.id, "activity")
+                            handleTouchEnd(e, activity.id)
                           }
                         >
                           <div
@@ -943,148 +804,6 @@ export default function TasksPage() {
           </Card>
         )}
       </div>
-
-      {/* Task Modals */}
-      <Modal
-        open={isAddTaskModalOpen}
-        onClose={() => setIsAddTaskModalOpen(false)}
-        title="Ajouter une consigne"
-        description="Définissez une action à partager avec votre équipe."
-        size="sm"
-        footer={
-          <>
-            <Button
-              variant="ghost"
-              onClick={() => setIsAddTaskModalOpen(false)}
-            >
-              Annuler
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleSaveTask}
-              disabled={!taskForm.title.trim()}
-            >
-              Enregistrer
-            </Button>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <div className="grid gap-2">
-            <label className="text-sm font-semibold text-[#1f184f]">
-              Intitulé
-            </label>
-            <input
-              value={taskForm.title}
-              onChange={(e) =>
-                setTaskForm({ ...taskForm, title: e.target.value })
-              }
-              placeholder="Ex. Vérifier l'analgésie secteur 5"
-              className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-            />
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-semibold text-[#1f184f]">
-              Détails
-            </label>
-            <textarea
-              rows={3}
-              value={taskForm.details}
-              onChange={(e) =>
-                setTaskForm({ ...taskForm, details: e.target.value })
-              }
-              placeholder="Précisez les informations importantes."
-              className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-            />
-          </div>
-        </div>
-      </Modal>
-
-      <Modal
-        open={isEditTaskModalOpen}
-        onClose={() => setIsEditTaskModalOpen(false)}
-        title="Modifier la consigne"
-        description="Mettez à jour les informations."
-        size="sm"
-        footer={
-          <>
-            <Button
-              variant="ghost"
-              onClick={() => setIsEditTaskModalOpen(false)}
-            >
-              Annuler
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleSaveTask}
-              disabled={!taskForm.title.trim()}
-            >
-              Enregistrer
-            </Button>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <div className="grid gap-2">
-            <label className="text-sm font-semibold text-[#1f184f]">
-              Intitulé
-            </label>
-            <input
-              value={taskForm.title}
-              onChange={(e) =>
-                setTaskForm({ ...taskForm, title: e.target.value })
-              }
-              placeholder="Ex. Vérifier l'analgésie secteur 5"
-              className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-            />
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-semibold text-[#1f184f]">
-              Détails
-            </label>
-            <textarea
-              rows={3}
-              value={taskForm.details}
-              onChange={(e) =>
-                setTaskForm({ ...taskForm, details: e.target.value })
-              }
-              placeholder="Précisez les informations importantes."
-              className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-            />
-          </div>
-        </div>
-      </Modal>
-
-      <Modal
-        open={isDeleteTaskModalOpen}
-        onClose={() => setIsDeleteTaskModalOpen(false)}
-        title="Supprimer la consigne ?"
-        description="Cette action retirera la consigne de votre liste."
-        size="sm"
-        footer={
-          <>
-            <Button
-              variant="ghost"
-              onClick={() => setIsDeleteTaskModalOpen(false)}
-            >
-              Annuler
-            </Button>
-            <Button
-              className="bg-rose-600 text-white hover:bg-rose-700 focus-visible:ring-rose-300"
-              onClick={handleConfirmDeleteTask}
-            >
-              Supprimer
-            </Button>
-          </>
-        }
-      >
-        {taskToDelete ? (
-          <p className="text-sm text-[#5f5aa5]">
-            Confirmez-vous la suppression de la consigne « {taskToDelete.title}{" "}
-            » ?
-          </p>
-        ) : null}
-      </Modal>
 
       {/* Activity Modals */}
       <Modal

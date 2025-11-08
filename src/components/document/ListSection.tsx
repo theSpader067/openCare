@@ -1,0 +1,111 @@
+"use client";
+
+import { LucideIcon, Search, X } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { cn } from "@/lib/utils";
+import type { DocumentItem } from "@/types/document";
+
+interface ListSectionProps<T extends DocumentItem> {
+  title: string;
+  items: T[];
+  searchTerm: string;
+  onSearchChange: (term: string) => void;
+  activeItemId: string | null;
+  onSelectItem: (item: T) => void;
+  renderItemContent: (item: T) => React.ReactNode;
+  emptyIcon?: React.ComponentType<any>;
+  emptyTitle?: string;
+  emptyDescription?: string;
+  searchPlaceholder?: string;
+  hideCount?: boolean;
+}
+
+export function ListSection<T extends DocumentItem>({
+  title,
+  items,
+  searchTerm,
+  onSearchChange,
+  activeItemId,
+  onSelectItem,
+  renderItemContent,
+  emptyIcon,
+  emptyTitle,
+  emptyDescription,
+  searchPlaceholder = "Rechercher…",
+  hideCount = false,
+}: ListSectionProps<T>) {
+  return (
+    <Card className="flex h-full w-full flex-col border-none bg-white/95">
+      <CardHeader className="space-y-4 pb-2">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <CardTitle>{title}</CardTitle>
+          {!hideCount && (
+            <Badge variant="muted" className="bg-slate-100 text-slate-600">
+              {items.length}
+            </Badge>
+          )}
+        </div>
+        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
+          <Search className="h-4 w-4 text-slate-400" />
+          <input
+            value={searchTerm}
+            onChange={(event) => onSearchChange(event.target.value)}
+            placeholder={searchPlaceholder}
+            className="w-full bg-transparent focus:outline-none"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => onSearchChange("")}
+              className="p-1 hover:bg-slate-100 rounded transition"
+            >
+              <X className="h-4 w-4 text-slate-400" />
+            </button>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="flex-1 min-h-0 px-6 pb-6">
+        {items.length === 0 ? (
+          <EmptyState
+            icon={emptyIcon as unknown as LucideIcon}
+            title={emptyTitle || "Aucun élément"}
+            description={
+              emptyDescription || "Créez votre premier élément pour commencer."
+            }
+          />
+        ) : (
+          <div className="flex h-full flex-col overflow-y-auto pt-4">
+            <ul className="flex flex-col gap-3">
+              {items.map((item) => {
+                const isActive = item.id === activeItemId;
+                return (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      onClick={() => onSelectItem(item)}
+                      className={cn(
+                        "w-full rounded-2xl border px-4 py-4 text-left shadow-sm transition",
+                        "hover:-translate-y-[1px] hover:shadow-md",
+                        isActive
+                          ? "border-indigo-200 bg-indigo-50/80"
+                          : "border-slate-200 bg-white"
+                      )}
+                    >
+                      {renderItemContent(item)}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

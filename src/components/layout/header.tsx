@@ -6,10 +6,12 @@ import {
   Bell,
   CalendarDays,
   ChevronDown,
+  FileText,
   ListChecks,
   Loader2,
   LogOut,
   Menu,
+  Plus,
   Search,
   Sparkles,
   Stethoscope,
@@ -211,6 +213,8 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
   const profileRef = useRef<HTMLDivElement | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notificationsRef = useRef<HTMLDivElement | null>(null);
+  const [createDropdownOpen, setCreateDropdownOpen] = useState(false);
+  const createDropdownRef = useRef<HTMLDivElement | null>(null);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const mobileSearchInputRef = useRef<HTMLInputElement | null>(null);
   const [rdvPatients, setRdvPatients] = useState<PatientOption[]>(() =>
@@ -284,6 +288,22 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [notificationsOpen]);
+
+  useEffect(() => {
+    if (!createDropdownOpen) {
+      return undefined;
+    }
+    const handleClick = (event: MouseEvent) => {
+      if (
+        createDropdownRef.current &&
+        !createDropdownRef.current.contains(event.target as Node)
+      ) {
+        setCreateDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [createDropdownOpen]);
 
   useEffect(() => {
     if (!rdvSuccess) {
@@ -478,14 +498,88 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
            
 
             <div className="hidden items-center gap-3 xl:flex">
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleOpenRdvModal}
-              >
-                <CalendarDays className="mr-2 h-4 w-4" />
-                Nouveau rendez-vous
-              </Button>
+              <div className="relative" ref={createDropdownRef}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => {
+                    setProfileOpen(false);
+                    setNotificationsOpen(false);
+                    setIsMobileSearchOpen(false);
+                    setShowSuggestions(false);
+                    setCreateDropdownOpen((open) => !open);
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Créer
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 transition-transform",
+                      createDropdownOpen && "rotate-180",
+                    )}
+                  />
+                </Button>
+
+                {createDropdownOpen ? (
+                  <div className="absolute right-0 top-full z-40 mt-3 w-56 rounded-3xl border border-violet-200/70 bg-white/95 p-2 shadow-2xl shadow-indigo-200/60 backdrop-blur">
+                    <ul className="space-y-1">
+                      <li>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCreateDropdownOpen(false);
+                            router.push("/ordonnances");
+                          }}
+                          className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-[#352f72] transition hover:bg-indigo-50/80 hover:text-[#2f2961]"
+                        >
+                          <FileText className="h-5 w-5 text-indigo-600" />
+                          Ordonnance
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCreateDropdownOpen(false);
+                            router.push("/analyses");
+                          }}
+                          className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-[#352f72] transition hover:bg-indigo-50/80 hover:text-[#2f2961]"
+                        >
+                          <Beaker className="h-5 w-5 text-indigo-600" />
+                          Analyses
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCreateDropdownOpen(false);
+                            router.push("/comptes-rendus");
+                          }}
+                          className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-[#352f72] transition hover:bg-indigo-50/80 hover:text-[#2f2961]"
+                        >
+                          <FileText className="h-5 w-5 text-indigo-600" />
+                          Compte rendu
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCreateDropdownOpen(false);
+                            router.push("/avis");
+                          }}
+                          className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-[#352f72] transition hover:bg-indigo-50/80 hover:text-[#2f2961]"
+                        >
+                          <Stethoscope className="h-5 w-5 text-indigo-600" />
+                          Avis
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
               {rdvSuccess ? (
                 <div className="rounded-full border border-emerald-200/70 bg-emerald-50/80 px-3 py-1 text-xs font-semibold text-emerald-700 shadow-sm shadow-emerald-100/60">
                   {rdvSuccess}

@@ -18,7 +18,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
-import { Patient, PatientStatus, RiskLevel, patientsSeed } from "./data";
+import { Patient, PatientStatus, RiskLevel, PatientType, patientsSeed } from "./data";
 import { ObservationTimeline } from "./observation-timeline";
 import { PatientFilters } from "./patient-filters";
 
@@ -132,6 +132,7 @@ export default function PatientsPage() {
   const [filters, setFilters] = useState({
     query: "",
     status: "all",
+    type: "all",
     from: "",
     to: "",
   });
@@ -169,6 +170,7 @@ export default function PatientsPage() {
     setFilters({
       query: "",
       status: "all",
+      type: "all",
       from: "",
       to: "",
     });
@@ -183,6 +185,7 @@ export default function PatientsPage() {
     return (
       filters.query !== "" ||
       filters.status !== "all" ||
+      filters.type !== "all" ||
       filters.from !== "" ||
       filters.to !== ""
     );
@@ -202,6 +205,10 @@ export default function PatientsPage() {
 
     if (filters.status !== "all") {
       result = result.filter((patient) => patient.status === filters.status);
+    }
+
+    if (filters.type !== "all") {
+      result = result.filter((patient) => patient.type === filters.type);
     }
 
     if (filters.from || filters.to) {
@@ -373,9 +380,9 @@ export default function PatientsPage() {
             
             </div>
             <div className="flex flex-col gap-2">
-               
+
                 <div className="flex flex-wrap gap-2">
-                  
+
                   <span
                     className={cn(
                       "px-3 py-1 text-xs font-semibold",
@@ -391,6 +398,16 @@ export default function PatientsPage() {
                     )}
                   >
                     {selectedPatient.status}
+                  </span>
+                  <span
+                    className={cn(
+                      "px-3 py-1 text-xs font-semibold rounded-full",
+                      selectedPatient.type === "privé"
+                        ? "bg-purple-100 text-purple-700"
+                        : "bg-blue-100 text-blue-700",
+                    )}
+                  >
+                    {selectedPatient.type === "privé" ? "Privé" : "Équipe"}
                   </span>
                     <span
                     className={cn(
@@ -469,65 +486,65 @@ export default function PatientsPage() {
 
         <div className="space-y-6">
           <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-            <header className="flex flex-wrap items-center justify-between gap-2">
+            <header className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-200">
               <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
                 <CalendarDays className="h-4 w-4 text-indigo-500" />
                 Observations
               </div>
-              <span className="text-xs text-slate-500">
-                {sortedObservations.length} entrée(s)
+              <span className="text-xs font-medium text-slate-500 bg-slate-50 px-2.5 py-1 rounded-full">
+                {sortedObservations.length} entrée{sortedObservations.length !== 1 ? 's' : ''}
               </span>
             </header>
-            {latestObservation ? (
-              <div className="mt-4 rounded-2xl border border-indigo-100 bg-indigo-50/70 p-4 text-sm text-slate-700 shadow-inner">
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wide text-indigo-600">
-                  <span>{formatObservationDate(latestObservation.timestamp)}</span>
-                  <span className="text-indigo-400">
-                    {formatRelativeTimeFromNow(latestObservation.timestamp)}
-                  </span>
+
+            {sortedObservations.length > 0 ? (
+              <div className="mt-5 max-h-80 overflow-y-auto pr-2">
+                <div className="space-y-4">
+                  {sortedObservations.map((observation, index) => (
+                    <div key={observation.id ?? `${observation.timestamp}-${index}`} className="flex gap-4">
+                      {/* Timeline indicator */}
+                      <div className="flex flex-col items-center flex-shrink-0">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-indigo-300 bg-indigo-50 shadow-sm">
+                          <span className="h-2 w-2 rounded-full bg-indigo-500" />
+                        </div>
+                        {index < sortedObservations.length - 1 && (
+                          <div className="my-1 h-8 w-px bg-gradient-to-b from-indigo-300 to-slate-200" />
+                        )}
+                      </div>
+
+                      {/* Observation content */}
+                      <div className="flex-1 pb-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                          <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">
+                            {formatObservationDate(observation.timestamp)}
+                          </p>
+                          <span className="text-xs text-slate-400">
+                            {formatRelativeTimeFromNow(observation.timestamp)}
+                          </span>
+                        </div>
+                        <div className="rounded-lg bg-slate-50 border border-slate-200 p-3">
+                          <p className="text-sm text-slate-700 leading-relaxed line-clamp-3">
+                            {observation.note.length > 150
+                              ? `${observation.note.substring(0, 150)}...`
+                              : observation.note}
+                          </p>
+                          {observation.note.length > 150 && (
+                            <p className="text-xs text-indigo-600 font-medium mt-2">
+                              Afficher plus
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <p className="mt-3 whitespace-pre-line leading-relaxed">
-                  {latestObservation.note}
-                </p>
               </div>
             ) : (
-              <p className="mt-3 text-sm text-slate-500">
+              <p className="mt-4 text-sm text-slate-500">
                 Aucune observation enregistrée pour ce patient.
               </p>
             )}
-            {otherObservations.length > 0 ? (
-              <div className="mt-4">
-                <ObservationTimeline
-                  entries={otherObservations}
-                  className="max-h-52 rounded-xl border border-slate-200/80 bg-white/70 px-4 py-4"
-                  emptyMessage="Pas d'autres observations."
-                />
-              </div>
-            ) : null}
           </section>
 
-          <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-slate-800">
-              Consignes et actions
-            </h3>
-            {selectedPatient.instructions.length > 0 ? (
-              <ul className="mt-4 space-y-3 text-sm text-slate-700">
-                {selectedPatient.instructions.map((instruction) => (
-                  <li
-                    key={instruction}
-                    className="flex items-start gap-3 rounded-lg bg-slate-50/80 px-3.5 py-2.5 leading-relaxed"
-                  >
-                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-indigo-500" />
-                    <span>{instruction}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="mt-3 text-sm text-slate-500">
-                Aucune consigne particulière pour le moment.
-              </p>
-            )}
-          </section>
         </div>
       </div>
     );
@@ -636,6 +653,9 @@ export default function PatientsPage() {
                         Statut
                       </th>
                       <th className="px-4 py-3 font-medium text-slate-500">
+                        Type
+                      </th>
+                      <th className="px-4 py-3 font-medium text-slate-500">
                         CIM
                       </th>
                       <th className="px-4 py-3 text-right font-medium text-slate-500">
@@ -684,6 +704,18 @@ export default function PatientsPage() {
                           >
                             {patient.status}
                           </Badge>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={cn(
+                              "px-3 py-1 text-xs font-semibold rounded-full",
+                              patient.type === "privé"
+                                ? "bg-purple-100 text-purple-700"
+                                : "bg-blue-100 text-blue-700",
+                            )}
+                          >
+                            {patient.type === "privé" ? "Privé" : "Équipe"}
+                          </span>
                         </td>
                         <td className="px-4 py-3 text-sm text-slate-600">
                           <div className="flex flex-col">
@@ -855,6 +887,32 @@ export default function PatientsPage() {
                   <option value="Hospitalisé">Hospitalisé</option>
                   <option value="Consultation">Consultation</option>
                   <option value="Suivi">Suivi</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label
+                  htmlFor="edit-type"
+                  className="text-sm font-medium text-[#221b5b]"
+                >
+                  Type
+                </label>
+                <select
+                  id="edit-type"
+                  className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-[#7c3aed] focus:outline-none focus:ring-2 focus:ring-[#dcd0ff]"
+                  value={editForm.type}
+                  onChange={(event) =>
+                    setEditForm((previous) =>
+                      previous
+                        ? {
+                            ...previous,
+                            type: event.target.value as PatientType,
+                          }
+                        : previous,
+                    )
+                  }
+                >
+                  <option value="privé">Privé</option>
+                  <option value="équipe">Équipe</option>
                 </select>
               </div>
             </div>

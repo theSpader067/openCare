@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Plus, FileText, Stethoscope, FlaskConical, ListChecks } from "lucide-react";
+import { Plus, FileText, Stethoscope, FlaskConical, ListChecks, ClipboardPlus } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { primaryNav, bottomNav } from "./sidebar";
@@ -24,7 +24,7 @@ const createMenuItems = [
     icon: FileText,
   },
   {
-    href: "/messages",
+    href: "/avis",
     label: "Avis",
     icon: Stethoscope,
   },
@@ -40,7 +40,7 @@ const mobileNavItemsTablet = [
   {
     isDropdown: true,
     label: "Créer",
-    icon: Plus,
+    icon: ClipboardPlus,
   },
   {
     href: "/tasks",
@@ -59,7 +59,7 @@ const mobileNavItemsPhone = [
   {
     isDropdown: true,
     label: "Créer",
-    icon: Plus,
+    icon: ClipboardPlus,
   },
   {
     href: "/tasks",
@@ -143,7 +143,7 @@ export function MobileNav() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-30 w-full border-t border-violet-200/70 bg-white/85 px-4 py-2 shadow-[0_-6px_18px_rgba(99,102,241,0.15)] backdrop-blur-xl lg:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-30 w-full border-t border-violet-200/70 bg-white/85 px-4 py-1.5 shadow-[0_-6px_18px_rgba(99,102,241,0.15)] backdrop-blur-xl lg:hidden">
       <div className="flex w-full items-center justify-evenly">
         {/* Phone screens (< md) */}
         <div className="flex w-full items-center justify-evenly md:hidden">

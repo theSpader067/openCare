@@ -1,37 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  Calendar,
-  Clock,
-  Plus,
-  Search,
-  Pill,
-  Users,
-  X,
-  ArrowLeft,
-  User,
-  FilePlus,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Calendar, FilePlus, Pill, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
-
-type Patient = {
-  id: string;
-  fullName: string;
-  age: number;
-  histoire: string;
-};
+import { DataListLayout } from "@/components/document/DataListLayout";
+import { PatientModal } from "@/components/document/PatientModal";
+import type { Patient } from "@/types/document";
 
 type Ordonnance = {
   id: string;
@@ -42,6 +16,7 @@ type Ordonnance = {
   prescriptionDetails: string;
   createdAt: string;
   createdBy: string;
+  age?: number;
 };
 
 const mockPatients: Patient[] = [
@@ -190,8 +165,7 @@ export default function OrdonnancesPage() {
     null
   );
   const [showPatientModal, setShowPatientModal] = useState(false);
-  const [patientMode, setPatientMode] = useState<"select" | "new">("select");
-  const [patientSearch, setPatientSearch] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [createForm, setCreateForm] = useState({
     title: "",
@@ -200,12 +174,6 @@ export default function OrdonnancesPage() {
     clinicalInfo: "",
     prescriptionDetails: "",
   });
-  const [newPatientForm, setNewPatientForm] = useState({
-    fullName: "",
-    age: "",
-    histoire: "",
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const userOrdonnances = useMemo(() => {
     return ordonnances.filter((ord) => ord.createdBy === "Vous");
@@ -222,19 +190,6 @@ export default function OrdonnancesPage() {
       );
     });
   }, [userOrdonnances, searchTerm]);
-
-  const filteredPatients = useMemo(() => {
-    const query = patientSearch.trim().toLowerCase();
-    if (!query) {
-      return mockPatients;
-    }
-    return mockPatients.filter((patient) => {
-      return (
-        patient.fullName.toLowerCase().includes(query) ||
-        patient.histoire.toLowerCase().includes(query)
-      );
-    });
-  }, [patientSearch]);
 
   useEffect(() => {
     if (!isCreateMode && !activeOrdonnanceId && filteredOrdonnances.length > 0) {
@@ -277,34 +232,34 @@ export default function OrdonnancesPage() {
       clinicalInfo: "",
       prescriptionDetails: "",
     });
-    setNewPatientForm({ fullName: "", age: "", histoire: "" });
-    setPatientSearch("");
-    setPatientMode("select");
 
     if (typeof window !== "undefined" && window.innerWidth < 1280) {
       openMobilePanel("create");
     }
   };
 
+  const handleCancelCreate = () => {
+    setIsCreateMode(false);
+    closeMobilePanel();
+  };
+
   const handleSelectPatient = (patient: Patient) => {
     setCreateForm((prev) => ({ ...prev, patient }));
     setShowPatientModal(false);
-    setPatientSearch("");
   };
 
-  const handleCreateNewPatient = () => {
-    if (!newPatientForm.fullName.trim() || !newPatientForm.age) {
+  const handleCreateNewPatient = (formData: Record<string, string>) => {
+    if (!formData.fullName?.trim() || !formData.age) {
       return;
     }
     const newPatient: Patient = {
       id: `P-${Date.now()}`,
-      fullName: newPatientForm.fullName.trim(),
-      age: parseInt(newPatientForm.age, 10),
-      histoire: newPatientForm.histoire.trim(),
+      fullName: formData.fullName.trim(),
+      age: parseInt(formData.age, 10),
+      histoire: formData.histoire?.trim() || "",
     };
     setCreateForm((prev) => ({ ...prev, patient: newPatient }));
     setShowPatientModal(false);
-    setNewPatientForm({ fullName: "", age: "", histoire: "" });
   };
 
   const handleCreateOrdonnance = () => {
@@ -347,710 +302,262 @@ export default function OrdonnancesPage() {
     }, 520);
   };
 
-  const handleCancelCreate = () => {
-    setIsCreateMode(false);
-    closeMobilePanel();
-    setCreateForm({
-      title: "",
-      date: new Date().toISOString().split("T")[0],
-      patient: null,
-      clinicalInfo: "",
-      prescriptionDetails: "",
-    });
-  };
+  const isFormValid =
+    createForm.title &&
+    createForm.date &&
+    createForm.patient &&
+    createForm.clinicalInfo &&
+    createForm.prescriptionDetails;
 
-  const renderCreateFormContent = () => (
+  const createFormContent = (
+    <div className="space-y-4">
+      {/* Title */}
+      <div className="space-y-2">
+        <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+          Titre de l'ordonnance
+        </label>
+        <input
+          type="text"
+          value={createForm.title}
+          onChange={(e) =>
+            setCreateForm((prev) => ({ ...prev, title: e.target.value }))
+          }
+          placeholder="Ex: Traitement post-opératoire"
+          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        />
+      </div>
+
+      {/* Date */}
+      <div className="space-y-2">
+        <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+          Date
+        </label>
+        <input
+          type="date"
+          value={createForm.date}
+          onChange={(e) =>
+            setCreateForm((prev) => ({ ...prev, date: e.target.value }))
+          }
+          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        />
+      </div>
+
+      {/* Patient Selection */}
+      <div className="space-y-2">
+        <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+          Patient
+        </label>
+        <button
+          type="button"
+          onClick={() => setShowPatientModal(true)}
+          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        >
+          {createForm.patient ? (
+            <span className="font-medium text-slate-900">
+              {createForm.patient.fullName}
+            </span>
+          ) : (
+            <span className="text-slate-500">Sélectionner un patient</span>
+          )}
+        </button>
+      </div>
+
+      {/* Clinical Info */}
+      <div className="space-y-2">
+        <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+          Renseignement clinique
+        </label>
+        <textarea
+          value={createForm.clinicalInfo}
+          onChange={(e) =>
+            setCreateForm((prev) => ({
+              ...prev,
+              clinicalInfo: e.target.value,
+            }))
+          }
+          placeholder="Contexte clinique et antécédents pertinents..."
+          rows={3}
+          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        />
+      </div>
+
+      {/* Prescription Details */}
+      <div className="space-y-2">
+        <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+          Détails de la prescription
+        </label>
+        <textarea
+          value={createForm.prescriptionDetails}
+          onChange={(e) =>
+            setCreateForm((prev) => ({
+              ...prev,
+              prescriptionDetails: e.target.value,
+            }))
+          }
+          placeholder="1. Médicament A - dosage × fréquence..."
+          rows={6}
+          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        />
+      </div>
+    </div>
+  );
+
+  const detailViewContent = activeOrdonnance ? (
     <>
-      <div className="space-y-4">
-        {/* Title */}
-        <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-            Titre de l'ordonnance
-          </label>
-          <input
-            type="text"
-            value={createForm.title}
-            onChange={(e) =>
-              setCreateForm((prev) => ({ ...prev, title: e.target.value }))
-            }
-            placeholder="Ex: Traitement post-opératoire"
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-          />
+      {/* Header with Patient ID and Date */}
+      <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-200">
+        <div>
+          <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
+            ID Patient
+          </p>
+          <p className="text-lg font-bold text-slate-900 mt-1">
+            {activeOrdonnance.patient?.id}
+          </p>
         </div>
-
-        {/* Date */}
-        <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+        <div className="text-right">
+          <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
             Date
-          </label>
-          <input
-            type="date"
-            value={createForm.date}
-            onChange={(e) =>
-              setCreateForm((prev) => ({ ...prev, date: e.target.value }))
-            }
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-          />
-        </div>
-
-        {/* Patient Selection */}
-        <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-            Patient
-          </label>
-          <button
-            type="button"
-            onClick={() => setShowPatientModal(true)}
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-          >
-            {createForm.patient ? (
-              <span className="font-medium text-slate-900">
-                {createForm.patient.fullName}
-              </span>
-            ) : (
-              <span className="text-slate-500">Sélectionner un patient</span>
-            )}
-          </button>
-        </div>
-
-        {/* Clinical Info */}
-        <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-            Renseignement clinique
-          </label>
-          <textarea
-            value={createForm.clinicalInfo}
-            onChange={(e) =>
-              setCreateForm((prev) => ({
-                ...prev,
-                clinicalInfo: e.target.value,
-              }))
-            }
-            placeholder="Contexte clinique et antécédents pertinents..."
-            rows={3}
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-          />
-        </div>
-
-        {/* Prescription Details */}
-        <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-            Détails de la prescription
-          </label>
-          <textarea
-            value={createForm.prescriptionDetails}
-            onChange={(e) =>
-              setCreateForm((prev) => ({
-                ...prev,
-                prescriptionDetails: e.target.value,
-              }))
-            }
-            placeholder="1. Médicament A - dosage × fréquence..."
-            rows={6}
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-          />
+          </p>
+          <p className="text-lg font-bold text-slate-900 mt-1">
+            {formatDate(activeOrdonnance.date)}
+          </p>
         </div>
       </div>
+
+      {/* Ordonnance Title */}
+      <div>
+        <p className="text-xs uppercase tracking-wide text-indigo-600 font-semibold mb-2">
+          Ordonnance
+        </p>
+        <h2 className="text-2xl font-bold text-slate-900">
+          {activeOrdonnance.title}
+        </h2>
+      </div>
+
+      {/* Patient Info */}
+      {activeOrdonnance.patient && (
+        <section className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50 p-4 shadow-sm">
+          <header className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-indigo-600">
+            <User className="h-4 w-4" />
+            Patient
+          </header>
+          <p className="text-sm font-semibold text-slate-900">
+            {activeOrdonnance.patient.fullName}
+          </p>
+          <p className="text-sm text-slate-700 mt-2">
+            {(activeOrdonnance.patient as any).age} ans
+          </p>
+        </section>
+      )}
+
+      {/* Clinical Information */}
+      <section className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
+        <header className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Renseignement clinique
+        </header>
+        <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
+          {activeOrdonnance.clinicalInfo}
+        </p>
+      </section>
+
+      {/* Prescription Details */}
+      <section className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm flex-1">
+        <header className="mb-3 text-xs font-semibold uppercase tracking-wide text-indigo-600">
+          Détails de la prescription
+        </header>
+        <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap font-mono">
+          {activeOrdonnance.prescriptionDetails}
+        </p>
+      </section>
+    </>
+  ) : null;
+
+  const renderListItemContent = (ordonnance: Ordonnance) => (
+    <>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-slate-800">
+            {ordonnance.title}
+          </p>
+          <p className="text-xs text-slate-500">
+            Créé par {ordonnance.createdBy}
+          </p>
+        </div>
+        <span className="text-xs text-slate-400">
+          {formatDate(ordonnance.date)}
+        </span>
+      </div>
+      {ordonnance.patient && (
+        <div className="mt-3 rounded-xl border border-slate-200/70 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+          <p className="font-semibold text-slate-700">
+            {ordonnance.patient.fullName}
+          </p>
+          <p className="text-xs text-slate-500 mt-1">
+            {(ordonnance.patient as any).age} ans
+          </p>
+        </div>
+      )}
+      <p className="mt-3 text-sm text-slate-600 line-clamp-2">
+        {ordonnance.prescriptionDetails}
+      </p>
     </>
   );
 
   return (
-    <div className="space-y-4 h-fit">
-      {/* Desktop View */}
-      <section className="hidden xl:block space-y-4">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Ordonnances</CardTitle>
-                <CardDescription>
-                  Gérez vos ordonnances prescrites
-                </CardDescription>
-              </div>
-              <Button
-                onClick={handleOpenCreate}
-                className="gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Nouvelle ordonnance
-              </Button>
-            </div>
-          </CardHeader>
-        </Card>
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-          {/* List Section */}
-          <Card className="xl:col-span-1">
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2 px-1 py-1.5 rounded-lg border border-slate-200 bg-slate-50">
-                <Search className="h-4 w-4 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Rechercher..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1 bg-transparent text-sm text-slate-600 outline-none placeholder:text-slate-400"
-                />
-                {searchTerm && (
-                  <button
-                    onClick={() => setSearchTerm("")}
-                    className="p-1 hover:bg-slate-200 rounded transition"
-                  >
-                    <X className="h-4 w-4 text-slate-400" />
-                  </button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              {filteredOrdonnances.length === 0 ? (
-                <EmptyState
-                  icon={Pill}
-                  title="Aucune ordonnance"
-                  description="Créez votre première ordonnance"
-                />
-              ) : (
-                <ul className="space-y-2">
-                  {filteredOrdonnances.map((ordonnance) => {
-                    const isActive = activeOrdonnanceId === ordonnance.id;
-                    return (
-                      <li key={ordonnance.id}>
-                        <button
-                          type="button"
-                          onClick={() => handleSelectOrdonnance(ordonnance.id)}
-                          className={cn(
-                            "w-full rounded-2xl border px-4 py-4 text-left shadow-sm transition",
-                            "hover:-translate-y-[1px] hover:shadow-md",
-                            isActive
-                              ? "border-indigo-200 bg-indigo-50/80"
-                              : "border-slate-200 bg-white"
-                          )}
-                        >
-                          <div className="flex flex-wrap items-start justify-between gap-3">
-                            <div className="space-y-1">
-                              <p className="text-sm font-semibold text-slate-800">
-                                {ordonnance.title}
-                              </p>
-                              <p className="text-xs text-slate-500">
-                                Créé par {ordonnance.createdBy}
-                              </p>
-                            </div>
-                            <span className="text-xs text-slate-400">
-                              {formatDate(ordonnance.date)}
-                            </span>
-                          </div>
-                          {ordonnance.patient && (
-                            <div className="mt-3 rounded-xl border border-slate-200/70 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                              <p className="font-semibold text-slate-700">
-                                {ordonnance.patient.fullName}
-                              </p>
-                              <p className="text-xs text-slate-500 mt-1">
-                                {ordonnance.patient.age} ans
-                              </p>
-                            </div>
-                          )}
-                          <p className="mt-3 text-sm text-slate-600 line-clamp-2">
-                            {ordonnance.prescriptionDetails}
-                          </p>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Detail Section */}
-          {isCreateMode ? (
-            <Card className="xl:col-span-2 h-full">
-              <CardHeader className="pb-3 border-b border-slate-200">
-                <CardTitle>Nouvelle ordonnance</CardTitle>
-              </CardHeader>
-              <ScrollArea className="h-full">
-                <div className="p-6 pb-24">
-                  {renderCreateFormContent()}
-                </div>
-              </ScrollArea>
-              <div className="border-t border-slate-200/70 bg-white/90 p-4 space-y-3 flex-shrink-0">
-                <Button
-                  variant="ghost"
-                  className="w-full"
-                  onClick={handleCancelCreate}
-                >
-                  Annuler
-                </Button>
-                <Button
-                  className="w-full"
-                  onClick={handleCreateOrdonnance}
-                  disabled={
-                    !createForm.title ||
-                    !createForm.date ||
-                    !createForm.patient ||
-                    !createForm.clinicalInfo ||
-                    !createForm.prescriptionDetails ||
-                    isSubmitting
-                  }
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  {isSubmitting ? "Enregistrement…" : "Enregistrer"}
-                </Button>
-              </div>
-            </Card>
-          ) : activeOrdonnance ? (
-            <Card className="xl:col-span-2 h-full">
-              <ScrollArea className="h-full">
-                <div className="p-6 pb-24 space-y-5">
-                  {/* Header with Patient ID and Date */}
-                  <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-200">
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
-                        ID Patient
-                      </p>
-                      <p className="text-lg font-bold text-slate-900 mt-1">
-                        {activeOrdonnance.patient?.id}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
-                        Date
-                      </p>
-                      <p className="text-lg font-bold text-slate-900 mt-1">
-                        {formatDate(activeOrdonnance.date)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Ordonnance Title */}
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-indigo-600 font-semibold mb-2">
-                      Ordonnance
-                    </p>
-                    <h2 className="text-2xl font-bold text-slate-900">
-                      {activeOrdonnance.title}
-                    </h2>
-                  </div>
-
-                  {/* Patient Info */}
-                  {activeOrdonnance.patient && (
-                    <section className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50 p-4 shadow-sm">
-                      <header className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-indigo-600">
-                        <User className="h-4 w-4" />
-                        Patient
-                      </header>
-                      <p className="text-sm font-semibold text-slate-900">
-                        {activeOrdonnance.patient.fullName}
-                      </p>
-                      <p className="text-sm text-slate-700 mt-2">
-                        {activeOrdonnance.patient.age} ans
-                      </p>
-                    </section>
-                  )}
-
-                  {/* Clinical Information */}
-                  <section className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
-                    <header className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Renseignement clinique
-                    </header>
-                    <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
-                      {activeOrdonnance.clinicalInfo}
-                    </p>
-                  </section>
-
-                  {/* Prescription Details - Takes remaining space */}
-                  <section className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm flex-1">
-                    <header className="mb-3 text-xs font-semibold uppercase tracking-wide text-indigo-600">
-                      Détails de la prescription
-                    </header>
-                    <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap font-mono">
-                      {activeOrdonnance.prescriptionDetails}
-                    </p>
-                  </section>
-                </div>
-              </ScrollArea>
-            </Card>
-          ) : null}
+    <>
+    <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between my-2">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">Ordonnances</h1>
+          <p className="text-sm text-slate-500">
+            Gérez vos prescriptions médicales et consultez l'historique des ordonnances.
+          </p>
         </div>
+        <Button
+          variant="primary"
+          className="w-full sm:w-auto hidden xl:flex"
+          onClick={handleOpenCreate}
+        >
+          <FilePlus className="mr-2 h-4 w-4" />
+          Nouvelle ordonnance
+        </Button>
       </section>
+      <DataListLayout
+        items={ordonnances}
+        filteredItems={filteredOrdonnances}
+        activeItemId={activeOrdonnanceId}
+        isCreateMode={isCreateMode}
+        isMobilePanelOpen={isMobilePanelOpen}
+        mobilePanelMode={mobilePanelMode}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        onSelectItem={(item: Ordonnance) => handleSelectOrdonnance(item.id)}
+        onOpenCreate={handleOpenCreate}
+        onCancelCreate={handleCancelCreate}
+        onCloseMobilePanel={closeMobilePanel}
+        title="Ordonnances"
+        renderListItemContent={renderListItemContent}
+        renderDetailViewContent={detailViewContent ? () => detailViewContent : () => null}
+        createFormContent={createFormContent}
+        emptyIcon={Pill}
+        emptyTitle="Aucune ordonnance"
+        emptyDescription="Créez votre première ordonnance"
+        searchPlaceholder="Rechercher une ordonnance..."
+        isSubmitting={isSubmitting}
+        createTitle="Nouvelle ordonnance"
+        createDescription="Enregistrez une nouvelle prescription"
+        saveButtonText="Enregistrer"
+        isFormValid={isFormValid as unknown as boolean}
+        onSave={handleCreateOrdonnance}
+      />
 
-      {/* Mobile List View */}
-      <section className="xl:hidden space-y-4 pb-20">
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Mes ordonnances</CardTitle>
-                <CardDescription>
-                  Vos ordonnances créées
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2 px-1 py-1.5 rounded-lg border border-slate-200 bg-slate-50">
-              <Search className="h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Rechercher..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1 bg-transparent text-sm text-slate-600 outline-none placeholder:text-slate-400"
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm("")}
-                  className="p-1 hover:bg-slate-200 rounded transition"
-                >
-                  <X className="h-4 w-4 text-slate-400" />
-                </button>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {filteredOrdonnances.length === 0 ? (
-              <EmptyState
-                icon={Pill}
-                title="Aucune ordonnance"
-                description="Créez votre première ordonnance"
-              />
-            ) : (
-              <ul className="space-y-2">
-                {filteredOrdonnances.map((ordonnance) => (
-                  <li key={ordonnance.id}>
-                    <button
-                      type="button"
-                      onClick={() => handleSelectOrdonnance(ordonnance.id)}
-                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left shadow-sm transition hover:-translate-y-[1px] hover:shadow-md"
-                    >
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div className="space-y-1">
-                          <p className="text-sm font-semibold text-slate-800">
-                            {ordonnance.title}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            Créé par {ordonnance.createdBy}
-                          </p>
-                        </div>
-                        <span className="text-xs text-slate-400">
-                          {formatDate(ordonnance.date)}
-                        </span>
-                      </div>
-                      {ordonnance.patient && (
-                        <div className="mt-3 rounded-xl border border-slate-200/70 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                          <p className="font-semibold text-slate-700">
-                            {ordonnance.patient.fullName}
-                          </p>
-                          <p className="text-xs text-slate-500 mt-1">
-                            {ordonnance.patient.age} ans
-                          </p>
-                        </div>
-                      )}
-                      <p className="mt-3 text-sm text-slate-600 line-clamp-2">
-                        {ordonnance.prescriptionDetails}
-                      </p>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* Mobile Floating Button */}
-      {!isMobilePanelOpen && (
-        <div className="fixed bottom-24 right-4 xl:hidden z-40">
-          <Button
-            onClick={handleOpenCreate}
-            size="lg"
-            className="h-14 w-14 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg"
-          >
-            <FilePlus className="h-6 w-6" />
-          </Button>
-        </div>
-      )}
-
-      {/* Mobile Sliding Panel */}
-      {isMobilePanelOpen && (
-        <div className="fixed inset-0 z-50 bg-black/20 xl:hidden flex items-end">
-          <div className="w-full rounded-t-3xl border-t border-slate-200 bg-white shadow-2xl overflow-hidden flex flex-col h-[95vh]">
-            {/* Panel Header */}
-            <div className="flex items-center justify-between p-4 border-b border-slate-200 flex-shrink-0">
-              <button
-                onClick={closeMobilePanel}
-                className="flex items-center gap-2 text-indigo-600 font-medium text-sm hover:text-indigo-700"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Retour
-              </button>
-              {mobilePanelMode === "view" && activeOrdonnance && (
-                <h3 className="font-semibold text-slate-900 truncate flex-1 mx-4">
-                  {activeOrdonnance.title}
-                </h3>
-              )}
-              {mobilePanelMode === "create" && (
-                <h3 className="font-semibold text-slate-900">Nouvelle ordonnance</h3>
-              )}
-            </div>
-
-            {/* Panel Content */}
-            {mobilePanelMode === "view" && activeOrdonnance ? (
-              <>
-                <ScrollArea className="flex-1">
-                  <div className="p-4 pb-24">
-                    <div className="space-y-4">
-                      {/* Header with Patient ID and Date */}
-                      <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-200">
-                        <div>
-                          <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
-                            ID Patient
-                          </p>
-                          <p className="font-bold text-slate-900 mt-1">
-                            {activeOrdonnance.patient?.id}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
-                            Date
-                          </p>
-                          <p className="font-bold text-slate-900 mt-1">
-                            {formatDate(activeOrdonnance.date)}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Ordonnance Title */}
-                      <div>
-                        <p className="text-xs uppercase tracking-wide text-indigo-600 font-semibold mb-2">
-                          Ordonnance
-                        </p>
-                        <h2 className="text-xl font-bold text-slate-900">
-                          {activeOrdonnance.title}
-                        </h2>
-                      </div>
-
-                      {/* Patient Info */}
-                      {activeOrdonnance.patient && (
-                        <section className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50 p-4 shadow-sm">
-                          <header className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-indigo-600">
-                            <User className="h-4 w-4" />
-                            Patient
-                          </header>
-                          <p className="text-sm font-semibold text-slate-900">
-                            {activeOrdonnance.patient.fullName}
-                          </p>
-                          <p className="text-sm text-slate-700 mt-2">
-                            {activeOrdonnance.patient.age} ans
-                          </p>
-                        </section>
-                      )}
-
-                      {/* Clinical Information */}
-                      <section className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
-                        <header className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                          Renseignement clinique
-                        </header>
-                        <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
-                          {activeOrdonnance.clinicalInfo}
-                        </p>
-                      </section>
-
-                      {/* Prescription Details */}
-                      <section className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
-                        <header className="mb-3 text-xs font-semibold uppercase tracking-wide text-indigo-600">
-                          Détails de la prescription
-                        </header>
-                        <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap font-mono">
-                          {activeOrdonnance.prescriptionDetails}
-                        </p>
-                      </section>
-                    </div>
-                  </div>
-                </ScrollArea>
-              </>
-            ) : mobilePanelMode === "create" ? (
-              <>
-                <ScrollArea className="flex-1">
-                  <div className="p-4 pb-24">
-                    {renderCreateFormContent()}
-                  </div>
-                </ScrollArea>
-                <div className="border-t border-slate-200/70 bg-white/90 p-4 space-y-3 flex-shrink-0">
-                  <Button
-                    variant="ghost"
-                    className="w-full"
-                    onClick={handleCancelCreate}
-                  >
-                    Annuler
-                  </Button>
-                  <Button
-                    className="w-full"
-                    onClick={handleCreateOrdonnance}
-                    disabled={
-                      !createForm.title ||
-                      !createForm.date ||
-                      !createForm.patient ||
-                      !createForm.clinicalInfo ||
-                      !createForm.prescriptionDetails ||
-                      isSubmitting
-                    }
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    {isSubmitting ? "Enregistrement…" : "Enregistrer"}
-                  </Button>
-                </div>
-              </>
-            ) : null}
-          </div>
-        </div>
-      )}
-
-      {/* Patient Modal */}
-      {showPatientModal && (
-        <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md border-none shadow-2xl">
-            <CardHeader className="relative pb-3">
-              <CardTitle>Sélectionner ou créer un patient</CardTitle>
-              <button
-                onClick={() => setShowPatientModal(false)}
-                className="absolute top-4 right-4 p-1 hover:bg-slate-100 rounded-lg transition"
-              >
-                <X className="h-5 w-5 text-slate-500" />
-              </button>
-            </CardHeader>
-
-            <CardContent className="space-y-4">
-              {/* Mode Tabs */}
-              <div className="flex gap-2 border-b border-slate-200">
-                <button
-                  onClick={() => setPatientMode("select")}
-                  className={cn(
-                    "px-4 py-2 text-sm font-medium border-b-2 transition",
-                    patientMode === "select"
-                      ? "border-indigo-600 text-indigo-600"
-                      : "border-transparent text-slate-600"
-                  )}
-                >
-                  Existants
-                </button>
-                <button
-                  onClick={() => setPatientMode("new")}
-                  className={cn(
-                    "px-4 py-2 text-sm font-medium border-b-2 transition",
-                    patientMode === "new"
-                      ? "border-indigo-600 text-indigo-600"
-                      : "border-transparent text-slate-600"
-                  )}
-                >
-                  Nouveau
-                </button>
-              </div>
-
-              {patientMode === "select" ? (
-                <div className="space-y-3">
-                  {/* Search Input */}
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-slate-50">
-                    <Search className="h-4 w-4 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="Rechercher un patient..."
-                      value={patientSearch}
-                      onChange={(e) => setPatientSearch(e.target.value)}
-                      className="flex-1 bg-transparent text-sm text-slate-600 outline-none placeholder:text-slate-400"
-                    />
-                  </div>
-                  {/* Patients List */}
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {filteredPatients.length > 0 ? (
-                      filteredPatients.map((patient) => (
-                        <button
-                          key={patient.id}
-                          onClick={() => handleSelectPatient(patient)}
-                          className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition"
-                        >
-                          <p className="font-medium text-slate-900">
-                            {patient.fullName}
-                          </p>
-                          <p className="text-xs text-slate-500 line-clamp-1">
-                            {patient.age} ans • {patient.histoire.substring(0, 40)}...
-                          </p>
-                        </button>
-                      ))
-                    ) : (
-                      <p className="text-center text-sm text-slate-500 py-4">
-                        Aucun patient trouvé
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-xs font-semibold uppercase text-slate-600">
-                      Nom complet
-                    </label>
-                    <input
-                      type="text"
-                      value={newPatientForm.fullName}
-                      onChange={(e) =>
-                        setNewPatientForm((prev) => ({
-                          ...prev,
-                          fullName: e.target.value,
-                        }))
-                      }
-                      placeholder="Nom et prénom"
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold uppercase text-slate-600">
-                      Âge
-                    </label>
-                    <input
-                      type="number"
-                      value={newPatientForm.age}
-                      onChange={(e) =>
-                        setNewPatientForm((prev) => ({
-                          ...prev,
-                          age: e.target.value,
-                        }))
-                      }
-                      placeholder="30"
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold uppercase text-slate-600">
-                      Histoire
-                    </label>
-                    <textarea
-                      value={newPatientForm.histoire}
-                      onChange={(e) =>
-                        setNewPatientForm((prev) => ({
-                          ...prev,
-                          histoire: e.target.value,
-                        }))
-                      }
-                      placeholder="Contexte clinique..."
-                      rows={3}
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                    />
-                  </div>
-                  <Button
-                    className="w-full"
-                    onClick={handleCreateNewPatient}
-                    disabled={!newPatientForm.fullName.trim() || !newPatientForm.age}
-                  >
-                    Créer le patient
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
-    </div>
+      <PatientModal
+        isOpen={showPatientModal}
+        onClose={() => setShowPatientModal(false)}
+        patients={mockPatients}
+        onSelectPatient={handleSelectPatient}
+        newPatientFields={["fullName", "age", "histoire"]}
+        onCreatePatient={handleCreateNewPatient}
+      />
+    </>
   );
 }

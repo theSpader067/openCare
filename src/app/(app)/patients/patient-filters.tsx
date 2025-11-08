@@ -9,6 +9,7 @@ import { PatientStatus } from "./data";
 type PatientFilters = {
   query: string;
   status: string;
+  type: string;
   from: string;
   to: string;
 };
@@ -101,6 +102,24 @@ export function PatientFilters({
               </select>
             </div>
 
+            {/* Type Filter */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Type
+              </label>
+              <select
+                value={filters.type}
+                onChange={(event) =>
+                  onFilterChange("type", event.target.value)
+                }
+                className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              >
+                <option value="all">Tous les types</option>
+                <option value="privé">Privé</option>
+                <option value="équipe">Équipe</option>
+              </select>
+            </div>
+
             {/* Date Range - From */}
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -147,12 +166,13 @@ export function PatientFilters({
 
       {/* Desktop Search - Always Visible */}
       <div className="hidden sm:block">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div className="flex w-full flex-col gap-2 md:max-w-[360px]">
+        {/* Row 1: Search Bar */}
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:gap-4 lg:pb-4 lg:border-b lg:border-slate-200">
+          <div className="flex-1">
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Patient / identifiant
             </label>
-            <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm">
+            <div className="mt-2 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm">
               <Search className="h-4 w-4 flex-shrink-0 text-slate-400" />
               <input
                 type="search"
@@ -165,54 +185,7 @@ export function PatientFilters({
               />
             </div>
           </div>
-          <div className="grid w-full gap-3 sm:grid-cols-3 md:max-w-xl">
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Statut
-              </label>
-              <select
-                value={filters.status}
-                onChange={(event) =>
-                  onFilterChange("status", event.target.value)
-                }
-                className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-              >
-                <option value="all">Tous les statuts</option>
-                {uniqueStatuses.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Du
-              </label>
-              <input
-                type="date"
-                value={filters.from}
-                onChange={(event) =>
-                  onFilterChange("from", event.target.value)
-                }
-                className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Au
-              </label>
-              <input
-                type="date"
-                value={filters.to}
-                onChange={(event) =>
-                  onFilterChange("to", event.target.value)
-                }
-                className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-              />
-            </div>
-          </div>
-          <div className="flex w-full flex-col items-stretch gap-2 sm:flex-row sm:justify-end sm:gap-3 md:w-auto">
+          <div className="hidden lg:flex lg:items-end lg:gap-3">
             <Button
               variant="ghost"
               size="sm"
@@ -223,6 +196,87 @@ export function PatientFilters({
               Réinitialiser
             </Button>
           </div>
+        </div>
+
+        {/* Row 2: Filter Controls */}
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Statut
+            </label>
+            <select
+              value={filters.status}
+              onChange={(event) =>
+                onFilterChange("status", event.target.value)
+              }
+              className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+            >
+              <option value="all">Tous les statuts</option>
+              {uniqueStatuses.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Type
+            </label>
+            <select
+              value={filters.type}
+              onChange={(event) =>
+                onFilterChange("type", event.target.value)
+              }
+              className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+            >
+              <option value="all">Tous les types</option>
+              <option value="privé">Privé</option>
+              <option value="équipe">Équipe</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Du
+            </label>
+            <input
+              type="date"
+              value={filters.from}
+              onChange={(event) =>
+                onFilterChange("from", event.target.value)
+              }
+              className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Au
+            </label>
+            <input
+              type="date"
+              value={filters.to}
+              onChange={(event) =>
+                onFilterChange("to", event.target.value)
+              }
+              className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+            />
+          </div>
+        </div>
+
+        {/* Reset Button for Mobile/Tablet - Below filters */}
+        <div className="mt-4 flex lg:hidden">
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={!isFilterActive}
+            onClick={resetFilters}
+            className="h-11 w-full rounded-2xl border border-transparent text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50/60 sm:w-auto"
+          >
+            Réinitialiser
+          </Button>
         </div>
       </div>
     </div>

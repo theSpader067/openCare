@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Save, UserRound } from "lucide-react";
+import { ArrowLeft, Save, UserRound, X, ChevronLeft, Loader2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -21,8 +21,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Separator } from "@/components/ui/separator";
-import { ObservationTimeline } from "../observation-timeline";
-import { Patient, PatientStatus, RiskLevel, patientsSeed } from "../data";
+import { Patient, PatientStatus, RiskLevel, PatientType, patientsSeed, ObservationEntry } from "../data";
+import { WYSIWYGEditor } from "@/components/wysiwyg-editor";
 
 type PatientFormState = {
   name: string;
@@ -31,6 +31,7 @@ type PatientFormState = {
   service: string;
   status: PatientStatus;
   riskLevel: RiskLevel;
+  type: PatientType;
   nextVisit: string;
   diagnosisCode: string;
   diagnosisLabel: string;
@@ -48,6 +49,7 @@ const emptyForm: PatientFormState = {
   service: "",
   status: "Hospitalisé",
   riskLevel: "Standard",
+  type: "équipe",
   nextVisit: "",
   diagnosisCode: "",
   diagnosisLabel: "",
@@ -70,6 +72,7 @@ function toFormState(patient?: Patient | null): PatientFormState {
     service: patient.service,
     status: patient.status,
     riskLevel: patient.riskLevel,
+    type: patient.type,
     nextVisit: patient.nextVisit,
     diagnosisCode: patient.diagnosis.code,
     diagnosisLabel: patient.diagnosis.label,
@@ -95,16 +98,22 @@ export default function PatientDossierPage() {
   );
 
   const isExistingPatient = Boolean(patient);
-  const observationEntries = patient?.observations ?? [];
 
   const [formData, setFormData] = useState<PatientFormState>(() =>
     toFormState(isExistingPatient ? patient : null),
   );
+  const [observations, setObservations] = useState<ObservationEntry[]>(() =>
+    patient?.observations ?? [],
+  );
   const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [selectedObservationIndex, setSelectedObservationIndex] = useState<number | null>(null);
+  const [isObservationPanelOpen, setIsObservationPanelOpen] = useState(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setFormData(toFormState(isExistingPatient ? patient : null));
+    setObservations(patient?.observations ?? []);
   }, [isExistingPatient, patient]);
 
   useEffect(() => {
@@ -122,6 +131,25 @@ export default function PatientDossierPage() {
     ? "Visualisez et mettez à jour le dossier médical complet du patient sélectionné."
     : "Renseignez l'ensemble des informations nécessaires pour créer un nouveau dossier patient.";
 
+  const sortedObservations = useMemo(() => {
+    return [...observations].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    );
+  }, [observations]);
+
+  const selectedObservation =
+    selectedObservationIndex !== null ? sortedObservations[selectedObservationIndex] : null;
+
+  const formatObservationTimestamp = (timestamp: string) => {
+    return new Intl.DateTimeFormat("fr-FR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(timestamp));
+  };
+
   const handleInputChange =
     (field: keyof PatientFormState) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
       const value = event.target.value;
@@ -133,14 +161,54 @@ export default function PatientDossierPage() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setIsSaved(true);
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
+
+    // Check if there's a new observation to add
+    if (formData.observationDraft.trim()) {
+      setIsSaving(true);
+
+      // Show loading state for 1 second
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      saveTimeoutRef.current = setTimeout(() => {
+        // Create new observation entry
+        const newObservation: ObservationEntry = {
+          id: `obs-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          note: formData.observationDraft,
+        };
+
+        // Add to observations list
+        const updatedObservations = [newObservation, ...observations];
+        setObservations(updatedObservations);
+
+        // Clear the observation draft
+        setFormData((prev) => ({
+          ...prev,
+          observationDraft: "",
+        }));
+
+        // Select the newly added observation
+        setSelectedObservationIndex(0);
+
+        // Stop loading state
+        setIsSaving(false);
+
+        // Show saved feedback
+        setIsSaved(true);
+        setTimeout(() => {
+          setIsSaved(false);
+        }, 2000);
+
+        saveTimeoutRef.current = null;
+      }, 1000);
+    } else {
+      // If no new observation, just show save feedback
+      setIsSaved(true);
+      setTimeout(() => {
+        setIsSaved(false);
+      }, 2000);
     }
-    saveTimeoutRef.current = setTimeout(() => {
-      setIsSaved(false);
-      saveTimeoutRef.current = null;
-    }, 2800);
   };
 
   if (patientId && !isExistingPatient && mode !== "create") {
@@ -238,7 +306,7 @@ export default function PatientDossierPage() {
               required
             />
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <SelectField
               label="Statut"
               id="patient-status"
@@ -259,6 +327,16 @@ export default function PatientDossierPage() {
                 { label: "Élevé", value: "Élevé" },
                 { label: "Modéré", value: "Modéré" },
                 { label: "Standard", value: "Standard" },
+              ]}
+            />
+            <SelectField
+              label="Type"
+              id="patient-type"
+              value={formData.type}
+              onChange={handleInputChange("type")}
+              options={[
+                { label: "Privé", value: "privé" },
+                { label: "Équipe", value: "équipe" },
               ]}
             />
             <InputField
@@ -344,42 +422,208 @@ export default function PatientDossierPage() {
 
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle>Observations & consignes</CardTitle>
+          <CardTitle>Observations</CardTitle>
           <CardDescription>
-            Notez les observations cliniques et les actions à planifier.
+            Notez les observations cliniques.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <ObservationTimeline
-            entries={observationEntries}
-            className="max-h-72 rounded-2xl border border-slate-200 bg-indigo-50/40 px-4 py-4"
-            emptyMessage={
-              isExistingPatient
-                ? "Aucune observation enregistrée pour le moment."
-                : "Aucune observation saisie pour l'instant."
-            }
-          />
-          <TextareaField
-            label={
-              isExistingPatient
-                ? "Ajouter une observation"
-                : "Observations initiales"
-            }
-            id="patient-observation-draft"
-            value={formData.observationDraft}
-            onChange={handleInputChange("observationDraft")}
-            placeholder="Saisissez une observation, elle sera horodatée lors de l'enregistrement."
-            rows={4}
-          />
+          {/* Observations Section */}
+          {sortedObservations.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800 mb-4">
+                Historique des observations ({sortedObservations.length})
+              </h3>
+
+              {/* XL Screen: Two-column layout */}
+              <div className="hidden xl:grid xl:grid-cols-3 xl:gap-4 xl:border xl:border-slate-200 xl:rounded-2xl xl:p-4 xl:bg-slate-50/40">
+                {/* Left: Dates List */}
+                <div className="xl:border-r xl:border-slate-200 xl:pr-4">
+                  <div className="space-y-1.5 max-h-96 overflow-y-auto">
+                    {sortedObservations.map((observation, index) => {
+                      const obsDate = new Date(observation.timestamp);
+                      const formattedDate = new Intl.DateTimeFormat("fr-FR", {
+                        day: "numeric",
+                        month: "short",
+                        year: "2-digit",
+                      }).format(obsDate);
+                      const formattedTime = new Intl.DateTimeFormat("fr-FR", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }).format(obsDate);
+
+                      return (
+                        <button
+                          key={observation.id ?? `${observation.timestamp}-${index}`}
+                          onClick={() => setSelectedObservationIndex(index)}
+                          className={`w-full text-left px-2 py-1.5 transition ${
+                            selectedObservationIndex === index
+                              ? "text-indigo-600 underline font-semibold"
+                              : "text-slate-600 hover:text-indigo-600 hover:underline"
+                          }`}
+                        >
+                          <p className="text-xs font-medium">
+                            {formattedDate}
+                          </p>
+                          <p className="text-xs text-slate-500">{formattedTime}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Right: Observation Details */}
+                <div className="xl:col-span-2 flex flex-col">
+                  {selectedObservation ? (
+                    <div className="space-y-3 flex flex-col h-full">
+                      <div>
+                        <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">
+                          {formatObservationTimestamp(selectedObservation.timestamp)}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Observation {sortedObservations.findIndex(o => o.id === selectedObservation.id) + 1} sur {sortedObservations.length}
+                        </p>
+                      </div>
+                      <div className="bg-white rounded-lg border border-slate-200 p-4 flex-1 overflow-y-auto prose prose-sm max-w-none">
+                        {selectedObservation.note.includes("<") ? (
+                          <div
+                            className="text-sm text-slate-700 leading-relaxed [&_p]:m-0 [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-lg [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_strong]:font-semibold [&_em]:italic [&_u]:underline"
+                            dangerouslySetInnerHTML={{ __html: selectedObservation.note }}
+                          />
+                        ) : (
+                          <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                            {selectedObservation.note}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-slate-500">
+                      <p className="text-sm">Sélectionnez une date pour voir les détails</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Smaller Screens: Dates List with Sliding Panel */}
+              <div className="xl:hidden">
+                <div className="border border-slate-200 rounded-xl bg-white p-3 space-y-1 max-h-60 overflow-y-auto">
+                  {sortedObservations.map((observation, index) => {
+                    const obsDate = new Date(observation.timestamp);
+                    const formattedDate = new Intl.DateTimeFormat("fr-FR", {
+                      day: "numeric",
+                      month: "short",
+                      year: "2-digit",
+                    }).format(obsDate);
+                    const formattedTime = new Intl.DateTimeFormat("fr-FR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }).format(obsDate);
+
+                    return (
+                      <button
+                        key={observation.id ?? `${observation.timestamp}-${index}`}
+                        onClick={() => {
+                          setSelectedObservationIndex(index);
+                          setIsObservationPanelOpen(true);
+                        }}
+                        className="w-full text-left px-2 py-1.5 transition text-slate-600 hover:text-indigo-600 hover:underline cursor-pointer"
+                      >
+                        <p className="text-xs font-medium">
+                          {formattedDate}
+                        </p>
+                        <p className="text-xs text-slate-500">{formattedTime}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Sliding Panel for Mobile/Tablet */}
+                <div
+                  className={`fixed inset-0 z-40 bg-slate-900/20 backdrop-blur-[2px] transition-opacity duration-300 ${
+                    isObservationPanelOpen
+                      ? "opacity-100"
+                      : "pointer-events-none opacity-0"
+                  }`}
+                  onClick={() => setIsObservationPanelOpen(false)}
+                />
+                <div
+                  className={`fixed inset-y-0 right-0 z-50 w-full max-w-md flex flex-col rounded-l-3xl border border-indigo-200/60 bg-white shadow-2xl shadow-indigo-200/60 transition-transform duration-300 ${
+                    isObservationPanelOpen ? "translate-x-0" : "translate-x-full"
+                  }`}
+                >
+                  {/* Panel Header */}
+                  <div className="flex items-center justify-between border-b border-indigo-100/70 px-5 py-4">
+                    <p className="text-sm font-semibold text-slate-800">Détail de l&apos;observation</p>
+                    <button
+                      type="button"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
+                      onClick={() => setIsObservationPanelOpen(false)}
+                      aria-label="Fermer"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* Panel Content */}
+                  <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col pb-24">
+                    {selectedObservation ? (
+                      <div className="space-y-4 flex flex-col h-full">
+                        <div>
+                          <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">
+                            {formatObservationTimestamp(selectedObservation.timestamp)}
+                          </p>
+                          <p className="text-xs text-slate-500 mt-2">
+                            Observation {sortedObservations.findIndex(o => o.id === selectedObservation.id) + 1} sur {sortedObservations.length}
+                          </p>
+                        </div>
+                        <div className="bg-slate-50 rounded-lg border border-slate-200 p-4 flex-1 overflow-y-auto prose prose-sm max-w-none">
+                          {selectedObservation.note.includes("<") ? (
+                            <div
+                              className="text-sm text-slate-700 leading-relaxed [&_p]:m-0 [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-lg [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_strong]:font-semibold [&_em]:italic [&_u]:underline"
+                              dangerouslySetInnerHTML={{ __html: selectedObservation.note }}
+                            />
+                          ) : (
+                            <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                              {selectedObservation.note}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <Separator />
-          <TextareaField
-            label="Consignes"
-            id="patient-instructions"
-            value={formData.instructions}
-            onChange={handleInputChange("instructions")}
-            placeholder="Séparez les consignes par un saut de ligne"
-            rows={4}
-          />
+
+          {/* New Observation Input - WYSIWYG Editor */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-[#221b5b]">
+              {isExistingPatient
+                ? "Ajouter une observation"
+                : "Observations initiales"}
+            </label>
+            <WYSIWYGEditor
+              value={formData.observationDraft}
+              onChange={(value) =>
+                setFormData((previous) => ({
+                  ...previous,
+                  observationDraft: value,
+                }))
+              }
+              placeholder="Saisissez une observation, elle sera horodatée lors de l'enregistrement."
+              className="min-h-64"
+            />
+            <p className="text-xs text-slate-500">
+              Utilisez les outils de formatage pour structurer votre observation (gras, italique, titres, listes, etc.)
+            </p>
+          </div>
+
+          <Separator />
+
         </CardContent>
       </Card>
 
@@ -391,9 +635,18 @@ export default function PatientDossierPage() {
         >
           Annuler
         </Button>
-        <Button variant="primary" type="submit">
-          <Save className="mr-2 h-4 w-4" />
-          Enregistrer
+        <Button variant="primary" type="submit" disabled={isSaving}>
+          {isSaving ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Enregistrement...
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Enregistrer
+            </>
+          )}
         </Button>
       </div>
     </form>

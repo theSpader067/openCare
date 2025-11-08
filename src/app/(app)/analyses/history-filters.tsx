@@ -12,6 +12,21 @@ type HistoryFilters = {
   to: string;
 };
 
+const bilanTypes = {
+  bilan: {
+    label: "Bilans",
+    items: ["NFS", "CRP", "Ionogramme", "Bilan hépatique", "Bilan ionogramme", "Bilan de coagulation", "Gaz du sang artériel", "Groupage sanguin", "Lactates sanguins", "Dosage protéinurie", "Fer sérique + Ferritine", "HbA1c", "Test allergologique", "Bilan pré-chimiothérapie", "Numération plaquettaire", "Dosage INR"],
+  },
+  imagerie: {
+    label: "Imagerie",
+    items: ["TDM TAP", "TDM abdominopelvien", "Rx thorax", "Échographie abdominale", "Radiographie"],
+  },
+  anapath: {
+    label: "Anapath",
+    items: ["Biopsie", "Cytoponction", "Analyse histologique"],
+  },
+};
+
 type HistoryFiltersProps = {
   filters: HistoryFilters;
   onFilterChange: <K extends keyof HistoryFilters>(key: K, value: string) => void;
@@ -86,11 +101,27 @@ export function HistoryFilters({ filters, onFilterChange, uniqueHistoryTypes, is
                 className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
               >
                 <option value="all">Tous les types</option>
-                {uniqueHistoryTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
+                <optgroup label="Bilans">
+                  {bilanTypes.bilan.items.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Imagerie">
+                  {bilanTypes.imagerie.items.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Anapath">
+                  {bilanTypes.anapath.items.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </optgroup>
               </select>
             </div>
 
@@ -175,11 +206,27 @@ export function HistoryFilters({ filters, onFilterChange, uniqueHistoryTypes, is
                 className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
               >
                 <option value="all">Tous les types</option>
-                {uniqueHistoryTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
+                <optgroup label="Bilans">
+                  {bilanTypes.bilan.items.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Imagerie">
+                  {bilanTypes.imagerie.items.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Anapath">
+                  {bilanTypes.anapath.items.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </optgroup>
               </select>
             </div>
 

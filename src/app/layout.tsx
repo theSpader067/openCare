@@ -1,7 +1,9 @@
+
 import type { Metadata } from "next";
 import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
-
+import Providers from "./provider";
+import { SessionProvider } from "next-auth/react";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
@@ -28,7 +30,9 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <body className={`${inter.variable} ${manrope.variable} font-sans antialiased`}>
-        {children}
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

@@ -19,7 +19,9 @@ import {
   MapPin,
   Pencil,
   Plus,
+  RotateCw,
   Trash2,
+  Users,
   UsersRound,
   X,
 } from "lucide-react";
@@ -58,6 +60,7 @@ interface TaskItem {
   title: string;
   details: string;
   done: boolean;
+  delegatedTo?: string;
 }
 
 interface PatientItem {
@@ -120,6 +123,64 @@ interface PatientFormState {
   labsStatus: PatientItem["labs"]["status"];
   labsNote: string;
 }
+
+interface Resident {
+  id: string;
+  name: string;
+  role: string;
+  service: string;
+}
+
+const residentsData: Resident[] = [
+  {
+    id: "RES-01",
+    name: "Dr. Léa Martin",
+    role: "Interne",
+    service: "Chirurgie digestive",
+  },
+  {
+    id: "RES-02",
+    name: "Claire Dupont",
+    role: "IDE",
+    service: "Chirurgie générale",
+  },
+  {
+    id: "RES-03",
+    name: "Dr. Hugo Tessier",
+    role: "Interne senior",
+    service: "Chirurgie cardiaque",
+  },
+  {
+    id: "RES-04",
+    name: "Sarah Lemoine",
+    role: "IDE",
+    service: "Anesthésie",
+  },
+  {
+    id: "RES-05",
+    name: "Dr. Maxime Benali",
+    role: "Interne",
+    service: "Orthopédie",
+  },
+  {
+    id: "RES-06",
+    name: "Amélie Bernard",
+    role: "Coordinatrice",
+    service: "Hôpital de jour",
+  },
+  {
+    id: "RES-07",
+    name: "Dr. Thomas Nguyen",
+    role: "Chef de clinique",
+    service: "Chirurgie digestive",
+  },
+  {
+    id: "RES-08",
+    name: "Sophie Mercier",
+    role: "IDE",
+    service: "Réanimation",
+  },
+];
 
 const statsSummary: Stat[] = [
   {
@@ -632,6 +693,7 @@ export default function DashboardPage() {
   const [activityTab, setActivityTab] = useState<ActivityTabKey>("activites");
   const [isMobileToolkitOpen, setIsMobileToolkitOpen] = useState(false);
   const [isStatsInteracting, setIsStatsInteracting] = useState(false);
+  const [openDelegateDropdown, setOpenDelegateDropdown] = useState<string | null>(null);
 
   const timersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
   const statsInteractionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -666,6 +728,25 @@ export default function DashboardPage() {
       setPatientForm(createEmptyPatientForm());
     }
   }, [isAddPatientModalOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openDelegateDropdown) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('[data-dropdown]')) {
+          setOpenDelegateDropdown(null);
+        }
+      }
+    };
+
+    if (openDelegateDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openDelegateDropdown]);
 
   const selectedDayData = scheduleData[selectedDate] ?? createEmptyDay();
   const selectedDateObj = useMemo(() => parseKeyToDate(selectedDate), [selectedDate]);
@@ -934,6 +1015,37 @@ export default function DashboardPage() {
     });
   };
 
+  const handleReloadTasks = () => {
+    setIsTasksLoading(true);
+    const timer = window.setTimeout(() => {
+      setIsTasksLoading(false);
+      timersRef.current = timersRef.current.filter((item) => item !== timer as unknown as ReturnType<typeof setTimeout>);
+    }, 2000);
+    timersRef.current.push(timer as unknown as ReturnType<typeof setTimeout>);
+  };
+
+  const handleOpenDelegateDropdown = (taskId: string) => {
+    setOpenDelegateDropdown(taskId);
+  };
+
+  const handleCloseDelegateDropdown = () => {
+    setOpenDelegateDropdown(null);
+  };
+
+  const handleDelegateTask = (taskId: string, residentId: string) => {
+    updateDayData(selectedDate, (day) => ({
+      ...day,
+      tasks: day.tasks.map((task) =>
+        task.id === taskId ? { ...task, delegatedTo: residentId } : task,
+      ),
+    }));
+    setOpenDelegateDropdown(null);
+  };
+
+  const getResidentById = (residentId: string): Resident | undefined => {
+    return residentsData.find((resident) => resident.id === residentId);
+  };
+
   const tasks = selectedDayData.tasks;
   const tasksCount = tasks.length;
   const completedTasks = tasks.filter((task) => task.done).length;
@@ -949,7 +1061,7 @@ export default function DashboardPage() {
   const statsList = statsSummary;
   const hasStats = statsList.length > 0;
   const marqueeStats = useMemo(
-    () => (hasStats ? [...statsList, ...statsList] : []),
+    () => (hasStats ? [...statsList, ...statsList, ...statsList, ...statsList, ...statsList, ...statsList] : []),
     [hasStats, statsList],
   );
   const activityGroups = useMemo(() => {
@@ -993,7 +1105,7 @@ export default function DashboardPage() {
     contentClassName?: string,
   ) => (
     <Card className={cn("border-none bg-white/90", cardClassName)}>
-      <CardContent className={cn("pt-0", contentClassName)}>
+      <CardContent className={cn("pt-4 px-4", contentClassName)}>
         <Calendar
           selected={selectedDateObj}
           onSelect={handleSelectDate}
@@ -1034,6 +1146,15 @@ export default function DashboardPage() {
             Terminé : {completedTasks}/{tasksCount}
           </Badge>
           <Button
+            variant="outline"
+            size="sm"
+            className="h-9 w-9 rounded-full p-0 border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+            onClick={handleReloadTasks}
+            disabled={isTasksLoading}
+          >
+            <RotateCw className={cn("h-4 w-4", isTasksLoading && "animate-spin")} />
+          </Button>
+          <Button
             variant="primary"
             size="sm"
             className="h-9 w-9 rounded-full p-0"
@@ -1070,6 +1191,9 @@ export default function DashboardPage() {
             <div className="space-y-3">
               {tasks.map((task) => {
                 const isDone = task.done;
+                const isDelegated = Boolean(task.delegatedTo);
+                const delegatedResident = task.delegatedTo ? getResidentById(task.delegatedTo) : undefined;
+                const isDropdownOpen = openDelegateDropdown === task.id;
                 return (
                   <div
                     key={task.id}
@@ -1088,6 +1212,8 @@ export default function DashboardPage() {
                       "focus:outline-none focus:ring-2 focus:ring-indigo-200/70 focus:ring-offset-1",
                       isDone
                         ? "border-emerald-200/80 bg-emerald-50/70 text-emerald-700 shadow-emerald-100/60"
+                        : isDelegated
+                        ? "border-violet-300 bg-white/85 hover:border-violet-400"
                         : "border-slate-200 bg-white/85 hover:border-indigo-200",
                     )}
                   >
@@ -1126,9 +1252,76 @@ export default function DashboardPage() {
                         >
                           {task.details}
                         </p>
+                        {delegatedResident && (
+                          <>
+                            <div className="mt-2 border-t border-slate-200" />
+                            <div className="mt-2 flex items-center gap-2 text-xs">
+                              <Users className="h-3.5 w-3.5 text-violet-600" />
+                              <span className="text-violet-700">
+                                Délégué à:
+                              </span>
+                              <span className="inline-flex items-center rounded-full bg-violet-100 px-2.5 py-0.5 font-medium text-violet-800 border border-violet-200">
+                                {delegatedResident.name}
+                              </span>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
                     <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
+                      <div className="relative">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 w-9 rounded-full border-violet-200 text-violet-600 transition hover:bg-violet-50/80"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleOpenDelegateDropdown(task.id);
+                          }}
+                        >
+                          <Users className="h-4 w-4" />
+                        </Button>
+                        {isDropdownOpen && (
+                          <div
+                            data-dropdown
+                            className="absolute right-0 top-full z-10 mt-2 w-64 rounded-xl border border-violet-200 bg-white shadow-lg"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <div className="flex items-center justify-between border-b border-violet-100 px-3 py-2">
+                              <span className="text-xs font-semibold text-violet-900">
+                                Déléguer à
+                              </span>
+                              <button
+                                type="button"
+                                onClick={handleCloseDelegateDropdown}
+                                className="text-slate-400 hover:text-slate-600"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
+                            <div className="max-h-64 overflow-y-auto">
+                              {residentsData.map((resident) => (
+                                <button
+                                  key={resident.id}
+                                  type="button"
+                                  onClick={() => handleDelegateTask(task.id, resident.id)}
+                                  className={cn(
+                                    "flex w-full flex-col gap-1 px-3 py-2 text-left transition hover:bg-violet-50",
+                                    task.delegatedTo === resident.id && "bg-violet-50",
+                                  )}
+                                >
+                                  <span className="text-sm font-medium text-slate-800">
+                                    {resident.name}
+                                  </span>
+                                  <span className="text-xs text-slate-600">
+                                    {resident.role} · {resident.service}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                       <Button
                         variant="outline"
                         size="sm"
@@ -1223,60 +1416,55 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="flex h-full flex-col overflow-auto">
+    <div className="flex h-full flex-col overflow-auto pb-20 lg:pb-0">
       <section className="shrink-0">
         {!hasStats ? (
           <Card className="border-dashed border-slate-200 bg-white/70 p-6 text-center text-sm text-slate-500">
             Aucun indicateur disponible pour le moment. Connectez vos flux opérationnels pour activer cette section.
           </Card>
         ) : (
-          <>
-            <div className="hidden grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4 xl:grid">
-              {statsList.map((stat) => renderStatCard(stat))}
-            </div>
-            <div className="relative -mx-4 mt-1 pb-4 sm:-mx-6 sm:px-6 xl:hidden">
-              <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-white via-white/70 to-transparent" />
-              <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white via-white/70 to-transparent" />
+          <div className="relative -mx-4 mt-1 pb-4 sm:-mx-6 sm:px-6">
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-white via-white/70 to-transparent z-10" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white via-white/70 to-transparent z-10" />
+            <div
+              className="no-scrollbar overflow-x-auto pb-1 pl-1 pr-4 snap-x snap-mandatory"
+              onPointerDown={handleStatsInteractionStart}
+              onPointerUp={() => handleStatsInteractionEnd()}
+              onPointerLeave={() => handleStatsInteractionEnd()}
+              onPointerCancel={() => handleStatsInteractionEnd()}
+              onScroll={() => {
+                handleStatsInteractionStart();
+                handleStatsInteractionEnd(1200);
+              }}
+              onWheel={() => {
+                handleStatsInteractionStart();
+                handleStatsInteractionEnd(1200);
+              }}
+            >
               <div
-                className="no-scrollbar overflow-x-auto pb-1 pl-1 pr-4 snap-x snap-mandatory"
-                onPointerDown={handleStatsInteractionStart}
-                onPointerUp={() => handleStatsInteractionEnd()}
-                onPointerLeave={() => handleStatsInteractionEnd()}
-                onPointerCancel={() => handleStatsInteractionEnd()}
-                onScroll={() => {
-                  handleStatsInteractionStart();
-                  handleStatsInteractionEnd(1200);
-                }}
-                onWheel={() => {
-                  handleStatsInteractionStart();
-                  handleStatsInteractionEnd(1200);
-                }}
+                className={cn(
+                  "dashboard-marquee-track flex w-max gap-4 pb-0",
+                  isStatsInteracting && "dashboard-marquee-track--paused",
+                )}
+                style={
+                  {
+                    "--marquee-duration": `${Math.max(
+                      statsList.length * 12,
+                      40,
+                    )}s`,
+                  } as CSSProperties
+                }
               >
-                <div
-                  className={cn(
-                    "dashboard-marquee-track flex w-max gap-4 pb-0",
-                    isStatsInteracting && "dashboard-marquee-track--paused",
-                  )}
-                  style={
-                    {
-                      "--marquee-duration": `${Math.max(
-                        statsList.length * 12,
-                        40,
-                      )}s`,
-                    } as CSSProperties
-                  }
-                >
-                  {marqueeStats.map((stat, index) =>
-                    renderStatCard(stat, {
-                      key: `${stat.label}-${index}`,
-                      className:
-                        "min-w-[15rem] max-w-[15rem] snap-start sm:min-w-[18rem] sm:max-w-[18rem]",
-                    }),
-                  )}
-                </div>
+                {marqueeStats.map((stat, index) =>
+                  renderStatCard(stat, {
+                    key: `${stat.label}-${index}`,
+                    className:
+                      "min-w-[15rem] max-w-[15rem] snap-start sm:min-w-[18rem] sm:max-w-[18rem]",
+                  }),
+                )}
               </div>
             </div>
-          </>
+          </div>
         )}
       </section>
 
@@ -1560,36 +1748,38 @@ export default function DashboardPage() {
       />
       <div
         className={cn(
-          "fixed inset-x-4 bottom-4 z-50 rounded-3xl border border-violet-200/60 bg-white/95 p-4 shadow-2xl shadow-indigo-200/60 transition-transform duration-300 xl:hidden",
+          "fixed inset-x-4 bottom-4 top-20 z-50 flex flex-col rounded-3xl border border-violet-200/60 bg-white/95 shadow-2xl shadow-indigo-200/60 transition-transform duration-300 xl:hidden",
           isMobileToolkitOpen
             ? "translate-y-0"
             : "pointer-events-none translate-y-[120%]",
         )}
       >
-        <div className="flex items-center justify-between gap-4 border-b border-violet-100/70 pb-3">
+        <div className="flex flex-shrink-0 items-center justify-between gap-4 border-b border-violet-100/70 px-4 py-3">
           <div className="flex items-center gap-2 text-sm font-semibold text-[#352f72]">
             <ListChecks className="h-4 w-4 text-indigo-500" />
             Vos outils rapides
           </div>
           <button
             type="button"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
+            className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
             onClick={() => setIsMobileToolkitOpen(false)}
             aria-label="Fermer le panneau"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="mt-4 space-y-4">
-          {renderCalendarCard(
-            "border border-slate-200/70 bg-white/95 shadow-md shadow-indigo-100/50",
-            "pt-0",
-          )}
-          {renderTasksCard({
-            cardClassName:
-              "border border-slate-200/70 bg-white/95 shadow-md shadow-indigo-100/50 min-h-0",
-            contentClassName: "max-h-72 overflow-y-auto",
-          })}
+        <div className="min-w-0 flex-1 overflow-y-auto px-4 py-4">
+          <div className="space-y-4">
+            {renderCalendarCard(
+              "border border-slate-200/70 bg-white/95 shadow-md shadow-indigo-100/50",
+              "pt-0",
+            )}
+            {renderTasksCard({
+              cardClassName:
+                "border border-slate-200/70 bg-white/95 shadow-md shadow-indigo-100/50 min-h-0",
+              contentClassName: "max-h-72 overflow-y-auto",
+            })}
+          </div>
         </div>
       </div>
 

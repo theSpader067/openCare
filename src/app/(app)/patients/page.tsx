@@ -20,6 +20,7 @@ import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
 import { Patient, PatientStatus, RiskLevel, patientsSeed } from "./data";
 import { ObservationTimeline } from "./observation-timeline";
+import { PatientFilters } from "./patient-filters";
 
 function useSectionData<T>(seed: T[], delay = 650) {
   const [data, setData] = useState<T[]>([]);
@@ -70,7 +71,7 @@ const RISK_BADGE_CLASSES: Record<RiskLevel, string> = {
 const SERVICE_BADGE_CLASS =
   "border border-sky-200 bg-sky-100 text-sky-700 shadow-sm shadow-sky-200/60";
 const PATIENT_ID_BADGE_CLASS =
-  "border border-violet-200 bg-gradient-to-r from-[#ede9fe] via-[#ddd6fe] to-[#e9d5ff] text-[#4c1d95] shadow-sm shadow-violet-100/70";
+  "border border-slate-300 bg-slate-100 text-slate-700 shadow-sm shadow-slate-200/60";
 
 function formatFullDate(dateString: string) {
   return new Intl.DateTimeFormat("fr-FR", {
@@ -128,6 +129,12 @@ export default function PatientsPage() {
   const [editPatient, setEditPatient] = useState<Patient | null>(null);
   const [editForm, setEditForm] = useState<Patient | null>(null);
   const [deletePatient, setDeletePatient] = useState<Patient | null>(null);
+  const [filters, setFilters] = useState({
+    query: "",
+    status: "all",
+    from: "",
+    to: "",
+  });
 
   useEffect(() => {
     if (!patientsLoading && patientsData.length === 0) {
@@ -150,9 +157,77 @@ export default function PatientsPage() {
     }
   }, [selectedPatientId]);
 
+  const handleFilterChange = <K extends keyof typeof filters>(
+    key: K,
+    value: string,
+  ) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    setCurrentPage(1);
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      query: "",
+      status: "all",
+      from: "",
+      to: "",
+    });
+    setCurrentPage(1);
+  };
+
+  const uniqueStatuses = useMemo(() => {
+    return Array.from(new Set(seededPatients.map((p) => p.status)));
+  }, [seededPatients]);
+
+  const isFilterActive = useMemo(() => {
+    return (
+      filters.query !== "" ||
+      filters.status !== "all" ||
+      filters.from !== "" ||
+      filters.to !== ""
+    );
+  }, [filters]);
+
+  const filteredPatients = useMemo(() => {
+    let result = [...patientsData];
+
+    if (filters.query) {
+      const query = filters.query.toLowerCase();
+      result = result.filter(
+        (patient) =>
+          patient.name.toLowerCase().includes(query) ||
+          patient.id.toLowerCase().includes(query),
+      );
+    }
+
+    if (filters.status !== "all") {
+      result = result.filter((patient) => patient.status === filters.status);
+    }
+
+    if (filters.from || filters.to) {
+      result = result.filter((patient) => {
+        const patientDate = new Date(patient.birthDate);
+        const fromDate = filters.from ? new Date(filters.from) : null;
+        const toDate = filters.to ? new Date(filters.to) : null;
+
+        if (fromDate && patientDate < fromDate) return false;
+        if (toDate && patientDate > toDate) return false;
+
+        return true;
+      });
+    }
+
+    return result;
+  }, [patientsData, filters]);
+
+  const paginatedPatients = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return filteredPatients.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [currentPage, filteredPatients]);
+
   const totalPages = Math.max(
     1,
-    Math.ceil(patientsData.length / PAGE_SIZE) || 1,
+    Math.ceil(filteredPatients.length / PAGE_SIZE) || 1,
   );
 
   useEffect(() => {
@@ -160,11 +235,6 @@ export default function PatientsPage() {
       setCurrentPage(totalPages);
     }
   }, [currentPage, totalPages]);
-
-  const paginatedPatients = useMemo(() => {
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    return patientsData.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [currentPage, patientsData]);
 
   const selectedPatient =
     patientsData.find((patient) => patient.id === selectedPatientId) ?? null;
@@ -181,6 +251,13 @@ export default function PatientsPage() {
   const latestObservation = sortedObservations[0] ?? null;
   const otherObservations =
     sortedObservations.length > 1 ? sortedObservations.slice(1) : [];
+
+  const startItem =
+    filteredPatients.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const endItem =
+    filteredPatients.length === 0
+      ? 0
+      : Math.min(currentPage * PAGE_SIZE, filteredPatients.length);
 
   const handleOpenEdit = (patient: Patient) => {
     setEditPatient(patient);
@@ -216,13 +293,6 @@ export default function PatientsPage() {
 
     setDeletePatient(null);
   };
-
-  const startItem =
-    patientsData.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
-  const endItem =
-    patientsData.length === 0
-      ? 0
-      : Math.min(currentPage * PAGE_SIZE, patientsData.length);
 
   const renderPreviewContent = (variant: "desktop" | "mobile") => {
     if (patientsLoading) {
@@ -270,49 +340,25 @@ export default function PatientsPage() {
       <div className="flex flex-col gap-6 pb-6">
         <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-5">
-            <div className="flex items-start gap-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex w-full gap-2">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#22d3ee] text-white shadow-lg shadow-indigo-200/60">
                 <UserRound className="h-8 w-8" />
+              
               </div>
               <div className="flex flex-col gap-2">
-                <h2 className="text-xl font-semibold text-slate-900">
-                  {selectedPatient.name}
-                </h2>
-                <p className="text-sm text-slate-600">
-                  {formatFullDate(selectedPatient.birthDate)} · {selectedPatient.age} ans
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Badge className="bg-indigo-100 text-indigo-700">
+              <h2 className="text-xl font-semibold text-slate-900">
+                    {selectedPatient.name}
+                  </h2>
+                  <span className="text-xs font-semibold text-slate-600">
                     {selectedPatient.id}
-                  </Badge>
-                  <Badge
-                    className={cn(
-                      "px-3 py-1 text-xs font-semibold",
-                      SERVICE_BADGE_CLASS,
-                    )}
-                  >
-                    {selectedPatient.service}
-                  </Badge>
-                  <Badge
-                    className={cn(
-                      "px-3 py-1 text-xs font-semibold",
-                      statusBadgeClass,
-                    )}
-                  >
-                    {selectedPatient.status}
-                  </Badge>
-                  <Badge
-                    className={cn(
-                      "px-3 py-1 text-xs font-semibold",
-                      riskBadgeClass,
-                    )}
-                  >
-                    Risque {selectedPatient.riskLevel}
-                  </Badge>
+                  </span>
+                  <p className="text-xs text-slate-600">
+                    {formatFullDate(selectedPatient.birthDate)} · {selectedPatient.age} ans
+                  </p>
                 </div>
               </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap w-full justify-end gap-2">
               <Button
                 variant="ghost"
                 size="sm"
@@ -324,6 +370,38 @@ export default function PatientsPage() {
                 Visiter dossier
               </Button>
             </div>
+            
+            </div>
+            <div className="flex flex-col gap-2">
+               
+                <div className="flex flex-wrap gap-2">
+                  
+                  <span
+                    className={cn(
+                      "px-3 py-1 text-xs font-semibold",
+                      "bg-slate-100 text-slate-700",
+                    )}
+                  >
+                    {selectedPatient.service}
+                  </span>
+                  <span
+                    className={cn(
+                      "px-3 py-1 text-xs font-semibold",
+                      "bg-slate-100 text-slate-700",
+                    )}
+                  >
+                    {selectedPatient.status}
+                  </span>
+                    <span
+                    className={cn(
+                      "px-3 py-1 text-xs font-semibold",
+                      "bg-slate-100 text-slate-700",
+                    )}
+                  >
+                    Risque {selectedPatient.riskLevel}
+                  </span>
+                </div>
+              </div>
           </div>
         </section>
 
@@ -334,9 +412,9 @@ export default function PatientsPage() {
                 Diagnostic principal
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <Badge className="bg-indigo-100 text-indigo-700">
+                <span className="px-3 py-1 text-xs font-semibold bg-sky-100 text-sky-700 border border-sky-200">
                   {selectedPatient.diagnosis.code}
-                </Badge>
+                </span>
                 <span className="text-base text-slate-700">
                   {selectedPatient.diagnosis.label}
                 </span>
@@ -457,7 +535,7 @@ export default function PatientsPage() {
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20 lg:pb-0">
       <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">
@@ -514,7 +592,7 @@ export default function PatientsPage() {
       </div>
 
       <section className="grid gap-6 xl:grid-cols-[3fr_2fr]">
-        <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-md">
+        <div className="flex flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-md">
           {patientsLoading ? (
             <div className="flex h-64 items-center justify-center">
               <Spinner label="Chargement des dossiers patients..." />
@@ -537,6 +615,13 @@ export default function PatientsPage() {
             </div>
           ) : (
             <>
+              <PatientFilters
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                uniqueStatuses={uniqueStatuses}
+                isFilterActive={isFilterActive}
+                resetFilters={resetFilters}
+              />
               <div className="flex-1 overflow-x-auto overflow-y-auto">
                 <table className="min-w-full divide-y divide-slate-200 bg-white text-left text-sm">
                   <thead className="bg-slate-50">
@@ -580,26 +665,15 @@ export default function PatientsPage() {
                             </span>
                             <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                               <span>{patient.age} ans</span>
-                              <Badge
-                                className={cn(
-                                  "px-2.5 py-1 text-[11px] font-semibold",
-                                  SERVICE_BADGE_CLASS,
-                                )}
-                              >
-                                {patient.service}
-                              </Badge>
                             </div>
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <Badge
-                            className={cn(
-                              "px-3 py-1 text-xs font-semibold",
-                              PATIENT_ID_BADGE_CLASS,
-                            )}
+                          <span
+                            className="px-3 py-1 text-xs font-semibold bg-slate-100 text-slate-700"
                           >
                             {patient.id}
-                          </Badge>
+                          </span>
                         </td>
                         <td className="px-4 py-3">
                           <Badge
@@ -658,7 +732,7 @@ export default function PatientsPage() {
                 <span>
                   {startItem === 0
                     ? "Aucun dossier à afficher"
-                    : `Affichage ${startItem}–${endItem} sur ${patientsData.length} dossiers`}
+                    : `Affichage ${startItem}–${endItem} sur ${filteredPatients.length} dossiers`}
                 </span>
                 <div className="flex items-center gap-3">
                   <Button
@@ -673,8 +747,8 @@ export default function PatientsPage() {
                     Précédent
                   </Button>
                   <span className="text-xs text-slate-500">
-                    Page {patientsData.length === 0 ? 0 : currentPage} /{" "}
-                    {patientsData.length === 0 ? 0 : totalPages}
+                    Page {filteredPatients.length === 0 ? 0 : currentPage} /{" "}
+                    {filteredPatients.length === 0 ? 0 : totalPages}
                   </span>
                   <Button
                     variant="outline"
@@ -914,16 +988,13 @@ function TagGroup({
   return (
     <div className="flex flex-wrap gap-2">
       {tags.map((tag, index) => (
-        <Badge
+        <span
           key={tag}
-          className={cn(
-            "ring-1 ring-inset px-2.5 py-1 text-xs font-medium",
-            TAG_COLOR_CLASSES[index % TAG_COLOR_CLASSES.length],
-          )}
+          className="px-3 py-1 text-xs font-semibold bg-sky-100 text-sky-700 border border-sky-200"
         >
           {tag}
-        </Badge>
+        </span>
       ))}
     </div>
-  );
+  );  
 }

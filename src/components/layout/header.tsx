@@ -1,5 +1,5 @@
 "use client";
-
+import { signOut, useSession } from "next-auth/react"
 import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import {
   Beaker,
@@ -13,6 +13,7 @@ import {
   Search,
   Sparkles,
   Stethoscope,
+  User,
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -444,6 +445,9 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
     [],
   );
 
+  const { data: session } = useSession()
+  if (!session) return null;
+
   return (
     <>
       <header className="sticky top-0 z-30 border-b border-violet-200/60 bg-white/70 backdrop-blur-xl">
@@ -460,81 +464,18 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
             </Button>
             <div className="flex flex-col">
               <span className="text-xs font-semibold uppercase tracking-wide text-blue-600">
-                Centre Hospitalier Moulay Youssef
+                {(session.user as any).hospital}
               </span>
               <h1 className="text-sm font-semibold text-slate-900 sm:text-base">
-                Bonjour Dr. Bouziane
+                Bonjour {(session.user as any).username}
               </h1>
             </div>
           </div>
 
           <div className="flex flex-1 items-center justify-end gap-3">
-            <div className="relative hidden w-full max-w-md lg:block">
-              <div className="flex items-center gap-2 rounded-full border border-violet-200/70 bg-white/50 px-4 py-2 text-sm text-[#6157b0] shadow-inner shadow-white/60">
-                <Search className="h-4 w-4 text-[#8a81d6]" />
-                <input
-                  type="search"
-                  placeholder="Rechercher un patient, une analyse, un message..."
-                  value={searchQuery}
-                  onChange={(event) => handleSearchChange(event.target.value)}
-                  onFocus={() => setShowSuggestions(true)}
-                  onBlur={() => {
-                    setTimeout(() => setShowSuggestions(false), 120);
-                  }}
-                  className="w-full bg-transparent text-sm text-[#403b78] placeholder:text-[#8a81d6] focus:outline-none"
-                />
-                {isSearching ? <Loader2 className="h-4 w-4 animate-spin text-[#8a81d6]" /> : null}
-              </div>
+            
 
-              {showSuggestions && (isSearching || searchQuery.trim()) ? (
-                <div className="absolute left-0 right-0 top-full z-20 mt-2 max-h-56 overflow-y-auto rounded-2xl border border-violet-200/70 bg-white/95 p-2 shadow-xl backdrop-blur">
-                  {isSearching ? (
-                    <div className="flex items-center justify-center gap-2 py-6 text-sm text-[#6157b0]">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Recherche en cours...</span>
-                    </div>
-                  ) : suggestions.length === 0 ? (
-                    <div className="py-4 text-center text-sm text-slate-500">
-                      Aucun résultat pour « {searchQuery} »
-                    </div>
-                  ) : (
-                    <ul className="space-y-1">
-                      {suggestions.map((item) => (
-                        <li key={item.id}>
-                          <button
-                            type="button"
-                            className="w-full rounded-xl px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-violet-50"
-                            onMouseDown={(event) => event.preventDefault()}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="font-medium text-[#352f72]">{item.title}</span>
-                              <span
-                                className={cn(
-                                  "rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                                  suggestionBadge[item.category],
-                                )}
-                              >
-                                {item.category}
-                              </span>
-                            </div>
-                            <p className="mt-1 text-xs text-[#6b63b5]">{item.subtitle}</p>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              ) : null}
-            </div>
-
-            <button
-              type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-violet-200/60 bg-white text-[#5f5aa5] shadow-sm shadow-indigo-100 transition hover:border-violet-300 hover:bg-indigo-50/70 focus:outline-none focus:ring-2 focus:ring-violet-200/70 lg:hidden"
-              onClick={() => setIsMobileSearchOpen((previous) => !previous)}
-              aria-label={isMobileSearchOpen ? "Fermer la recherche" : "Ouvrir la recherche"}
-            >
-              {isMobileSearchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
-            </button>
+           
 
             <div className="hidden items-center gap-3 xl:flex">
               <Button
@@ -561,10 +502,15 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                 notificationsOpen && "bg-indigo-50/80 text-[#4338ca]",
               )}
               onClick={() => {
-                setNotificationsOpen((open) => !open);
                 setProfileOpen(false);
                 setIsMobileSearchOpen(false);
                 setShowSuggestions(false);
+                // On lg screens and larger, show dropdown; on smaller screens, navigate to page
+                if (window.innerWidth >= 1024) {
+                  setNotificationsOpen((open) => !open);
+                } else {
+                  router.push("/notifications");
+                }
               }}
               aria-haspopup="menu"
               aria-expanded={notificationsOpen}
@@ -578,7 +524,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
               ) : null}
             </Button>
 
-            {notificationsOpen ? (
+            {notificationsOpen && window.innerWidth >= 1024 ? (
               <div className="absolute right-0 top-full z-40 mt-3 w-80 rounded-3xl border border-violet-200/70 bg-white/95 p-4 shadow-2xl shadow-indigo-200/60 backdrop-blur">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -661,7 +607,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                     className="flex items-center gap-1 text-xs font-semibold text-[#4338ca] transition hover:text-[#2d2674]"
                     onClick={() => {
                       setNotificationsOpen(false);
-                      router.push("/messages");
+                      router.push("/notifications");
                     }}
                   >
                     Voir tout
@@ -672,7 +618,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
             ) : null}
           </div>
 
-          <div className="relative hidden md:flex" ref={profileRef}>
+          <div className="relative flex" ref={profileRef}>
             <button
               type="button"
               onClick={() => {
@@ -688,14 +634,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
               aria-haspopup="menu"
               aria-expanded={profileOpen}
             >
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#8a81d6]">
-                  Aujourd&apos;hui
-                </p>
-                <p className="text-sm font-medium text-[#352f72]">
-                  {today}
-                </p>
-              </div>
+             
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#c4b5fd] to-[#a5b4fc] text-sm font-semibold text-[#1d184f] shadow-sm shadow-indigo-200/60">
                 DD
               </div>
@@ -715,44 +654,36 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-[#2f2961]">
-                        Dr. Bouziane
+                        Dr. {(session.user as any).username}
                       </p>
                       <p className="text-xs text-[#6a66b1]">
-                        Urologie @ CHU Ibn Sina
+                        {(session.user as any).specialty} @ {(session.user as any).hospital}
                       </p>
+                      
                     </div>
                   </div>
                   <div className="mt-4 space-y-3">
-                    <div className="rounded-2xl border border-violet-200/70 bg-white/80 p-3 shadow-inner shadow-white/70">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-[#6a66b1]">
-                        Votre journée
-                      </p>
-                      <p className="mt-1 text-sm text-[#352f72]">
-                        3 rendez-vous restants et 1 compte rendu à finaliser.
-                      </p>
-                    </div>
-                    <div className="grid gap-2">
-                      <button
-                        type="button"
-                        className="flex w-full items-center justify-between gap-3 rounded-2xl border border-violet-200/70 bg-white px-4 py-3 text-sm font-semibold text-[#352f72] shadow-sm transition hover:border-violet-300 hover:bg-indigo-50/70 focus:outline-none focus:ring-2 focus:ring-violet-200/70"
-                      >
-                        Mon profil
-                        <ChevronDown className="h-4 w-4 -rotate-90 text-[#8a81d6]" />
-                      </button>
-                      <button
-                        type="button"
-                        className="flex w-full items-center justify-between gap-3 rounded-2xl border border-violet-200/70 bg-white px-4 py-3 text-sm font-semibold text-[#352f72] shadow-sm transition hover:border-violet-300 hover:bg-indigo-50/70 focus:outline-none focus:ring-2 focus:ring-violet-200/70"
-                      >
-                        Paramètres
-                        <ChevronDown className="h-4 w-4 -rotate-90 text-[#8a81d6]" />
-                      </button>
-                    </div>
                     <button
                       type="button"
-                      className="flex w-full items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-rose-500/90 via-rose-500/80 to-rose-500/90 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-rose-300/40 transition hover:shadow-rose-400/50 focus:outline-none focus:ring-2 focus:ring-rose-200/80"
+                      className="flex w-full items-center hover:cursor-pointer rounded-2xl bg-gradient-to-r from-indigo-500/90 via-indigo-500/80 to-indigo-500/90 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-300/40 transition hover:shadow-indigo-400/50 focus:outline-none focus:ring-2 focus:ring-indigo-200/80"
                       onClick={() => {
                         setProfileOpen(false);
-                        router.push("/login");
+                        router.push("/profile");
+                      }}
+                    >
+                      <span className="flex items-center gap-3">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/20">
+                          <User className="h-4 w-4" />
+                        </span>
+                        Mon profil
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className="flex w-full items-center hover:cursor-pointer rounded-2xl bg-gradient-to-r from-rose-500/90 via-rose-500/80 to-rose-500/90 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-rose-300/40 transition hover:shadow-rose-400/50 focus:outline-none focus:ring-2 focus:ring-rose-200/80"
+                      onClick={() => {
+                        setProfileOpen(false);
+                        signOut({ callbackUrl: process.env.NEXTAUTH_REDIRECT_AFTER_LOGOUT! });
                       }}
                     >
                       <span className="flex items-center gap-3">
@@ -768,72 +699,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
             </div>
           </div>
         </div>
-        {isMobileSearchOpen ? (
-          <div className="border-t border-violet-200/60 bg-white/95 px-4 pb-4 pt-3 shadow-inner shadow-violet-100/70 lg:hidden">
-            <div className="flex items-center gap-2 rounded-full border border-violet-200/70 bg-white px-4 py-2 text-sm text-[#6157b0] shadow-sm shadow-indigo-100/60">
-              <Search className="h-4 w-4 text-[#8a81d6]" />
-              <input
-                ref={mobileSearchInputRef}
-                type="search"
-                placeholder="Rechercher un patient, une analyse, un message..."
-                value={searchQuery}
-                onChange={(event) => handleSearchChange(event.target.value)}
-                className="w-full bg-transparent text-sm text-[#403b78] placeholder:text-[#8a81d6] focus:outline-none"
-              />
-              {isSearching ? <Loader2 className="h-4 w-4 animate-spin text-[#8a81d6]" /> : null}
-              <button
-                type="button"
-                className="ml-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-indigo-50/70 text-[#5f5aa5] shadow-sm transition hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-violet-200/70"
-                onClick={() => {
-                  setIsMobileSearchOpen(false);
-                  setShowSuggestions(false);
-                }}
-                aria-label="Fermer la recherche mobile"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            {showSuggestions && (isSearching || searchQuery.trim()) ? (
-              <div className="mt-3 max-h-64 overflow-y-auto rounded-3xl border border-violet-200/70 bg-white/95 p-3 shadow-xl">
-                {isSearching ? (
-                  <div className="flex items-center justify-center gap-2 py-10 text-sm text-[#6157b0]">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Recherche en cours...</span>
-                  </div>
-                ) : suggestions.length === 0 ? (
-                  <div className="py-6 text-center text-sm text-slate-500">
-                    Aucun résultat pour « {searchQuery} »
-                  </div>
-                ) : (
-                  <ul className="space-y-2">
-                    {suggestions.map((item) => (
-                      <li key={item.id}>
-                        <button
-                          type="button"
-                          className="w-full rounded-2xl border border-transparent px-3 py-3 text-left text-sm text-slate-700 transition hover:border-violet-200 hover:bg-violet-50"
-                          onMouseDown={(event) => event.preventDefault()}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="font-semibold text-[#352f72]">{item.title}</span>
-                            <span
-                              className={cn(
-                                "rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                                suggestionBadge[item.category],
-                              )}
-                            >
-                              {item.category}
-                            </span>
-                          </div>
-                          <p className="mt-1 text-xs text-[#6b63b5]">{item.subtitle}</p>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            ) : null}
-          </div>
-        ) : null}
+        
       </header>
       <Modal
         open={isRdvModalOpen}

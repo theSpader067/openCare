@@ -653,7 +653,315 @@ export default function AvisPage() {
         </Button>
       </section>
 
-      <section className="grid flex-1 gap-6 xl:grid-cols-[1.3fr_2fr]">
+      {/* Mobile/Tablet Sliding Panel from Right */}
+      <div
+        className={cn(
+          "fixed inset-0 z-40 bg-slate-900/20 backdrop-blur-[2px] transition-opacity duration-300 xl:hidden",
+          isMobilePanelOpen ? "opacity-100" : "pointer-events-none opacity-0",
+        )}
+        onClick={() => closeMobilePanel()}
+      />
+
+      <div
+        className={cn(
+          "fixed right-0 top-16 bottom-24 z-50 w-full max-w-md flex flex-col bg-white/95 shadow-2xl transition-transform duration-300 xl:hidden overflow-hidden",
+          isMobilePanelOpen
+            ? "translate-x-0"
+            : "translate-x-full",
+        )}
+      >
+        <div className="flex flex-shrink-0 items-center justify-between gap-4 border-b border-violet-100/70 px-4 py-3">
+          <div className="flex items-center gap-2 text-sm font-semibold text-[#352f72]">
+            <Stethoscope className="h-4 w-4 text-indigo-500" />
+            {mobilePanelMode === "view" ? "Détail de l'avis" : "Nouvel avis"}
+          </div>
+          <button
+            type="button"
+            className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
+            onClick={() => closeMobilePanel()}
+            aria-label="Fermer le panneau"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="min-w-0 flex-1 overflow-y-auto px-4 py-4">
+          {mobilePanelMode === "view" ? (
+            <>
+              {!activeAvis ? (
+                <EmptyState
+                  icon={Stethoscope}
+                  title="Sélectionnez un avis"
+                  description="Choisissez une demande d'avis pour afficher le dossier associé et répondre."
+                />
+              ) : (
+                <div className="space-y-5">
+                  <div>
+                    <h3 className="text-lg font-semibold">
+                      {activeAvis.patient.name} · {activeAvis.patient.id}
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      {activeAvis.service} — {formatDateTime(activeAvis.requestedAt)}
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => router.push(`/patients/dossier?id=${activeAvis.patient.id}`)}
+                      className="mt-2"
+                    >
+                      Voir dossier
+                    </Button>
+                  </div>
+
+                  <section className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
+                    <header className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      <ArrowLeftRight className="h-4 w-4" />
+                      Informations patient
+                    </header>
+                    <div className="grid gap-4">
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-slate-500">
+                          Service référent
+                        </p>
+                        <p className="mt-1 text-sm font-medium text-slate-800">
+                          {activeAvis.patient.service}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-slate-500">
+                          Diagnostic
+                        </p>
+                        <p className="mt-1 text-sm font-medium text-slate-800">
+                          {activeAvis.patient.diagnosis}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-slate-500">
+                          Sollicité par
+                        </p>
+                        <p className="mt-1 text-sm font-medium text-slate-800">
+                          {activeAvis.direction === "incoming" ? activeAvis.requestedBy : "Notre service"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-slate-500">
+                          Dernière mise à jour
+                        </p>
+                        <p className="mt-1 text-sm font-medium text-slate-800">
+                          {formatDateTime(activeAvis.seenAt ?? activeAvis.requestedAt)}
+                        </p>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="rounded-2xl bg-white p-4 shadow-sm">
+                    <header className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Contexte clinique
+                    </header>
+                    <p className="text-sm leading-relaxed text-slate-700">
+                      {activeAvis.context}
+                    </p>
+                  </section>
+
+                  <section className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
+                    <header className="mb-2 text-xs font-semibold uppercase tracking-wide text-indigo-600">
+                      Demande
+                    </header>
+                    <p className="text-sm leading-relaxed text-slate-700">
+                      {activeAvis.request}
+                    </p>
+                  </section>
+
+                  <section className="flex flex-col rounded-2xl bg-amber-50/60 p-4 shadow-inner">
+                    <header className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-700">
+                      Réponse
+                    </header>
+                    {activeThread.length === 0 ? (
+                      <div className="flex items-center justify-center rounded-xl border border-dashed border-amber-200/80 bg-white/70 px-4 py-6 text-sm text-amber-700">
+                        Aucun échange enregistré pour l&apos;instant.
+                      </div>
+                    ) : (
+                      <div className="max-h-64 space-y-3 overflow-y-auto pr-1">
+                        {activeThread.map((message) => {
+                          const isOutgoing = message.direction === "outgoing";
+                          return (
+                            <div
+                              key={message.id}
+                              className={cn(
+                                "max-w-[75%] rounded-2xl px-3 py-2 text-sm leading-relaxed shadow-sm",
+                                isOutgoing
+                                  ? "ml-auto bg-indigo-600 text-white"
+                                  : "mr-auto bg-white text-slate-700",
+                              )}
+                            >
+                              <div className="flex items-center justify-between gap-3 text-xs">
+                                <span className="font-semibold">
+                                  {message.author}
+                                </span>
+                                <span className={cn(isOutgoing ? "text-indigo-100" : "text-slate-400")}>
+                                  {formatDateTime(message.sentAt)}
+                                </span>
+                              </div>
+                              <p className={cn("mt-1", isOutgoing ? "text-indigo-100" : "text-slate-700")}>{message.content}</p>
+                            </div>
+                          );
+                        })}
+                        <div ref={threadEndRef} />
+                      </div>
+                    )}
+                  </section>
+
+                  <div className="space-y-3 rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
+                    <textarea
+                      value={replyDraft}
+                      onChange={(event) => setReplyDraft(event.target.value)}
+                      onKeyDown={handleReplyKeyDown}
+                      className="min-h-[100px] w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                      placeholder="Répondez à la demande…"
+                    />
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <Button variant="ghost" size="sm">
+                        <Paperclip className="mr-2 h-4 w-4" />
+                        Joindre un document
+                      </Button>
+                      <Button variant="primary" size="sm" onClick={handleSubmitReply} disabled={!replyDraft.trim()}>
+                        <Send className="mr-2 h-4 w-4" />
+                        Envoyer la réponse
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="flex flex-col h-full">
+              <div className="flex-1 overflow-y-auto space-y-4 pb-4">
+                {renderCreateFormContent()}
+              </div>
+              <div className="flex-shrink-0 border-t border-slate-200/70 bg-white/90 p-4 space-y-3">
+                <Button
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => closeMobilePanel()}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  variant="primary"
+                  className="w-full"
+                  onClick={handleCreateAvis}
+                  disabled={!createForm.patientId || !createForm.request.trim() || isSubmitting}
+                  isLoading={isSubmitting}
+                >
+                  <MailPlus className="mr-2 h-4 w-4" />
+                  {isSubmitting ? "Envoi en cours…" : "Envoyer la demande"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile List View */}
+      <section className="flex flex-1 xl:hidden">
+        <Card className="flex w-full flex-col border-none bg-white/95">
+          <CardHeader className="space-y-4 pb-2">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                {(["all", "incoming", "outgoing"] as TabFilter[]).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setFilter(tab)}
+                    className={cn(
+                      "rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition",
+                      filter === tab
+                        ? "bg-indigo-600 text-white shadow"
+                        : "border border-slate-200 bg-white text-slate-600 hover:border-indigo-200",
+                    )}
+                  >
+                    {tab === "all" ? "Tous" : tab === "incoming" ? "Reçus" : "Émis"}
+                  </button>
+                ))}
+              </div>
+              <Badge variant="muted" className="bg-slate-100 text-slate-600">
+                {filteredAvis.length} avis
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
+              <Search className="h-4 w-4 text-slate-400" />
+              <input
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Rechercher un service, un patient ou un diagnostic"
+                className="w-full bg-transparent focus:outline-none"
+              />
+            </div>
+          </CardHeader>
+          <CardContent className="flex-1 min-h-0 px-6 pb-6">
+            {filteredAvis.length === 0 ? (
+              <EmptyState
+                icon={ClipboardList}
+                title="Aucun avis à afficher"
+                description="Modifiez les filtres ou enregistrez un nouvel avis pour le partager avec un service."
+              />
+            ) : (
+              <div className="flex h-full flex-col overflow-y-auto pt-4">
+                <ul className="flex flex-col gap-3">
+                  {filteredAvis.map((avis) => {
+                    const isActive = avis.id === activeAvisId;
+                    const directionLabel =
+                      avis.direction === "incoming" ? "Demandé par" : "Demandé par nous";
+
+                    return (
+                      <li key={avis.id}>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectAvis(avis.id)}
+                          className={cn(
+                            "w-full rounded-2xl border px-4 py-4 text-left shadow-sm transition",
+                            "hover:-translate-y-[1px] hover:shadow-md",
+                            isActive
+                              ? "border-indigo-200 bg-indigo-50/80"
+                              : "border-slate-200 bg-white",
+                          )}
+                        >
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div className="space-y-1">
+                              <p className="text-sm font-semibold text-slate-800">
+                                {avis.service}
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                {directionLabel} {avis.direction === "incoming" ? avis.requestedBy : ""}
+                              </p>
+                            </div>
+                            <span className="text-xs text-slate-400">
+                              {formatDateTime(avis.requestedAt)}
+                            </span>
+                          </div>
+                          <div className="mt-3 rounded-xl border border-slate-200/70 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                            <p className="font-semibold text-slate-700">
+                              {avis.patient.name} · {avis.patient.id}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {avis.patient.diagnosis}
+                            </p>
+                          </div>
+                          <p className="mt-3 text-sm text-slate-600">
+                            {avis.summary}
+                          </p>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Desktop View */}
+      <section className="hidden xl:grid xl:flex-1 xl:gap-6 xl:grid-cols-[1.3fr_2fr]">
         <Card className="flex h-full flex-col border-none bg-white/95">
           <CardHeader className="space-y-4 pb-2">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -707,7 +1015,7 @@ export default function AvisPage() {
                       <li key={avis.id}>
                         <button
                           type="button"
-                          onClick={() => setActiveAvisId(avis.id)}
+                          onClick={() => handleSelectAvis(avis.id)}
                           className={cn(
                             "w-full rounded-2xl border px-4 py-4 text-left shadow-sm transition",
                             "hover:-translate-y-[1px] hover:shadow-md",

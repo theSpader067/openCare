@@ -1,25 +1,64 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Mail, ShieldCheck, LogIn } from "lucide-react";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Mail, ShieldCheck, LogIn, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { signIn } from "next-auth/react"
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      router.push("/");
-    }, 900);
-  };
+  useEffect(() => {
+    // Check for verification success
+    if (searchParams.get('verified') === '1') {
+      setSuccess('Email verified successfully! Please login to continue.')
+    }
+    // Check for unverified error
+    if (searchParams.get('unverified') === '1') {
+      setError('Please verify your email before logging in.')
+    }
+    // Check for other errors
+    const errorParam = searchParams.get('error')
+    if (errorParam === 'invalid_token') {
+      setError('Invalid verification link. Please request a new one.')
+    } else if (errorParam === 'expired') {
+      setError('Verification link has expired. Please request a new one.')
+    }
+  }, [searchParams])
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError(null)
+    setIsLoading(true)
+
+    try {
+      const res = await signIn('credentials', {
+        email,
+        password,
+        callbackUrl: '/dashboard',
+      })
+
+      if (res?.error) {
+        setIsLoading(false)
+        setError(res.error || 'An unexpected error occurred')
+      } else if (res?.ok) {
+        // NextAuth callback will handle the redirect based on user state
+        return
+      }
+    } catch (err) {
+      console.error('Login error:', err)
+      setIsLoading(false)
+      setError('An unexpected error occurred. Please try again.')
+    }
+  }
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-[#0f172a] via-[#312e81] to-[#6d28d9]">
@@ -30,23 +69,21 @@ export default function LoginPage() {
       </div>
 
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-16">
-        <div className="mb-10 flex items-center gap-3 text-white">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-xl font-semibold text-white shadow-lg shadow-indigo-900/40">
+        <div className="mb-12 flex items-center gap-3 text-white">
+          <span className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-[#7c3aed] via-[#6366f1] to-[#4f46e5] text-2xl font-bold text-white shadow-lg shadow-indigo-300/60">
             OC
           </span>
           <div>
-            <p className="text-sm uppercase tracking-[0.4em] text-white/70">
-              OpenCare
-            </p>
-            <h1 className="text-2xl font-semibold">
+            <h1 className="text-4xl font-bold">OpenCare</h1>
+            <p className="text-xs uppercase tracking-widest text-white/60">
               Plateforme des praticiens
-            </h1>
+            </p>
           </div>
         </div>
 
         <div className="w-full max-w-4xl rounded-[32px] border border-white/10 bg-white/10 p-1 shadow-[0_25px_80px_-25px_rgba(79,70,229,0.65)] backdrop-blur-xl">
           <div className="grid gap-6 rounded-[30px] bg-white/10 p-8 md:grid-cols-[1.1fr_0.9fr]">
-            <div className="rounded-3xl bg-white/10 p-6 text-white shadow-inner shadow-indigo-900/40">
+            <div className="rounded-3xl bg-white/10 p-6 text-white shadow-inner shadow-indigo-900/40 hidden md:block">
               <h2 className="text-2xl font-semibold">
                 Bienvenue de retour 👋
               </h2>
@@ -140,6 +177,21 @@ export default function LoginPage() {
                   </Link>
                 </div>
 
+                {success && (
+                  <div className="rounded-xl bg-green-50 p-4 border border-green-200">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-green-800">{success}</p>
+                    </div>
+                  </div>
+                )}
+
+                {error && (
+                  <div className="rounded-xl bg-red-50 p-4 border border-red-200">
+                    <p className="text-sm text-red-800">{error}</p>
+                  </div>
+                )}
+
                 <Button
                   type="submit"
                   variant="primary"
@@ -162,6 +214,7 @@ export default function LoginPage() {
                   type="button"
                   variant="outline"
                   className="mt-4 w-full border-slate-200 py-3 text-sm font-semibold text-slate-700 hover:border-indigo-200 hover:bg-indigo-50"
+                  onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
                 >
                   <span className="mr-3 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white">
                     <span className="text-lg font-bold text-indigo-600">G</span>
@@ -181,5 +234,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold">Loading...</h1></div></div>}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

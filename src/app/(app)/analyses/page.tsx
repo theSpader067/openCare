@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ComponentType } from "react";
-import { Activity, Beaker, Download, FlaskConical, List, Search } from "lucide-react";
+import { Activity, Beaker, Download, FlaskConical, List, Search, ClipboardList, X } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -15,6 +15,9 @@ import { Spinner } from "@/components/ui/spinner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
+
+import { HistoryFilters } from "./history-filters";
+import { PendingAnalyseCard } from "./pending-analyse-card";
 
 type Analyse = {
   id: string;
@@ -33,6 +36,13 @@ type AnalyseDetail = {
     reference: string;
   }>;
   interpretation: string;
+  historicalValues?: Array<{
+    date: string;
+    results: Array<{
+      label: string;
+      value: string;
+    }>;
+  }>;
 };
 
 const REFERENCE_REQUEST_DATE = new Date("2024-03-13T12:00:00+01:00");
@@ -256,6 +266,24 @@ const analyseDetails: Record<string, AnalyseDetail> = {
     ],
     interpretation:
       "Bilan hépatique dans les valeurs usuelles. Poursuivre la surveillance post-opératoire quotidienne.",
+    historicalValues: [
+      {
+        date: "2024-03-10T14:30:00+01:00",
+        results: [
+          { label: "ASAT", value: "38 U/L" },
+          { label: "ALAT", value: "35 U/L" },
+          { label: "Bilirubine totale", value: "15 µmol/L" },
+        ],
+      },
+      {
+        date: "2024-03-07T09:15:00+01:00",
+        results: [
+          { label: "ASAT", value: "52 U/L" },
+          { label: "ALAT", value: "48 U/L" },
+          { label: "Bilirubine totale", value: "18 µmol/L" },
+        ],
+      },
+    ],
   },
   "LAB-00091": {
     results: [
@@ -264,6 +292,22 @@ const analyseDetails: Record<string, AnalyseDetail> = {
     ],
     interpretation:
       "Equilibre glycémique insuffisant. Proposer un ajustement thérapeutique et renforcer l'éducation diététique.",
+    historicalValues: [
+      {
+        date: "2024-02-13T10:00:00+01:00",
+        results: [
+          { label: "HbA1c", value: "8,2 %" },
+          { label: "Glycémie à jeun", value: "1,35 g/L" },
+        ],
+      },
+      {
+        date: "2024-01-10T10:00:00+01:00",
+        results: [
+          { label: "HbA1c", value: "8,5 %" },
+          { label: "Glycémie à jeun", value: "1,42 g/L" },
+        ],
+      },
+    ],
   },
   "LAB-00090": {
     results: [
@@ -468,6 +512,7 @@ export default function AnalysesPage() {
 
   const [selectedBilan, setSelectedBilan] = useState<Analyse | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [isPendingPanelOpen, setIsPendingPanelOpen] = useState(false);
   const [newRequestForm, setNewRequestForm] = useState({
     type: "",
     patient: "",
@@ -575,7 +620,7 @@ export default function AnalysesPage() {
     Boolean(historyFilters.to);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20 lg:pb-0">
       <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Analyses</h1>
@@ -595,62 +640,57 @@ export default function AnalysesPage() {
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {statsByCategory.map((card) => {
           const Icon = card.icon;
           return (
             <div
               key={card.key}
               className={cn(
-                "relative overflow-hidden rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm",
+                "relative flex flex-col justify-between overflow-hidden rounded-xl sm:rounded-2xl border border-slate-200 bg-white/95 p-3 sm:p-4 md:p-5 shadow-sm",
                 "bg-gradient-to-br",
                 card.gradient,
               )}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    {card.label}
-                  </p>
-                  <div className="mt-4 grid gap-2">
-                    <div className="rounded-xl border border-slate-200/70 bg-white/75 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      <div className="flex items-center justify-between">
-                        <span>En cours</span>
-                        <span className="text-sm text-slate-900">
-                          {card.ongoing}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="rounded-xl border border-slate-200/70 bg-white/75 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      <div className="flex items-center justify-between">
-                        <span>Récupérés</span>
-                        <span className="text-sm text-slate-900">
-                          {card.completed}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div className="flex items-start sm:items-center gap-2 sm:gap-3">
                 <span
                   className={cn(
-                    "flex h-11 w-11 items-center justify-center rounded-xl shadow-inner",
+                    "flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-xl shadow-inner flex-shrink-0",
                     card.iconBg,
                   )}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                 </span>
+                <div className="text-xs sm:text-sm font-semibold uppercase tracking-wide text-slate-500 line-clamp-2">
+                  {card.label}
+                </div>
               </div>
-              <p className="mt-4 text-xs text-slate-500">
-                {card.ongoing + card.completed === 0
-                  ? "Aucune demande suivie actuellement."
-                  : `${card.ongoing + card.completed} demandes suivies dans cette spécialité.`}
-              </p>
+              <div className="mt-3 sm:mt-4 md:mt-5 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4">
+                <div className="flex-1">
+                  <p className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
+                    {card.ongoing + card.completed}
+                  </p>
+                  <p className="text-xs text-slate-500 leading-snug mt-1 line-clamp-2">
+                    {card.ongoing + card.completed === 0
+                      ? "Aucune demande suivie actuellement."
+                      : `${card.ongoing + card.completed} demandes suivies dans cette spécialité.`}
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs font-semibold text-slate-500 flex-shrink-0">
+                  <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-sky-700 whitespace-nowrap">
+                    {card.ongoing} en cours
+                  </span>
+                  <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-emerald-700 whitespace-nowrap">
+                    {card.completed} récupérés
+                  </span>
+                </div>
+              </div>
             </div>
           );
         })}
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[3fr_1fr]">
+      <section className="grid gap-6 xl:grid-cols-[3fr_1fr]">
         <Card className="flex h-fit flex-col overflow-hidden">
           <CardHeader className="flex flex-col gap-2 border-b border-slate-200 bg-white px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -661,85 +701,13 @@ export default function AnalysesPage() {
             </div>
           </CardHeader>
           <CardContent className="flex-1 p-0">
-            <div className="border-b border-slate-200 bg-slate-50/70 px-4 py-4">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                <div className="flex w-full flex-col gap-2 lg:max-w-[360px]">
-                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Patient / identifiant
-                  </label>
-                  <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm">
-                    <Search className="h-4 w-4 text-slate-400" />
-                    <input
-                      type="search"
-                      value={historyFilters.query}
-                      onChange={(event) =>
-                        handleHistoryFilterChange("query", event.target.value)
-                      }
-                      placeholder="Rechercher un patient ou un numéro"
-                      className="w-full bg-transparent text-slate-700 placeholder:text-slate-400 focus:outline-none"
-                    />
-                  </div>
-                </div>
-                <div className="grid w-full gap-3 sm:grid-cols-2 lg:max-w-xl lg:grid-cols-3">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Type de bilan
-                    </label>
-                    <select
-                      value={historyFilters.type}
-                      onChange={(event) =>
-                        handleHistoryFilterChange("type", event.target.value)
-                      }
-                      className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-                    >
-                      <option value="all">Tous les types</option>
-                      {uniqueHistoryTypes.map((type) => (
-                        <option key={type} value={type}>
-                          {type}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Du
-                    </label>
-                    <input
-                      type="date"
-                      value={historyFilters.from}
-                      onChange={(event) =>
-                        handleHistoryFilterChange("from", event.target.value)
-                      }
-                      className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Au
-                    </label>
-                    <input
-                      type="date"
-                      value={historyFilters.to}
-                      onChange={(event) =>
-                        handleHistoryFilterChange("to", event.target.value)
-                      }
-                      className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-                    />
-                  </div>
-                </div>
-                <div className="flex w-full flex-col items-stretch gap-2 sm:flex-row sm:justify-end sm:gap-3 lg:w-auto">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={!isHistoryFilterActive}
-                    onClick={resetHistoryFilters}
-                    className="h-11 rounded-2xl border border-transparent text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50/60"
-                  >
-                    Réinitialiser
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <HistoryFilters
+              filters={historyFilters}
+              onFilterChange={handleHistoryFilterChange}
+              uniqueHistoryTypes={uniqueHistoryTypes}
+              isHistoryFilterActive={isHistoryFilterActive}
+              resetHistoryFilters={resetHistoryFilters}
+            />
             {historyLoading ? (
               <div className="flex h-64 items-center justify-center">
                 <Spinner label="Récupération de l'historique..." />
@@ -789,9 +757,6 @@ export default function AnalysesPage() {
                         <th className="px-4 py-3 font-medium text-slate-500">
                           Demande
                         </th>
-                        <th className="px-4 py-3 font-medium text-slate-500">
-                          Statut
-                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -812,16 +777,6 @@ export default function AnalysesPage() {
                           </td>
                           <td className="px-4 py-3 text-sm text-slate-600">
                             {formatAnalyseDateTime(analyse.requestedDate)}
-                          </td>
-                          <td className="px-4 py-3">
-                            <Badge
-                              className={cn(
-                                "px-2.5 py-1 text-xs font-semibold",
-                                statusBadgeMap[analyse.status],
-                              )}
-                            >
-                              {analyse.status}
-                            </Badge>
                           </td>
                         </tr>
                       ))}
@@ -870,14 +825,14 @@ export default function AnalysesPage() {
           </CardContent>
         </Card>
 
-        <Card className="flex h-auto flex-col">
+        <Card className="hidden h-full flex-col xl:flex overflow-hidden">
           <CardHeader className="pb-3">
             <CardTitle>Ordres en attente</CardTitle>
             <CardDescription>
               Priorisation des analyses non traitées et contacts laboratoire.
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex-1 overflow-auto pt-0">
+          <CardContent className="flex-1 overflow-y-auto pt-0">
             {pendingLoading ? (
               <div className="flex h-full items-center justify-center">
                 <Spinner label="Connexion au laboratoire..." />
@@ -896,91 +851,87 @@ export default function AnalysesPage() {
             ) : (
               <div className="flex h-full flex-col overflow-hidden">
                 <div className="flex-1 space-y-3 overflow-y-auto pr-1">
-                  {pendingAnalyses.map((analyse) => {
-                    const isUrgent = analyse.status === "Urgent";
-                    const ticketBorder = isUrgent
-                      ? "border-rose-200/80 shadow-rose-200/60"
-                      : "border-indigo-100 shadow-indigo-100/60";
-                    const ticketGradient = isUrgent
-                      ? "from-[#fff1f2] via-[#ffe4e6] to-[#fff7f7]"
-                      : "from-white/95 via-indigo-50/40 to-white/95";
-                    const statusBadge = statusBadgeMap[analyse.status];
-
-                    return (
-                      <div
-                        key={analyse.id}
-                        className={cn(
-                          "relative overflow-hidden rounded-[28px] border bg-gradient-to-br p-0 shadow-md transition hover:shadow-lg",
-                          ticketBorder,
-                          ticketGradient,
-                        )}
-                      >
-                        <div className="flex flex-col gap-4 p-5 md:grid md:grid-cols-[minmax(0,1fr)_215px] md:items-start md:gap-0 md:pr-0">
-                          <div className="space-y-4 md:pr-6">
-                            <div className="flex flex-wrap items-start justify-between gap-3">
-                              <div className="space-y-1">
-                                <p className="text-sm font-semibold text-slate-800">
-                                  {analyse.patient}
-                                </p>
-                                <p className="text-xs text-slate-500">
-                                  Responsable : {analyse.requester}
-                                </p>
-                              </div>
-                              <span className={cn("rounded-full px-3 py-1 text-xs font-semibold", statusBadge)}>
-                                {analyse.status}
-                              </span>
-                            </div>
-                            <div className="text-sm text-slate-700">
-                              {analyse.type}
-                            </div>
-                            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                              <span className="rounded-full bg-slate-100 px-2.5 py-1 font-semibold text-slate-600">
-                                ID labo : {analyse.id}
-                              </span>
-                              <span>{formatAnalyseDateTime(analyse.requestedDate)}</span>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-col gap-3 rounded-2xl border border-white/70 bg-white/80 p-4 text-left shadow-inner shadow-white/30 md:min-h-full md:justify-between md:rounded-none md:border-l md:border-transparent md:bg-white/65 md:px-4 md:py-5 md:text-right md:shadow-none">
-                            <div className="space-y-2 text-xs text-slate-500 md:space-y-1">
-                              <p className="font-semibold uppercase tracking-wide text-slate-500">
-                                Patient / ID
-                              </p>
-                              <p className="text-sm font-semibold text-slate-800">
-                                {analyse.patient}
-                              </p>
-                              <p className="font-semibold text-indigo-600">
-                                {analyse.id}
-                              </p>
-                            </div>
-                            <div className="flex flex-col gap-2 md:items-end">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-10 w-full justify-center rounded-full text-indigo-600 transition hover:bg-indigo-50/80 md:w-auto"
-                              >
-                                Détails
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-10 w-full justify-center rounded-full border-indigo-200 text-slate-700 hover:bg-indigo-50/80 md:w-auto"
-                              >
-                                <Download className="mr-2 h-4 w-4" />
-                                Télécharger
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {pendingAnalyses.map((analyse) => (
+                    <PendingAnalyseCard key={analyse.id} analyse={analyse} />
+                  ))}
                 </div>
               </div>
             )}
           </CardContent>
         </Card>
       </section>
+
+      {/* Floating button for mobile */}
+      <button
+        onClick={() => setIsPendingPanelOpen(true)}
+        className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg transition-all hover:bg-indigo-700 hover:shadow-xl xl:hidden"
+        aria-label="Ouvrir les ordres en attente"
+      >
+        <ClipboardList className="h-6 w-6" />
+      </button>
+
+      {/* Overlay */}
+      <div
+        className={cn(
+          "fixed inset-0 z-40 bg-slate-900/20 backdrop-blur-sm transition-opacity duration-300 xl:hidden",
+          isPendingPanelOpen ? "opacity-100" : "pointer-events-none opacity-0",
+        )}
+        onClick={() => setIsPendingPanelOpen(false)}
+      />
+
+      {/* Slide-in panel */}
+      <div
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex w-full max-w-md flex-col rounded-r-3xl border-r border-slate-200 bg-white shadow-2xl transition-transform duration-300 xl:hidden",
+          isPendingPanelOpen
+            ? "translate-x-0"
+            : "pointer-events-none -translate-x-full",
+        )}
+      >
+        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Ordres en attente</h2>
+            <p className="text-sm text-slate-500">
+              Analyses non traitées
+            </p>
+          </div>
+          <button
+            type="button"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
+            onClick={() => setIsPendingPanelOpen(false)}
+            aria-label="Fermer le panneau"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          {pendingLoading ? (
+            <div className="flex h-64 items-center justify-center">
+              <Spinner label="Connexion au laboratoire..." />
+            </div>
+          ) : pendingAnalyses.length === 0 ? (
+            <EmptyState
+              icon={FlaskConical}
+              title="Aucune demande en attente"
+              description="Créez une nouvelle demande pour lancer un ordre d'analyse."
+              action={
+                <Button variant="primary" onClick={() => {
+                  setCreateModalOpen(true);
+                  setIsPendingPanelOpen(false);
+                }}>
+                  Nouvel ordre
+                </Button>
+              }
+            />
+          ) : (
+            <div className="space-y-3">
+              {pendingAnalyses.map((analyse) => (
+                <PendingAnalyseCard key={analyse.id} analyse={analyse} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
       <Modal
         open={Boolean(selectedBilan)}
@@ -1052,6 +1003,38 @@ export default function AnalysesPage() {
                 <p className="mt-2 leading-relaxed">
                   {selectedDetails.interpretation}
                 </p>
+              </div>
+            ) : null}
+            {selectedDetails?.historicalValues && selectedDetails.historicalValues.length > 0 ? (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+                <h3 className="text-sm font-semibold text-slate-800">
+                  Anciens résultats
+                </h3>
+                <div className="mt-3 space-y-3">
+                  {selectedDetails.historicalValues.map((history, index) => (
+                    <div
+                      key={`history-${index}`}
+                      className="rounded-xl border border-slate-200 bg-white p-3"
+                    >
+                      <p className="text-xs font-semibold text-slate-600 mb-2">
+                        {formatAnalyseDateTime(history.date)}
+                      </p>
+                      <ul className="space-y-1 text-xs">
+                        {history.results.map((item) => (
+                          <li
+                            key={`${index}-${item.label}`}
+                            className="flex items-center justify-between text-slate-700"
+                          >
+                            <span className="text-slate-600">{item.label}</span>
+                            <span className="font-medium text-slate-800">
+                              {item.value}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : null}
           </div>

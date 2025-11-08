@@ -1,19 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import {
   Calendar,
-  ClipboardPenLine,
-  CloudSun,
-  FileBox,
-  FilePlus2,
-  Link2,
+  Clock,
+  Plus,
   Search,
-  Sparkles,
-  Stars,
-  UserRound,
+  Stethoscope,
+  Users,
+  X,
+  ArrowLeft,
+  User,
+  FilePlus,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -27,267 +26,130 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
-type ReportStatus = "draft" | "finalized" | "needs-review";
-type ReportMood = "luminous" | "serene" | "urgent";
-
-type Report = {
+type Patient = {
   id: string;
-  title: string;
-  summary: string;
+  fullName: string;
+  histoire: string;
+};
+
+type Operation = {
+  id: string;
+  type: string;
+  date: string;
+  duration: number;
+  operators: Operator[];
+  details: string;
+  patient?: Patient;
   createdAt: string;
-  updatedAt: string;
-  status: ReportStatus;
-  mood: ReportMood;
-  specialty: string;
-  author: {
-    name: string;
-    role: string;
-  };
-  patient: {
-    id: string;
-    name: string;
-    age: number;
-    service: string;
-    diagnosis: string;
-  };
-  sections: {
-    clinicalContext: string;
-    observations: string;
-    plan: string;
-    nextSteps: string;
-  };
-  keywords: string[];
+  createdBy: string;
 };
 
-type ReportTemplate = {
+type Operator = {
   id: string;
-  label: string;
-  title: string;
-  summary: string;
-  specialty: string;
-  mood: ReportMood;
-  sections: Report["sections"];
-  keywords: string[];
+  name: string;
+  role: string;
 };
 
-type DraftReport = {
-  title: string;
-  summary: string;
-  patientId: string;
-  specialty: string;
-  mood: ReportMood;
-  sections: Report["sections"];
-  keywords: string[];
+type TeamMember = {
+  id: string;
+  name: string;
+  role: string;
 };
 
-const createdReportsSeed: Report[] = [
+const operationTypes = [
+  "Chirurgie générale",
+  "Chirurgie digestive",
+  "Chirurgie vasculaire",
+  "Urologie",
+  "Orthopédie",
+  "Cardiologie interventionnelle",
+  "Neurochirurgie",
+  "Chirurgie thoracique",
+];
+
+const teamMembers: TeamMember[] = [
+  { id: "TM1", name: "Dr. Marie Dupont", role: "Chirurgien" },
+  { id: "TM2", name: "Dr. Jean Martin", role: "Chirurgien" },
+  { id: "TM3", name: "IDE Sarah Laurent", role: "Infirmière" },
+  { id: "TM4", name: "IDE Claire Moreau", role: "Infirmière" },
+  { id: "TM5", name: "Dr. Pierre Lefebvre", role: "Anesthésiste" },
+  { id: "TM6", name: "IDE Marc Bertrand", role: "Infirmier" },
+];
+
+const mockPatients: Patient[] = [
   {
-    id: "CR-2024-091",
-    title: "Bilan post-opératoire · Sleeve gastrectomie",
-    summary: "Suivi immédiat J+1 avec point hémodynamique rassurant et recommandations nutritionnelles.",
-    createdAt: "2024-03-12T08:15:00+01:00",
-    updatedAt: "2024-03-12T12:32:00+01:00",
-    status: "finalized",
-    mood: "luminous",
-    specialty: "Chirurgie bariatrique",
-    author: {
-      name: "Dr. Adama Faye",
-      role: "Chef de clinique",
-    },
-    patient: {
-      id: "P-2024-0201",
-      name: "Awa Ndiaye",
-      age: 47,
-      service: "Chirurgie viscérale",
-      diagnosis: "Obésité morbide · sleeve gastrectomie",
-    },
-    sections: {
-      clinicalContext:
-        "Patiente opérée la veille par sleeve gastrectomie laparoscopique. Suites opératoires immédiates simples. Surveillance en service de chirurgie avec protocole Enhanced Recovery After Surgery (ERAS).",
-      observations:
-        "Douleurs correctement soulagées (EVA 3/10). Transit non repris, absence de nausées. Pansement sec, pas de signe d'hémorragie. Biologie matinale rassurante (Hb 12,1 g/dL, CRP 18 mg/L).",
-      plan:
-        "Poursuite du protocole d'hydratation par paliers. Mobilisation précoce accompagnée. Héparine bas poids moléculaire maintenue 7 jours.",
-      nextSteps:
-        "Consultation diététique à J+7 programmée. Contrôle vitaminique à 1 mois. Téléconsultation de suivi à prévoir à J+30.",
-    },
-    keywords: ["ERAS", "post-opératoire", "nutrition"],
+    id: "P-001",
+    fullName: "Awa Ndiaye",
+    histoire: "Patiente hospitalisée pour obésité morbide. Antécédents de diabète type 2. Allergie à la pénicilline.",
   },
   {
-    id: "CR-2024-088",
-    title: "Compte rendu consultation cardio-oncologie",
-    summary: "Optimisation thérapeutique pré-chimiothérapie avec ajustement bêta-bloquant.",
-    createdAt: "2024-03-11T16:05:00+01:00",
-    updatedAt: "2024-03-11T17:10:00+01:00",
-    status: "needs-review",
-    mood: "serene",
-    specialty: "Cardiologie",
-    author: {
-      name: "Dr. Malick Sarr",
-      role: "Praticien hospitalier",
-    },
-    patient: {
-      id: "P-2024-0142",
-      name: "Lamia Saïd",
-      age: 58,
-      service: "Oncologie",
-      diagnosis: "Cholangiocarcinome · chimiothérapie FOLFIRINOX",
-    },
-    sections: {
-      clinicalContext:
-        "Patiente suivie en cardio-oncologie pour optimisation avant mise en route d'une chimiothérapie potentiellement cardiotoxique. Antécédents d'hypertension équilibrée.",
-      observations:
-        "ECG : rythme sinusal, QTc 440 ms. Echo cardiaque : FE 58 %, GLS -18 %. TA 145/90 mmHg. Pas de signes cliniques d'insuffisance cardiaque.",
-      plan:
-        "Augmentation du bisoprolol à 5 mg. Surveillance tensionnelle hebdomadaire. Contrôle biologique (NFS, iono, BNP) avant chaque cycle.",
-      nextSteps:
-        "Nouveau point cardio à J+21 après premier cycle. Télémonitoring tensionnel via appli OpenCare.",
-    },
-    keywords: ["cardio-oncologie", "chimiothérapie", "surveillance"],
+    id: "P-002",
+    fullName: "Lamia Saïd",
+    histoire: "Patiente suivie pour cholangiocarcinome. Chimiothérapie FOLFIRINOX en cours. Bonne tolérance générale.",
   },
   {
-    id: "CR-2024-082",
-    title: "Synthèse pluridisciplinaire RCP sein",
-    summary: "Décision collégiale de mastectomie totale avec reconstruction immédiate.",
-    createdAt: "2024-03-08T11:00:00+01:00",
-    updatedAt: "2024-03-09T09:45:00+01:00",
-    status: "draft",
-    mood: "urgent",
-    specialty: "RCP Sein",
-    author: {
-      name: "Dr. Sokhna Diallo",
-      role: "Coordinatrice RCP",
-    },
-    patient: {
-      id: "P-2024-0185",
-      name: "Mamadou Carter",
-      age: 64,
-      service: "Oncologie",
-      diagnosis: "Métastases osseuses suspectées",
-    },
-    sections: {
-      clinicalContext:
-        "Réunion de concertation pluridisciplinaire du 8 mars 2024. Présence des services chirurgie, oncologie médicale, radiologie, anatomopathologie et soins de support.",
-      observations:
-        "Résultats d'imagerie : atteinte quadrants externes. Biopsie confirmant carcinome infiltrant G3. Score de 7/9 (Nottingham).",
-      plan:
-        "Indication collégiale de mastectomie totale droite avec reconstruction immédiate DIEP.",
-      nextSteps:
-        "Programmation bloc à J+14. Consultation anesthésique à organiser. Entretien soutien psycho-oncologie à proposer.",
-    },
-    keywords: ["RCP", "chirurgie", "oncologie"],
+    id: "P-003",
+    fullName: "Mamadou Carter",
+    histoire: "Patient présentant des métastases osseuses. Suivi en oncologie. Performance status ECOG 1.",
   },
 ];
 
-const favoriteTemplates: ReportTemplate[] = [
+const mockOperations: Operation[] = [
   {
-    id: "template-post-op-digestif",
-    label: "Post-op digestif premium",
-    title: "Suivi post-opératoire programme ERAS",
-    summary: "Compte rendu structuré des suites opératoires avec priorités ERAS.",
-    specialty: "Chirurgie digestive",
-    mood: "luminous",
-    keywords: ["ERAS", "mobilisation", "douleur"],
-    sections: {
-      clinicalContext:
-        "Patient hospitalisé en chirurgie digestive, sous protocole Enhanced Recovery After Surgery. Intervention réalisée sans incident majeur.",
-      observations:
-        "Constantes stables. Douleur bien contrôlée. Absence de fièvre. Période post-opératoire conforme aux attentes. Pansements secs.",
-      plan:
-        "Hydratation orale progressive, mobilisation accompagnée, prophylaxie thromboembolique maintenue, surveillance biologique J+2.",
-      nextSteps:
-        "Consultation diététique sous 5 jours, appel infirmier à domicile planifié, contrôle chirurgical à J+10.",
-    },
+    id: "OP-001",
+    type: "Chirurgie digestive",
+    date: "2024-03-15",
+    duration: 120,
+    operators: [
+      { id: "TM1", name: "Dr. Marie Dupont", role: "Chirurgien" },
+      { id: "TM3", name: "IDE Sarah Laurent", role: "Infirmière" },
+    ],
+    patient: mockPatients[0],
+    details:
+      "Cholécystectomie laparoscopique. Intervention sans incident. Patient stable tout au long de la procédure. Hémostase complète. Sutures réalisées sans complication.",
+    createdAt: "2024-03-15T14:30:00",
+    createdBy: "Dr. Marie Dupont",
   },
   {
-    id: "template-consult-cardio",
-    label: "Consultation cardio",
-    title: "Compte rendu consultation cardio-thérapeutique",
-    summary: "Structure focus sur adaptation thérapeutique et éducation.",
-    specialty: "Cardiologie",
-    mood: "serene",
-    keywords: ["suivi", "éducation", "thérapeutique"],
-    sections: {
-      clinicalContext:
-        "Consultation programmée dans le cadre du suivi cardiologique. Historique d'hypertension et de cardiopathie ischémique stabilisée.",
-      observations:
-        "Examens complémentaires récents satisfaisants. Patient symptomatique de classe NYHA II. Observance médicamenteuse partielle.",
-      plan:
-        "Optimiser bêta-bloquant, renforcer l'éducation thérapeutique et adapter l'activité physique.",
-      nextSteps:
-        "Bilan sanguin dans 2 semaines, téléconsultation de contrôle dans 1 mois, atelier éducation cardiaque collectif.",
-    },
+    id: "OP-002",
+    type: "Chirurgie vasculaire",
+    date: "2024-03-14",
+    duration: 180,
+    operators: [
+      { id: "TM2", name: "Dr. Jean Martin", role: "Chirurgien" },
+      { id: "TM5", name: "Dr. Pierre Lefebvre", role: "Anesthésiste" },
+      { id: "TM4", name: "IDE Claire Moreau", role: "Infirmière" },
+    ],
+    patient: mockPatients[1],
+    details:
+      "Bypass fémoro-poplité. Sutures vasculaires réalisées avec succès. Hémostase complète. Patient stable en post-opératoire.",
+    createdAt: "2024-03-14T11:00:00",
+    createdBy: "Dr. Jean Martin",
   },
   {
-    id: "template-radiologie",
-    label: "Intervention radiologie",
-    title: "Compte rendu post-acte radiologie interventionnelle",
-    summary: "Trame rapide pour gestes mini-invasifs et monitoring post-acte.",
-    specialty: "Radiologie interventionnelle",
-    mood: "urgent",
-    keywords: ["check-list", "monitoring"],
-    sections: {
-      clinicalContext:
-        "Acte radiologique interventionnel réalisé sous guidage fluoroscopique. Indication validée en RCP dédiée.",
-      observations:
-        "Gestes techniques effectués selon le plan. Tolérance satisfaisante. Surveillance immédiate sans anomalie.",
-      plan:
-        "Antibioprophylaxie respectée. Analgésie adaptée. Surveillance clinique et biologique renforcée les premières 24 heures.",
-      nextSteps:
-        "Contrôle imagerie à J+7, contact téléphonique pour symptômes d'alerte, consultation chirurgicale si complication suspectée.",
-    },
+    id: "OP-003",
+    type: "Chirurgie générale",
+    date: "2024-03-13",
+    duration: 90,
+    operators: [
+      { id: "TM1", name: "Dr. Marie Dupont", role: "Chirurgien" },
+      { id: "TM6", name: "IDE Marc Bertrand", role: "Infirmier" },
+    ],
+    patient: mockPatients[2],
+    details:
+      "Hernioplastie inguinale unilatérale. Pose de prothèse sans complication. Intervention classique, patient en bon état.",
+    createdAt: "2024-03-13T09:15:00",
+    createdBy: "Dr. Marie Dupont",
   },
 ];
 
-const patientsDirectory = [
-  {
-    id: "P-2024-0201",
-    name: "Awa Ndiaye",
-    age: 47,
-    service: "Chirurgie viscérale",
-    diagnosis: "Obésité morbide · sleeve gastrectomie",
-  },
-  {
-    id: "P-2024-0142",
-    name: "Lamia Saïd",
-    age: 58,
-    service: "Oncologie",
-    diagnosis: "Cholangiocarcinome · chimiothérapie FOLFIRINOX",
-  },
-  {
-    id: "P-2024-0185",
-    name: "Mamadou Carter",
-    age: 64,
-    service: "Oncologie",
-    diagnosis: "Métastases osseuses suspectées",
-  },
-  {
-    id: "P-2024-0110",
-    name: "Fatou Diop",
-    age: 52,
-    service: "Endocrinologie",
-    diagnosis: "Diabète type 2 · surveillance annuelle",
-  },
-  {
-    id: "P-2024-0103",
-    name: "Nadine Morel",
-    age: 72,
-    service: "Hépato-gastro-entérologie",
-    diagnosis: "Sténose biliaire · suivi palliative",
-  },
-];
-
-const reportStatusBadgeMap: Record<ReportStatus, string> = {
-  draft: "bg-violet-500/10 text-violet-600 shadow-sm shadow-violet-200/80",
-  "needs-review": "bg-amber-500/15 text-amber-700 shadow-sm shadow-amber-200/80",
-  finalized: "bg-emerald-500/15 text-emerald-700 shadow-sm shadow-emerald-200/80",
-};
-
-const reportMoodGradient: Record<ReportMood, string> = {
-  luminous: "from-[#f8f7ff] via-[#f1f5ff] to-[#ecfdf5]",
-  serene: "from-[#f4f3ff] via-[#eef5ff] to-[#fdf7ff]",
-  urgent: "from-[#fff4f4] via-[#fff7ed] to-[#fef3ff]",
-};
+function formatDate(dateString: string) {
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(dateString));
+}
 
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("fr-FR", {
@@ -299,721 +161,1137 @@ function formatDateTime(value: string) {
 }
 
 export default function ComptesRendusPage() {
-  const router = useRouter();
-  const [reports, setReports] = useState<Report[]>(createdReportsSeed);
-  const [search, setSearch] = useState("");
-  const [activeReportId, setActiveReportId] = useState<string | null>(
-    createdReportsSeed[0]?.id ?? null,
+  const [operations, setOperations] = useState<Operation[]>(mockOperations);
+  const [activeOperationId, setActiveOperationId] = useState<string | null>(
+    mockOperations[0]?.id ?? null
   );
-  const [mode, setMode] = useState<"view" | "create">("view");
-  const initialTemplate = favoriteTemplates[0];
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
-    initialTemplate?.id ?? null,
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isCreateMode, setIsCreateMode] = useState(false);
+  const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
+  const [mobilePanelMode, setMobilePanelMode] = useState<"view" | "create" | null>(
+    null
   );
-  const [draft, setDraft] = useState<DraftReport>(() => ({
-    title: initialTemplate?.title ?? "",
-    summary: initialTemplate?.summary ?? "",
-    specialty: initialTemplate?.specialty ?? "",
-    mood: initialTemplate?.mood ?? "serene",
-    sections: initialTemplate?.sections ?? {
-      clinicalContext: "",
-      observations: "",
-      plan: "",
-      nextSteps: "",
-    },
-    keywords: initialTemplate?.keywords ?? [],
-    patientId: patientsDirectory[0]?.id ?? "",
-  }));
+  const [showPatientModal, setShowPatientModal] = useState(false);
+  const [patientMode, setPatientMode] = useState<"select" | "new">("select");
+  const [patientSearch, setPatientSearch] = useState("");
 
-  const filteredReports = useMemo(() => {
-    const needle = search.trim().toLowerCase();
-    if (!needle) {
-      return reports;
-    }
-    return reports.filter((report) => {
-      const haystack = [
-        report.title,
-        report.summary,
-        report.specialty,
-        report.patient.name,
-        report.patient.service,
-        ...report.keywords,
-      ]
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(needle);
+  const [createForm, setCreateForm] = useState({
+    type: "",
+    date: new Date().toISOString().split("T")[0],
+    duration: "",
+    operators: [] as Operator[],
+    patient: null as Patient | null,
+    details: "",
+  });
+  const [newPatientForm, setNewPatientForm] = useState({
+    fullName: "",
+    histoire: "",
+  });
+  const [showOperatorSelect, setShowOperatorSelect] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const filteredOperations = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    return operations.filter((op) => {
+      return (
+        !query ||
+        op.type.toLowerCase().includes(query) ||
+        op.createdBy.toLowerCase().includes(query) ||
+        op.details.toLowerCase().includes(query) ||
+        op.patient?.fullName.toLowerCase().includes(query) ||
+        op.operators.some((o) => o.name.toLowerCase().includes(query))
+      );
     });
-  }, [reports, search]);
+  }, [operations, searchTerm]);
 
-  const activeReport = useMemo(() => {
-    if (!activeReportId) {
-      return null;
+  const filteredPatients = useMemo(() => {
+    const query = patientSearch.trim().toLowerCase();
+    if (!query) {
+      return mockPatients;
     }
-    return reports.find((report) => report.id === activeReportId) ?? null;
-  }, [activeReportId, reports]);
+    return mockPatients.filter((patient) => {
+      return (
+        patient.fullName.toLowerCase().includes(query) ||
+        patient.histoire.toLowerCase().includes(query)
+      );
+    });
+  }, [patientSearch]);
 
   useEffect(() => {
-    if (mode === "create") {
-      return;
+    if (!isCreateMode && !activeOperationId && filteredOperations.length > 0) {
+      setActiveOperationId(filteredOperations[0].id);
     }
-    if (filteredReports.length === 0) {
-      setActiveReportId(null);
-      return;
-    }
-    if (!activeReportId || !filteredReports.some((report) => report.id === activeReportId)) {
-      setActiveReportId(filteredReports[0]?.id ?? null);
-    }
-  }, [filteredReports, activeReportId, mode]);
+  }, [activeOperationId, filteredOperations, isCreateMode]);
 
-  function handleOpenCreation(templateId?: string | null) {
-    const template =
-      favoriteTemplates.find((item) => item.id === templateId) ?? favoriteTemplates[0];
+  const activeOperation = useMemo(() => {
+    if (!activeOperationId) {
+      return null;
+    }
+    return operations.find((op) => op.id === activeOperationId) ?? null;
+  }, [activeOperationId, operations]);
 
-    setMode("create");
-    setActiveReportId(null);
-    setSelectedTemplateId(template?.id ?? null);
-    setDraft({
-      title: template?.title ?? "",
-      summary: template?.summary ?? "",
-      specialty: template?.specialty ?? "",
-      mood: template?.mood ?? "serene",
-      sections: template?.sections ?? {
-        clinicalContext: "",
-        observations: "",
-        plan: "",
-        nextSteps: "",
-      },
-      keywords: template?.keywords ?? [],
-      patientId: patientsDirectory[0]?.id ?? "",
+  const closeMobilePanel = () => {
+    setIsMobilePanelOpen(false);
+    setMobilePanelMode(null);
+  };
+
+  const openMobilePanel = (mode: "view" | "create") => {
+    setMobilePanelMode(mode);
+    setIsMobilePanelOpen(true);
+  };
+
+  const handleSelectOperation = (operationId: string) => {
+    setActiveOperationId(operationId);
+    setIsCreateMode(false);
+    if (typeof window !== "undefined" && window.innerWidth < 1280) {
+      openMobilePanel("view");
+    }
+  };
+
+  const handleOpenCreate = () => {
+    setIsCreateMode(true);
+    setActiveOperationId(null);
+    setCreateForm({
+      type: "",
+      date: new Date().toISOString().split("T")[0],
+      duration: "",
+      operators: [],
+      patient: null,
+      details: "",
     });
-  }
+    setNewPatientForm({ fullName: "", histoire: "" });
+    setShowOperatorSelect(false);
+    setPatientSearch("");
+    setPatientMode("select");
 
-  function handleTemplateChange(templateId: string) {
-    setSelectedTemplateId(templateId);
-    const template =
-      favoriteTemplates.find((item) => item.id === templateId) ?? null;
-    if (!template) {
-      return;
+    if (typeof window !== "undefined" && window.innerWidth < 1280) {
+      openMobilePanel("create");
     }
-    // Replace the current draft with the newly selected favourite template.
-    setDraft((previous) => ({
-      ...previous,
-      title: template.title,
-      summary: template.summary,
-      specialty: template.specialty,
-      mood: template.mood,
-      sections: template.sections,
-      keywords: template.keywords,
+  };
+
+  const handleAddOperator = (member: TeamMember) => {
+    const alreadyAdded = createForm.operators.some((op) => op.id === member.id);
+    if (!alreadyAdded) {
+      setCreateForm((prev) => ({
+        ...prev,
+        operators: [
+          ...prev.operators,
+          { id: member.id, name: member.name, role: member.role },
+        ],
+      }));
+    }
+    setShowOperatorSelect(false);
+  };
+
+  const handleRemoveOperator = (id: string) => {
+    setCreateForm((prev) => ({
+      ...prev,
+      operators: prev.operators.filter((op) => op.id !== id),
     }));
-  }
+  };
 
-  function handleSaveDraft() {
-    if (!draft.title.trim() || !draft.patientId) {
+  const handleSelectPatient = (patient: Patient) => {
+    setCreateForm((prev) => ({ ...prev, patient }));
+    setShowPatientModal(false);
+    setPatientSearch("");
+  };
+
+  const handleCreateNewPatient = () => {
+    if (!newPatientForm.fullName.trim()) {
       return;
     }
-    const patient = patientsDirectory.find((item) => item.id === draft.patientId);
-    if (!patient) {
-      return;
-    }
-
-    const createdAt = new Date().toISOString();
-    const newReport: Report = {
-      id: `CR-${Date.now()}`,
-      title: draft.title,
-      summary: draft.summary,
-      createdAt,
-      updatedAt: createdAt,
-      status: "draft",
-      mood: draft.mood,
-      specialty: draft.specialty || patient.service,
-      author: {
-        name: "Vous",
-        role: "Rédacteur",
-      },
-      patient,
-      sections: draft.sections,
-      keywords: draft.keywords,
+    const newPatient: Patient = {
+      id: `P-${Date.now()}`,
+      fullName: newPatientForm.fullName,
+      histoire: newPatientForm.histoire,
     };
+    setCreateForm((prev) => ({ ...prev, patient: newPatient }));
+    setShowPatientModal(false);
+    setNewPatientForm({ fullName: "", histoire: "" });
+    setPatientSearch("");
+  };
 
-    setReports((previous) => [newReport, ...previous]);
-    setMode("view");
-    setActiveReportId(newReport.id);
-    setSearch("");
-  }
-
-  function handleCancelCreation() {
-    setMode("view");
-    setSelectedTemplateId(null);
-    if (reports.length > 0) {
-      setActiveReportId(reports[0].id);
+  const handleCreateOperation = () => {
+    if (
+      !createForm.type ||
+      !createForm.date ||
+      !createForm.duration ||
+      !createForm.details ||
+      createForm.operators.length === 0 ||
+      !createForm.patient
+    ) {
+      return;
     }
-  }
+    setIsSubmitting(true);
+    const newOperation: Operation = {
+      id: `OP-${Date.now()}`,
+      type: createForm.type,
+      date: createForm.date,
+      duration: parseInt(createForm.duration),
+      operators: createForm.operators,
+      patient: createForm.patient,
+      details: createForm.details,
+      createdAt: new Date().toISOString(),
+      createdBy: "Dr. Marie Dupont",
+    };
+    setTimeout(() => {
+      setOperations((previous) => [newOperation, ...previous]);
+      setIsCreateMode(false);
+      if (typeof window !== "undefined" && window.innerWidth < 1280) {
+        setMobilePanelMode("view");
+        setIsMobilePanelOpen(true);
+      }
+      setActiveOperationId(newOperation.id);
+      setIsSubmitting(false);
+    }, 350);
+  };
 
-  return (
-    <div className="flex h-full flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#5f5aa5]">
-            Espace rédaction
-          </p>
-          <h1 className="mt-1 text-2xl font-semibold text-[#1d184f]">
-            Comptes rendus cliniques
-          </h1>
-          <p className="text-sm text-slate-500">
-            Une boîte créative pour vos synthèses, suivis personnalisés et décisions de RCP.
-          </p>
-        </div>
-        <div className="flex flex-col items-end gap-3 sm:flex-row sm:items-center">
-          <div className="hidden items-center gap-2 rounded-2xl border border-slate-200/80 bg-white px-3 py-2 text-xs text-slate-500 shadow-sm shadow-slate-200 sm:flex">
-            <Stars className="h-4 w-4 text-violet-500" />
-            <span>{reports.length} comptes rendus</span>
-          </div>
+  const handleCancelCreate = () => {
+    setIsCreateMode(false);
+    if (operations.length > 0) {
+      setActiveOperationId(operations[0].id);
+    }
+    closeMobilePanel();
+  };
+
+  const availableOperators = teamMembers.filter(
+    (member) => !createForm.operators.some((op) => op.id === member.id)
+  );
+
+  const renderCreateFormContent = () => (
+    <div className="grid gap-4">
+      {/* Patient Selection */}
+      <div className="grid gap-2">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Patient
+          </label>
           <Button
-            onClick={() => handleOpenCreation(selectedTemplateId)}
-            className="group flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#6d28d9] via-[#7c3aed] to-[#22d3ee] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-300/40 transition hover:brightness-110"
+            size="sm"
+            variant="ghost"
+            onClick={() => setShowPatientModal(true)}
+            className="h-6 px-2 text-xs"
           >
-            <FilePlus2 className="h-4 w-4 transition-transform group-hover:-translate-y-0.5" />
-            Nouveau compte rendu
+            <Plus className="h-3 w-3 mr-1" />
+            {createForm.patient ? "Modifier" : "Ajouter"}
           </Button>
+        </div>
+        {createForm.patient && (
+          <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-3">
+            <p className="text-sm font-semibold text-slate-900">
+              {createForm.patient.fullName}
+            </p>
+            <p className="text-xs text-slate-600 mt-1 line-clamp-2">
+              {createForm.patient.histoire}
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div className="grid gap-2">
+        <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Type d&apos;intervention
+        </label>
+        <select
+          value={createForm.type}
+          onChange={(event) =>
+            setCreateForm((prev) => ({ ...prev, type: event.target.value }))
+          }
+          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        >
+          <option value="">Sélectionner un type…</option>
+          {operationTypes.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-2">
+          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Date
+          </label>
+          <input
+            type="date"
+            value={createForm.date}
+            onChange={(event) =>
+              setCreateForm((prev) => ({ ...prev, date: event.target.value }))
+            }
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+          />
+        </div>
+
+        <div className="grid gap-2">
+          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Durée (min)
+          </label>
+          <input
+            type="number"
+            value={createForm.duration}
+            onChange={(event) =>
+              setCreateForm((prev) => ({
+                ...prev,
+                duration: event.target.value,
+              }))
+            }
+            placeholder="120"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+          />
         </div>
       </div>
 
-      <div className="grid flex-1 grid-cols-1 gap-6 xl:grid-cols-[390px_1fr]">
-        <div className="flex flex-col gap-4">
-          <div className="relative overflow-hidden rounded-3xl border border-slate-200/70 bg-gradient-to-br from-[#f8f7ff] via-[#eef2ff] to-[#f2fbff] p-5 shadow-lg shadow-indigo-100/40">
-            <div className="absolute -left-16 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-indigo-500/10 blur-2xl" />
-            <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-sky-400/20 blur-3xl" />
-            <div className="relative flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-[#1d184f]">Historique personnalisé</h2>
-                <CloudSun className="h-5 w-5 text-indigo-400" />
-              </div>
-              <div className="group relative">
-                <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-indigo-400 transition group-focus-within:text-indigo-600" />
-                <input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Rechercher patient, spécialité, mot-clé..."
-                  className="w-full rounded-2xl border border-slate-200/80 bg-white/80 px-11 py-2.5 text-sm text-slate-600 outline-none transition focus:border-indigo-300 focus:bg-white focus:shadow-md focus:shadow-indigo-200/40"
-                />
-              </div>
-              <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-                <span className="inline-flex items-center gap-1 rounded-full bg-white/80 px-2.5 py-1 font-medium text-indigo-500 shadow-sm shadow-indigo-100">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Filtre intelligent
-                </span>
-                <span>{filteredReports.length} résultats</span>
-              </div>
-            </div>
-          </div>
-
-          <ScrollArea className="flex-1 border-none bg-transparent p-0 shadow-none xl:max-h-[calc(100vh-280px)]">
-            <div className="flex flex-col gap-3 pb-2">
-              {filteredReports.length === 0 ? (
-                <EmptyState
-                  icon={ClipboardPenLine}
-                  title="Aucun compte rendu trouvé"
-                  description="Ajustez les mots-clés ou relancez une création à partir d'un favori."
-                  className="min-h-[320px] bg-white/80 py-16"
-                  action={
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="rounded-full border-indigo-200 text-indigo-600 hover:bg-indigo-50"
-                      onClick={() => handleOpenCreation(selectedTemplateId)}
-                    >
-                      Composer un nouveau
-                    </Button>
-                  }
-                />
-              ) : (
-                filteredReports.map((report) => {
-                  const isActive = mode === "view" && report.id === activeReportId;
-                  return (
-                    <button
-                      key={report.id}
-                      onClick={() => {
-                        setMode("view");
-                        setActiveReportId(report.id);
-                      }}
-                      className={cn(
-                        "relative flex flex-col gap-3 rounded-3xl border p-4 text-left transition-all",
-                        "border-slate-200/60 bg-white/95 shadow-sm shadow-slate-200/50 hover:border-indigo-200 hover:shadow-md hover:shadow-indigo-100/40",
-                        isActive &&
-                          "border-transparent bg-gradient-to-br from-[#6d28d9]/80 via-[#7c3aed]/70 to-[#22d3ee]/80 text-white shadow-xl shadow-indigo-200/50 hover:border-transparent hover:shadow-indigo-200/60",
-                      )}
-                    >
-                      <div className="flex items-center justify-between">
-                        <Badge
-                          variant="muted"
-                          className={cn(
-                            "rounded-full px-3 py-1 text-xs font-medium",
-                            reportStatusBadgeMap[report.status],
-                            isActive && "bg-white/20 text-white shadow-none",
-                          )}
-                        >
-                          {report.status === "draft"
-                            ? "Brouillon"
-                            : report.status === "needs-review"
-                              ? "À relire"
-                              : "Signé"}
-                        </Badge>
-                        <span
-                          className={cn(
-                            "text-xs font-medium text-slate-400",
-                            isActive && "text-white/80",
-                          )}
-                        >
-                          {formatDateTime(report.updatedAt)}
-                        </span>
-                      </div>
-                      <div>
-                        <h3
-                          className={cn(
-                            "text-sm font-semibold text-[#1d184f]",
-                            isActive && "text-white",
-                          )}
-                        >
-                          {report.title}
-                        </h3>
-                        <p
-                          className={cn(
-                            "mt-1 text-xs text-slate-500",
-                            isActive && "text-white/80",
-                          )}
-                        >
-                          {report.summary}
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600",
-                            isActive && "bg-white/20 text-white",
-                          )}
-                        >
-                          <UserRound className="h-3.5 w-3.5" />
-                          {report.patient.name}
-                        </span>
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600",
-                            isActive && "bg-white/20 text-white",
-                          )}
-                        >
-                          <Calendar className="h-3.5 w-3.5" />
-                          {report.specialty}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          </ScrollArea>
+      <div className="grid gap-2">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Opérateurs
+          </label>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setShowOperatorSelect(!showOperatorSelect)}
+            className="h-6 px-2 text-xs"
+          >
+            <Plus className="h-3 w-3 mr-1" />
+            Ajouter
+          </Button>
         </div>
 
-        <div className="flex h-full flex-col rounded-3xl border border-slate-200/70 bg-white/95 shadow-xl shadow-indigo-100/40">
-          {mode === "create" ? (
-            <div className="flex flex-1 flex-col gap-6 p-8">
-              <div className="flex flex-wrap items-center justify-between gap-4">
+        {showOperatorSelect && (
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2 max-h-40 overflow-y-auto">
+            {availableOperators.length === 0 ? (
+              <p className="text-xs text-slate-500 py-2">
+                Tous les opérateurs ont été ajoutés
+              </p>
+            ) : (
+              availableOperators.map((member) => (
+                <button
+                  key={member.id}
+                  onClick={() => handleAddOperator(member)}
+                  className="w-full text-left px-3 py-2 rounded-lg hover:bg-white transition text-sm"
+                >
+                  <p className="font-medium text-slate-900">{member.name}</p>
+                  <p className="text-xs text-slate-500">{member.role}</p>
+                </button>
+              ))
+            )}
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-2">
+          {createForm.operators.map((operator) => (
+            <Badge
+              key={operator.id}
+              variant="muted"
+              className="rounded-full pl-3 pr-1.5 py-1"
+            >
+              {operator.name}
+              <button
+                onClick={() => handleRemoveOperator(operator.id)}
+                className="ml-1.5 hover:text-slate-700"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid gap-2">
+        <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Détails de l&apos;intervention
+        </label>
+        <textarea
+          value={createForm.details}
+          onChange={(event) =>
+            setCreateForm((prev) => ({ ...prev, details: event.target.value }))
+          }
+          rows={4}
+          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+          placeholder="Décrivez les détails de l'intervention…"
+        />
+      </div>
+    </div>
+  );
+
+  const detailView = isCreateMode ? (
+    <>
+      <CardHeader className="pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <CardTitle className="text-lg">Nouveau compte rendu</CardTitle>
+            <CardDescription>Enregistrez une nouvelle intervention</CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="flex-1 overflow-y-auto pb-6">
+        <div className="space-y-4">
+          {renderCreateFormContent()}
+        </div>
+      </CardContent>
+      <div className="border-t border-slate-200/70 bg-white/90 p-4 space-y-3">
+        <Button
+          variant="ghost"
+          className="w-full"
+          onClick={handleCancelCreate}
+        >
+          Annuler
+        </Button>
+        <Button
+          className="w-full"
+          onClick={handleCreateOperation}
+          disabled={
+            !createForm.type ||
+            !createForm.date ||
+            !createForm.duration ||
+            !createForm.details ||
+            createForm.operators.length === 0 ||
+            !createForm.patient ||
+            isSubmitting
+          }
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          {isSubmitting ? "Enregistrement…" : "Enregistrer"}
+        </Button>
+      </div>
+    </>
+  ) : !activeOperation ? (
+    <CardContent className="flex flex-1 items-center justify-center">
+      <EmptyState
+        icon={Stethoscope}
+        title="Sélectionnez un compte rendu"
+        description="Choisissez un compte rendu dans la liste pour afficher les détails."
+      />
+    </CardContent>
+  ) : (
+    <>
+      <CardHeader className="pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <CardTitle className="text-lg">{activeOperation.type}</CardTitle>
+            <CardDescription className="text-xs text-slate-500 pt-2">
+              {formatDateTime(activeOperation.createdAt)}
+            </CardDescription>
+          </div>
+          <Button
+            size="sm"
+            onClick={handleOpenCreate}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Nouveau
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="flex-1 overflow-y-auto">
+        <div className="space-y-4 pb-4">
+          {/* Patient Card */}
+          {activeOperation.patient && (
+            <section className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50 p-4 shadow-sm">
+              <header className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-indigo-600">
+                <User className="h-4 w-4" />
+                Patient
+              </header>
+              <p className="text-sm font-semibold text-slate-900">
+                {activeOperation.patient.fullName}
+              </p>
+              <p className="text-sm text-slate-700 mt-2 leading-relaxed">
+                {activeOperation.patient.histoire}
+              </p>
+            </section>
+          )}
+
+          <section className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
+            <header className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <Calendar className="h-4 w-4" />
+              Informations générales
+            </header>
+            <div className="grid gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-500">
+                  Créé par
+                </p>
+                <p className="mt-1 text-sm font-medium text-slate-800">
+                  {activeOperation.createdBy}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-400">
-                    Studio créatif
+                  <p className="text-xs uppercase tracking-wide text-slate-500">
+                    Date
                   </p>
-                  <h2 className="text-xl font-semibold text-[#1d184f]">
-                    Nouveau compte rendu
-                  </h2>
-                  <p className="text-sm text-slate-500">
-                    Choisissez un favori, liez un patient et laissez libre cours à votre narration clinique.
+                  <p className="mt-1 text-sm font-medium text-slate-800">
+                    {formatDate(activeOperation.date)}
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-slate-500">
+                    Durée
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-slate-800">
+                    {activeOperation.duration}m
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-2xl bg-white p-4 shadow-sm">
+            <header className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Opérateurs ({activeOperation.operators.length})
+            </header>
+            <div className="flex flex-wrap gap-2">
+              {activeOperation.operators.map((operator) => (
+                <div
+                  key={operator.id}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm"
+                >
+                  <div className="h-6 w-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-semibold flex-shrink-0">
+                    {operator.name.charAt(0)}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-slate-900">{operator.name}</p>
+                    <p className="text-xs text-slate-500">{operator.role}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
+            <header className="mb-2 text-xs font-semibold uppercase tracking-wide text-indigo-600">
+              Détails de l&apos;intervention
+            </header>
+            <p className="text-sm leading-relaxed text-slate-700">
+              {activeOperation.details}
+            </p>
+          </section>
+        </div>
+      </CardContent>
+    </>
+  );
+
+  return (
+    <div className="flex h-full flex-col gap-6">
+      {/* Desktop View */}
+      <section className="hidden xl:grid xl:flex-1 xl:gap-6 xl:grid-cols-[1.3fr_2fr]">
+        <Card className="flex h-full flex-col border-none bg-white/95">
+          <CardHeader className="space-y-4 pb-2">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <CardTitle>Comptes rendus</CardTitle>
+              <Badge variant="muted" className="bg-slate-100 text-slate-600">
+                {filteredOperations.length}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
+              <Search className="h-4 w-4 text-slate-400" />
+              <input
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Rechercher un type, un créateur ou une opération"
+                className="w-full bg-transparent focus:outline-none"
+              />
+            </div>
+          </CardHeader>
+          <CardContent className="flex-1 min-h-0 px-6 pb-6">
+            {filteredOperations.length === 0 ? (
+              <EmptyState
+                icon={Stethoscope}
+                title="Aucun compte rendu"
+                description="Créez votre premier compte rendu pour commencer à documenter vos interventions."
+              />
+            ) : (
+              <div className="flex h-full flex-col overflow-y-auto pt-4">
+                <ul className="flex flex-col gap-3">
+                  {filteredOperations.map((operation) => {
+                    const isActive = operation.id === activeOperationId && !isCreateMode;
+                    return (
+                      <li key={operation.id}>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectOperation(operation.id)}
+                          className={cn(
+                            "w-full rounded-2xl border px-4 py-4 text-left shadow-sm transition",
+                            "hover:-translate-y-[1px] hover:shadow-md",
+                            isActive
+                              ? "border-indigo-200 bg-indigo-50/80"
+                              : "border-slate-200 bg-white"
+                          )}
+                        >
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div className="space-y-1">
+                              <p className="text-sm font-semibold text-slate-800">
+                                {operation.type}
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                Créé par {operation.createdBy}
+                              </p>
+                            </div>
+                            <span className="text-xs text-slate-400">
+                              {formatDate(operation.date)}
+                            </span>
+                          </div>
+                          <div className="mt-3 rounded-xl border border-slate-200/70 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                            {operation.patient && (
+                              <p className="font-semibold text-slate-700 mb-1">
+                                {operation.patient.fullName}
+                              </p>
+                            )}
+                            <p className="font-semibold text-slate-700">
+                              {operation.duration}m • {operation.operators.length} opérateurs
+                            </p>
+                            <p className="text-xs text-slate-500 line-clamp-1 mt-1">
+                              {operation.operators.map((o) => o.name).join(", ")}
+                            </p>
+                          </div>
+                          <p className="mt-3 text-sm text-slate-600 line-clamp-2">
+                            {operation.details}
+                          </p>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="flex h-full flex-col border-none bg-white/95">
+          {detailView}
+        </Card>
+      </section>
+
+      {/* Mobile & Tablet List View */}
+      <section className="flex flex-1 xl:hidden">
+        <Card className="flex w-full flex-col border-none bg-white/95">
+          <CardHeader className="space-y-4 pb-2">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <CardTitle>Comptes rendus</CardTitle>
+              <Badge variant="muted" className="bg-slate-100 text-slate-600">
+                {filteredOperations.length}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
+              <Search className="h-4 w-4 text-slate-400" />
+              <input
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Rechercher…"
+                className="w-full bg-transparent focus:outline-none"
+              />
+            </div>
+          </CardHeader>
+          <CardContent className="flex-1 min-h-0 px-6 pb-6">
+            {filteredOperations.length === 0 ? (
+              <EmptyState
+                icon={Stethoscope}
+                title="Aucun compte rendu"
+                description="Créez votre premier compte rendu pour commencer à documenter vos interventions."
+              />
+            ) : (
+              <div className="flex h-full flex-col overflow-y-auto pt-4">
+                <ul className="flex flex-col gap-3">
+                  {filteredOperations.map((operation) => {
+                    const isActive = operation.id === activeOperationId && !isCreateMode;
+                    return (
+                      <li key={operation.id}>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectOperation(operation.id)}
+                          className={cn(
+                            "w-full rounded-2xl border px-4 py-4 text-left shadow-sm transition",
+                            "hover:-translate-y-[1px] hover:shadow-md",
+                            isActive
+                              ? "border-indigo-200 bg-indigo-50/80"
+                              : "border-slate-200 bg-white"
+                          )}
+                        >
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div className="space-y-1">
+                              <p className="text-sm font-semibold text-slate-800">
+                                {operation.type}
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                Créé par {operation.createdBy}
+                              </p>
+                            </div>
+                            <span className="text-xs text-slate-400">
+                              {formatDate(operation.date)}
+                            </span>
+                          </div>
+                          <div className="mt-3 rounded-xl border border-slate-200/70 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                            {operation.patient && (
+                              <p className="font-semibold text-slate-700 mb-1">
+                                {operation.patient.fullName}
+                              </p>
+                            )}
+                            <p className="font-semibold text-slate-700">
+                              {operation.duration}m • {operation.operators.length} opérateurs
+                            </p>
+                            <p className="text-xs text-slate-500 line-clamp-1 mt-1">
+                              {operation.operators.map((o) => o.name).join(", ")}
+                            </p>
+                          </div>
+                          <p className="mt-3 text-sm text-slate-600 line-clamp-2">
+                            {operation.details}
+                          </p>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Mobile Floating Button */}
+      {!isMobilePanelOpen && (
+        <div className="fixed bottom-24 right-4 xl:hidden z-40">
+          <Button
+            onClick={handleOpenCreate}
+            size="lg"
+            className="h-14 w-14 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg"
+          >
+            <FilePlus className="h-6 w-6" />
+          </Button>
+        </div>
+      )}
+
+      {/* Mobile Sliding Panel */}
+      {isMobilePanelOpen && (
+        <div className="fixed inset-0 z-50 bg-black/20 xl:hidden flex items-end">
+          <div className="w-full rounded-t-3xl border-t border-slate-200 bg-white shadow-2xl overflow-hidden flex flex-col h-[95vh]">
+            {/* Panel Header */}
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 flex-shrink-0">
+              <button
+                onClick={closeMobilePanel}
+                className="flex items-center gap-2 text-indigo-600 font-medium text-sm hover:text-indigo-700"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Retour
+              </button>
+              {mobilePanelMode === "view" && activeOperation && (
+                <h3 className="font-semibold text-slate-900 truncate flex-1 mx-4">
+                  {activeOperation.type}
+                </h3>
+              )}
+              {mobilePanelMode === "create" && (
+                <h3 className="font-semibold text-slate-900">Nouveau compte rendu</h3>
+              )}
+            </div>
+
+            {/* Panel Content */}
+            {mobilePanelMode === "view" && activeOperation ? (
+              <>
+                <ScrollArea className="flex-1">
+                  <div className="p-4 pb-24">
+                    <div className="space-y-4">
+                      {/* Patient Card */}
+                      {activeOperation.patient && (
+                        <section className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50 p-4 shadow-sm">
+                          <header className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-indigo-600">
+                            <User className="h-4 w-4" />
+                            Patient
+                          </header>
+                          <p className="text-sm font-semibold text-slate-900">
+                            {activeOperation.patient.fullName}
+                          </p>
+                          <p className="text-sm text-slate-700 mt-2 leading-relaxed">
+                            {activeOperation.patient.histoire}
+                          </p>
+                        </section>
+                      )}
+
+                      <section className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
+                        <header className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          <Calendar className="h-4 w-4" />
+                          Informations générales
+                        </header>
+                        <div className="grid gap-4">
+                          <div>
+                            <p className="text-xs uppercase tracking-wide text-slate-500">
+                              Créé par
+                            </p>
+                            <p className="mt-1 text-sm font-medium text-slate-800">
+                              {activeOperation.createdBy}
+                            </p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-xs uppercase tracking-wide text-slate-500">
+                                Date
+                              </p>
+                              <p className="mt-1 text-sm font-medium text-slate-800">
+                                {formatDate(activeOperation.date)}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs uppercase tracking-wide text-slate-500">
+                                Durée
+                              </p>
+                              <p className="mt-1 text-sm font-medium text-slate-800">
+                                {activeOperation.duration}m
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </section>
+
+                      <section className="rounded-2xl bg-white p-4 shadow-sm">
+                        <header className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          Opérateurs ({activeOperation.operators.length})
+                        </header>
+                        <div className="flex flex-wrap gap-2">
+                          {activeOperation.operators.map((operator) => (
+                            <div
+                              key={operator.id}
+                              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm"
+                            >
+                              <div className="h-6 w-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-semibold flex-shrink-0">
+                                {operator.name.charAt(0)}
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium text-slate-900">
+                                  {operator.name}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  {operator.role}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+
+                      <section className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
+                        <header className="mb-2 text-xs font-semibold uppercase tracking-wide text-indigo-600">
+                          Détails de l&apos;intervention
+                        </header>
+                        <p className="text-sm leading-relaxed text-slate-700">
+                          {activeOperation.details}
+                        </p>
+                      </section>
+                    </div>
+                  </div>
+                </ScrollArea>
+              </>
+            ) : mobilePanelMode === "create" ? (
+              <>
+                <ScrollArea className="flex-1">
+                  <div className="p-4 pb-24">
+                    <div className="space-y-4">
+                      {renderCreateFormContent()}
+                    </div>
+                  </div>
+                </ScrollArea>
+                <div className="border-t border-slate-200/70 bg-white/90 p-4 space-y-3 flex-shrink-0">
                   <Button
-                    variant="outline"
-                    onClick={handleCancelCreation}
-                    className="rounded-full border-slate-200 px-4 text-sm text-slate-600 hover:bg-slate-100"
+                    variant="ghost"
+                    className="w-full"
+                    onClick={handleCancelCreate}
                   >
                     Annuler
                   </Button>
                   <Button
-                    onClick={handleSaveDraft}
-                    className="rounded-full bg-gradient-to-r from-[#6d28d9] via-[#7c3aed] to-[#22d3ee] px-4 text-sm font-semibold text-white shadow-lg shadow-indigo-200/70 hover:brightness-110"
+                    className="w-full"
+                    onClick={handleCreateOperation}
+                    disabled={
+                      !createForm.type ||
+                      !createForm.date ||
+                      !createForm.duration ||
+                      !createForm.details ||
+                      createForm.operators.length === 0 ||
+                      !createForm.patient ||
+                      isSubmitting
+                    }
                   >
-                    Enregistrer le brouillon
+                    <Plus className="mr-2 h-4 w-4" />
+                    {isSubmitting ? "Enregistrement…" : "Enregistrer"}
                   </Button>
                 </div>
-              </div>
+              </>
+            ) : null}
+          </div>
+        </div>
+      )}
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="flex flex-col gap-2 rounded-2xl border border-slate-200/70 bg-[#fdfcff] p-4 shadow-inner shadow-white">
-                  <span className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-400">
-                    Favori
-                  </span>
-                  <select
-                    value={selectedTemplateId ?? ""}
-                    onChange={(event) => handleTemplateChange(event.target.value)}
-                    className="rounded-xl border border-indigo-100 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-                  >
-                    {favoriteTemplates.map((template) => (
-                      <option key={template.id} value={template.id}>
-                        {template.label}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-slate-500">
-                    Inspirez-vous de vos meilleures trames et personnalisez-les instantanément.
-                  </p>
-                </label>
-
-                <label className="flex flex-col gap-2 rounded-2xl border border-slate-200/70 bg-[#fdfcff] p-4 shadow-inner shadow-white">
-                  <span className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-400">
-                    Patient
-                  </span>
-                  <select
-                    value={draft.patientId}
-                    onChange={(event) =>
-                      setDraft((previous) => ({
-                        ...previous,
-                        patientId: event.target.value,
-                      }))
-                    }
-                    className="rounded-xl border border-indigo-100 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-                  >
-                    {patientsDirectory.map((patient) => (
-                      <option key={patient.id} value={patient.id}>
-                        {patient.name} · {patient.service}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-slate-500">
-                    Reliez ce compte rendu à un dossier pour qu’il rayonne partout dans OpenCare.
-                  </p>
-                </label>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="flex flex-col gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    Titre inspirant
-                  </span>
-                  <input
-                    value={draft.title}
-                    onChange={(event) =>
-                      setDraft((previous) => ({ ...previous, title: event.target.value }))
-                    }
-                    placeholder="Ex. Suivi post-opératoire jour 2 · protocole personnalisé"
-                    className="rounded-2xl border border-slate-200/70 bg-white px-4 py-3 text-sm text-slate-600 outline-none transition focus:border-indigo-300 focus:shadow-lg focus:shadow-indigo-200/40"
-                  />
-                </label>
-                <label className="flex flex-col gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    Spécialité / Filière
-                  </span>
-                  <input
-                    value={draft.specialty}
-                    onChange={(event) =>
-                      setDraft((previous) => ({ ...previous, specialty: event.target.value }))
-                    }
-                    placeholder="Ex. Cardiologie interventionnelle"
-                    className="rounded-2xl border border-slate-200/70 bg-white px-4 py-3 text-sm text-slate-600 outline-none transition focus:border-indigo-300 focus:shadow-lg focus:shadow-indigo-200/40"
-                  />
-                </label>
-              </div>
-
-              <label className="flex flex-col gap-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                  Accroche lumineuse
-                </span>
-                <textarea
-                  value={draft.summary}
-                  onChange={(event) =>
-                    setDraft((previous) => ({ ...previous, summary: event.target.value }))
-                  }
-                  placeholder="Résumez en une phrase la tonalité de votre message clinique."
-                  className="min-h-[86px] rounded-2xl border border-slate-200/70 bg-white px-4 py-3 text-sm leading-relaxed text-slate-600 outline-none transition focus:border-indigo-300 focus:shadow-lg focus:shadow-indigo-200/40"
-                />
-              </label>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <Card className="border-slate-200/70 shadow-md shadow-indigo-100/30">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                    <div>
-                      <CardTitle className="text-sm font-semibold text-[#1d184f]">
-                        Contexte clinique
-                      </CardTitle>
-                      <CardDescription className="text-xs text-slate-500">
-                        Posez le décor thérapeutique.
-                      </CardDescription>
-                    </div>
-                    <FileBox className="h-4 w-4 text-indigo-400" />
-                  </CardHeader>
-                  <CardContent>
-                    <textarea
-                      value={draft.sections.clinicalContext}
-                      onChange={(event) =>
-                        setDraft((previous) => ({
-                          ...previous,
-                          sections: {
-                            ...previous.sections,
-                            clinicalContext: event.target.value,
-                          },
-                        }))
-                      }
-                      className="min-h-[140px] w-full rounded-2xl border border-slate-200/70 bg-[#fafbff] px-4 py-3 text-sm leading-relaxed text-slate-600 outline-none transition focus:border-indigo-300 focus:shadow-lg focus:shadow-indigo-200/40"
-                    />
-                  </CardContent>
-                </Card>
-                <Card className="border-slate-200/70 shadow-md shadow-indigo-100/30">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                    <div>
-                      <CardTitle className="text-sm font-semibold text-[#1d184f]">
-                        Observations clés
-                      </CardTitle>
-                      <CardDescription className="text-xs text-slate-500">
-                        Mettez en lumière les constantes et les examens.
-                      </CardDescription>
-                    </div>
-                    <ClipboardPenLine className="h-4 w-4 text-indigo-400" />
-                  </CardHeader>
-                  <CardContent>
-                    <textarea
-                      value={draft.sections.observations}
-                      onChange={(event) =>
-                        setDraft((previous) => ({
-                          ...previous,
-                          sections: {
-                            ...previous.sections,
-                            observations: event.target.value,
-                          },
-                        }))
-                      }
-                      className="min-h-[140px] w-full rounded-2xl border border-slate-200/70 bg-[#fafbff] px-4 py-3 text-sm leading-relaxed text-slate-600 outline-none transition focus:border-indigo-300 focus:shadow-lg focus:shadow-indigo-200/40"
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <Card className="border-slate-200/70 shadow-md shadow-indigo-100/30">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                    <div>
-                      <CardTitle className="text-sm font-semibold text-[#1d184f]">
-                        Plan & traitements
-                      </CardTitle>
-                      <CardDescription className="text-xs text-slate-500">
-                        Décrivez la stratégie thérapeutique proposée.
-                      </CardDescription>
-                    </div>
-                    <Link2 className="h-4 w-4 text-indigo-400" />
-                  </CardHeader>
-                  <CardContent>
-                    <textarea
-                      value={draft.sections.plan}
-                      onChange={(event) =>
-                        setDraft((previous) => ({
-                          ...previous,
-                          sections: {
-                            ...previous.sections,
-                            plan: event.target.value,
-                          },
-                        }))
-                      }
-                      className="min-h-[120px] w-full rounded-2xl border border-slate-200/70 bg-[#fafbff] px-4 py-3 text-sm leading-relaxed text-slate-600 outline-none transition focus:border-indigo-300 focus:shadow-lg focus:shadow-indigo-200/40"
-                    />
-                  </CardContent>
-                </Card>
-                <Card className="border-slate-200/70 shadow-md shadow-indigo-100/30">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                    <div>
-                      <CardTitle className="text-sm font-semibold text-[#1d184f]">
-                        Prochaines étapes
-                      </CardTitle>
-                      <CardDescription className="text-xs text-slate-500">
-                        Anticipez les actions de suivi et les alertes.
-                      </CardDescription>
-                    </div>
-                    <Sparkles className="h-4 w-4 text-indigo-400" />
-                  </CardHeader>
-                  <CardContent>
-                    <textarea
-                      value={draft.sections.nextSteps}
-                      onChange={(event) =>
-                        setDraft((previous) => ({
-                          ...previous,
-                          sections: {
-                            ...previous.sections,
-                            nextSteps: event.target.value,
-                          },
-                        }))
-                      }
-                      className="min-h-[120px] w-full rounded-2xl border border-slate-200/70 bg-[#fafbff] px-4 py-3 text-sm leading-relaxed text-slate-600 outline-none transition focus:border-indigo-300 focus:shadow-lg focus:shadow-indigo-200/40"
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          ) : activeReport ? (
-            <div className="relative flex-1 space-y-8 overflow-hidden rounded-3xl">
-              <div
-                className={cn(
-                  "relative overflow-hidden rounded-3xl border border-slate-200/70 p-8 shadow-xl shadow-indigo-100/50",
-                  "bg-gradient-to-br",
-                  reportMoodGradient[activeReport.mood],
-                )}
+      {/* Patient Modal */}
+      {showPatientModal && (
+        <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4 xl:hidden">
+          <Card className="w-full max-w-md border-none shadow-2xl">
+            <CardHeader className="relative pb-3">
+              <CardTitle>Sélectionner ou créer un patient</CardTitle>
+              <button
+                onClick={() => setShowPatientModal(false)}
+                className="absolute top-4 right-4 p-1 hover:bg-slate-100 rounded-lg transition"
               >
-                <div className="absolute -left-20 top-24 h-40 w-40 rounded-full bg-white/40 blur-3xl" />
-                <div className="absolute -right-16 -top-10 h-48 w-48 rounded-full bg-white/30 blur-3xl" />
-                <div className="relative flex flex-col gap-6">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                      <Badge className={cn("rounded-full px-3 py-1 text-xs font-medium", reportStatusBadgeMap[activeReport.status])}>
-                        {activeReport.status === "draft"
-                          ? "Brouillon lumineux"
-                          : activeReport.status === "needs-review"
-                            ? "À valider"
-                            : "Signé et diffusé"}
-                      </Badge>
-                      <h2 className="mt-3 text-2xl font-semibold text-[#1d184f]">
-                        {activeReport.title}
-                      </h2>
-                      <p className="text-sm text-slate-600">
-                        {activeReport.summary}
+                <X className="h-5 w-5 text-slate-500" />
+              </button>
+            </CardHeader>
+
+            <CardContent className="space-y-4">
+              {/* Mode Tabs */}
+              <div className="flex gap-2 border-b border-slate-200">
+                <button
+                  onClick={() => setPatientMode("select")}
+                  className={cn(
+                    "px-4 py-2 text-sm font-medium border-b-2 transition",
+                    patientMode === "select"
+                      ? "border-indigo-600 text-indigo-600"
+                      : "border-transparent text-slate-600"
+                  )}
+                >
+                  Existants
+                </button>
+                <button
+                  onClick={() => setPatientMode("new")}
+                  className={cn(
+                    "px-4 py-2 text-sm font-medium border-b-2 transition",
+                    patientMode === "new"
+                      ? "border-indigo-600 text-indigo-600"
+                      : "border-transparent text-slate-600"
+                  )}
+                >
+                  Nouveau
+                </button>
+              </div>
+
+              {patientMode === "select" ? (
+                <div className="space-y-3">
+                  {/* Search Input */}
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-slate-50">
+                    <Search className="h-4 w-4 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Rechercher un patient..."
+                      value={patientSearch}
+                      onChange={(e) => setPatientSearch(e.target.value)}
+                      className="flex-1 bg-transparent text-sm text-slate-600 outline-none placeholder:text-slate-400"
+                    />
+                  </div>
+                  {/* Patients List */}
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {filteredPatients.length > 0 ? (
+                      filteredPatients.map((patient) => (
+                        <button
+                          key={patient.id}
+                          onClick={() => handleSelectPatient(patient)}
+                          className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition"
+                        >
+                          <p className="font-medium text-slate-900">
+                            {patient.fullName}
+                          </p>
+                          <p className="text-xs text-slate-500 line-clamp-2">
+                            {patient.histoire}
+                          </p>
+                        </button>
+                      ))
+                    ) : (
+                      <p className="text-center text-sm text-slate-500 py-4">
+                        Aucun patient trouvé
                       </p>
-                    </div>
-                    <div className="flex flex-col items-end gap-2 text-right text-xs text-slate-500">
-                      <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-slate-600 shadow-sm shadow-indigo-200/40">
-                        <Calendar className="h-3.5 w-3.5 text-indigo-500" />
-                        {formatDateTime(activeReport.updatedAt)}
-                      </div>
-                      <div className="text-[11px]">
-                        <span className="font-semibold text-slate-700">
-                          {activeReport.author.name}
-                        </span>{" "}
-                        · {activeReport.author.role}
-                      </div>
-                    </div>
+                    )}
                   </div>
-
-                  <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium text-slate-600">
-                    <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 shadow-sm shadow-indigo-100/40">
-                      <UserRound className="h-3.5 w-3.5 text-indigo-500" />
-                      {activeReport.patient.name} · {activeReport.patient.age} ans
-                    </span>
-                    <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 shadow-sm shadow-indigo-100/40">
-                      <Link2 className="h-3.5 w-3.5 text-indigo-500" />
-                      {activeReport.patient.service}
-                    </span>
-                    <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 shadow-sm shadow-indigo-100/40">
-                      <ClipboardPenLine className="h-3.5 w-3.5 text-indigo-500" />
-                      {activeReport.specialty}
-                    </span>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700">
+                      Nom complet
+                    </label>
+                    <input
+                      type="text"
+                      value={newPatientForm.fullName}
+                      onChange={(e) =>
+                        setNewPatientForm({
+                          ...newPatientForm,
+                          fullName: e.target.value,
+                        })
+                      }
+                      placeholder="Entrez le nom du patient"
+                      className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    />
                   </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    {activeReport.keywords.map((keyword) => (
-                      <span
-                        key={keyword}
-                        className="rounded-full bg-white/70 px-3 py-1 text-xs font-medium text-indigo-500 shadow-sm shadow-indigo-100/40"
-                      >
-                        #{keyword}
-                      </span>
-                    ))}
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700">
+                      Histoire clinique
+                    </label>
+                    <textarea
+                      value={newPatientForm.histoire}
+                      onChange={(e) =>
+                        setNewPatientForm({
+                          ...newPatientForm,
+                          histoire: e.target.value,
+                        })
+                      }
+                      placeholder="Antécédents, allergie, histoire clinique..."
+                      rows={4}
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 resize-none"
+                    />
                   </div>
-
-                  <div>
+                  <div className="flex gap-3">
                     <Button
-                      variant="outline"
-                      className="rounded-full border-indigo-200 bg-white/80 px-4 text-xs font-semibold text-indigo-600 shadow-sm shadow-indigo-100/50 hover:bg-indigo-50"
-                      onClick={() => router.push(`/patients/dossier?id=${activeReport.patient.id}`)}
+                      variant="ghost"
+                      onClick={() => setShowPatientModal(false)}
+                      className="flex-1"
                     >
-                      Ouvrir le dossier patient
+                      Annuler
+                    </Button>
+                    <Button
+                      onClick={handleCreateNewPatient}
+                      disabled={!newPatientForm.fullName.trim()}
+                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white"
+                    >
+                      Créer
                     </Button>
                   </div>
                 </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Desktop Patient Modal */}
+      {showPatientModal && (
+        <div className="hidden xl:fixed xl:inset-0 xl:z-50 xl:bg-black/30 xl:flex xl:items-center xl:justify-center xl:p-4">
+          <Card className="w-full max-w-md border-none shadow-2xl">
+            <CardHeader className="relative pb-3">
+              <CardTitle>Sélectionner ou créer un patient</CardTitle>
+              <button
+                onClick={() => setShowPatientModal(false)}
+                className="absolute top-4 right-4 p-1 hover:bg-slate-100 rounded-lg transition"
+              >
+                <X className="h-5 w-5 text-slate-500" />
+              </button>
+            </CardHeader>
+
+            <CardContent className="space-y-4">
+              {/* Mode Tabs */}
+              <div className="flex gap-2 border-b border-slate-200">
+                <button
+                  onClick={() => setPatientMode("select")}
+                  className={cn(
+                    "px-4 py-2 text-sm font-medium border-b-2 transition",
+                    patientMode === "select"
+                      ? "border-indigo-600 text-indigo-600"
+                      : "border-transparent text-slate-600"
+                  )}
+                >
+                  Existants
+                </button>
+                <button
+                  onClick={() => setPatientMode("new")}
+                  className={cn(
+                    "px-4 py-2 text-sm font-medium border-b-2 transition",
+                    patientMode === "new"
+                      ? "border-indigo-600 text-indigo-600"
+                      : "border-transparent text-slate-600"
+                  )}
+                >
+                  Nouveau
+                </button>
               </div>
 
-              <div className="grid gap-5 px-1 pb-8 xl:grid-cols-2">
-                <Card className="border-slate-200/70 shadow-lg shadow-indigo-100/40">
-                  <CardHeader>
-                    <CardTitle className="text-sm font-semibold text-[#1d184f]">
-                      Contexte clinique
-                    </CardTitle>
-                    <CardDescription className="text-xs text-slate-500">
-                      Le fil narratif du dossier.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm leading-relaxed text-slate-600">
-                      {activeReport.sections.clinicalContext}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="border-slate-200/70 shadow-lg shadow-indigo-100/40">
-                  <CardHeader>
-                    <CardTitle className="text-sm font-semibold text-[#1d184f]">
-                      Observations
-                    </CardTitle>
-                    <CardDescription className="text-xs text-slate-500">
-                      Votre regard clinique du moment.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm leading-relaxed text-slate-600">
-                      {activeReport.sections.observations}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="border-slate-200/70 shadow-lg shadow-indigo-100/40">
-                  <CardHeader>
-                    <CardTitle className="text-sm font-semibold text-[#1d184f]">
-                      Plan & traitements
-                    </CardTitle>
-                    <CardDescription className="text-xs text-slate-500">
-                      L’architecture thérapeutique recommandée.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm leading-relaxed text-slate-600">
-                      {activeReport.sections.plan}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="border-slate-200/70 shadow-lg shadow-indigo-100/40">
-                  <CardHeader>
-                    <CardTitle className="text-sm font-semibold text-[#1d184f]">
-                      Prochaines étapes
-                    </CardTitle>
-                    <CardDescription className="text-xs text-slate-500">
-                      Actions concrètes et moments clés à surveiller.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm leading-relaxed text-slate-600">
-                      {activeReport.sections.nextSteps}
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          ) : (
-            <EmptyState
-              icon={Sparkles}
-              title="Composez votre premier compte rendu"
-              description="Sélectionnez un élément dans l’historique ou lancez une création inspirée."
-              action={
-                <Button
-                  onClick={() => handleOpenCreation(selectedTemplateId)}
-                  className="rounded-full bg-gradient-to-r from-[#6d28d9] via-[#7c3aed] to-[#22d3ee] px-4 text-sm font-semibold text-white shadow-lg shadow-indigo-200/70 hover:brightness-110"
-                >
-                  Dévoiler un nouveau récit clinique
-                </Button>
-              }
-              className="m-8"
-            />
-          )}
+              {patientMode === "select" ? (
+                <div className="space-y-3">
+                  {/* Search Input */}
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-slate-50">
+                    <Search className="h-4 w-4 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Rechercher un patient..."
+                      value={patientSearch}
+                      onChange={(e) => setPatientSearch(e.target.value)}
+                      className="flex-1 bg-transparent text-sm text-slate-600 outline-none placeholder:text-slate-400"
+                    />
+                  </div>
+                  {/* Patients List */}
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {filteredPatients.length > 0 ? (
+                      filteredPatients.map((patient) => (
+                        <button
+                          key={patient.id}
+                          onClick={() => handleSelectPatient(patient)}
+                          className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition"
+                        >
+                          <p className="font-medium text-slate-900">
+                            {patient.fullName}
+                          </p>
+                          <p className="text-xs text-slate-500 line-clamp-2">
+                            {patient.histoire}
+                          </p>
+                        </button>
+                      ))
+                    ) : (
+                      <p className="text-center text-sm text-slate-500 py-4">
+                        Aucun patient trouvé
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700">
+                      Nom complet
+                    </label>
+                    <input
+                      type="text"
+                      value={newPatientForm.fullName}
+                      onChange={(e) =>
+                        setNewPatientForm({
+                          ...newPatientForm,
+                          fullName: e.target.value,
+                        })
+                      }
+                      placeholder="Entrez le nom du patient"
+                      className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700">
+                      Histoire clinique
+                    </label>
+                    <textarea
+                      value={newPatientForm.histoire}
+                      onChange={(e) =>
+                        setNewPatientForm({
+                          ...newPatientForm,
+                          histoire: e.target.value,
+                        })
+                      }
+                      placeholder="Antécédents, allergie, histoire clinique..."
+                      rows={4}
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 resize-none"
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <Button
+                      variant="ghost"
+                      onClick={() => setShowPatientModal(false)}
+                      className="flex-1"
+                    >
+                      Annuler
+                    </Button>
+                    <Button
+                      onClick={handleCreateNewPatient}
+                      disabled={!newPatientForm.fullName.trim()}
+                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white"
+                    >
+                      Créer
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
-      </div>
+      )}
     </div>
   );
 }

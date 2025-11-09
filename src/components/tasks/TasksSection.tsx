@@ -52,7 +52,6 @@ interface TasksSectionProps {
 
   // Optional features
   showReloadButton?: boolean;
-  onReload?: () => void | Promise<void>;
 
   // Patient and tasks support
   patients?: Patient[];
@@ -78,7 +77,6 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
     onTaskEdit,
     onTaskDelete,
     showReloadButton = false,
-    onReload,
     patients = [],
     favoriteTasks = [],
     onFavoriteTasksChange,
@@ -286,7 +284,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
                 variant="outline"
                 size="sm"
                 className="h-9 w-9 rounded-full p-0 border-indigo-200 text-indigo-600 hover:bg-indigo-50"
-                onClick={onReload}
+                onClick={() => loadTasks()}
                 disabled={isLoading}
               >
                 <RotateCw

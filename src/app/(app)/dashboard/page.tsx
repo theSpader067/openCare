@@ -474,10 +474,6 @@ export default function DashboardPage() {
     }, 360);
   };
 
-  const handleReloadTasks = async () => {
-    await tasksSectionRef.current?.refresh();
-  };
-
   const tasks = selectedDayData?.tasks;
   const tasksCount = tasks?.length;
   const completedTasks = tasks?.filter((task) => task.done).length;
@@ -636,7 +632,6 @@ export default function DashboardPage() {
               ref={tasksSectionRef}
               title="Consignes du jour"
               showReloadButton={true}
-              onReload={handleReloadTasks}
               onTaskToggle={handleToggleTaskDone}
               onTaskAdd={async (formData) => {
                 // Tasks are created via TasksSection's internal API
@@ -842,7 +837,6 @@ export default function DashboardPage() {
               ref={tasksSectionRef}
               title="Consignes du jour"
               showReloadButton={true}
-              onReload={handleReloadTasks}
               onTaskToggle={handleToggleTaskDone}
               onTaskAdd={async (formData) => {
                 await tasksSectionRef.current?.refresh();

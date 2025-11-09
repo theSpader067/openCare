@@ -498,10 +498,6 @@ export default function TasksPage() {
     }
   };
 
-  const handleReloadTasks = async () => {
-    await tasksSectionRef.current?.refresh();
-  };
-
   // Activity handlers
   const handleOpenAddActivityModal = () => {
     setActivityForm({
@@ -670,7 +666,6 @@ export default function TasksPage() {
             dateLabel={selectedDateLabel}
             showDateLabel={true}
             showReloadButton={true}
-            onReload={handleReloadTasks}
             onTaskToggle={handleTaskToggle}
             onTaskAdd={handleTaskAdd}
             onTaskEdit={handleTaskEdit}

@@ -10,8 +10,6 @@ export default withAuth(
     const token = req.nextauth?.token
     const pathname = req.nextUrl.pathname
 
-    console.log("Middleware running for:", pathname)
-    console.log("Token:", token)
 
     // If user is not authenticated and trying to access a public route, allow it
     if (!token && PUBLIC_ROUTES.includes(pathname)) {

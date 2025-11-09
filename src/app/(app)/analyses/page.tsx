@@ -457,7 +457,7 @@ export default function AnalysesPage() {
         <Card className="flex h-fit flex-col overflow-hidden">
           <CardHeader className="flex flex-col gap-2 border-b border-slate-200 bg-white px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <CardTitle>Bilans historiques</CardTitle>
+              <CardTitle>Historique des Bilans</CardTitle>
               <CardDescription>
                 Résultats validés et archivés avec suivi chronologique.
               </CardDescription>
@@ -515,10 +515,10 @@ export default function AnalysesPage() {
                           Patient
                         </th>
                         <th className="px-4 py-3 font-medium text-slate-500">
-                          Type
+                          Titre du bilan
                         </th>
                         <th className="px-4 py-3 font-medium text-slate-500">
-                          Type de bilan
+                          Type
                         </th>
                         <th className="px-4 py-3 font-medium text-slate-500">
                           Date
@@ -603,7 +603,7 @@ export default function AnalysesPage() {
           <CardHeader className="pb-3">
             <CardTitle>Ordres en attente</CardTitle>
             <CardDescription>
-              Priorisation des analyses non traitées et contacts laboratoire.
+              Priorisation des analyses non traitées.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-1 overflow-y-auto pt-0">

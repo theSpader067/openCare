@@ -25,86 +25,6 @@ import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
 import { patientsSeed } from "@/data/patients/patients-data";
 
-interface SearchSuggestion {
-  id: string;
-  title: string;
-  subtitle: string;
-  category: "Patient" | "Analyse" | "Message";
-}
-
-const SEARCH_DATA: SearchSuggestion[] = [
-  {
-    id: "PAT-FD",
-    title: "Fatou Diop",
-    subtitle: "Patient · Chirurgie digestive",
-    category: "Patient",
-  },
-  {
-    id: "PAT-LM",
-    title: "Louis Martin",
-    subtitle: "Patient · Pré-op bloc 5",
-    category: "Patient",
-  },
-  {
-    id: "LAB-IONO",
-    title: "Ionogramme patient Costa",
-    subtitle: "Analyse critique · Laboratoire central",
-    category: "Analyse",
-  },
-  {
-    id: "MSG-CARDIO",
-    title: "Message Dr. Evans",
-    subtitle: "Équipe cardiologie · Avis ECG",
-    category: "Message",
-  },
-  {
-    id: "MSG-BLOC",
-    title: "Brief bloc opératoire",
-    subtitle: "Bloc 5 · Planning de demain",
-    category: "Message",
-  },
-];
-
-type PatientOption = {
-  id: string;
-  name: string;
-  birthDate: string;
-  service: string;
-};
-
-type RendezvousFormState = {
-  mode: "existing" | "new";
-  patientId: string;
-  newPatientName: string;
-  newPatientBirthDate: string;
-  newPatientService: string;
-  rendezvousType: string;
-  date: string;
-  time: string;
-  location: string;
-  notes: string;
-};
-
-const RDV_TYPES = [
-  "Consultation",
-  "Suivi post-op",
-  "Préadmission",
-  "Bilan complémentaire",
-  "Visite d'équipe",
-] as const;
-
-const createEmptyRdvForm = (defaultPatientId: string): RendezvousFormState => ({
-  mode: "existing",
-  patientId: defaultPatientId,
-  newPatientName: "",
-  newPatientBirthDate: "",
-  newPatientService: "",
-  rendezvousType: RDV_TYPES[0],
-  date: "",
-  time: "",
-  location: "",
-  notes: "",
-});
 
 const formatBirthDate = (value: string) => {
   if (!value) {
@@ -157,40 +77,6 @@ const NOTIFICATION_META: Record<
   },
 };
 
-const NOTIFICATIONS_SEED: NotificationItem[] = [
-  {
-    id: "notif-avis-01",
-    type: "avis",
-    title: "Avis cardiologie validé",
-    description: "Dr. Rahmani confirme l'ajustement du bêtabloquant pour Mme Messaoui.",
-    time: "Il y a 8 minutes",
-    source: "Service cardiologie",
-  },
-  {
-    id: "notif-task-01",
-    type: "task",
-    title: "Nouvelle consigne déléguée",
-    description: "Résident bloc B a assigné la préparation du staff du soir.",
-    time: "Il y a 21 minutes",
-    source: "Bloc opératoire B",
-  },
-  {
-    id: "notif-bilan-01",
-    type: "bilan",
-    title: "Bilan biologique complet",
-    description: "Les résultats de Mme Laurier sont synchronisés et prêts à valider.",
-    time: "Il y a 1 heure",
-    source: "Laboratoire central",
-  },
-  {
-    id: "notif-avis-02",
-    type: "avis",
-    title: "Avis infectiologie en attente",
-    description: "Prise en charge antibiotique demandée pour Mr. Zouhair (lit 512).",
-    time: "Il y a 2 heures",
-    source: "Service infectiologie",
-  },
-];
 
 interface AppHeaderProps {
   onToggleSidebar: () => void;
@@ -203,59 +89,16 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
     month: "long",
   }).format(new Date());
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const rdvSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notificationsRef = useRef<HTMLDivElement | null>(null);
   const [createDropdownOpen, setCreateDropdownOpen] = useState(false);
   const createDropdownRef = useRef<HTMLDivElement | null>(null);
-  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
-  const mobileSearchInputRef = useRef<HTMLInputElement | null>(null);
-  const [rdvPatients, setRdvPatients] = useState<PatientOption[]>(() =>
-    patientsSeed.map((patient) => ({
-      id: patient.id,
-      name: patient.name,
-      birthDate: patient.birthDate,
-      service: patient.service,
-    })),
-  );
-  const [rdvForm, setRdvForm] = useState<RendezvousFormState>(() =>
-    createEmptyRdvForm(patientsSeed[0]?.id ?? ""),
-  );
-  const [isRdvModalOpen, setIsRdvModalOpen] = useState(false);
-  const [isSavingRdv, setIsSavingRdv] = useState(false);
-  const [rdvSuccess, setRdvSuccess] = useState<string | null>(null);
-  const notifications = NOTIFICATIONS_SEED;
+  const notifications:NotificationItem[] = [];
   const unreadCount = notifications.length;
   const unreadBadge = unreadCount > 9 ? "9+" : `${unreadCount}`;
 
-  const clearPendingSearch = () => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-      searchTimeoutRef.current = null;
-    }
-  };
-
-  const clearPendingRdvSave = () => {
-    if (rdvSaveTimeoutRef.current) {
-      clearTimeout(rdvSaveTimeoutRef.current);
-      rdvSaveTimeoutRef.current = null;
-    }
-  };
-
-  useEffect(
-    () => () => {
-      clearPendingSearch();
-      clearPendingRdvSave();
-    },
-    [],
-  );
 
   useEffect(() => {
     if (!profileOpen) {
@@ -305,156 +148,8 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [createDropdownOpen]);
 
-  useEffect(() => {
-    if (!rdvSuccess) {
-      return;
-    }
-    const timer = window.setTimeout(() => setRdvSuccess(null), 3800);
-    return () => window.clearTimeout(timer);
-  }, [rdvSuccess]);
 
-  useEffect(() => {
-    if (isMobileSearchOpen) {
-      mobileSearchInputRef.current?.focus();
-      setShowSuggestions(Boolean(searchQuery.trim()));
-      setNotificationsOpen(false);
-      setProfileOpen(false);
-    } else {
-      setShowSuggestions(false);
-    }
-  }, [isMobileSearchOpen, searchQuery]);
 
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-    clearPendingSearch();
-
-    if (!value.trim()) {
-      setIsSearching(false);
-      setSuggestions([]);
-      return;
-    }
-
-    setIsSearching(true);
-    setShowSuggestions(true);
-
-    searchTimeoutRef.current = setTimeout(() => {
-      const lowercaseValue = value.toLowerCase();
-      const results = SEARCH_DATA.filter(
-        (item) =>
-          item.title.toLowerCase().includes(lowercaseValue) ||
-          item.subtitle.toLowerCase().includes(lowercaseValue),
-      ).slice(0, 5);
-
-      setSuggestions(results);
-      setIsSearching(false);
-    }, 900);
-  };
-
-  const selectedRdvPatient = useMemo(
-    () => rdvPatients.find((patient) => patient.id === rdvForm.patientId) ?? null,
-    [rdvPatients, rdvForm.patientId],
-  );
-
-  const isRdvFormValid = useMemo(() => {
-    const hasPatient =
-      rdvForm.mode === "existing"
-        ? Boolean(rdvForm.patientId)
-        : Boolean(
-            rdvForm.newPatientName.trim() &&
-              rdvForm.newPatientBirthDate &&
-              rdvForm.newPatientService.trim(),
-          );
-    return (
-      hasPatient &&
-      Boolean(rdvForm.rendezvousType.trim()) &&
-      Boolean(rdvForm.date) &&
-      Boolean(rdvForm.time)
-    );
-  }, [rdvForm]);
-
-  const handleOpenRdvModal = () => {
-    clearPendingRdvSave();
-    setRdvForm(createEmptyRdvForm(rdvPatients[0]?.id ?? ""));
-    setIsRdvModalOpen(true);
-    setIsSavingRdv(false);
-  };
-
-  const handleCloseRdvModal = () => {
-    clearPendingRdvSave();
-    setIsRdvModalOpen(false);
-    setIsSavingRdv(false);
-    setRdvForm(createEmptyRdvForm(rdvPatients[0]?.id ?? ""));
-  };
-
-  const handleSwitchRdvMode = (mode: "existing" | "new") => {
-    setRdvForm((previous) => {
-      if (previous.mode === mode) {
-        return previous;
-      }
-      if (mode === "existing") {
-        const fallbackId = rdvPatients[0]?.id ?? "";
-        return {
-          ...previous,
-          mode,
-          patientId: previous.patientId || fallbackId,
-        };
-      }
-      return {
-        ...previous,
-        mode,
-        patientId: "",
-        newPatientName: "",
-        newPatientBirthDate: "",
-        newPatientService: "",
-      };
-    });
-  };
-
-  const handleSaveRendezvous = () => {
-    if (!isRdvFormValid || isSavingRdv) {
-      return;
-    }
-
-    clearPendingRdvSave();
-    setIsSavingRdv(true);
-
-    const patientName =
-      rdvForm.mode === "existing"
-        ? selectedRdvPatient?.name ?? "Patient"
-        : rdvForm.newPatientName.trim();
-    const patientService =
-      rdvForm.mode === "existing"
-        ? selectedRdvPatient?.service ?? ""
-        : rdvForm.newPatientService.trim();
-
-    const newPatientPayload =
-      rdvForm.mode === "new"
-        ? {
-            id: `P-${Date.now()}`,
-            name: rdvForm.newPatientName.trim(),
-            birthDate: rdvForm.newPatientBirthDate,
-            service: rdvForm.newPatientService.trim(),
-          }
-        : null;
-
-    rdvSaveTimeoutRef.current = setTimeout(() => {
-      let nextDefaultId = rdvPatients[0]?.id ?? "";
-      if (newPatientPayload) {
-        nextDefaultId = newPatientPayload.id;
-        setRdvPatients((previous) => [newPatientPayload, ...previous]);
-      }
-
-      setRdvSuccess(
-        `Rendez-vous planifié pour ${patientName}${
-          patientService ? ` · ${patientService}` : ""
-        }`,
-      );
-      setIsSavingRdv(false);
-      setIsRdvModalOpen(false);
-      setRdvForm(createEmptyRdvForm(nextDefaultId));
-      rdvSaveTimeoutRef.current = null;
-    }, 520);
-  };
 
   const suggestionBadge = useMemo(
     () => ({
@@ -505,8 +200,6 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                   onClick={() => {
                     setProfileOpen(false);
                     setNotificationsOpen(false);
-                    setIsMobileSearchOpen(false);
-                    setShowSuggestions(false);
                     setCreateDropdownOpen((open) => !open);
                   }}
                   className="flex items-center gap-2"
@@ -547,7 +240,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                           className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-[#352f72] transition hover:bg-indigo-50/80 hover:text-[#2f2961]"
                         >
                           <Beaker className="h-5 w-5 text-indigo-600" />
-                          Analyses
+                          analyses
                         </button>
                       </li>
                       <li>
@@ -580,11 +273,6 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                   </div>
                 ) : null}
               </div>
-              {rdvSuccess ? (
-                <div className="rounded-full border border-emerald-200/70 bg-emerald-50/80 px-3 py-1 text-xs font-semibold text-emerald-700 shadow-sm shadow-emerald-100/60">
-                  {rdvSuccess}
-                </div>
-              ) : null}
             </div>
 
           <div className="relative" ref={notificationsRef}>
@@ -597,8 +285,6 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
               )}
               onClick={() => {
                 setProfileOpen(false);
-                setIsMobileSearchOpen(false);
-                setShowSuggestions(false);
                 // On lg screens and larger, show dropdown; on smaller screens, navigate to page
                 if (window.innerWidth >= 1024) {
                   setNotificationsOpen((open) => !open);
@@ -624,9 +310,6 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-[#8a81d6]">
                       Notifications
-                    </p>
-                    <p className="text-sm font-semibold text-[#1f184f]">
-                      Flux d&apos;équipe en direct
                     </p>
                   </div>
                   <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-3 py-1 text-[11px] font-semibold text-[#4338ca]">
@@ -718,8 +401,6 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
               onClick={() => {
                 setProfileOpen((open) => !open);
                 setNotificationsOpen(false);
-                setIsMobileSearchOpen(false);
-                setShowSuggestions(false);
               }}
               className={cn(
                 "flex items-center gap-3 rounded-full border border-violet-200/60 bg-white/60 px-4 py-1.5 text-left shadow-inner shadow-white/70 transition",
@@ -795,259 +476,6 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
         </div>
         
       </header>
-      <Modal
-        open={isRdvModalOpen}
-        onClose={handleCloseRdvModal}
-        title="Planifier un rendez-vous"
-        description="Coordonnez un nouveau créneau patient avec toutes les informations clés."
-        size="lg"
-        footer={
-          <>
-            <Button
-              variant="outline"
-              onClick={handleCloseRdvModal}
-              disabled={isSavingRdv}
-            >
-              Annuler
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleSaveRendezvous}
-              disabled={!isRdvFormValid || isSavingRdv}
-              isLoading={isSavingRdv}
-            >
-              {isSavingRdv ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enregistrement...
-                </>
-              ) : (
-                <>
-                  <CalendarDays className="mr-2 h-4 w-4" />
-                  Planifier
-                </>
-              )}
-            </Button>
-          </>
-        }
-      >
-        <div className="space-y-5">
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => handleSwitchRdvMode("existing")}
-              className={cn(
-                "rounded-2xl border border-violet-200/70 px-4 py-3 text-sm font-semibold transition",
-                "hover:border-violet-300 hover:bg-indigo-50/60 focus:outline-none focus:ring-2 focus:ring-violet-200/70",
-                rdvForm.mode === "existing"
-                  ? "bg-gradient-to-r from-[#ede9ff] via-white to-[#eef2ff] text-[#352f72] shadow-md shadow-indigo-100"
-                  : "bg-white/70 text-[#5f5aa5]",
-              )}
-            >
-              Patient existant
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSwitchRdvMode("new")}
-              className={cn(
-                "rounded-2xl border border-violet-200/70 px-4 py-3 text-sm font-semibold transition",
-                "hover:border-violet-300 hover:bg-indigo-50/60 focus:outline-none focus:ring-2 focus:ring-violet-200/70",
-                rdvForm.mode === "new"
-                  ? "bg-gradient-to-r from-[#fde4ff] via-white to-[#fce7f3] text-[#352f72] shadow-md shadow-rose-100"
-                  : "bg-white/70 text-[#5f5aa5]",
-              )}
-            >
-              Nouveau patient
-            </button>
-          </div>
-
-          {rdvForm.mode === "existing" ? (
-            <div className="space-y-3">
-              <label className="block text-xs font-semibold uppercase tracking-wide text-[#6a66b1]">
-                Sélection du patient
-              </label>
-              <select
-                value={rdvForm.patientId}
-                onChange={(event) =>
-                  setRdvForm((previous) => ({
-                    ...previous,
-                    patientId: event.target.value,
-                  }))
-                }
-                className="w-full rounded-2xl border border-violet-200/70 bg-white px-3 py-2.5 text-sm font-medium text-[#352f72] shadow-sm focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-200/70"
-              >
-                <option value="">Sélectionnez un patient</option>
-                {rdvPatients.map((patient) => (
-                  <option key={patient.id} value={patient.id}>
-                    {patient.name} · {patient.service}
-                  </option>
-                ))}
-              </select>
-              {selectedRdvPatient ? (
-                <div className="flex items-start justify-between rounded-2xl border border-violet-200/70 bg-white/60 px-4 py-3 text-sm text-[#352f72] shadow-inner shadow-white/40">
-                  <div>
-                    <p className="font-semibold text-[#2f2961]">
-                      {selectedRdvPatient.name}
-                    </p>
-                    <p className="text-xs text-[#6a66b1]">
-                      Né(e) le {formatBirthDate(selectedRdvPatient.birthDate)}
-                    </p>
-                  </div>
-                  <Badge className="bg-indigo-100 text-indigo-700">
-                    {selectedRdvPatient.service}
-                  </Badge>
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wide text-[#6a66b1]">
-                    Nom complet
-                  </label>
-                  <input
-                    type="text"
-                    value={rdvForm.newPatientName}
-                    onChange={(event) =>
-                      setRdvForm((previous) => ({
-                        ...previous,
-                        newPatientName: event.target.value,
-                      }))
-                    }
-                    placeholder="Nom du patient"
-                    className="w-full rounded-2xl border border-violet-200/70 bg-white px-3 py-2.5 text-sm text-[#352f72] shadow-sm focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-200/70"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wide text-[#6a66b1]">
-                    Date de naissance
-                  </label>
-                  <input
-                    type="date"
-                    value={rdvForm.newPatientBirthDate}
-                    onChange={(event) =>
-                      setRdvForm((previous) => ({
-                        ...previous,
-                        newPatientBirthDate: event.target.value,
-                      }))
-                    }
-                    className="w-full rounded-2xl border border-violet-200/70 bg-white px-3 py-2.5 text-sm text-[#352f72] shadow-sm focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-200/70"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wide text-[#6a66b1]">
-                  Service de prise en charge
-                </label>
-                <input
-                  type="text"
-                  value={rdvForm.newPatientService}
-                  onChange={(event) =>
-                    setRdvForm((previous) => ({
-                      ...previous,
-                      newPatientService: event.target.value,
-                    }))
-                  }
-                  placeholder="Ex : Chirurgie digestive"
-                  className="w-full rounded-2xl border border-violet-200/70 bg-white px-3 py-2.5 text-sm text-[#352f72] shadow-sm focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-200/70"
-                />
-              </div>
-            </div>
-          )}
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-[#6a66b1]">
-                Type de rendez-vous
-              </label>
-              <select
-                value={rdvForm.rendezvousType}
-                onChange={(event) =>
-                  setRdvForm((previous) => ({
-                    ...previous,
-                    rendezvousType: event.target.value,
-                  }))
-                }
-                className="w-full rounded-2xl border border-violet-200/70 bg-white px-3 py-2.5 text-sm font-medium text-[#352f72] shadow-sm focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-200/70"
-              >
-                {RDV_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-[#6a66b1]">
-                Lieu
-              </label>
-              <input
-                type="text"
-                value={rdvForm.location}
-                onChange={(event) =>
-                  setRdvForm((previous) => ({
-                    ...previous,
-                    location: event.target.value,
-                  }))
-                }
-                placeholder="Ex : Bloc 5 · Salle 2"
-                className="w-full rounded-2xl border border-violet-200/70 bg-white px-3 py-2.5 text-sm text-[#352f72] shadow-sm focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-200/70"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-[#6a66b1]">
-                Date
-              </label>
-              <input
-                type="date"
-                value={rdvForm.date}
-                onChange={(event) =>
-                  setRdvForm((previous) => ({
-                    ...previous,
-                    date: event.target.value,
-                  }))
-                }
-                className="w-full rounded-2xl border border-violet-200/70 bg-white px-3 py-2.5 text-sm text-[#352f72] shadow-sm focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-200/70"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-[#6a66b1]">
-                Heure
-              </label>
-              <input
-                type="time"
-                value={rdvForm.time}
-                onChange={(event) =>
-                  setRdvForm((previous) => ({
-                    ...previous,
-                    time: event.target.value,
-                  }))
-                }
-                className="w-full rounded-2xl border border-violet-200/70 bg-white px-3 py-2.5 text-sm text-[#352f72] shadow-sm focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-200/70"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-[#6a66b1]">
-              Notes et objectifs
-            </label>
-            <textarea
-              value={rdvForm.notes}
-              onChange={(event) =>
-                setRdvForm((previous) => ({
-                  ...previous,
-                  notes: event.target.value,
-                }))
-              }
-              rows={3}
-              placeholder="Précisez les examens, préparations ou documents à prévoir."
-              className="w-full rounded-2xl border border-violet-200/70 bg-white px-3 py-2.5 text-sm text-[#352f72] shadow-sm focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-200/70"
-            />
-          </div>
-        </div>
-      </Modal>
     </>
   );
 }

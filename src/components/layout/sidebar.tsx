@@ -37,7 +37,7 @@ export const primaryNav = [
     subitems: [
       {
         href: "/analyses",
-        label: "Analyses",
+        label: "analyses",
         icon: FlaskConical,
       },
       {

@@ -26,11 +26,11 @@ export interface Stat {
 export const statsSummary: Stat[] = [
   {
     label: "Consultations planifiées",
-    value: "18",
-    variation: "+3 vs hier",
-    trend: "up",
+    value: "",
+    variation: "",
+    trend: "neutral",
     icon: UsersRound,
-    hint: "Cabinet et téléconsultations",
+    hint: "Synchronisez vos données...",
     theme: {
       card: "bg-gradient-to-br from-[#e0f2ff] via-[#ecf3ff] to-white",
       icon: "bg-white text-[#0f62fe]",
@@ -40,11 +40,11 @@ export const statsSummary: Stat[] = [
   },
   {
     label: "Interventions au bloc",
-    value: "4",
-    variation: "+1 équipe mobilisée",
-    trend: "up",
+    value: "",
+    variation: "",
+    trend: "neutral",
     icon: HeartPulse,
-    hint: "Blocs 2 · 5 · 7 · 8",
+    hint: "Synchronisez vos données...",
     theme: {
       card: "bg-gradient-to-br from-[#fee2f2] via-[#fff1f7] to-white",
       icon: "bg-white text-[#d61f69]",
@@ -54,11 +54,11 @@ export const statsSummary: Stat[] = [
   },
   {
     label: "Analyses critiques",
-    value: "5",
-    variation: "2 en attente",
+    value: "",
+    variation: "",
     trend: "neutral",
     icon: ClipboardList,
-    hint: "Laboratoire central",
+    hint: "Synchronisez vos données...",
     theme: {
       card: "bg-gradient-to-br from-[#f7f3ff] via-[#f1f5ff] to-white",
       icon: "bg-white text-[#7c3aed]",
@@ -68,11 +68,11 @@ export const statsSummary: Stat[] = [
   },
   {
     label: "Patients à suivre",
-    value: "9",
-    variation: "-2 vs hier",
-    trend: "down",
+    value: "",
+    variation: "",
+    trend: "neutral",
     icon: Activity,
-    hint: "Post-op + surveillance",
+    hint: "Synchronisez vos données...",
     theme: {
       card: "bg-gradient-to-br from-[#dcfce7] via-[#f1fff5] to-white",
       icon: "bg-white text-[#059669]",

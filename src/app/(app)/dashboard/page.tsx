@@ -43,9 +43,8 @@ import { TasksSection } from "@/components/tasks/TasksSection";
 import type { TaskItem } from "@/types/tasks";
 import { statsSummary } from "@/data/dashboard/dashboard-stats";
 import type { Stat } from "@/data/dashboard/dashboard-stats";
-import { mockPatients, initialServicePatients } from "@/data/dashboard/dashboard-patients";
+import type { SimplePatient } from "@/data/dashboard/dashboard-patients";
 import type { PatientItem } from "@/data/dashboard/dashboard-patients";
-import { mockFavoriteTasks } from "@/data/dashboard/dashboard-tasks";
 import {
   activityTypeMeta,
   patientStatusMeta,
@@ -58,6 +57,14 @@ import {
   type ActivityItem,
   type DayData,
 } from "@/data/dashboard/dashboard-schedule";
+import { mockFavoriteTasks, mockPatients } from "../tasks/page";
+import {
+  createActivity,
+  getActivities,
+  updateActivity,
+  deleteActivity,
+} from "@/lib/api/activities";
+import { useSession } from "next-auth/react";
 
 type ActivityStatus = "done" | "todo";
 
@@ -69,6 +76,7 @@ interface ActivityFormState {
   title: string;
   time: string;
   type: ActivityType;
+  activityDay: Date;
   description: string;
   location: string;
   team: string;
@@ -106,6 +114,7 @@ const createEmptyActivityForm = (): ActivityFormState => ({
   title: "",
   time: "",
   type: "consultation",
+  activityDay: new Date(),
   description: "",
   location: "",
   team: "",
@@ -160,6 +169,10 @@ const labStatusOptions: PatientItem["labs"]["status"][] = ["pending", "completed
 
 
 export default function DashboardPage() {
+  const { data: session } = useSession();
+  const sessionUser = session?.user as any;
+  const userId = sessionUser?.id ? parseInt(sessionUser.id as string) : null;
+
   const baseDate = useMemo(() => startOfDay(new Date()), []);
   const [calendarMonth, setCalendarMonth] = useState(
     new Date(baseDate.getFullYear(), baseDate.getMonth(), 1),
@@ -170,12 +183,12 @@ export default function DashboardPage() {
   }, [baseDate]);
 
   const [scheduleData, setScheduleData] =
-    useState<Record<string, DayData>>(scheduleSeeds as Record<string, DayData>);
+    useState<Record<string, DayData>>({} as Record<string,DayData>);
   const [selectedDate, setSelectedDate] = useState(formatDateKey(baseDate));
   const [isActivitiesLoading, setIsActivitiesLoading] = useState(false);
   const [isTasksLoading, setIsTasksLoading] = useState(false);
   const [servicePatients, setServicePatients] =
-    useState<PatientItem[]>(initialServicePatients);
+    useState<PatientItem[]>([]);
   const [isServicePatientsLoading, setIsServicePatientsLoading] =
     useState(false);
   const [isAddActivityModalOpen, setIsAddActivityModalOpen] = useState(false);
@@ -217,7 +230,51 @@ export default function DashboardPage() {
     }
   }, [isAddPatientModalOpen]);
 
-  const selectedDayData = scheduleData[selectedDate] ?? createEmptyDay();
+  const loadActivitiesFromAPI = async () => {
+    setIsActivitiesLoading(true);
+    try {
+      const result = await getActivities();
+      if (result.success && result.data) {
+        // Filter activities by selected date and populate into scheduleData
+        const selectedDateObj = parseKeyToDate(selectedDate);
+        const selectedDateStr = formatDateKey(selectedDateObj);
+
+        const filteredActivities = result.data.filter((activity) => {
+          if (!activity.activityDay) return false;
+          const activityDate = new Date(activity.activityDay);
+          const activityDateStr = formatDateKey(activityDate);
+          return activityDateStr === selectedDateStr;
+        });
+
+        updateDayData(selectedDate, (day) => ({
+          ...day,
+          activities: filteredActivities,
+        }));
+      }
+    } catch (error) {
+      console.error("Error loading activities:", error);
+    } finally {
+      setIsActivitiesLoading(false);
+    }
+  };
+
+  // Load activities from API on mount
+  useEffect(() => {
+    if (userId) {
+      loadActivitiesFromAPI();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
+  // Reload activities when selected date changes
+  useEffect(() => {
+    if (userId) {
+      loadActivitiesFromAPI();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate]);
+
+  const selectedDayData = scheduleData? scheduleData[selectedDate] : createEmptyDay();
   const selectedDateObj = useMemo(() => parseKeyToDate(selectedDate), [selectedDate]);
   const selectedDayLabel = useMemo(() =>
     capitalize(
@@ -356,32 +413,35 @@ export default function DashboardPage() {
     }));
   };
 
-  const handleAddActivity = () => {
+  const handleAddActivity = async () => {
     if (!activityForm.title.trim() || !activityForm.time.trim()) {
       return;
     }
 
-    const newActivity: ActivityItem = {
-      id: `ACT-${Date.now()}`,
-      type: activityForm.type,
-      title: activityForm.title.trim(),
-      description:
-        activityForm.description.trim() ||
-        "Aucun détail supplémentaire pour cette activité.",
-      time: activityForm.time,
-      location: activityForm.location.trim() || undefined,
-      team: activityForm.team.trim() || undefined,
-      status: "todo",
-    };
+    setIsActivitiesLoading(true);
+    try {
+      const result = await createActivity({
+        title: activityForm.title.trim(),
+        type: activityForm.type,
+        description: activityForm.description.trim() || "Aucun détail supplémentaire pour cette activité.",
+        time: activityForm.time,
+        location: activityForm.location.trim() || undefined,
+        activityDay: activityForm.activityDay,
+      });
 
-    runAsyncUpdate(["activities"], () => {
-      updateDayData(selectedDate, (day) => ({
-        ...day,
-        activities: [newActivity, ...day.activities],
-      }));
-      setIsAddActivityModalOpen(false);
-      setActivityForm(createEmptyActivityForm());
-    });
+      if (result.success && result.data) {
+        updateDayData(selectedDate, (day) => ({
+          ...day,
+          activities: [result.data!, ...day.activities],
+        }));
+        setIsAddActivityModalOpen(false);
+        setActivityForm(createEmptyActivityForm());
+      }
+    } catch (error) {
+      console.error("Error creating activity:", error);
+    } finally {
+      setIsActivitiesLoading(false);
+    }
   };
 
   const handleAddPatient = () => {
@@ -417,9 +477,9 @@ export default function DashboardPage() {
     timersRef.current.push(timer as unknown as ReturnType<typeof setTimeout>);
   };
 
-  const tasks = selectedDayData.tasks;
-  const tasksCount = tasks.length;
-  const completedTasks = tasks.filter((task) => task.done).length;
+  const tasks = selectedDayData?.tasks;
+  const tasksCount = tasks?.length;
+  const completedTasks = tasks?.filter((task) => task.done).length;
   const activityFormIsValid = Boolean(
     activityForm.title.trim() && activityForm.time.trim(),
   );
@@ -440,12 +500,12 @@ export default function DashboardPage() {
       bloc: [],
       divers: [],
     };
-    selectedDayData.activities.forEach((activity) => {
+    selectedDayData?.activities.forEach((activity) => {
       const key = activityToTab(activity);
       groups[key].push(activity);
     });
     return groups;
-  }, [selectedDayData.activities]);
+  }, [selectedDayData?.activities]);
   const activityTabsConfig = useMemo(
     () => [
       {
@@ -494,19 +554,31 @@ export default function DashboardPage() {
     contentClassName?: string;
   }) => (
     <TasksSection
-      tasks={tasks}
+      tasks={[]}
       isLoading={isTasksLoading}
       title="Consignes du jour"
       showReloadButton={true}
       onReload={handleReloadTasks}
       onTaskToggle={handleToggleTaskDone}
-      onTaskAdd={(newTask) => {
+      onTaskAdd={async (formData) => {
+        // Create mock tasks from form data
+        const createdTasks = formData.titles.map((title) => ({
+          id: `TASK-${Date.now()}-${Math.random()}`,
+          title,
+          details: "",
+          done: false,
+          patientName: formData.patientName,
+          taskType: formData.taskType || "team",
+        }));
+
         runAsyncUpdate(["tasks"], () => {
           updateDayData(selectedDate, (day) => ({
             ...day,
-            tasks: [newTask, ...day.tasks],
+            tasks: [...createdTasks, ...day.tasks],
           }));
         });
+
+        return createdTasks;
       }}
       onTaskEdit={(updatedTask) => {
         runAsyncUpdate(["tasks"], () => {
@@ -596,7 +668,7 @@ export default function DashboardPage() {
             )}
           >
             {isEmpty
-              ? "Synchronisez vos données pour activer cet indicateur."
+              ? ""
               : stat.hint}
           </p>
         </CardContent>
@@ -676,7 +748,7 @@ export default function DashboardPage() {
                     variant="muted"
                     className="bg-indigo-100 text-indigo-800"
                   >
-                    {selectedDayData.activities.length} activité(s)
+                    {selectedDayData?.activities.length} activité(s)
                   </Badge>
                   <Button
                     variant="primary"
@@ -688,33 +760,14 @@ export default function DashboardPage() {
                   </Button>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {activityTabsConfig.map((tab) => {
-                  const isActive = tab.key === activityTab;
-                  return (
-                    <button
-                      key={tab.key}
-                      type="button"
-                      onClick={() => setActivityTab(tab.key)}
-                      className={cn(
-                        "rounded-full px-3 py-1.5 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-indigo-200/70 focus:ring-offset-1",
-                        isActive
-                          ? "bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#ec4899] text-white shadow-lg shadow-indigo-200/50"
-                          : "border border-violet-200/60 bg-white/70 text-[#5f5aa5] hover:border-violet-300 hover:bg-indigo-50/70",
-                      )}
-                    >
-                      {tab.label} ({tab.count})
-                    </button>
-                  );
-                })}
-              </div>
+             
             </CardHeader>
             <CardContent className="flex-1 min-h-0 overflow-hidden pt-0">
               {isActivitiesLoading ? (
                 <div className="flex h-full items-center justify-center">
                   <Spinner label="Chargement des activités..." />
                 </div>
-              ) : selectedDayData.activities.length === 0 ? (
+              ) : selectedDayData?.activities.length === 0 ? (
                 <EmptyState
                   icon={ClipboardList}
                   title="Aucune activité pour cette journée"
@@ -1009,6 +1062,20 @@ export default function DashboardPage() {
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="grid gap-2">
+              <label className="text-sm font-semibold text-[#1f184f]">Jour de l&apos;activité</label>
+              <input
+                type="date"
+                value={activityForm.activityDay.toISOString().split('T')[0]}
+                onChange={(event) =>
+                  setActivityForm((prev) => ({
+                    ...prev,
+                    activityDay: new Date(event.target.value),
+                  }))
+                }
+                className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
+              />
+            </div>
+            <div className="grid gap-2">
               <label className="text-sm font-semibold text-[#1f184f]">Horaire</label>
               <input
                 type="time"
@@ -1022,24 +1089,24 @@ export default function DashboardPage() {
                 className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
               />
             </div>
-            <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">Type</label>
-              <select
-                value={activityForm.type}
-                onChange={(event) =>
-                  setActivityForm((prev) => ({
-                    ...prev,
-                    type: event.target.value as ActivityType,
-                  }))
-                }
-                className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-              >
-                <option value="consultation">Consultation</option>
-                <option value="chirurgie">Bloc opératoire</option>
-                <option value="staff">Staff / réunion</option>
-                <option value="tournee">Tournée</option>
-              </select>
-            </div>
+          </div>
+          <div className="grid gap-2">
+            <label className="text-sm font-semibold text-[#1f184f]">Type</label>
+            <select
+              value={activityForm.type}
+              onChange={(event) =>
+                setActivityForm((prev) => ({
+                  ...prev,
+                  type: event.target.value as ActivityType,
+                }))
+              }
+              className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
+            >
+              <option value="consultation">Consultation</option>
+              <option value="chirurgie">Bloc opératoire</option>
+              <option value="staff">Staff / réunion</option>
+              <option value="tournee">Tournée</option>
+            </select>
           </div>
           <div className="grid gap-2">
             <label className="text-sm font-semibold text-[#1f184f]">Description</label>

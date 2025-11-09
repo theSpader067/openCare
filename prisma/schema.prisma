@@ -31,17 +31,193 @@ model User {
   hospital    String?
   year        String?
   onboardingCompleted Boolean @default(false)
+  biographie  String?
+  notifyByEmail Boolean @default(false)
+  notifyByPush Boolean @default(false)
+  profileVisible Boolean @default(true)
+  addresse    String?
   sessions    Session[]
   accounts    Account[]
   verificationToken   VerificationToken[]
+  patients    Patient[]
+  teamsAsAdmin Team[]    @relation("TeamAdmin")
+  teamsAsMember Team[]   @relation("TeamMembers")
+  createdTasks Task[]    @relation("TaskCreator")
+  createdFavouriteTasks FavouriteTask[] @relation("FavouriteTaskCreator")
+  activities  Activity[] @relation("ActivityParticipants")
+  createdOrdonnances Ordonnance[] @relation("OrdonnanceCreator")
+  createdAvis Avis[] @relation("AvisCreator")
+  createdRapports Rapport[] @relation("RapportCreator")
+  rapportParticipations Rapport[] @relation("RapportParticipants")
+}
+
+model Observation {
+  id        Int       @id @default(autoincrement())
+  text      String
+  patientId Int
+  patient   Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Patient {
+  id                Int            @id @default(autoincrement())
+  fullName          String
+  pid               String         @unique
+  dateOfBirth       DateTime?
+  service           String?
+  status            String?
+  userId            Int
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isPrivate         Boolean        @default(false)
+  nextContact       DateTime?
+  diagnostic        String?
+  cim               String?
+  atcdsMedical      String?
+  atcdsChirurgical  String?
+  atcdsExtra        String?
+  observations      Observation[]
+  ordonnances       Ordonnance[]
+  avis              Avis[]
+  rapports          Rapport[]
+  analyses          Analyse[]
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+}
+
+model Team {
+  id        Int       @id @default(autoincrement())
+  name      String
+  hospital  String?
+  service   String?
+  adminId   Int
+  admin     User      @relation("TeamAdmin", fields: [adminId], references: [id], onDelete: Cascade)
+  members   User[]    @relation("TeamMembers")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Task {
+  id        Int       @id @default(autoincrement())
+  title     String
+  creatorId Int
+  creator   User      @relation("TaskCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  isPrivate Boolean   @default(false)
+  isComplete Boolean  @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model FavouriteTask {
+  id        Int       @id @default(autoincrement())
+  title     String
+  creatorId Int
+  creator   User      @relation("FavouriteTaskCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Activity {
+  id           Int       @id @default(autoincrement())
+  title        String
+  horaire      String?
+  category     String?
+  details      String?
+  place        String?
+  activityDay  DateTime?
+  participants User[]    @relation("ActivityParticipants")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Notification {
   id          Int       @id @default(autoincrement())
+  category    String?
   title       String
   description String?
-  type        String?   
-  timestamp   DateTime  @default(now())
+  source      String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Ordonnance {
+  id                    Int       @id @default(autoincrement())
+  title                 String
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  patientId             Int
+  patient               Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientName           String?
+  patientAge            String?
+  patientHistory        String?
+  renseignementClinique String?
+  details               String?
+  creatorId             Int
+  creator               User      @relation("OrdonnanceCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  isPrivate             Boolean   @default(false)
+}
+
+model Avis {
+  id             Int       @id @default(autoincrement())
+  title          String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  patientId      Int
+  patient        Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientName    String?
+  patientAge     String?
+  patientHistory String?
+  creatorId      Int
+  creator        User      @relation("AvisCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  details        String?
+}
+
+model Rapport {
+  id             Int       @id @default(autoincrement())
+  title          String
+  category       String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  duration       String?
+  patientId      Int
+  patient        Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientName    String?
+  patientAge     String?
+  patientHistory String?
+  participants   User[]    @relation("RapportParticipants")
+  details        String?
+  recommandations String?
+  creatorId      Int
+  creator        User      @relation("RapportCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+}
+
+model LabEntry {
+  id        Int       @id @default(autoincrement())
+  analyse   String?
+  labKey    String?
+  labValue  String?
+  analyseId Int
+  analyse_relation Analyse @relation(fields: [analyseId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Analyse {
+  id             Int        @id @default(autoincrement())
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  category       String?
+  title          String
+  patientId      Int
+  patient        Patient    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientName    String?
+  patientAge     String?
+  patientHistory String?
+  details        String?
+  labEntries     LabEntry[]
+  interpretation String?
+  status         String?
+  labId          String?
 }
 
 model Account {

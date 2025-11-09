@@ -5,8 +5,12 @@ import {
   ShieldCheck,
   Stethoscope,
   Users,
-
+  CheckCircle2,
+  Circle,
+  Beaker,
+  FileText,
 } from "lucide-react";
+import type { TaskItem } from "@/types/tasks";
 
 export interface NavLink {
   href: string;
@@ -27,7 +31,7 @@ export interface HeroHighlight {
 }
 
 export const heroHighlights: HeroHighlight[] = [
-  { label: "Déploiement moyen", value: "3 semaines", icon: CalendarDays },
+  { label: "Déploiement moyen", value: "3 jours", icon: CalendarDays },
   { label: "Conformité & sécurité", value: "100%", icon: ShieldCheck },
   { label: "Gain de temps constaté", value: "+32%", icon: Activity },
 ];
@@ -158,5 +162,106 @@ export const faqs: FAQ[] = [
     question: "Comment fonctionne l'assistance ?",
     answer:
       "Support 24/7, référent projet dédié et bibliothèque de tutoriels interactifs. Vous pouvez contacter nos experts via chat sécurisé ou hotline dédiée.",
+  },
+];
+
+// Mockup data for component showcases
+export const mockTasksData: TaskItem[] = [
+  {
+    id: "task-1",
+    title: "Vérifier l'analgésie post-opératoire",
+    details: "Contrôle des médicaments administrés et évaluation du confort patient",
+    done: false,
+    taskType: "team",
+  },
+  {
+    id: "task-2",
+    title: "Changer le pansement stérile",
+    details: "Remplacement du pansement selon le protocole de l'unité",
+    done: true,
+    taskType: "team",
+  },
+  {
+    id: "task-3",
+    title: "Mobilisation passive du patient",
+    details: "Exercices de kinésithérapie pour prévention des thromboses",
+    done: false,
+    taskType: "team",
+  },
+];
+
+export const mockPatientData = {
+  id: "PAT-001",
+  name: "Fatou Diop",
+  age: 58,
+  service: "Chirurgie digestive",
+  diagnosis: "Colectomie laparoscopique · J+7",
+  status: "Post-op",
+  doctor: "Dr. Paul Martin",
+  admissionDate: "2025-11-02",
+  surgeryType: "Chirurgie digestive",
+  lastVitals: {
+    temperature: 37.2,
+    heartRate: 72,
+    bloodPressure: "125/80",
+    oxygenSaturation: 98,
+  },
+  labs: {
+    status: "completed" as const,
+    note: "CRP 12 mg/L (stable)",
+  },
+};
+
+export const mockAnalysisData = [
+  {
+    id: "ANA-001",
+    type: "Imagerie",
+    date: "2025-11-08",
+    description: "Radiographie thoracique post-opératoire",
+    status: "Reviewed",
+  },
+  {
+    id: "ANA-002",
+    type: "Bilan sanguin",
+    date: "2025-11-07",
+    description: "Hémoglobine, hématocrite, plaquettes",
+    status: "Pending",
+  },
+  {
+    id: "ANA-003",
+    type: "Bactériologie",
+    date: "2025-11-06",
+    description: "Résultats de culture - Stérile",
+    status: "Reviewed",
+  },
+];
+
+export const mockCompteRenduData = [
+  {
+    id: "CR-001",
+    title: "Colectomie laparoscopique partielle",
+    date: "2025-11-02",
+    patient: "Fatou Diop",
+    surgeon: "Dr. Paul Martin",
+    duration: "120 min",
+    status: "Finalisé",
+  },
+  {
+    id: "CR-002",
+    title: "Herniorraphie inguinale unilatérale",
+    date: "2025-11-01",
+    patient: "Jean Dupont",
+    surgeon: "Dr. Sophie Bernard",
+    duration: "45 min",
+    status: "En cours",
+  },
+  {
+    id: "CR-003",
+    title: "Appendicectomie d'urgence",
+    date: "2025-10-31",
+    patient: "Marie Martin",
+    surgeon: "Dr. Paul Martin",
+    duration: "60 min",
+    status: "Finalisé",
   },
 ];

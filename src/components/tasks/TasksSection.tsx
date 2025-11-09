@@ -28,22 +28,28 @@ interface Patient {
   name: string;
 }
 
+interface TaskFormData {
+  titles: string[];
+  taskType?: "team" | "private";
+  patientName?: string;
+}
+
 interface TasksSectionProps {
-  tasks: TaskItem[];
+  tasks: TaskItem[] | undefined;
   isLoading?: boolean;
   title?: string;
   dateLabel?: string;
   showDateLabel?: boolean;
 
-  // Callbacks
-  onTaskToggle: (taskId: string) => void;
-  onTaskAdd: (task: TaskItem) => void;
-  onTaskEdit: (task: TaskItem) => void;
-  onTaskDelete: (taskId: string) => void;
+  // Callbacks (can be async)
+  onTaskToggle: (taskId: string) => void | Promise<void>;
+  onTaskAdd: (formData: TaskFormData) => Promise<TaskItem[] | null>;
+  onTaskEdit: (task: TaskItem) => void | Promise<void>;
+  onTaskDelete: (taskId: string) => void | Promise<void>;
 
   // Optional features
   showReloadButton?: boolean;
-  onReload?: () => void;
+  onReload?: () => void | Promise<void>;
 
   // Patient and tasks support
   patients?: Patient[];
@@ -96,12 +102,14 @@ export function TasksSection({
   const [isAddingFavoriteTask, setIsAddingFavoriteTask] = useState(false);
   const [newFavoriteTask, setNewFavoriteTask] = useState("");
   const [localFavoriteTasks, setLocalFavoriteTasks] = useState(favoriteTasks);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
 
-  const completedTasks = tasks.filter((task) => task.done).length;
-  const tasksCount = tasks.length;
+  const completedTasks = tasks?.filter((task) => task.done).length;
+  const tasksCount = tasks?.length;
 
   // Filter patients based on search
   const filteredPatients = patients.filter((patient) =>
@@ -142,42 +150,61 @@ export function TasksSection({
     setSwipedTaskId(null);
   };
 
-  const handleSaveTask = () => {
+  const handleSaveTask = async () => {
     // Filter out empty titles
     const validTitles = taskForm.titles.filter((t) => t.trim());
     if (validTitles.length === 0) return;
 
-    if (taskToEdit) {
-      // Edit existing task - use first title
-      onTaskEdit({
-        ...taskToEdit,
-        title: validTitles[0],
-        patientName: taskForm.patientName,
-        taskType: taskForm.taskType || "team",
-      });
-      setIsEditTaskModalOpen(false);
-    } else {
-      // Add new tasks - create one for each title
-      validTitles.forEach((title) => {
-        const newTask: TaskItem = {
-          id: `TASK-${Date.now()}-${Math.random()}`,
-          title,
-          details: "",
-          done: false,
+    setIsSaving(true);
+    try {
+      if (taskToEdit) {
+        // Edit existing task - use first title
+        await onTaskEdit({
+          ...taskToEdit,
+          title: validTitles[0],
           patientName: taskForm.patientName,
           taskType: taskForm.taskType || "team",
-        };
-        onTaskAdd(newTask);
-      });
-      setIsAddTaskModalOpen(false);
+        });
+        setIsEditTaskModalOpen(false);
+      } else {
+        // Add new tasks - pass form data to parent handler
+        const createdTasks = await onTaskAdd({
+          titles: validTitles,
+          taskType: taskForm.taskType || "team",
+          patientName: taskForm.patientName,
+        });
+
+        // If tasks were successfully created, close modal and reset form
+        if (createdTasks && createdTasks.length > 0) {
+          setIsAddTaskModalOpen(false);
+          // Reset form
+          setTaskForm({
+            titles: [""],
+            patientId: undefined,
+            patientName: "",
+            taskType: "team",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error saving task:", error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleConfirmDeleteTask = () => {
+  const handleConfirmDeleteTask = async () => {
     if (taskToDelete) {
-      onTaskDelete(taskToDelete.id);
-      setIsDeleteTaskModalOpen(false);
-      setTaskToDelete(null);
+      setIsDeleting(true);
+      try {
+        await onTaskDelete(taskToDelete.id);
+        setIsDeleteTaskModalOpen(false);
+        setTaskToDelete(null);
+      } catch (error) {
+        console.error("Error deleting task:", error);
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
 
@@ -258,7 +285,7 @@ export function TasksSection({
             <div className="flex h-full items-center justify-center">
               <Spinner label="Chargement des consignes..." />
             </div>
-          ) : tasks.length === 0 ? (
+          ) : tasks?.length === 0 ? (
             <EmptyState
               icon={ClipboardList}
               title="Aucune consigne enregistrée"
@@ -273,7 +300,7 @@ export function TasksSection({
           ) : (
             <div className="h-full min-h-0 overflow-y-auto pr-1">
               <div className="space-y-3">
-                {tasks.map((task) => {
+                {tasks?.map((task) => {
                   const isDone = task.done;
 
                   return (
@@ -303,9 +330,10 @@ export function TasksSection({
                       >
                         <div className="flex items-start gap-3 sm:flex-1">
                           <button
-                            onClick={() => onTaskToggle(task.id)}
+                            onClick={() => void onTaskToggle(task.id)}
                             className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border transition hover:bg-slate-100"
                             type="button"
+                            disabled={isLoading}
                           >
                             <span
                               className={cn(
@@ -437,14 +465,17 @@ export function TasksSection({
             <Button
               variant="ghost"
               onClick={() => setIsAddTaskModalOpen(false)}
+              disabled={isSaving}
             >
               Annuler
             </Button>
             <Button
               variant="primary"
               onClick={handleSaveTask}
-              disabled={taskForm.titles.every((t) => !t.trim())}
+              disabled={taskForm.titles.every((t) => !t.trim()) || isSaving}
+              className={isSaving ? "opacity-70" : ""}
             >
+              {isSaving ? <Spinner className="h-4 w-4 mr-2" /> : null}
               Enregistrer
             </Button>
           </>
@@ -555,7 +586,7 @@ export function TasksSection({
           <div className="grid gap-2">
             <div className="flex items-center justify-between">
               <label className="text-sm font-semibold text-[#1f184f]">
-                Intitulés
+                Tâches
               </label>
             </div>
 
@@ -697,14 +728,17 @@ export function TasksSection({
             <Button
               variant="ghost"
               onClick={() => setIsEditTaskModalOpen(false)}
+              disabled={isSaving}
             >
               Annuler
             </Button>
             <Button
               variant="primary"
               onClick={handleSaveTask}
-              disabled={taskForm.titles.every((t) => !t.trim())}
+              disabled={taskForm.titles.every((t) => !t.trim()) || isSaving}
+              className={isSaving ? "opacity-70" : ""}
             >
+              {isSaving ? <Spinner className="h-4 w-4 mr-2" /> : null}
               Enregistrer
             </Button>
           </>
@@ -841,13 +875,16 @@ export function TasksSection({
             <Button
               variant="ghost"
               onClick={() => setIsDeleteTaskModalOpen(false)}
+              disabled={isDeleting}
             >
               Annuler
             </Button>
             <Button
-              className="bg-rose-600 text-white hover:bg-rose-700 focus-visible:ring-rose-300"
+              className="bg-rose-600 text-white hover:bg-rose-700 focus-visible:ring-rose-300 disabled:opacity-70"
               onClick={handleConfirmDeleteTask}
+              disabled={isDeleting}
             >
+              {isDeleting ? <Spinner className="h-4 w-4 mr-2" /> : null}
               Supprimer
             </Button>
           </>

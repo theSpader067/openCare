@@ -7,6 +7,7 @@ import {
   useState,
   type ComponentType,
 } from "react";
+import { useSession } from "next-auth/react";
 import {
   Activity,
   Calendar as CalendarIcon,
@@ -37,7 +38,21 @@ import { Modal } from "@/components/ui/modal";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { TasksSection } from "@/components/tasks/TasksSection";
+import { ActivitySection } from "@/components/activities/ActivitySection";
 import type { TaskItem } from "@/types/tasks";
+import {
+  createTask,
+  updateTask,
+  deleteTask,
+  toggleTaskCompletion,
+  getTasks,
+} from "@/lib/api/tasks";
+import {
+  createActivity,
+  getActivities,
+  updateActivity,
+  deleteActivity,
+} from "@/lib/api/activities";
 
 function SimpleDatePicker({
   date,
@@ -101,6 +116,7 @@ interface ActivityItem {
   location?: string;
   team?: string;
   status: ActivityStatus;
+  activityDay?: string | Date;
 }
 
 
@@ -338,13 +354,14 @@ type ActivityFormState = {
   title: string;
   description: string;
   type: ActivityType;
+  activityDay: Date;
   time: string;
   location: string;
   team: string;
 };
 
 // Mock data for patients
-const mockPatients = [
+export const mockPatients = [
   { id: "PAT-001", name: "Fatou Diop" },
   { id: "PAT-002", name: "Jean Dupont" },
   { id: "PAT-003", name: "Marie Martin" },
@@ -356,7 +373,7 @@ const mockPatients = [
 ];
 
 // Mock favorite tasks for quick selection
-const mockFavoriteTasks = [
+export const mockFavoriteTasks = [
   "Vérifier l'analgésie",
   "Changer le pansement",
   "Évaluer les signes vitaux",
@@ -368,6 +385,10 @@ const mockFavoriteTasks = [
 ];
 
 export default function TasksPage() {
+  const { data: session } = useSession();
+  const sessionUser = session?.user as any;
+  const userId = sessionUser?.id ? parseInt(sessionUser.id as string) : null;
+
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [selectedTab, setSelectedTab] = useState<"activites" | "taches">(
     "taches"
@@ -382,6 +403,57 @@ export default function TasksPage() {
     generateActivitiesForDate(new Date())
   );
 
+  // Load tasks from database on mount
+  useEffect(() => {
+    if (userId) {
+      loadTasks();
+      loadActivities();
+    }
+  }, [userId]);
+
+  // Reload activities when selected date changes
+  useEffect(() => {
+    if (userId) {
+      loadActivities();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate]);
+
+  const loadTasks = async () => {
+    setIsTasksLoading(true);
+    try {
+      const result = await getTasks();
+      if (result.success && result.data) {
+        setTasks(result.data);
+      }
+    } catch (error) {
+      console.error("Error loading tasks:", error);
+    } finally {
+      setIsTasksLoading(false);
+    }
+  };
+
+  const loadActivities = async () => {
+    setIsActivitiesLoading(true);
+    try {
+      const result = await getActivities();
+      if (result.success && result.data) {
+        // Filter activities by selected date (comparing just the date part, not time)
+        const selectedDateStr = selectedDate.toISOString().split('T')[0];
+        const filteredActivities = result.data.filter((activity) => {
+          // Check if activity's activityDay matches the selected date
+          const activityDateStr = activity.activityDay ? activity.activityDay.toString().split('T')[0] : '';
+          return activityDateStr === selectedDateStr;
+        });
+        setActivities(filteredActivities);
+      }
+    } catch (error) {
+      console.error("Error loading activities:", error);
+    } finally {
+      setIsActivitiesLoading(false);
+    }
+  };
+
   // Task management - simplified since TasksSection handles modals
 
   // Activity management
@@ -393,6 +465,7 @@ export default function TasksPage() {
     title: "",
     description: "",
     type: "consultation",
+    activityDay: new Date(),
     time: "",
     location: "",
     team: "",
@@ -433,31 +506,87 @@ export default function TasksPage() {
   };
 
   // Task handlers - delegated to TasksSection component
-  const handleTaskToggle = (taskId: string) => {
-    setTasks(
-      tasks.map((t) => (t.id === taskId ? { ...t, done: !t.done } : t))
-    );
+  const handleTaskToggle = async (taskId: string) => {
+    try {
+      const taskIdNum = parseInt(taskId);
+      const result = await toggleTaskCompletion(taskIdNum);
+      if (result.success && result.data) {
+        const updatedData = result.data;
+        setTasks(
+          tasks.map((t) =>
+            t.id === taskId ? { ...t, done: updatedData.done } : t
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error toggling task:", error);
+    }
   };
 
-  const handleTaskAdd = (newTask: TaskItem) => {
-    setTasks((prevTasks) => [...prevTasks, newTask]);
+  const handleTaskAdd = async (formData: { titles: string[]; taskType?: "team" | "private"; patientName?: string }) => {
+    const createdTasks: TaskItem[] = [];
+
+    try {
+      // Create a task for each title
+      for (const title of formData.titles) {
+        const result = await createTask({
+          title: title.trim(),
+          isPrivate: formData.taskType === "private",
+        });
+
+        if (result.success && result.data) {
+          createdTasks.push(result.data);
+        } else {
+          console.error(`Failed to create task: ${result.error}`);
+        }
+      }
+
+      // Add all created tasks to state
+      if (createdTasks.length > 0) {
+        setTasks((prevTasks) => [...prevTasks, ...createdTasks]);
+      }
+
+      return createdTasks.length > 0 ? createdTasks : null;
+    } catch (error) {
+      console.error("Error adding tasks:", error);
+      return null;
+    }
   };
 
-  const handleTaskEdit = (updatedTask: TaskItem) => {
-    setTasks(
-      tasks.map((t) => (t.id === updatedTask.id ? updatedTask : t))
-    );
+  const handleTaskEdit = async (updatedTask: TaskItem) => {
+    try {
+      const taskIdNum = parseInt(updatedTask.id);
+      const result = await updateTask({
+        taskId: taskIdNum,
+        title: updatedTask.title,
+        isPrivate: updatedTask.taskType === "private",
+      });
+      if (result.success && result.data) {
+        setTasks(
+          tasks.map((t) =>
+            t.id === updatedTask.id ? result.data! : t
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error editing task:", error);
+    }
   };
 
-  const handleTaskDelete = (taskId: string) => {
-    setTasks(tasks.filter((t) => t.id !== taskId));
+  const handleTaskDelete = async (taskId: string) => {
+    try {
+      const taskIdNum = parseInt(taskId);
+      const result = await deleteTask(taskIdNum);
+      if (result.success) {
+        setTasks(tasks.filter((t) => t.id !== taskId));
+      }
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
   };
 
-  const handleReloadTasks = () => {
-    setIsTasksLoading(true);
-    setTimeout(() => {
-      setIsTasksLoading(false);
-    }, 2000);
+  const handleReloadTasks = async () => {
+    await loadTasks();
   };
 
   // Activity handlers
@@ -466,6 +595,7 @@ export default function TasksPage() {
       title: "",
       description: "",
       type: "consultation",
+      activityDay: selectedDate,
       time: "",
       location: "",
       team: "",
@@ -479,6 +609,7 @@ export default function TasksPage() {
       title: activity.title,
       description: activity.description,
       type: activity.type,
+      activityDay: activity.activityDay ? new Date(activity.activityDay) : selectedDate,
       time: activity.time,
       location: activity.location || "",
       team: activity.team || "",
@@ -494,49 +625,63 @@ export default function TasksPage() {
     setSwipedActivityId(null);
   };
 
-  const handleSaveActivity = () => {
+  const handleSaveActivity = async () => {
     if (!activityForm.title.trim()) return;
 
-    if (activityToEdit) {
-      // Edit existing activity
-      setActivities(
-        activities.map((a) =>
-          a.id === activityToEdit.id
-            ? {
-                ...a,
-                title: activityForm.title,
-                description: activityForm.description,
-                type: activityForm.type,
-                time: activityForm.time,
-                location: activityForm.location,
-                team: activityForm.team,
-              }
-            : a
-        )
-      );
-      setIsEditActivityModalOpen(false);
-    } else {
-      // Add new activity
-      const newActivity: ActivityItem = {
-        id: `ACT-${Date.now()}`,
-        title: activityForm.title,
-        description: activityForm.description,
-        type: activityForm.type,
-        time: activityForm.time,
-        location: activityForm.location,
-        team: activityForm.team,
-        status: "todo",
-      };
-      setActivities([...activities, newActivity]);
-      setIsAddActivityModalOpen(false);
+    try {
+      if (activityToEdit) {
+        // Edit existing activity
+        const result = await updateActivity({
+          activityId: parseInt(activityToEdit.id),
+          title: activityForm.title,
+          type: activityForm.type,
+          description: activityForm.description,
+          time: activityForm.time,
+          location: activityForm.location,
+          activityDay: activityForm.activityDay,
+        });
+
+        if (result.success && result.data) {
+          setActivities(
+            activities.map((a) =>
+              a.id === activityToEdit.id ? result.data! : a
+            )
+          );
+          setIsEditActivityModalOpen(false);
+        }
+      } else {
+        // Add new activity
+        const result = await createActivity({
+          title: activityForm.title,
+          type: activityForm.type,
+          description: activityForm.description,
+          time: activityForm.time,
+          location: activityForm.location,
+          activityDay: activityForm.activityDay,
+        });
+
+        if (result.success && result.data) {
+          setActivities([...activities, result.data]);
+          setIsAddActivityModalOpen(false);
+        }
+      }
+    } catch (error) {
+      console.error("Error saving activity:", error);
     }
   };
 
-  const handleConfirmDeleteActivity = () => {
-    if (activityToDelete) {
-      setActivities(activities.filter((a) => a.id !== activityToDelete.id));
-      setIsDeleteActivityModalOpen(false);
-      setActivityToDelete(null);
+  const handleConfirmDeleteActivity = async () => {
+    if (!activityToDelete) return;
+
+    try {
+      const result = await deleteActivity(parseInt(activityToDelete.id));
+      if (result.success) {
+        setActivities(activities.filter((a) => a.id !== activityToDelete.id));
+        setIsDeleteActivityModalOpen(false);
+        setActivityToDelete(null);
+      }
+    } catch (error) {
+      console.error("Error deleting activity:", error);
     }
   };
 
@@ -641,442 +786,35 @@ export default function TasksPage() {
 
         {/* Activities Tab */}
         {selectedTab === "activites" && (
-          <Card className="flex min-h-0 flex-1 flex-col border-none bg-white/90">
-            <CardHeader className="flex flex-wrap items-center justify-between gap-3 pb-4">
-              <div>
-                <CardTitle>Historique des activités</CardTitle>
-                <CardDescription>{selectedDateLabel}</CardDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="muted" className="bg-indigo-100 text-indigo-800">
-                  {activitiesCount} activité(s)
-                </Badge>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  className="h-9 w-9 rounded-full p-0"
-                  onClick={handleOpenAddActivityModal}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="flex-1 min-h-0 overflow-hidden pt-0">
-              {activities.length === 0 ? (
-                <EmptyState
-                  icon={ClipboardList}
-                  title="Aucune activité pour cette journée"
-                  description="Ajoutez vos consultations, passages au bloc ou tournées pour garder un historique complet."
-                  action={
-                    <Button
-                      variant="primary"
-                      onClick={handleOpenAddActivityModal}
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Ajouter une activité
-                    </Button>
-                  }
-                />
-              ) : (
-                <div className="h-full min-h-0 overflow-y-auto pr-1">
-                  <ul className="space-y-3">
-                    {activities.map((activity) => {
-                      const meta = activityTypeMeta[activity.type];
-                      const Icon = meta.icon;
-                      const done = activity.status === "done";
-
-                      return (
-                        <li
-                          key={activity.id}
-                          className="relative"
-                          onTouchStart={handleTouchStart}
-                          onTouchEnd={(e) =>
-                            handleTouchEnd(e, activity.id)
-                          }
-                        >
-                          <div
-                            className={cn(
-                              "flex flex-col gap-4 rounded-2xl border bg-white/80 p-4 shadow-sm sm:flex-row sm:items-start sm:justify-between transition-transform duration-300 ease-out",
-                              done
-                                ? "border-emerald-200 bg-emerald-50/80"
-                                : "border-transparent hover:-translate-y-[1px] hover:border-slate-200"
-                            )}
-                            style={{
-                              transform: swipedActivityId === activity.id ? "translateX(-96px)" : "translateX(0)",
-                            }}
-                          >
-                            <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
-                              <button
-                                onClick={() =>
-                                  handleToggleActivity(activity.id)
-                                }
-                                className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl transition hover:opacity-80"
-                                type="button"
-                              >
-                                <span
-                                  className={cn(
-                                    "flex h-full w-full items-center justify-center rounded-2xl shadow-inner",
-                                    meta.badgeClass
-                                  )}
-                                >
-                                  <Icon className="h-5 w-5" />
-                                </span>
-                              </button>
-                              <div className="flex flex-1 flex-col gap-3">
-                                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                                  <div className="space-y-1">
-                                    <h3
-                                      className={cn(
-                                        "text-sm font-semibold text-[#1f184f]",
-                                        done && "line-through opacity-70"
-                                      )}
-                                    >
-                                      {activity.title}
-                                    </h3>
-                                    <p className="text-xs text-[#5f5aa5]">
-                                      {activity.description}
-                                    </p>
-                                  </div>
-                                  <Badge
-                                    variant="muted"
-                                    className="self-start bg-[#f1f0ff] text-[#4338ca]"
-                                  >
-                                    {activity.time}
-                                  </Badge>
-                                </div>
-                                <div className="flex flex-wrap items-center gap-3 text-xs text-[#6f66c4]">
-                                  {activity.location ? (
-                                    <span className="flex items-center gap-1">
-                                      <MapPin className="h-3.5 w-3.5" />
-                                      {activity.location}
-                                    </span>
-                                  ) : null}
-                                  <span className="flex items-center gap-1">
-                                    <CalendarIcon className="h-3.5 w-3.5" />
-                                    {meta.label}
-                                  </span>
-                                  {activity.team ? (
-                                    <span className="flex items-center gap-1">
-                                      <ListChecks className="h-3.5 w-3.5" />
-                                      {activity.team}
-                                    </span>
-                                  ) : null}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Swipe action buttons */}
-                          <div
-                            className={cn(
-                              "absolute right-2 top-1/2 -translate-y-1/2 flex gap-2 transition-all duration-300 ease-out",
-                              swipedActivityId === activity.id
-                                ? "opacity-100 pointer-events-auto"
-                                : "opacity-0 pointer-events-none"
-                            )}
-                          >
-                            <button
-                              onClick={() =>
-                                handleOpenEditActivityModal(activity)
-                              }
-                              className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-md"
-                              type="button"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() =>
-                                handleOpenDeleteActivityModal(activity)
-                              }
-                              className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-600 text-white hover:bg-rose-700 transition shadow-md"
-                              type="button"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <ActivitySection
+            activities={activities}
+            isLoading={isActivitiesLoading}
+            selectedDateLabel={selectedDateLabel}
+            activityForm={activityForm}
+            setActivityForm={setActivityForm}
+            isAddActivityModalOpen={isAddActivityModalOpen}
+            setIsAddActivityModalOpen={setIsAddActivityModalOpen}
+            isEditActivityModalOpen={isEditActivityModalOpen}
+            setIsEditActivityModalOpen={setIsEditActivityModalOpen}
+            isDeleteActivityModalOpen={isDeleteActivityModalOpen}
+            setIsDeleteActivityModalOpen={setIsDeleteActivityModalOpen}
+            activityToEdit={activityToEdit}
+            setActivityToEdit={setActivityToEdit}
+            activityToDelete={activityToDelete}
+            setActivityToDelete={setActivityToDelete}
+            swipedActivityId={swipedActivityId}
+            setSwipedActivityId={setSwipedActivityId}
+            onAddClick={handleOpenAddActivityModal}
+            onToggleClick={handleToggleActivity}
+            onEditClick={handleOpenEditActivityModal}
+            onDeleteClick={handleOpenDeleteActivityModal}
+            onSaveActivity={handleSaveActivity}
+            onConfirmDelete={handleConfirmDeleteActivity}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          />
         )}
       </div>
-
-      {/* Activity Modals */}
-      <Modal
-        open={isAddActivityModalOpen}
-        onClose={() => setIsAddActivityModalOpen(false)}
-        title="Ajouter une activité"
-        description="Enregistrez une consultation, une opération ou une réunion."
-        size="md"
-        footer={
-          <>
-            <Button
-              variant="ghost"
-              onClick={() => setIsAddActivityModalOpen(false)}
-            >
-              Annuler
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleSaveActivity}
-              disabled={!activityForm.title.trim()}
-            >
-              Enregistrer
-            </Button>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <div className="grid gap-2">
-            <label className="text-sm font-semibold text-[#1f184f]">
-              Titre
-            </label>
-            <input
-              value={activityForm.title}
-              onChange={(e) =>
-                setActivityForm({ ...activityForm, title: e.target.value })
-              }
-              placeholder="Ex. Consultation Fatou Diop"
-              className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-            />
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-semibold text-[#1f184f]">
-              Description
-            </label>
-            <textarea
-              rows={2}
-              value={activityForm.description}
-              onChange={(e) =>
-                setActivityForm({
-                  ...activityForm,
-                  description: e.target.value,
-                })
-              }
-              placeholder="Détails de l'activité"
-              className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-            />
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2">
-            <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">
-                Type
-              </label>
-              <select
-                value={activityForm.type}
-                onChange={(e) =>
-                  setActivityForm({
-                    ...activityForm,
-                    type: e.target.value as ActivityType,
-                  })
-                }
-                className="w-full rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-              >
-                <option value="consultation">Consultation</option>
-                <option value="chirurgie">Bloc opératoire</option>
-                <option value="staff">Staff / réunion</option>
-                <option value="tournee">Tournée</option>
-              </select>
-            </div>
-            <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">
-                Heure
-              </label>
-              <input
-                type="time"
-                value={activityForm.time}
-                onChange={(e) =>
-                  setActivityForm({ ...activityForm, time: e.target.value })
-                }
-                className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-              />
-            </div>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2">
-            <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">
-                Lieu
-              </label>
-              <input
-                value={activityForm.location}
-                onChange={(e) =>
-                  setActivityForm({ ...activityForm, location: e.target.value })
-                }
-                placeholder="Ex. Bloc 5, Secteur 3"
-                className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-              />
-            </div>
-            <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">
-                Équipe
-              </label>
-              <input
-                value={activityForm.team}
-                onChange={(e) =>
-                  setActivityForm({ ...activityForm, team: e.target.value })
-                }
-                placeholder="Ex. Dr. Benali, IDE Claire"
-                className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-              />
-            </div>
-          </div>
-        </div>
-      </Modal>
-
-      <Modal
-        open={isEditActivityModalOpen}
-        onClose={() => setIsEditActivityModalOpen(false)}
-        title="Modifier l'activité"
-        description="Mettez à jour les informations."
-        size="md"
-        footer={
-          <>
-            <Button
-              variant="ghost"
-              onClick={() => setIsEditActivityModalOpen(false)}
-            >
-              Annuler
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleSaveActivity}
-              disabled={!activityForm.title.trim()}
-            >
-              Enregistrer
-            </Button>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <div className="grid gap-2">
-            <label className="text-sm font-semibold text-[#1f184f]">
-              Titre
-            </label>
-            <input
-              value={activityForm.title}
-              onChange={(e) =>
-                setActivityForm({ ...activityForm, title: e.target.value })
-              }
-              placeholder="Ex. Consultation Fatou Diop"
-              className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-            />
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-semibold text-[#1f184f]">
-              Description
-            </label>
-            <textarea
-              rows={2}
-              value={activityForm.description}
-              onChange={(e) =>
-                setActivityForm({
-                  ...activityForm,
-                  description: e.target.value,
-                })
-              }
-              placeholder="Détails de l'activité"
-              className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-            />
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2">
-            <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">
-                Type
-              </label>
-              <select
-                value={activityForm.type}
-                onChange={(e) =>
-                  setActivityForm({
-                    ...activityForm,
-                    type: e.target.value as ActivityType,
-                  })
-                }
-                className="w-full rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-              >
-                <option value="consultation">Consultation</option>
-                <option value="chirurgie">Bloc opératoire</option>
-                <option value="staff">Staff / réunion</option>
-                <option value="tournee">Tournée</option>
-              </select>
-            </div>
-            <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">
-                Heure
-              </label>
-              <input
-                type="time"
-                value={activityForm.time}
-                onChange={(e) =>
-                  setActivityForm({ ...activityForm, time: e.target.value })
-                }
-                className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-              />
-            </div>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2">
-            <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">
-                Lieu
-              </label>
-              <input
-                value={activityForm.location}
-                onChange={(e) =>
-                  setActivityForm({ ...activityForm, location: e.target.value })
-                }
-                placeholder="Ex. Bloc 5, Secteur 3"
-                className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-              />
-            </div>
-            <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">
-                Équipe
-              </label>
-              <input
-                value={activityForm.team}
-                onChange={(e) =>
-                  setActivityForm({ ...activityForm, team: e.target.value })
-                }
-                placeholder="Ex. Dr. Benali, IDE Claire"
-                className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-              />
-            </div>
-          </div>
-        </div>
-      </Modal>
-
-      <Modal
-        open={isDeleteActivityModalOpen}
-        onClose={() => setIsDeleteActivityModalOpen(false)}
-        title="Supprimer l'activité ?"
-        description="Cette action retirera l'activité de votre liste."
-        size="sm"
-        footer={
-          <>
-            <Button
-              variant="ghost"
-              onClick={() => setIsDeleteActivityModalOpen(false)}
-            >
-              Annuler
-            </Button>
-            <Button
-              className="bg-rose-600 text-white hover:bg-rose-700 focus-visible:ring-rose-300"
-              onClick={handleConfirmDeleteActivity}
-            >
-              Supprimer
-            </Button>
-          </>
-        }
-      >
-        {activityToDelete ? (
-          <p className="text-sm text-[#5f5aa5]">
-            Confirmez-vous la suppression de l'activité « {activityToDelete.title} » ?
-          </p>
-        ) : null}
-      </Modal>
     </div>
   );
 }

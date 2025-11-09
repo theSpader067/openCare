@@ -77,14 +77,7 @@ export const authConfig: AuthOptions = {
           return null
         }
 
-        console.log("Authorize - success, returning user:", {
-          id: user.id,
-          email: user.email,
-          emailVerified: user.emailVerified,
-          onboardingCompleted: user.onboardingCompleted,
-          hospital: user.hospital,
-          specialty: user.specialty
-        });
+       
 
         return {
           id: user.id.toString(),
@@ -124,15 +117,7 @@ export const authConfig: AuthOptions = {
         token.hospital = (user as any).hospital
         token.specialty = (user as any).specialty
 
-        console.log("JWT callback - token after user:", {
-          userId: token.userId,
-          email: token.email,
-          username: token.username,
-          emailVerified: token.emailVerified,
-          onboardingCompleted: token.onboardingCompleted,
-          hospital: token.hospital,
-          specialty: token.specialty
-        });
+        
       }
 
       // Handle session update (when user completes onboarding)
@@ -149,12 +134,7 @@ export const authConfig: AuthOptions = {
             token.onboardingCompleted = dbUser.onboardingCompleted ?? false
             token.hospital = dbUser.hospital
             token.specialty = dbUser.specialty
-            console.log("JWT callback - updated token from DB:", {
-              emailVerified: token.emailVerified,
-              onboardingCompleted: token.onboardingCompleted,
-              hospital: token.hospital,
-              specialty: token.specialty
-            });
+           
           }
         }
       }
@@ -163,16 +143,7 @@ export const authConfig: AuthOptions = {
     },
 
     async session({ session, token }) {
-      console.log("Session callback - token:", {
-        userId: token.userId,
-        email: token.email,
-        username: token.username,
-        sub: token.sub,
-        emailVerified: token.emailVerified,
-        onboardingCompleted: token.onboardingCompleted,
-        hospital: token.hospital,
-        specialty: token.specialty
-      });
+      
 
       // Add token fields to session
       if (session.user) {
@@ -185,29 +156,19 @@ export const authConfig: AuthOptions = {
         ;(session.user as any).specialty = token.specialty as string
       }
 
-      console.log("Session callback - session.user:", session.user);
       return session
     },
 
     async signIn({ user, account }: { user: any, account: any }) {
-      console.log("SignIn callback - provider:", account?.provider, "user:", user.email);
 
       // For Google OAuth, load user data from database
       if (account?.provider === "google") {
-        console.log("SignIn callback - Google OAuth, loading user from DB");
 
         const dbUser = await prisma.user.findUnique({
           where: { email: user.email! },
         })
 
         if (dbUser) {
-          console.log("SignIn callback - Found user in DB:", {
-            email: dbUser.email,
-            emailVerified: dbUser.emailVerified,
-            onboardingCompleted: dbUser.onboardingCompleted,
-            hospital: dbUser.hospital,
-            specialty: dbUser.specialty
-          });
 
           // Add database fields to user object so JWT callback can access them
           // Keep id as number for adapter, JWT callback will convert to string

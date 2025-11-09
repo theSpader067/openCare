@@ -9,7 +9,6 @@ export interface TaskItem {
   title: string;
   details: string;
   done: boolean;
-  delegatedTo?: string;
   patientName?: string;
   taskType?: TaskType;
 }
@@ -23,6 +22,8 @@ export interface ActivityItem {
   location?: string;
   team?: string;
   status: ActivityStatus;
+  createdAt?: string | Date;
+  activityDay?: string | Date;
 }
 
 export interface TaskFormState {
@@ -36,6 +37,7 @@ export interface ActivityFormState {
   title: string;
   description: string;
   type: ActivityType;
+  activityDay: Date;
   time: string;
   location: string;
   team: string;

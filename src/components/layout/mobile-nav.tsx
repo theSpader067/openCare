@@ -15,7 +15,7 @@ const createMenuItems = [
   },
   {
     href: "/analyses",
-    label: "Bilan",
+    label: "analyses",
     icon: FlaskConical,
   },
   {
@@ -122,7 +122,7 @@ function NavItemRenderer({ items, pathname, dropdownOpen, setDropdownOpen }: { i
             key={itemHref}
             href={itemHref}
             className={cn(
-              "flex flex-col items-center gap-1.5 rounded-2xl px-3 py-2 text-[10px] font-medium transition duration-200",
+              "flex flex-col items-center gap-1.5 rounded-2xl px-1 py-1 text-[10px] font-medium transition duration-200",
               isActive
                 ? "bg-gradient-to-br from-[#eef2ff] via-[#ede9fe] to-white text-[#4338ca] shadow-sm shadow-indigo-200/60"
                 : "text-[#6c64b5] hover:bg-white/70 hover:text-[#2d2674]",
@@ -143,7 +143,7 @@ export function MobileNav() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-30 w-full border-t border-violet-200/70 bg-white/85 px-4 py-1.5 shadow-[0_-6px_18px_rgba(99,102,241,0.15)] backdrop-blur-xl lg:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-30 w-full border-t border-violet-200/70 bg-white/85 px-4 shadow-[0_-6px_18px_rgba(99,102,241,0.15)] backdrop-blur-xl lg:hidden">
       <div className="flex w-full items-center justify-evenly">
         {/* Phone screens (< md) */}
         <div className="flex w-full items-center justify-evenly md:hidden">

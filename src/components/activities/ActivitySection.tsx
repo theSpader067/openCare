@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import {
   Card,
   CardContent,
@@ -24,10 +24,14 @@ import {
 } from "lucide-react";
 import type { ActivityItem, ActivityFormState, ActivityType } from "@/types/tasks";
 import { activityTypeMeta } from "@/data/dashboard/dashboard-metadata";
+import { getActivities } from "@/lib/api/activities";
+
+export interface ActivitySectionRef {
+  refresh: () => Promise<void>;
+}
 
 interface ActivitySectionProps {
-  activities: ActivityItem[];
-  isLoading: boolean;
+  selectedDate: Date;
   selectedDateLabel: string;
   activityForm: ActivityFormState;
   setActivityForm: (form: ActivityFormState) => void;
@@ -49,37 +53,87 @@ interface ActivitySectionProps {
   onDeleteClick: (activity: ActivityItem) => void;
   onSaveActivity: () => Promise<void>;
   onConfirmDelete: () => Promise<void>;
+  onActivityUpdate?: (activities: ActivityItem[]) => void;
   onTouchStart: (e: React.TouchEvent) => void;
   onTouchEnd: (e: React.TouchEvent, id: string) => void;
 }
 
-export function ActivitySection({
-  activities,
-  isLoading,
-  selectedDateLabel,
-  activityForm,
-  setActivityForm,
-  isAddActivityModalOpen,
-  setIsAddActivityModalOpen,
-  isEditActivityModalOpen,
-  setIsEditActivityModalOpen,
-  isDeleteActivityModalOpen,
-  setIsDeleteActivityModalOpen,
-  activityToEdit,
-  setActivityToEdit,
-  activityToDelete,
-  setActivityToDelete,
-  swipedActivityId,
-  setSwipedActivityId,
-  onAddClick,
-  onToggleClick,
-  onEditClick,
-  onDeleteClick,
-  onSaveActivity,
-  onConfirmDelete,
-  onTouchStart,
-  onTouchEnd,
-}: ActivitySectionProps) {
+const formatDateKey = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionProps>(
+  function ActivitySection({
+    selectedDate,
+    selectedDateLabel,
+    activityForm,
+    setActivityForm,
+    isAddActivityModalOpen,
+    setIsAddActivityModalOpen,
+    isEditActivityModalOpen,
+    setIsEditActivityModalOpen,
+    isDeleteActivityModalOpen,
+    setIsDeleteActivityModalOpen,
+    activityToEdit,
+    setActivityToEdit,
+    activityToDelete,
+    setActivityToDelete,
+    swipedActivityId,
+    setSwipedActivityId,
+    onAddClick,
+    onToggleClick,
+    onEditClick,
+    onDeleteClick,
+    onSaveActivity,
+    onConfirmDelete,
+    onActivityUpdate,
+    onTouchStart,
+    onTouchEnd,
+  }: ActivitySectionProps, ref) {
+    const [activities, setActivities] = useState<ActivityItem[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const loadActivities = async () => {
+    setIsLoading(true);
+    try {
+      const result = await getActivities();
+      if (result.success && result.data) {
+        // Filter activities by selected date
+        const selectedDateStr = formatDateKey(selectedDate);
+        const filteredActivities = result.data.filter((activity) => {
+          if (!activity.activityDay) return false;
+          const activityData = activity as any;
+          const activityDateStr = formatDateKey(
+            activityData.activityDay instanceof Date
+              ? activityData.activityDay
+              : new Date(activityData.activityDay)
+          );
+          return activityDateStr === selectedDateStr;
+        });
+        setActivities(filteredActivities);
+        onActivityUpdate?.(filteredActivities);
+      }
+    } catch (error) {
+      console.error("Error loading activities:", error);
+      setActivities([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Expose refresh method to parent components
+  useImperativeHandle(ref, () => ({
+    refresh: loadActivities,
+  }), [loadActivities]);
+
+  // Fetch activities on mount and when selected date changes
+  useEffect(() => {
+    loadActivities();
+  }, [selectedDate, onActivityUpdate]);
+
   const completedActivities = activities.filter(
     (act) => act.status === "done"
   ).length;
@@ -341,6 +395,7 @@ export function ActivitySection({
     </>
   );
 }
+);
 
 interface ActivityFormContentProps {
   form: ActivityFormState;

@@ -394,30 +394,21 @@ export default function TasksPage() {
     "taches"
   );
   const [isTasksLoading, setIsTasksLoading] = useState(false);
-  const [isActivitiesLoading, setIsActivitiesLoading] = useState(false);
+  const [activitiesCount, setActivitiesCount] = useState(0);
 
   const [tasks, setTasks] = useState<TaskItem[]>(() =>
     generateTasksForDate(new Date())
   );
-  const [activities, setActivities] = useState<ActivityItem[]>(() =>
-    generateActivitiesForDate(new Date())
-  );
+
+  // Ref for ActivitySection to trigger refreshes
+  const activitySectionRef = useRef<any>(null);
 
   // Load tasks from database on mount
   useEffect(() => {
     if (userId) {
       loadTasks();
-      loadActivities();
     }
   }, [userId]);
-
-  // Reload activities when selected date changes
-  useEffect(() => {
-    if (userId) {
-      loadActivities();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate]);
 
   const loadTasks = async () => {
     setIsTasksLoading(true);
@@ -430,27 +421,6 @@ export default function TasksPage() {
       console.error("Error loading tasks:", error);
     } finally {
       setIsTasksLoading(false);
-    }
-  };
-
-  const loadActivities = async () => {
-    setIsActivitiesLoading(true);
-    try {
-      const result = await getActivities();
-      if (result.success && result.data) {
-        // Filter activities by selected date (comparing just the date part, not time)
-        const selectedDateStr = selectedDate.toISOString().split('T')[0];
-        const filteredActivities = result.data.filter((activity) => {
-          // Check if activity's activityDay matches the selected date
-          const activityDateStr = activity.activityDay ? activity.activityDay.toString().split('T')[0] : '';
-          return activityDateStr === selectedDateStr;
-        });
-        setActivities(filteredActivities);
-      }
-    } catch (error) {
-      console.error("Error loading activities:", error);
-    } finally {
-      setIsActivitiesLoading(false);
     }
   };
 
@@ -482,12 +452,6 @@ export default function TasksPage() {
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
 
-  // Activity stats
-  const completedActivities = activities.filter(
-    (act) => act.status === "done"
-  ).length;
-  const activitiesCount = activities.length;
-
   const selectedDateLabel = selectedDate.toLocaleDateString("fr-FR", {
     weekday: "long",
     day: "numeric",
@@ -499,9 +463,7 @@ export default function TasksPage() {
   const handleDateChange = (newDate: Date) => {
     setSelectedDate(newDate);
     const newTasks = generateTasksForDate(newDate);
-    const newActivities = generateActivitiesForDate(newDate);
     setTasks(newTasks);
-    setActivities(newActivities);
     setSwipedActivityId(null);
   };
 
@@ -641,13 +603,9 @@ export default function TasksPage() {
           activityDay: activityForm.activityDay,
         });
 
-        if (result.success && result.data) {
-          setActivities(
-            activities.map((a) =>
-              a.id === activityToEdit.id ? result.data! : a
-            )
-          );
+        if (result.success) {
           setIsEditActivityModalOpen(false);
+          await activitySectionRef.current?.refresh();
         }
       } else {
         // Add new activity
@@ -660,9 +618,9 @@ export default function TasksPage() {
           activityDay: activityForm.activityDay,
         });
 
-        if (result.success && result.data) {
-          setActivities([...activities, result.data]);
+        if (result.success) {
           setIsAddActivityModalOpen(false);
+          await activitySectionRef.current?.refresh();
         }
       }
     } catch (error) {
@@ -676,9 +634,9 @@ export default function TasksPage() {
     try {
       const result = await deleteActivity(parseInt(activityToDelete.id));
       if (result.success) {
-        setActivities(activities.filter((a) => a.id !== activityToDelete.id));
         setIsDeleteActivityModalOpen(false);
         setActivityToDelete(null);
+        await activitySectionRef.current?.refresh();
       }
     } catch (error) {
       console.error("Error deleting activity:", error);
@@ -686,16 +644,8 @@ export default function TasksPage() {
   };
 
   const handleToggleActivity = (activityId: string) => {
-    setActivities(
-      activities.map((a) =>
-        a.id === activityId
-          ? {
-              ...a,
-              status: a.status === "done" ? "todo" : "done",
-            }
-          : a
-      )
-    );
+    // Toggle is handled optimistically in the ActivitySection UI
+    // No API call needed - just refresh to sync with latest data
   };
 
   // Touch handlers for swipe (activities only)
@@ -757,7 +707,7 @@ export default function TasksPage() {
                 : "border-transparent text-slate-600 hover:text-slate-800"
             )}
           >
-            Activités ({activities.length})
+            Activités ({activitiesCount})
           </button>
         </div>
 
@@ -787,8 +737,8 @@ export default function TasksPage() {
         {/* Activities Tab */}
         {selectedTab === "activites" && (
           <ActivitySection
-            activities={activities}
-            isLoading={isActivitiesLoading}
+            ref={activitySectionRef}
+            selectedDate={selectedDate}
             selectedDateLabel={selectedDateLabel}
             activityForm={activityForm}
             setActivityForm={setActivityForm}
@@ -810,6 +760,7 @@ export default function TasksPage() {
             onDeleteClick={handleOpenDeleteActivityModal}
             onSaveActivity={handleSaveActivity}
             onConfirmDelete={handleConfirmDeleteActivity}
+            onActivityUpdate={(activities) => setActivitiesCount(activities?.length || 0)}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           />

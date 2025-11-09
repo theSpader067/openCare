@@ -174,7 +174,9 @@ export default function DashboardPage() {
   const [scheduleData, setScheduleData] =
     useState<Record<string, DayData>>({} as Record<string,DayData>);
   const [selectedDate, setSelectedDate] = useState(formatDateKey(baseDate));
-  const [isActivitiesLoading, setIsActivitiesLoading] = useState(false);
+
+  // Ref for ActivitySection to trigger refreshes
+  const activitySectionRef = useRef<any>(null);
   const [isTasksLoading, setIsTasksLoading] = useState(false);
   const [servicePatients, setServicePatients] =
     useState<PatientItem[]>([]);
@@ -222,49 +224,6 @@ export default function DashboardPage() {
     }
   }, [isAddPatientModalOpen]);
 
-  const loadActivitiesFromAPI = async () => {
-    setIsActivitiesLoading(true);
-    try {
-      const result = await getActivities();
-      if (result.success && result.data) {
-        // Filter activities by selected date and populate into scheduleData
-        const selectedDateObj = parseKeyToDate(selectedDate);
-        const selectedDateStr = formatDateKey(selectedDateObj);
-
-        const filteredActivities = result.data.filter((activity) => {
-          if (!activity.activityDay) return false;
-          const activityDate = new Date(activity.activityDay);
-          const activityDateStr = formatDateKey(activityDate);
-          return activityDateStr === selectedDateStr;
-        });
-
-        updateDayData(selectedDate, (day) => ({
-          ...day,
-          activities: filteredActivities,
-        }));
-      }
-    } catch (error) {
-      console.error("Error loading activities:", error);
-    } finally {
-      setIsActivitiesLoading(false);
-    }
-  };
-
-  // Load activities from API on mount
-  useEffect(() => {
-    if (userId) {
-      loadActivitiesFromAPI();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
-
-  // Reload activities when selected date changes
-  useEffect(() => {
-    if (userId) {
-      loadActivitiesFromAPI();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate]);
 
   const selectedDayData = scheduleData? scheduleData[selectedDate] : createEmptyDay();
   const selectedDateObj = useMemo(() => parseKeyToDate(selectedDate), [selectedDate]);
@@ -282,9 +241,6 @@ export default function DashboardPage() {
 
   const setLoading = (section: SectionKey, value: boolean) => {
     switch (section) {
-      case "activities":
-        setIsActivitiesLoading(value);
-        break;
       case "tasks":
         setIsTasksLoading(value);
         break;
@@ -371,7 +327,8 @@ export default function DashboardPage() {
     ensureDayExists(key);
     setSelectedDate(key);
     setCalendarMonth(new Date(normalized.getFullYear(), normalized.getMonth(), 1));
-    runAsyncUpdate(["activities", "tasks"], () => {
+    // Activities are now handled by ActivitySection component
+    runAsyncUpdate(["tasks"], () => {
       /* simulation de chargement lors du changement de journée */
     }, 360);
   };
@@ -410,7 +367,6 @@ export default function DashboardPage() {
       return;
     }
 
-    setIsActivitiesLoading(true);
     try {
       const result = await createActivity({
         title: activityForm.title.trim(),
@@ -421,18 +377,13 @@ export default function DashboardPage() {
         activityDay: activityForm.activityDay,
       });
 
-      if (result.success && result.data) {
-        updateDayData(selectedDate, (day) => ({
-          ...day,
-          activities: [result.data!, ...day.activities],
-        }));
+      if (result.success) {
         setIsAddActivityModalOpen(false);
         setActivityForm(createEmptyActivityForm());
+        await activitySectionRef.current?.refresh();
       }
     } catch (error) {
       console.error("Error creating activity:", error);
-    } finally {
-      setIsActivitiesLoading(false);
     }
   };
 
@@ -456,7 +407,6 @@ export default function DashboardPage() {
       return;
     }
 
-    setIsActivitiesLoading(true);
     try {
       if (activityToEdit) {
         // Update existing activity
@@ -470,16 +420,11 @@ export default function DashboardPage() {
           activityDay: activityForm.activityDay,
         });
 
-        if (result.success && result.data) {
-          updateDayData(selectedDate, (day) => ({
-            ...day,
-            activities: day.activities.map((act) =>
-              act.id === activityToEdit.id ? result.data! : act
-            ),
-          }));
+        if (result.success) {
           setIsEditActivityModalOpen(false);
           setActivityToEdit(null);
           setActivityForm(createEmptyActivityForm());
+          await activitySectionRef.current?.refresh();
         }
       } else {
         // Create new activity
@@ -487,8 +432,6 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error("Error saving activity:", error);
-    } finally {
-      setIsActivitiesLoading(false);
     }
   };
 
@@ -500,21 +443,15 @@ export default function DashboardPage() {
   const handleConfirmDelete = async () => {
     if (!activityToDelete) return;
 
-    setIsActivitiesLoading(true);
     try {
       const result = await deleteActivity(parseInt(activityToDelete.id));
       if (result.success) {
-        updateDayData(selectedDate, (day) => ({
-          ...day,
-          activities: day.activities.filter((act) => act.id !== activityToDelete.id),
-        }));
         setIsDeleteActivityModalOpen(false);
         setActivityToDelete(null);
+        await activitySectionRef.current?.refresh();
       }
     } catch (error) {
       console.error("Error deleting activity:", error);
-    } finally {
-      setIsActivitiesLoading(false);
     }
   };
 
@@ -775,9 +712,10 @@ export default function DashboardPage() {
             {renderTasksCard()}
           </div>
 
+          <div className="flex xl:col-span-2">
           <ActivitySection
-            activities={selectedDayData?.activities || []}
-            isLoading={isActivitiesLoading}
+            ref={activitySectionRef}
+            selectedDate={selectedDateObj}
             selectedDateLabel={selectedDayLabel}
             activityForm={activityForm}
             setActivityForm={setActivityForm}
@@ -803,6 +741,15 @@ export default function DashboardPage() {
             onDeleteClick={handleDeleteClick}
             onSaveActivity={handleSaveActivity}
             onConfirmDelete={handleConfirmDelete}
+            onActivityUpdate={(activities) => {
+              // Update scheduleData with the latest activities
+              if (activities.length > 0) {
+                updateDayData(selectedDate, (day) => ({
+                  ...day,
+                  activities: activities,
+                }));
+              }
+            }}
             onTouchStart={(e) => {
               const touch = e.touches[0];
               if (touch) {
@@ -820,6 +767,7 @@ export default function DashboardPage() {
               }
             }}
           />
+          </div>
 
           <Card className="flex h-full flex-col border-none bg-white/90 hidden xl:block h-[100%]">
             <CardHeader className="flex flex-wrap items-center justify-between gap-3 pb-4">

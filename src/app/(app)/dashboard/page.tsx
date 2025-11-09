@@ -40,6 +40,7 @@ import { Modal } from "@/components/ui/modal";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { TasksSection } from "@/components/tasks/TasksSection";
+import { ActivitySection } from "@/components/activities/ActivitySection";
 import type { TaskItem } from "@/types/tasks";
 import { statsSummary } from "@/data/dashboard/dashboard-stats";
 import type { Stat } from "@/data/dashboard/dashboard-stats";
@@ -69,7 +70,6 @@ import { useSession } from "next-auth/react";
 type ActivityStatus = "done" | "todo";
 
 type SectionKey = "activities" | "tasks" | "patients";
-type ActivityTabKey = "activites" | "bloc" | "divers";
 
 
 interface ActivityFormState {
@@ -91,17 +91,6 @@ interface PatientFormState {
   labsStatus: PatientItem["labs"]["status"];
   labsNote: string;
 }
-
-
-const activityToTab = (activity: ActivityItem): ActivityTabKey => {
-  if (activity.type === "chirurgie") {
-    return "bloc";
-  }
-  if (activity.type === "consultation" || activity.type === "tournee") {
-    return "activites";
-  }
-  return "divers";
-};
 
 
 const createEmptyDay = (): DayData => ({
@@ -192,15 +181,18 @@ export default function DashboardPage() {
   const [isServicePatientsLoading, setIsServicePatientsLoading] =
     useState(false);
   const [isAddActivityModalOpen, setIsAddActivityModalOpen] = useState(false);
+  const [isEditActivityModalOpen, setIsEditActivityModalOpen] = useState(false);
+  const [isDeleteActivityModalOpen, setIsDeleteActivityModalOpen] = useState(false);
   const [activityForm, setActivityForm] = useState<ActivityFormState>(() =>
     createEmptyActivityForm(),
   );
-  const [activityDetail, setActivityDetail] = useState<ActivityItem | null>(null);
+  const [activityToEdit, setActivityToEdit] = useState<ActivityItem | null>(null);
+  const [activityToDelete, setActivityToDelete] = useState<ActivityItem | null>(null);
+  const [swipedActivityId, setSwipedActivityId] = useState<string | null>(null);
   const [isAddPatientModalOpen, setIsAddPatientModalOpen] = useState(false);
   const [patientForm, setPatientForm] = useState<PatientFormState>(() =>
     createEmptyPatientForm(),
   );
-  const [activityTab, setActivityTab] = useState<ActivityTabKey>("activites");
   const [isMobileToolkitOpen, setIsMobileToolkitOpen] = useState(false);
   const [isStatsInteracting, setIsStatsInteracting] = useState(false);
 
@@ -414,7 +406,7 @@ export default function DashboardPage() {
   };
 
   const handleAddActivity = async () => {
-    if (!activityForm.title.trim() || !activityForm.time.trim()) {
+    if (!activityForm.title.trim()) {
       return;
     }
 
@@ -439,6 +431,88 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error("Error creating activity:", error);
+    } finally {
+      setIsActivitiesLoading(false);
+    }
+  };
+
+  const handleEditActivity = (activity: ActivityItem) => {
+    setActivityToEdit(activity);
+    const activityData = activity as any;
+    setActivityForm({
+      title: activity.title,
+      time: activity.time,
+      type: activity.type as ActivityType,
+      activityDay: activityData.activityDay instanceof Date ? activityData.activityDay : new Date(activityData.activityDay || selectedDateObj),
+      description: activity.description,
+      location: activity.location || "",
+      team: activity.team || "",
+    });
+    setIsEditActivityModalOpen(true);
+  };
+
+  const handleSaveActivity = async () => {
+    if (!activityForm.title.trim()) {
+      return;
+    }
+
+    setIsActivitiesLoading(true);
+    try {
+      if (activityToEdit) {
+        // Update existing activity
+        const result = await updateActivity({
+          activityId: parseInt(activityToEdit.id),
+          title: activityForm.title.trim(),
+          type: activityForm.type,
+          description: activityForm.description.trim() || "Aucun détail supplémentaire pour cette activité.",
+          time: activityForm.time,
+          location: activityForm.location.trim() || undefined,
+          activityDay: activityForm.activityDay,
+        });
+
+        if (result.success && result.data) {
+          updateDayData(selectedDate, (day) => ({
+            ...day,
+            activities: day.activities.map((act) =>
+              act.id === activityToEdit.id ? result.data! : act
+            ),
+          }));
+          setIsEditActivityModalOpen(false);
+          setActivityToEdit(null);
+          setActivityForm(createEmptyActivityForm());
+        }
+      } else {
+        // Create new activity
+        await handleAddActivity();
+      }
+    } catch (error) {
+      console.error("Error saving activity:", error);
+    } finally {
+      setIsActivitiesLoading(false);
+    }
+  };
+
+  const handleDeleteClick = (activity: ActivityItem) => {
+    setActivityToDelete(activity);
+    setIsDeleteActivityModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!activityToDelete) return;
+
+    setIsActivitiesLoading(true);
+    try {
+      const result = await deleteActivity(parseInt(activityToDelete.id));
+      if (result.success) {
+        updateDayData(selectedDate, (day) => ({
+          ...day,
+          activities: day.activities.filter((act) => act.id !== activityToDelete.id),
+        }));
+        setIsDeleteActivityModalOpen(false);
+        setActivityToDelete(null);
+      }
+    } catch (error) {
+      console.error("Error deleting activity:", error);
     } finally {
       setIsActivitiesLoading(false);
     }
@@ -481,7 +555,7 @@ export default function DashboardPage() {
   const tasksCount = tasks?.length;
   const completedTasks = tasks?.filter((task) => task.done).length;
   const activityFormIsValid = Boolean(
-    activityForm.title.trim() && activityForm.time.trim(),
+    activityForm.title.trim(),
   );
   const patientFormIsValid = Boolean(
     patientForm.name.trim() &&
@@ -494,41 +568,6 @@ export default function DashboardPage() {
     () => (hasStats ? [...statsList, ...statsList, ...statsList, ...statsList, ...statsList, ...statsList] : []),
     [hasStats, statsList],
   );
-  const activityGroups = useMemo(() => {
-    const groups: Record<ActivityTabKey, ActivityItem[]> = {
-      activites: [],
-      bloc: [],
-      divers: [],
-    };
-    selectedDayData?.activities.forEach((activity) => {
-      const key = activityToTab(activity);
-      groups[key].push(activity);
-    });
-    return groups;
-  }, [selectedDayData?.activities]);
-  const activityTabsConfig = useMemo(
-    () => [
-      {
-        key: "activites" as ActivityTabKey,
-        label: "Activités",
-        count: activityGroups.activites.length,
-      },
-      {
-        key: "bloc" as ActivityTabKey,
-        label: "Bloc",
-        count: activityGroups.bloc.length,
-      },
-      {
-        key: "divers" as ActivityTabKey,
-        label: "Divers",
-        count: activityGroups.divers.length,
-      },
-    ],
-    [activityGroups],
-  );
-  const filteredActivities = activityGroups[activityTab];
-  const activeActivityTab =
-    activityTabsConfig.find((tab) => tab.key === activityTab) ?? activityTabsConfig[0];
 
   const renderCalendarCard = (
     cardClassName?: string,
@@ -736,162 +775,51 @@ export default function DashboardPage() {
             {renderTasksCard()}
           </div>
 
-          <Card className="flex h-full min-h-0 flex-col border-none bg-white/90 xl:col-span-2">
-            <CardHeader className="flex flex-col gap-4 pb-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <CardTitle>Historique des activités</CardTitle>
-                  <CardDescription>{selectedDayLabel}</CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant="muted"
-                    className="bg-indigo-100 text-indigo-800"
-                  >
-                    {selectedDayData?.activities.length} activité(s)
-                  </Badge>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => setIsAddActivityModalOpen(true)}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Ajouter
-                  </Button>
-                </div>
-              </div>
-             
-            </CardHeader>
-            <CardContent className="flex-1 min-h-0 overflow-hidden pt-0">
-              {isActivitiesLoading ? (
-                <div className="flex h-full items-center justify-center">
-                  <Spinner label="Chargement des activités..." />
-                </div>
-              ) : selectedDayData?.activities.length === 0 ? (
-                <EmptyState
-                  icon={ClipboardList}
-                  title="Aucune activité pour cette journée"
-                  description="Ajoutez vos consultations, passages au bloc ou tournées pour garder un historique complet."
-                  action={
-                    <Button variant="outline" onClick={() => setIsAddActivityModalOpen(true)}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Planifier une activité
-                    </Button>
-                  }
-                />
-              ) : filteredActivities.length === 0 ? (
-                <EmptyState
-                  icon={ClipboardList}
-                  title="Pas d'activité dans cette catégorie"
-                  description={`Aucune donnée pour l'onglet « ${activeActivityTab.label} ». Changez de filtre ou planifiez un nouvel élément.`}
-                  action={
-                    <Button variant="outline" onClick={() => setIsAddActivityModalOpen(true)}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Ajouter une activité
-                    </Button>
-                  }
-                />
-              ) : (
-                <div className="h-full min-h-0 overflow-y-auto pr-1">
-                  <ul className="space-y-3">
-                    {filteredActivities.map((activity) => {
-                      const meta = activityTypeMeta[activity.type as ActivityType];
-                      const Icon = meta.icon;
-                      const done = activity.status === "done";
-
-                      return (
-                        <li key={activity.id}>
-                          <div
-                            className={cn(
-                              "flex flex-col gap-4 rounded-2xl border bg-white/80 p-4 shadow-sm transition sm:flex-row sm:items-start sm:justify-between",
-                              done
-                                ? "border-emerald-200 bg-emerald-50/80 shadow-emerald-100/60"
-                                : "border-transparent hover:-translate-y-[1px] hover:border-slate-200",
-                            )}
-                          >
-                            <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
-                              <span
-                                className={cn(
-                                  "flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl shadow-inner shadow-white/60",
-                                  meta.badgeClass,
-                                )}
-                              >
-                                <Icon className="h-5 w-5" />
-                              </span>
-                              <div className="flex flex-1 flex-col gap-3">
-                                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                                  <div className="space-y-1">
-                                    <h3
-                                      className={cn(
-                                        "text-sm font-semibold text-[#1f184f]",
-                                        done && "line-through opacity-70",
-                                      )}
-                                    >
-                                      {activity.title}
-                                    </h3>
-                                    <p className="text-xs text-[#5f5aa5]">
-                                      {activity.description}
-                                    </p>
-                                  </div>
-                                  <Badge
-                                    variant="muted"
-                                    className="self-start bg-[#f1f0ff] text-[#4338ca]"
-                                  >
-                                    {activity.time}
-                                  </Badge>
-                                </div>
-                                <div className="flex flex-wrap items-center gap-3 text-xs text-[#6f66c4]">
-                                  {activity.location ? (
-                                    <span className="flex items-center gap-1">
-                                      <MapPin className="h-3.5 w-3.5" />
-                                      {activity.location}
-                                    </span>
-                                  ) : null}
-                                  <span className="flex items-center gap-1">
-                                    <CalendarIcon className="h-3.5 w-3.5" />
-                                    {meta.label}
-                                  </span>
-                                  {activity.team ? (
-                                    <span className="flex items-center gap-1">
-                                      <ListChecks className="h-3.5 w-3.5" />
-                                      {activity.team}
-                                    </span>
-                                  ) : null}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:items-end">
-                              <button
-                                type="button"
-                                onClick={() => handleToggleActivity(activity.id)}
-                                className={cn(
-                                  "flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition",
-                                  done
-                                    ? "border-emerald-300 bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-                                    : "border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200",
-                                )}
-                              >
-                                {done ? <CheckCircle2 className="h-4 w-4" /> : <Circle className="h-4 w-4" />}
-                                {done ? "Terminé" : "À faire"}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setActivityDetail(activity)}
-                                className="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-200"
-                              >
-                                <Pencil className="h-4 w-4" />
-                                Détails
-                              </button>
-                            </div>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <ActivitySection
+            activities={selectedDayData?.activities || []}
+            isLoading={isActivitiesLoading}
+            selectedDateLabel={selectedDayLabel}
+            activityForm={activityForm}
+            setActivityForm={setActivityForm}
+            isAddActivityModalOpen={isAddActivityModalOpen}
+            setIsAddActivityModalOpen={setIsAddActivityModalOpen}
+            isEditActivityModalOpen={isEditActivityModalOpen}
+            setIsEditActivityModalOpen={setIsEditActivityModalOpen}
+            isDeleteActivityModalOpen={isDeleteActivityModalOpen}
+            setIsDeleteActivityModalOpen={setIsDeleteActivityModalOpen}
+            activityToEdit={activityToEdit}
+            setActivityToEdit={setActivityToEdit}
+            activityToDelete={activityToDelete}
+            setActivityToDelete={setActivityToDelete}
+            swipedActivityId={swipedActivityId}
+            setSwipedActivityId={setSwipedActivityId}
+            onAddClick={() => {
+              setActivityForm(createEmptyActivityForm());
+              setActivityToEdit(null);
+              setIsAddActivityModalOpen(true);
+            }}
+            onToggleClick={handleToggleActivity}
+            onEditClick={handleEditActivity}
+            onDeleteClick={handleDeleteClick}
+            onSaveActivity={handleSaveActivity}
+            onConfirmDelete={handleConfirmDelete}
+            onTouchStart={(e) => {
+              const touch = e.touches[0];
+              if (touch) {
+                (e.currentTarget as any).__touchStart = touch.clientX;
+              }
+            }}
+            onTouchEnd={(e, id) => {
+              const touch = e.changedTouches[0];
+              const start = (e.currentTarget as any).__touchStart || 0;
+              const distance = start - touch.clientX;
+              if (distance > 50) {
+                setSwipedActivityId(id);
+              } else if (distance < -50) {
+                setSwipedActivityId(null);
+              }
+            }}
+          />
 
           <Card className="flex h-full flex-col border-none bg-white/90 hidden xl:block h-[100%]">
             <CardHeader className="flex flex-wrap items-center justify-between gap-3 pb-4">
@@ -1022,180 +950,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <Modal
-        open={isAddActivityModalOpen}
-        onClose={() => setIsAddActivityModalOpen(false)}
-        title="Ajouter une activité"
-        description="Complétez les informations pour enrichir l&apos;historique de la journée."
-        size="md"
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setIsAddActivityModalOpen(false)}>
-              Annuler
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleAddActivity}
-              disabled={!activityFormIsValid}
-            >
-              Enregistrer
-            </Button>
-          </>
-        }
-      >
-        <div className="grid gap-4">
-          <div className="grid gap-2">
-            <label className="text-sm font-semibold text-[#1f184f]">
-              Titre de l&apos;activité
-            </label>
-            <input
-              value={activityForm.title}
-              onChange={(event) =>
-                setActivityForm((prev) => ({
-                  ...prev,
-                  title: event.target.value,
-                }))
-              }
-              placeholder="Ex. Bloc opératoire - Appendicectomie"
-              className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-            />
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2">
-            <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">Jour de l&apos;activité</label>
-              <input
-                type="date"
-                value={activityForm.activityDay.toISOString().split('T')[0]}
-                onChange={(event) =>
-                  setActivityForm((prev) => ({
-                    ...prev,
-                    activityDay: new Date(event.target.value),
-                  }))
-                }
-                className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-              />
-            </div>
-            <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">Horaire</label>
-              <input
-                type="time"
-                value={activityForm.time}
-                onChange={(event) =>
-                  setActivityForm((prev) => ({
-                    ...prev,
-                    time: event.target.value,
-                  }))
-                }
-                className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-              />
-            </div>
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-semibold text-[#1f184f]">Type</label>
-            <select
-              value={activityForm.type}
-              onChange={(event) =>
-                setActivityForm((prev) => ({
-                  ...prev,
-                  type: event.target.value as ActivityType,
-                }))
-              }
-              className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-            >
-              <option value="consultation">Consultation</option>
-              <option value="chirurgie">Bloc opératoire</option>
-              <option value="staff">Staff / réunion</option>
-              <option value="tournee">Tournée</option>
-            </select>
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-semibold text-[#1f184f]">Description</label>
-            <textarea
-              rows={3}
-              value={activityForm.description}
-              onChange={(event) =>
-                setActivityForm((prev) => ({
-                  ...prev,
-                  description: event.target.value,
-                }))
-              }
-              placeholder="Détaillez le contenu de l&apos;activité, les points à surveiller, etc."
-              className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-            />
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2">
-            <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">Lieu / service</label>
-              <input
-                value={activityForm.location}
-                onChange={(event) =>
-                  setActivityForm((prev) => ({
-                    ...prev,
-                    location: event.target.value,
-                  }))
-                }
-                placeholder="Ex. Bloc 5, Salle de conférence 2"
-                className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-              />
-            </div>
-            <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">Équipe / participants</label>
-              <input
-                value={activityForm.team}
-                onChange={(event) =>
-                  setActivityForm((prev) => ({
-                    ...prev,
-                    team: event.target.value,
-                  }))
-                }
-                placeholder="Ex. Dr. Benali, IDE Claire"
-                className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
-              />
-            </div>
-          </div>
-        </div>
-      </Modal>
-
-
-      <Modal
-        open={Boolean(activityDetail)}
-        onClose={() => setActivityDetail(null)}
-        title={activityDetail?.title}
-        description={activityDetail?.time ? `Horaire : ${activityDetail.time}` : undefined}
-        size="sm"
-        footer={
-          <Button variant="ghost" onClick={() => setActivityDetail(null)}>
-            Fermer
-          </Button>
-        }
-      >
-        {activityDetail ? (
-          <div className="space-y-4 text-sm text-[#5f5aa5]">
-            <Badge
-              variant="muted"
-              className={cn(
-                "bg-white/70",
-                activityTypeMeta[activityDetail.type as ActivityType].badgeClass,
-              )}
-            >
-              {activityTypeMeta[activityDetail.type as ActivityType].label}
-            </Badge>
-            <p className="leading-relaxed">{activityDetail.description}</p>
-            {activityDetail.location ? (
-              <p className="flex items-center gap-2 text-xs text-[#4338ca]">
-                <MapPin className="h-4 w-4" />
-                {activityDetail.location}
-              </p>
-            ) : null}
-            {activityDetail.team ? (
-              <p className="flex items-center gap-2 text-xs text-[#4338ca]">
-                <ListChecks className="h-4 w-4" />
-                {activityDetail.team}
-              </p>
-            ) : null}
-          </div>
-        ) : null}
-      </Modal>
 
       <Modal
         open={isAddPatientModalOpen}

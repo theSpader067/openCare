@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { getTasks } from "@/lib/api/tasks";
 import {
   CheckCircle2,
   Circle,
@@ -34,9 +35,11 @@ interface TaskFormData {
   patientName?: string;
 }
 
+export interface TasksSectionRef {
+  refresh: () => Promise<void>;
+}
+
 interface TasksSectionProps {
-  tasks: TaskItem[] | undefined;
-  isLoading?: boolean;
   title?: string;
   dateLabel?: string;
   showDateLabel?: boolean;
@@ -65,45 +68,72 @@ interface TasksSectionProps {
   contentClassName?: string;
 }
 
-export function TasksSection({
-  tasks,
-  isLoading = false,
-  title = "Consignes du jour",
-  dateLabel,
-  showDateLabel = false,
-  onTaskToggle,
-  onTaskAdd,
-  onTaskEdit,
-  onTaskDelete,
-  showReloadButton = false,
-  onReload,
-  patients = [],
-  favoriteTasks = [],
-  onFavoriteTasksChange,
-  enableSwipeActions = false,
-  cardClassName,
-  headerClassName,
-  contentClassName,
-}: TasksSectionProps) {
-  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
-  const [isEditTaskModalOpen, setIsEditTaskModalOpen] = useState(false);
-  const [isDeleteTaskModalOpen, setIsDeleteTaskModalOpen] = useState(false);
-  const [taskForm, setTaskForm] = useState<TaskFormState>({
-    titles: [""],
-    patientId: undefined,
-    patientName: "",
-    taskType: "team",
-  });
-  const [taskToEdit, setTaskToEdit] = useState<TaskItem | null>(null);
-  const [taskToDelete, setTaskToDelete] = useState<TaskItem | null>(null);
-  const [swipedTaskId, setSwipedTaskId] = useState<string | null>(null);
-  const [patientSearch, setPatientSearch] = useState("");
-  const [showPatientDropdown, setShowPatientDropdown] = useState(false);
-  const [isAddingFavoriteTask, setIsAddingFavoriteTask] = useState(false);
-  const [newFavoriteTask, setNewFavoriteTask] = useState("");
-  const [localFavoriteTasks, setLocalFavoriteTasks] = useState(favoriteTasks);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
+  function TasksSection({
+    title = "Consignes du jour",
+    dateLabel,
+    showDateLabel = false,
+    onTaskToggle,
+    onTaskAdd,
+    onTaskEdit,
+    onTaskDelete,
+    showReloadButton = false,
+    onReload,
+    patients = [],
+    favoriteTasks = [],
+    onFavoriteTasksChange,
+    enableSwipeActions = false,
+    cardClassName,
+    headerClassName,
+    contentClassName,
+  }: TasksSectionProps, ref) {
+    const [tasks, setTasks] = useState<TaskItem[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+    const [isEditTaskModalOpen, setIsEditTaskModalOpen] = useState(false);
+    const [isDeleteTaskModalOpen, setIsDeleteTaskModalOpen] = useState(false);
+    const [taskForm, setTaskForm] = useState<TaskFormState>({
+      titles: [""],
+      patientId: undefined,
+      patientName: "",
+      taskType: "team",
+    });
+    const [taskToEdit, setTaskToEdit] = useState<TaskItem | null>(null);
+    const [taskToDelete, setTaskToDelete] = useState<TaskItem | null>(null);
+    const [swipedTaskId, setSwipedTaskId] = useState<string | null>(null);
+    const [patientSearch, setPatientSearch] = useState("");
+    const [showPatientDropdown, setShowPatientDropdown] = useState(false);
+    const [isAddingFavoriteTask, setIsAddingFavoriteTask] = useState(false);
+    const [newFavoriteTask, setNewFavoriteTask] = useState("");
+    const [localFavoriteTasks, setLocalFavoriteTasks] = useState(favoriteTasks);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    // Fetch tasks on mount
+    const loadTasks = async () => {
+      setIsLoading(true);
+      try {
+        const result = await getTasks();
+        if (result.success && result.data) {
+          setTasks(result.data);
+        }
+      } catch (error) {
+        console.error("Error loading tasks:", error);
+        setTasks([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Expose refresh method to parent components
+    useImperativeHandle(ref, () => ({
+      refresh: loadTasks,
+    }), []);
+
+    // Load tasks on mount
+    useEffect(() => {
+      loadTasks();
+    }, []);
 
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
@@ -900,3 +930,4 @@ export function TasksSection({
     </div>
   );
 }
+);

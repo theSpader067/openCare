@@ -393,36 +393,11 @@ export default function TasksPage() {
   const [selectedTab, setSelectedTab] = useState<"activites" | "taches">(
     "taches"
   );
-  const [isTasksLoading, setIsTasksLoading] = useState(false);
   const [activitiesCount, setActivitiesCount] = useState(0);
 
-  const [tasks, setTasks] = useState<TaskItem[]>(() =>
-    generateTasksForDate(new Date())
-  );
-
-  // Ref for ActivitySection to trigger refreshes
+  // Refs for section components to trigger refreshes
   const activitySectionRef = useRef<any>(null);
-
-  // Load tasks from database on mount
-  useEffect(() => {
-    if (userId) {
-      loadTasks();
-    }
-  }, [userId]);
-
-  const loadTasks = async () => {
-    setIsTasksLoading(true);
-    try {
-      const result = await getTasks();
-      if (result.success && result.data) {
-        setTasks(result.data);
-      }
-    } catch (error) {
-      console.error("Error loading tasks:", error);
-    } finally {
-      setIsTasksLoading(false);
-    }
-  };
+  const tasksSectionRef = useRef<any>(null);
 
   // Task management - simplified since TasksSection handles modals
 
@@ -462,8 +437,6 @@ export default function TasksPage() {
   // Date change handler
   const handleDateChange = (newDate: Date) => {
     setSelectedDate(newDate);
-    const newTasks = generateTasksForDate(newDate);
-    setTasks(newTasks);
     setSwipedActivityId(null);
   };
 
@@ -471,15 +444,8 @@ export default function TasksPage() {
   const handleTaskToggle = async (taskId: string) => {
     try {
       const taskIdNum = parseInt(taskId);
-      const result = await toggleTaskCompletion(taskIdNum);
-      if (result.success && result.data) {
-        const updatedData = result.data;
-        setTasks(
-          tasks.map((t) =>
-            t.id === taskId ? { ...t, done: updatedData.done } : t
-          )
-        );
-      }
+      await toggleTaskCompletion(taskIdNum);
+      await tasksSectionRef.current?.refresh();
     } catch (error) {
       console.error("Error toggling task:", error);
     }
@@ -487,7 +453,6 @@ export default function TasksPage() {
 
   const handleTaskAdd = async (formData: { titles: string[]; taskType?: "team" | "private"; patientName?: string }) => {
     const createdTasks: TaskItem[] = [];
-
     try {
       // Create a task for each title
       for (const title of formData.titles) {
@@ -495,19 +460,13 @@ export default function TasksPage() {
           title: title.trim(),
           isPrivate: formData.taskType === "private",
         });
-
         if (result.success && result.data) {
           createdTasks.push(result.data);
-        } else {
-          console.error(`Failed to create task: ${result.error}`);
         }
       }
 
-      // Add all created tasks to state
-      if (createdTasks.length > 0) {
-        setTasks((prevTasks) => [...prevTasks, ...createdTasks]);
-      }
-
+      // Refresh tasks list after creation
+      await tasksSectionRef.current?.refresh();
       return createdTasks.length > 0 ? createdTasks : null;
     } catch (error) {
       console.error("Error adding tasks:", error);
@@ -518,18 +477,12 @@ export default function TasksPage() {
   const handleTaskEdit = async (updatedTask: TaskItem) => {
     try {
       const taskIdNum = parseInt(updatedTask.id);
-      const result = await updateTask({
+      await updateTask({
         taskId: taskIdNum,
         title: updatedTask.title,
         isPrivate: updatedTask.taskType === "private",
       });
-      if (result.success && result.data) {
-        setTasks(
-          tasks.map((t) =>
-            t.id === updatedTask.id ? result.data! : t
-          )
-        );
-      }
+      await tasksSectionRef.current?.refresh();
     } catch (error) {
       console.error("Error editing task:", error);
     }
@@ -538,17 +491,15 @@ export default function TasksPage() {
   const handleTaskDelete = async (taskId: string) => {
     try {
       const taskIdNum = parseInt(taskId);
-      const result = await deleteTask(taskIdNum);
-      if (result.success) {
-        setTasks(tasks.filter((t) => t.id !== taskId));
-      }
+      await deleteTask(taskIdNum);
+      await tasksSectionRef.current?.refresh();
     } catch (error) {
       console.error("Error deleting task:", error);
     }
   };
 
   const handleReloadTasks = async () => {
-    await loadTasks();
+    await tasksSectionRef.current?.refresh();
   };
 
   // Activity handlers
@@ -696,7 +647,7 @@ export default function TasksPage() {
                 : "border-transparent text-slate-600 hover:text-slate-800"
             )}
           >
-            Tâches ({tasks.length})
+            Tâches
           </button>
           <button
             onClick={() => setSelectedTab("activites")}
@@ -714,8 +665,7 @@ export default function TasksPage() {
         {/* Tasks Tab */}
         {selectedTab === "taches" && (
           <TasksSection
-            tasks={tasks}
-            isLoading={isTasksLoading}
+            ref={tasksSectionRef}
             title="Consignes du jour"
             dateLabel={selectedDateLabel}
             showDateLabel={true}

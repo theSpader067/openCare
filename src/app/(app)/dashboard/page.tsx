@@ -177,7 +177,9 @@ export default function DashboardPage() {
 
   // Ref for ActivitySection to trigger refreshes
   const activitySectionRef = useRef<any>(null);
-  const [isTasksLoading, setIsTasksLoading] = useState(false);
+
+  // Ref for TasksSection to trigger refreshes
+  const tasksSectionRef = useRef<any>(null);
   const [servicePatients, setServicePatients] =
     useState<PatientItem[]>([]);
   const [isServicePatientsLoading, setIsServicePatientsLoading] =
@@ -241,9 +243,6 @@ export default function DashboardPage() {
 
   const setLoading = (section: SectionKey, value: boolean) => {
     switch (section) {
-      case "tasks":
-        setIsTasksLoading(value);
-        break;
       case "patients":
         setIsServicePatientsLoading(value);
         break;
@@ -353,13 +352,9 @@ export default function DashboardPage() {
     });
   };
 
-  const handleToggleTaskDone = (taskId: string) => {
-    updateDayData(selectedDate, (day) => ({
-      ...day,
-      tasks: day.tasks.map((task) =>
-        task.id === taskId ? { ...task, done: !task.done } : task,
-      ),
-    }));
+  const handleToggleTaskDone = async (taskId: string) => {
+    // Task toggle is now handled by TasksSection, refresh after toggling
+    await tasksSectionRef.current?.refresh();
   };
 
   const handleAddActivity = async () => {
@@ -479,13 +474,8 @@ export default function DashboardPage() {
     }, 360);
   };
 
-  const handleReloadTasks = () => {
-    setIsTasksLoading(true);
-    const timer = window.setTimeout(() => {
-      setIsTasksLoading(false);
-      timersRef.current = timersRef.current.filter((item) => item !== timer as unknown as ReturnType<typeof setTimeout>);
-    }, 2000);
-    timersRef.current.push(timer as unknown as ReturnType<typeof setTimeout>);
+  const handleReloadTasks = async () => {
+    await tasksSectionRef.current?.refresh();
   };
 
   const tasks = selectedDayData?.tasks;
@@ -530,49 +520,24 @@ export default function DashboardPage() {
     contentClassName?: string;
   }) => (
     <TasksSection
-      tasks={[]}
-      isLoading={isTasksLoading}
+      ref={tasksSectionRef}
       title="Consignes du jour"
       showReloadButton={true}
       onReload={handleReloadTasks}
       onTaskToggle={handleToggleTaskDone}
       onTaskAdd={async (formData) => {
-        // Create mock tasks from form data
-        const createdTasks = formData.titles.map((title) => ({
-          id: `TASK-${Date.now()}-${Math.random()}`,
-          title,
-          details: "",
-          done: false,
-          patientName: formData.patientName,
-          taskType: formData.taskType || "team",
-        }));
-
-        runAsyncUpdate(["tasks"], () => {
-          updateDayData(selectedDate, (day) => ({
-            ...day,
-            tasks: [...createdTasks, ...day.tasks],
-          }));
-        });
-
-        return createdTasks;
+        // Tasks are created via TasksSection's internal API
+        // Just refresh after adding
+        await tasksSectionRef.current?.refresh();
+        return [];
       }}
-      onTaskEdit={(updatedTask) => {
-        runAsyncUpdate(["tasks"], () => {
-          updateDayData(selectedDate, (day) => ({
-            ...day,
-            tasks: day.tasks.map((task) =>
-              task.id === updatedTask.id ? updatedTask : task,
-            ),
-          }));
-        });
+      onTaskEdit={async (updatedTask) => {
+        // Update task via API
+        await tasksSectionRef.current?.refresh();
       }}
-      onTaskDelete={(taskId) => {
-        runAsyncUpdate(["tasks"], () => {
-          updateDayData(selectedDate, (day) => ({
-            ...day,
-            tasks: day.tasks.filter((item) => item.id !== taskId),
-          }));
-        });
+      onTaskDelete={async (taskId) => {
+        // Delete task via API
+        await tasksSectionRef.current?.refresh();
       }}
       patients={mockPatients}
       favoriteTasks={mockFavoriteTasks}

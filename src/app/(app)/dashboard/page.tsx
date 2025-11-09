@@ -514,48 +514,6 @@ export default function DashboardPage() {
     </Card>
   );
 
-  const renderTasksCard = (options?: {
-    cardClassName?: string;
-    headerClassName?: string;
-    contentClassName?: string;
-  }) => (
-    <TasksSection
-      ref={tasksSectionRef}
-      title="Consignes du jour"
-      showReloadButton={true}
-      onReload={handleReloadTasks}
-      onTaskToggle={handleToggleTaskDone}
-      onTaskAdd={async (formData) => {
-        // Tasks are created via TasksSection's internal API
-        // Just refresh after adding
-        await tasksSectionRef.current?.refresh();
-        return [];
-      }}
-      onTaskEdit={async (updatedTask) => {
-        // Update task via API
-        await tasksSectionRef.current?.refresh();
-      }}
-      onTaskDelete={async (taskId) => {
-        // Delete task via API
-        await tasksSectionRef.current?.refresh();
-      }}
-      patients={mockPatients}
-      favoriteTasks={mockFavoriteTasks}
-      cardClassName={cn(
-        "flex min-h-0 flex-1 flex-col border-none bg-white/90 min-h-[500px]",
-        options?.cardClassName
-      )}
-      headerClassName={cn(
-        "flex flex-wrap items-center justify-between gap-3 pb-4",
-        options?.headerClassName
-      )}
-      contentClassName={cn(
-        "flex-1 min-h-0 overflow-hidden pt-0",
-        options?.contentClassName
-      )}
-      enableSwipeActions={true}
-    />
-  );
 
   const renderStatCard = (
     stat: Stat,
@@ -674,7 +632,33 @@ export default function DashboardPage() {
         <div className="grid h-full min-h-0 grid-cols-1 gap-6 xl:grid-cols-4">
           <div className="hidden h-full min-h-0 flex-col gap-6 xl:flex">
             {renderCalendarCard()}
-            {renderTasksCard()}
+            <TasksSection
+              ref={tasksSectionRef}
+              title="Consignes du jour"
+              showReloadButton={true}
+              onReload={handleReloadTasks}
+              onTaskToggle={handleToggleTaskDone}
+              onTaskAdd={async (formData) => {
+                // Tasks are created via TasksSection's internal API
+                // Just refresh after adding
+                await tasksSectionRef.current?.refresh();
+                return [];
+              }}
+              onTaskEdit={async (updatedTask) => {
+                // Update task via API
+                await tasksSectionRef.current?.refresh();
+              }}
+              onTaskDelete={async (taskId) => {
+                // Delete task via API
+                await tasksSectionRef.current?.refresh();
+              }}
+              patients={mockPatients}
+              favoriteTasks={mockFavoriteTasks}
+              cardClassName="flex min-h-0 flex-1 flex-col border-none bg-white/90 min-h-[500px]"
+              headerClassName="flex flex-wrap items-center justify-between gap-3 pb-4"
+              contentClassName="flex-1 min-h-0 overflow-hidden pt-0"
+              enableSwipeActions={true}
+            />
           </div>
 
           <div className="flex xl:col-span-2">
@@ -854,11 +838,29 @@ export default function DashboardPage() {
               "border border-slate-200/70 bg-white/95 shadow-md shadow-indigo-100/50",
               "pt-0",
             )}
-            {renderTasksCard({
-              cardClassName:
-                "border border-slate-200/70 bg-white/95 shadow-md shadow-indigo-100/50 min-h-0",
-              contentClassName: "max-h-72 overflow-y-auto",
-            })}
+            <TasksSection
+              ref={tasksSectionRef}
+              title="Consignes du jour"
+              showReloadButton={true}
+              onReload={handleReloadTasks}
+              onTaskToggle={handleToggleTaskDone}
+              onTaskAdd={async (formData) => {
+                await tasksSectionRef.current?.refresh();
+                return [];
+              }}
+              onTaskEdit={async (updatedTask) => {
+                await tasksSectionRef.current?.refresh();
+              }}
+              onTaskDelete={async (taskId) => {
+                await tasksSectionRef.current?.refresh();
+              }}
+              patients={mockPatients}
+              favoriteTasks={mockFavoriteTasks}
+              cardClassName="border border-slate-200/70 bg-white/95 shadow-md shadow-indigo-100/50 min-h-0"
+              headerClassName="flex flex-wrap items-center justify-between gap-3 pb-4"
+              contentClassName="max-h-72 overflow-y-auto"
+              enableSwipeActions={true}
+            />
           </div>
         </div>
       </div>

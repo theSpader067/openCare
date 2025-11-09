@@ -132,7 +132,8 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
   // Fetch activities on mount and when selected date changes
   useEffect(() => {
     loadActivities();
-  }, [selectedDate, onActivityUpdate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate]);
 
   const completedActivities = activities.filter(
     (act) => act.status === "done"

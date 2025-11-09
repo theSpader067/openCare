@@ -55,6 +55,8 @@ export async function getActivities(): Promise<{
     });
 
     const result = await response.json();
+    console.log('activties @@@@@@@@@@')
+    console.log(result)
     return result;
   } catch (error) {
     console.error("Error fetching activities:", error);

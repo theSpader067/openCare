@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Separator } from "@/components/ui/separator";
-import { Patient, PatientStatus, RiskLevel, PatientType, patientsSeed, ObservationEntry } from "../data";
+import { Patient, PatientStatus, RiskLevel, PatientType, patientsSeed, ObservationEntry } from "@/data/patients/patients-data";
 import { WYSIWYGEditor } from "@/components/wysiwyg-editor";
 
 type PatientFormState = {

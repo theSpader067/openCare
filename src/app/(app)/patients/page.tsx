@@ -18,7 +18,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
-import { Patient, PatientStatus, RiskLevel, PatientType, patientsSeed } from "./data";
+import { Patient, PatientStatus, RiskLevel, PatientType, patientsSeed } from "@/data/patients/patients-data";
 import { ObservationTimeline } from "./observation-timeline";
 import { PatientFilters } from "./patient-filters";
 

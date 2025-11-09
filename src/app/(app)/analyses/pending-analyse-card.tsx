@@ -4,6 +4,7 @@ import { Clock, Download, User, Camera, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { AnalysisScannerModal } from "@/components/analysis-scanner-modal";
 
 type Analyse = {
   id: string;
@@ -60,6 +61,7 @@ export function PendingAnalyseCard({
 }) {
   const config = statusConfig[analyse.status];
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [testValues, setTestValues] = useState<Record<string, string>>(
     analyse.pendingTests?.reduce((acc, test) => {
       acc[test.id] = test.value || "";
@@ -70,6 +72,118 @@ export function PendingAnalyseCard({
 
   const handleTestValueChange = (testId: string, value: string) => {
     setTestValues((prev) => ({ ...prev, [testId]: value }));
+  };
+
+  const handleScanComplete = (data: {
+    imageUrl: string;
+    extractedText: string;
+  }) => {
+    console.log("Scan completed. Extracted text:", data.extractedText);
+
+    if (analyse.bilanCategory === "bilan" && analyse.pendingTests) {
+      const updatedValues = { ...testValues };
+      const text = data.extractedText;
+
+      // Split into lines and words for better parsing
+      const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      const fullText = text.toLowerCase();
+
+      analyse.pendingTests.forEach((test) => {
+        const testLabel = test.label.toLowerCase();
+        const testWords = testLabel.split(/\s+/);
+        const firstWord = testWords[0];
+
+        console.log(`Looking for test: ${test.label}`);
+
+        // Strategy 1: Look for exact label match in lines
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          const lowerLine = line.toLowerCase();
+
+          // Check if line contains the test name
+          if (lowerLine.includes(testLabel) ||
+              lowerLine.includes(firstWord) ||
+              testWords.some(word => word.length > 3 && lowerLine.includes(word))) {
+
+            // Extract all numbers from this line and nearby lines
+            const numbers = line.match(/\d+[.,]?\d*/g);
+
+            if (numbers && numbers.length > 0) {
+              // Find the most likely value (usually the first or last number in the line)
+              // Prefer numbers that look like lab values (with decimals)
+              const valueCandidate = numbers.find(n => n.includes('.') || n.includes(',')) || numbers[numbers.length - 1];
+
+              if (valueCandidate) {
+                // Normalize decimal separator
+                const normalizedValue = valueCandidate.replace(',', '.');
+                updatedValues[test.id] = normalizedValue;
+                console.log(`Found value for ${test.label}: ${normalizedValue}`);
+                break;
+              }
+            }
+
+            // If no number on this line, check next line (value might be on next line)
+            if (i + 1 < lines.length) {
+              const nextLine = lines[i + 1];
+              const nextNumbers = nextLine.match(/\d+[.,]?\d*/g);
+              if (nextNumbers && nextNumbers.length > 0) {
+                const valueCandidate = nextNumbers.find(n => n.includes('.') || n.includes(',')) || nextNumbers[0];
+                const normalizedValue = valueCandidate.replace(',', '.');
+                updatedValues[test.id] = normalizedValue;
+                console.log(`Found value for ${test.label} on next line: ${normalizedValue}`);
+                break;
+              }
+            }
+          }
+        }
+
+        // Strategy 2: If still not found, try fuzzy matching with common abbreviations
+        if (!updatedValues[test.id]) {
+          // Common lab abbreviations
+          const abbreviations: Record<string, string[]> = {
+            'ph': ['ph', 'p.h'],
+            'po2': ['po2', 'po₂', 'pao2', 'pao₂', 'p02'],
+            'pco2': ['pco2', 'pco₂', 'paco2', 'paco₂', 'pc02'],
+            'hco3': ['hco3', 'hco₃', 'bicarbonate'],
+            'glucose': ['glucose', 'glu', 'glycémie', 'glycemie'],
+            'sodium': ['sodium', 'na', 'na+'],
+            'potassium': ['potassium', 'k', 'k+'],
+            'chlore': ['chlore', 'cl', 'cl-'],
+            'calcium': ['calcium', 'ca', 'ca++'],
+            'créatinine': ['créatinine', 'creatinine', 'créat', 'creat'],
+            'urée': ['urée', 'uree', 'bun'],
+            'lactate': ['lactate', 'lac'],
+          };
+
+          for (const [key, aliases] of Object.entries(abbreviations)) {
+            if (testLabel.includes(key)) {
+              for (const alias of aliases) {
+                const regex = new RegExp(`${alias}[\\s:=-]*([\\d.,]+)`, 'gi');
+                const match = fullText.match(regex);
+                if (match && match.length > 0) {
+                  const valueMatch = match[0].match(/[\d.,]+/);
+                  if (valueMatch) {
+                    const normalizedValue = valueMatch[0].replace(',', '.');
+                    updatedValues[test.id] = normalizedValue;
+                    console.log(`Found value for ${test.label} using abbreviation: ${normalizedValue}`);
+                    break;
+                  }
+                }
+              }
+              if (updatedValues[test.id]) break;
+            }
+          }
+        }
+      });
+
+      setTestValues(updatedValues);
+      console.log("Updated test values:", updatedValues);
+    } else if (analyse.bilanCategory !== "bilan") {
+      // For imagerie/anapath, set the textarea with extracted text
+      setTextareaResults(data.extractedText);
+    }
+
+    setIsScannerOpen(false);
   };
 
   const categoryBadgeMap: Record<"bilan" | "imagerie" | "anapath" | "autres", { label: string; color: string }> = {
@@ -227,9 +341,9 @@ export function PendingAnalyseCard({
                       Saisie des résultats
                     </h3>
                     <button
-                      onClick={() => {}}
+                      onClick={() => setIsScannerOpen(true)}
                       className="inline-flex align-end h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition flex-shrink-0"
-                      title="Prendre une photo"
+                      title="Scanner avec caméra"
                     >
                       <Camera className="h-4 w-4" />
                     </button>
@@ -309,6 +423,18 @@ export function PendingAnalyseCard({
           </div>
         </>
       )}
+
+      {/* Scanner Modal */}
+      <AnalysisScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScan={handleScanComplete}
+        testLabels={
+          analyse.bilanCategory === "bilan" && analyse.pendingTests
+            ? analyse.pendingTests.map((test) => test.label)
+            : []
+        }
+      />
     </>
   );
 }

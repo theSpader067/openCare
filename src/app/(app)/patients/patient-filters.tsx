@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { PatientStatus } from "./data";
+import { PatientStatus } from "@/data/patients/patients-data";
 
 type PatientFilters = {
   query: string;

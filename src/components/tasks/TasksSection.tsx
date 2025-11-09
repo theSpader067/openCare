@@ -201,10 +201,10 @@ export function TasksSection({
   };
 
   return (
-    <>
+    <div className="">
       <Card
         className={cn(
-          "flex min-h-0 flex-1 flex-col border-none bg-white/90",
+          "flex max-h-fit flex-1 flex-col border-none bg-white/90",
           cardClassName
         )}
       >
@@ -250,7 +250,7 @@ export function TasksSection({
 
         <CardContent
           className={cn(
-            "flex-1 min-h-0 overflow-hidden pt-0",
+            "flex-1 h-fit overflow-hidden pt-0",
             contentClassName
           )}
         >
@@ -322,7 +322,7 @@ export function TasksSection({
                               )}
                             </span>
                           </button>
-                          <div className="flex flex-1 flex-col gap-2">
+                          <div className="flex flex-1 flex-col gap-2 my-auto">
                             <p
                               className={cn(
                                 "text-sm font-semibold",
@@ -860,6 +860,6 @@ export function TasksSection({
           </p>
         ) : null}
       </Modal>
-    </>
+    </div>
   );
 }

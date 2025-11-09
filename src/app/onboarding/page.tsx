@@ -5,65 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
-
-const specialties = [
-  "Cardiologie",
-  "Chirurgie générale",
-  "Chirurgie viscérale",
-  "Chirurgie thoracique",
-  "Neurochirurgie",
-  "Orthopédie",
-  "Urologie",
-  "Gynécologie-Obstétrique",
-  "Pédiatrie",
-  "Anesthésie-Réanimation",
-  "Radiologie",
-  "Pathologie",
-  "Oncologie",
-  "Gastro-entérologie",
-  "Pneumologie",
-  "Médecine interne",
-  "Rhumatologie",
-  "Dermatologie",
-  "Neurologie",
-  "Ophtalmologie",
-  "ORL",
-  "Dentisterie",
-  "Autre",
-];
-
-const hospitals = [
-  "Hôpital Bicêtre (APHP)",
-  "Hôpital Broussais (APHP)",
-  "Hôpital Cochin (APHP)",
-  "Hôpital de la Pitié-Salpêtrière (APHP)",
-  "Hôpital Lariboisière (APHP)",
-  "Hôpital Saint-Louis (APHP)",
-  "Hôpital Américain de Paris",
-  "Clinique du Val d'Or",
-  "Hospices Civils de Lyon",
-  "CHU de Marseille",
-  "CHU de Nice",
-  "CHU de Toulouse",
-  "CHU de Bordeaux",
-  "CHU de Montpellier",
-  "CHU de Nancy",
-  "CHU de Strasbourg",
-  "CHU de Grenoble",
-  "CHU de Lille",
-  "CHU de Rennes",
-  "CHU de Rouen",
-  "Autre",
-];
-
-const years = [
-  "1ère année",
-  "2ème année",
-  "3ème année",
-  "4ème année",
-  "5ème année",
-  "Spécialiste",
-];
+import { specialties, hospitals, years } from "@/data/onboarding/onboarding-content";
 
 export default function OnboardingPage() {
   const router = useRouter();

@@ -1,4 +1,4 @@
-import { ObservationEntry } from "./data";
+import { ObservationEntry } from "@/data/patients/patients-data";
 import { cn } from "@/lib/utils";
 
 function formatObservationTimestamp(timestamp: string) {

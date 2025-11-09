@@ -41,60 +41,29 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { TasksSection } from "@/components/tasks/TasksSection";
 import type { TaskItem } from "@/types/tasks";
-
-type ActivityType = "consultation" | "chirurgie" | "staff" | "tournee";
+import { statsSummary } from "@/data/dashboard/dashboard-stats";
+import type { Stat } from "@/data/dashboard/dashboard-stats";
+import { mockPatients, initialServicePatients } from "@/data/dashboard/dashboard-patients";
+import type { PatientItem } from "@/data/dashboard/dashboard-patients";
+import { mockFavoriteTasks } from "@/data/dashboard/dashboard-tasks";
+import {
+  activityTypeMeta,
+  patientStatusMeta,
+  labStatusMeta,
+  type ActivityType,
+} from "@/data/dashboard/dashboard-metadata";
+import {
+  generateTasksForDate,
+  getInitialScheduleSeeds,
+  type ActivityItem,
+  type DayData,
+} from "@/data/dashboard/dashboard-schedule";
 
 type ActivityStatus = "done" | "todo";
-
-interface ActivityItem {
-  id: string;
-  type: ActivityType;
-  title: string;
-  description: string;
-  time: string;
-  location?: string;
-  team?: string;
-  status: ActivityStatus;
-}
-
-
-interface PatientItem {
-  id: string;
-  name: string;
-  service: string;
-  diagnosis: string;
-  status: "Pré-op" | "Post-op" | "Surveillance" | "Rééducation";
-  labs: {
-    status: "pending" | "completed" | "na";
-    note: string;
-  };
-}
-
-interface DayData {
-  activities: ActivityItem[];
-  tasks: TaskItem[];
-  patients: PatientItem[];
-}
 
 type SectionKey = "activities" | "tasks" | "patients";
 type ActivityTabKey = "activites" | "bloc" | "divers";
 
-interface StatTheme {
-  card: string;
-  icon: string;
-  accent: string;
-  text: string;
-}
-
-interface Stat {
-  label: string;
-  value: string;
-  variation: string;
-  trend: "up" | "down" | "neutral";
-  icon: ComponentType<{ className?: string }>;
-  hint: string;
-  theme: StatTheme;
-}
 
 interface ActivityFormState {
   title: string;
@@ -115,118 +84,6 @@ interface PatientFormState {
   labsNote: string;
 }
 
-const statsSummary: Stat[] = [
-  {
-    label: "Consultations planifiées",
-    value: "18",
-    variation: "+3 vs hier",
-    trend: "up",
-    icon: UsersRound,
-    hint: "Cabinet et téléconsultations",
-    theme: {
-      card: "bg-gradient-to-br from-[#e0f2ff] via-[#ecf3ff] to-white",
-      icon: "bg-white text-[#0f62fe]",
-      accent: "text-[#0f62fe]",
-      text: "text-[#09356f]",
-    },
-  },
-  {
-    label: "Interventions au bloc",
-    value: "4",
-    variation: "+1 équipe mobilisée",
-    trend: "up",
-    icon: HeartPulse,
-    hint: "Blocs 2 · 5 · 7 · 8",
-    theme: {
-      card: "bg-gradient-to-br from-[#fee2f2] via-[#fff1f7] to-white",
-      icon: "bg-white text-[#d61f69]",
-      accent: "text-[#d61f69]",
-      text: "text-[#8a1547]",
-    },
-  },
-  {
-    label: "Analyses critiques",
-    value: "5",
-    variation: "2 en attente",
-    trend: "neutral",
-    icon: ClipboardList,
-    hint: "Laboratoire central",
-    theme: {
-      card: "bg-gradient-to-br from-[#f7f3ff] via-[#f1f5ff] to-white",
-      icon: "bg-white text-[#7c3aed]",
-      accent: "text-[#7c3aed]",
-      text: "text-[#43338b]",
-    },
-  },
-  {
-    label: "Patients à suivre",
-    value: "9",
-    variation: "-2 vs hier",
-    trend: "down",
-      icon: Activity,
-      hint: "Post-op + surveillance",
-    theme: {
-      card: "bg-gradient-to-br from-[#dcfce7] via-[#f1fff5] to-white",
-      icon: "bg-white text-[#059669]",
-      accent: "text-[#059669]",
-      text: "text-[#0f5132]",
-    },
-  },
-];
-
-// Mock data for patients
-const mockPatients = [
-  { id: "PAT-001", name: "Fatou Diop" },
-  { id: "PAT-002", name: "Jean Dupont" },
-  { id: "PAT-003", name: "Marie Martin" },
-  { id: "PAT-004", name: "Louis Mercier" },
-  { id: "PAT-005", name: "Amina Sow" },
-  { id: "PAT-006", name: "Pierre Leclerc" },
-  { id: "PAT-007", name: "Sophie Renard" },
-  { id: "PAT-008", name: "Ahmed Hassan" },
-];
-
-// Mock favorite tasks for quick selection
-const mockFavoriteTasks = [
-  "Vérifier l'analgésie",
-  "Changer le pansement",
-  "Évaluer les signes vitaux",
-  "Mobilisation passive",
-  "Suivi tension artérielle",
-  "Contrôle drains",
-  "Évaluation cicatrisation",
-  "Bilan de sortie",
-];
-
-const activityTypeMeta: Record<
-  ActivityType,
-  { label: string; icon: ComponentType<{ className?: string }>; badgeClass: string }
-> = {
-  consultation: {
-    label: "Consultation",
-    icon: UsersRound,
-    badgeClass:
-      "bg-gradient-to-br from-[#93c5fd] via-[#60a5fa] to-[#3b82f6] text-white shadow-inner shadow-blue-200/60",
-  },
-  chirurgie: {
-    label: "Bloc opératoire",
-    icon: HeartPulse,
-    badgeClass:
-      "bg-gradient-to-br from-[#fda4af] via-[#fb7185] to-[#f43f5e] text-white shadow-inner shadow-rose-200/60",
-  },
-  staff: {
-    label: "Staff multidisciplinaire",
-    icon: ClipboardList,
-    badgeClass:
-      "bg-gradient-to-br from-[#bae6fd] via-[#67e8f9] to-[#22d3ee] text-[#0c4a6e] shadow-inner shadow-sky-200/60",
-  },
-  tournee: {
-    label: "Tournée secteur",
-    icon: ListChecks,
-    badgeClass:
-      "bg-gradient-to-br from-[#fcd34d] via-[#f59e0b] to-[#f97316] text-[#78350f] shadow-inner shadow-amber-200/60",
-  },
-};
 
 const activityToTab = (activity: ActivityItem): ActivityTabKey => {
   if (activity.type === "chirurgie") {
@@ -238,52 +95,6 @@ const activityToTab = (activity: ActivityItem): ActivityTabKey => {
   return "divers";
 };
 
-const patientStatusMeta: Record<
-  PatientItem["status"],
-  { badgeClass: string; label: string }
-> = {
-  "Pré-op": {
-    badgeClass:
-      "bg-gradient-to-r from-[#facc15] via-[#fbbf24] to-[#f97316] text-[#7c2d12] shadow-inner shadow-amber-200/60",
-    label: "Pré-op",
-  },
-  "Post-op": {
-    badgeClass:
-      "bg-gradient-to-r from-[#22c55e] via-[#10b981] to-[#14b8a6] text-white shadow-inner shadow-emerald-200/60",
-    label: "Post-op",
-  },
-  Surveillance: {
-    badgeClass:
-      "bg-gradient-to-r from-[#60a5fa] via-[#3b82f6] to-[#2563eb] text-white shadow-inner shadow-sky-200/60",
-    label: "Surveillance",
-  },
-  Rééducation: {
-    badgeClass:
-      "bg-gradient-to-r from-[#c084fc] via-[#a855f7] to-[#7c3aed] text-white shadow-inner shadow-violet-200/60",
-    label: "Rééducation",
-  },
-};
-
-const labStatusMeta: Record<
-  PatientItem["labs"]["status"],
-  { badgeClass: string; label: string }
-> = {
-  pending: {
-    badgeClass:
-      "bg-gradient-to-r from-[#f97316]/90 to-[#f59e0b]/90 text-white shadow-inner shadow-amber-200/60",
-    label: "En attente",
-  },
-  completed: {
-    badgeClass:
-      "bg-gradient-to-r from-[#34d399]/90 to-[#22c55e]/90 text-white shadow-inner shadow-emerald-200/60",
-    label: "Dernier résultat",
-  },
-  na: {
-    badgeClass:
-      "bg-gradient-to-r from-[#e2e8f0]/90 to-[#cbd5f5]/90 text-[#1e293b] shadow-inner shadow-slate-200/60",
-    label: "N/A",
-  },
-};
 
 const createEmptyDay = (): DayData => ({
   activities: [],
@@ -347,107 +158,6 @@ const patientStatusOptions: PatientItem["status"][] = [
 
 const labStatusOptions: PatientItem["labs"]["status"][] = ["pending", "completed", "na"];
 
-const generateTasksForDate = (date: Date): TaskItem[] => {
-  const key = formatDateKey(date);
-  const dayName = capitalize(
-    date.toLocaleDateString("fr-FR", { weekday: "long" }),
-  );
-
-  if (date.getDay() === 0) {
-    return [
-      {
-        id: `${key}-TASK-RECUP`,
-        title: "Préparer la reprise du lundi",
-        details:
-          "Mettre à jour la check-list bloc, vérifier les commandes de dispositifs médicaux et confirmer les premières consultations du matin.",
-        done: false,
-      },
-    ];
-  }
-
-  return [
-    {
-      id: `${key}-TASK-01`,
-      title: `Brief infirmier ${dayName}`,
-      details:
-        "Partager les nouvelles consignes post-op avec l'équipe IDE du secteur 5 et planifier les évaluations EVA de la matinée.",
-      done: false,
-    },
-    {
-      id: `${key}-TASK-02`,
-      title: "Validation protocoles antibiotiques",
-      details:
-        "Confirmer avec la pharmacie la disponibilité des traitements IV prévus et vérifier les ordonnances pour les patients sortants.",
-      done: false,
-    },
-    {
-      id: `${key}-TASK-03`,
-      title: "Coordonner imagerie post-op",
-      details:
-        "Réserver un créneau scanner pour Mme Laurier avant 16h et informer l'équipe anesthésie des résultats attendus.",
-      done: false,
-    },
-  ];
-};
-
-const initialServicePatients: PatientItem[] = [
-  {
-    id: "PAT-01",
-    name: "Fatou Diop",
-    service: "Chirurgie digestive",
-    diagnosis: "Colectomie laparoscopique · J+7",
-    status: "Post-op",
-    labs: { status: "completed", note: "CRP 12 mg/L (stable)" },
-  },
-  {
-    id: "PAT-02",
-    name: "Louis Martin",
-    service: "Chirurgie cardiaque",
-    diagnosis: "Pontage coronarien planifié",
-    status: "Pré-op",
-    labs: { status: "pending", note: "Bilan coagulation 11h00" },
-  },
-  {
-    id: "PAT-03",
-    name: "Maria Alvarez",
-    service: "Orthopédie",
-    diagnosis: "Prothèse hanche droite · J+2",
-    status: "Surveillance",
-    labs: { status: "completed", note: "Hb 11.2 g/dL" },
-  },
-  {
-    id: "PAT-04",
-    name: "Jules Bernard",
-    service: "Réanimation",
-    diagnosis: "Traumatisme crânien · suivi neurologique",
-    status: "Rééducation",
-    labs: { status: "na", note: "Suivi kinésithérapie" },
-  },
-  {
-    id: "PAT-05",
-    name: "Sarah Lemoine",
-    service: "Anesthésie",
-    diagnosis: "Évaluation pré-anesthésie – cholécystectomie",
-    status: "Pré-op",
-    labs: { status: "pending", note: "Bilan coagulation 14h" },
-  },
-  {
-    id: "PAT-06",
-    name: "Moussa Diallo",
-    service: "Hôpital de jour",
-    diagnosis: "Préparation hospitalisation à domicile",
-    status: "Surveillance",
-    labs: { status: "completed", note: "Glycémie 1.02 g/L" },
-  },
-  {
-    id: "PAT-07",
-    name: "Nora Petit",
-    service: "Chirurgie digestive",
-    diagnosis: "Révision cicatrice · J+5",
-    status: "Post-op",
-    labs: { status: "na", note: "Contrôle clinique uniquement" },
-  },
-];
 
 export default function DashboardPage() {
   const baseDate = useMemo(() => startOfDay(new Date()), []);
@@ -456,167 +166,7 @@ export default function DashboardPage() {
   );
 
   const scheduleSeeds = useMemo(() => {
-    return {
-      [formatDateKey(baseDate)]: {
-        activities: [
-          {
-            id: "ACT-01",
-            type: "consultation",
-            title: "Consultation - Mme. Leroy",
-            description:
-              "Suivi post-opératoire J+7 : contrôle du pansement, évaluation de la douleur et réglage du traitement.",
-            time: "08:30",
-            location: "Salle 3 · Chirurgie",
-            team: "IDE Claire N. · Interne M. Lenoir",
-            status: "todo",
-          },
-          {
-            id: "ACT-02",
-            type: "chirurgie",
-            title: "Bloc opératoire - Colectomie",
-            description:
-              "Intervention laparoscopique patient Martin B. Prévoir check-list et briefing anesthésie.",
-            time: "10:15",
-            location: "Bloc 5 (équipe A)",
-            team: "Anesth. Dr. Benali · IADE Luc O.",
-            status: "todo",
-          },
-          {
-            id: "ACT-03",
-            type: "staff",
-            title: "Staff digestif pluridisciplinaire",
-            description:
-              "Présentation des dossiers RCP digestif et planification des suites de traitement.",
-            time: "12:30",
-            location: "Salle de conférence 2",
-            team: "Chirurgie · Gastro · Oncologie",
-            status: "done",
-          },
-          {
-            id: "ACT-04",
-            type: "tournee",
-            title: "Tournée post-opératoire (étage 5)",
-            description:
-              "Contrôle des patients chambres 512 à 520, évaluation douleur et mobilisation.",
-            time: "16:00",
-            location: "Service hospitalisation · Étage 5",
-            team: "Interne Léa M. · IDE de garde",
-            status: "todo",
-          },
-        ],
-        tasks: [
-          {
-            id: "TASK-01",
-            title: "Brief infirmier secteur 5",
-            details:
-              "Partager les consignes post-op et vérifier les protocoles analgésiques pour les chambres 512 à 520.",
-          },
-          {
-            id: "TASK-02",
-            title: "Revue bilans critiques",
-            details:
-              "Analyser les résultats hémostase Mme Nguen et bilan hépatique M. Fadel avant la tournée de 15h.",
-          },
-          {
-            id: "TASK-03",
-            title: "Coordination sortie HAD",
-            details:
-              "Préparer la transition de M. Diallo avec l'équipe HAD : matériel, prescription et rendez-vous de suivi.",
-          },
-        ],
-        patients: [],
-      },
-      [formatDateKey(addDays(baseDate, 1))]: {
-        activities: [
-          {
-            id: "TMR-ACT-01",
-            type: "consultation",
-            title: "Consultation d'urgence - M. Renard",
-            description:
-              "Douleurs abdominales aiguës · imagerie prévue après examen clinique.",
-            time: "08:00",
-            location: "Salle 1 · Urgences programmées",
-            team: "IDE Sonia P.",
-            status: "todo",
-          },
-          {
-            id: "TMR-ACT-02",
-            type: "chirurgie",
-            title: "Bloc laparoscopie - Cholécystectomie",
-            description:
-              "Patient L. Carpentier · Prévoir renfort instrumentiste et contrôle check-list.",
-            time: "11:00",
-            location: "Bloc 3 (équipe B)",
-            team: "Anesth. Dr. Kader · IADE Justine D.",
-            status: "todo",
-          },
-          {
-            id: "TMR-ACT-03",
-            type: "staff",
-            title: "Briefing anesthésie",
-            description:
-              "Validation fasting et protocole analgésie pour les interventions de l&apos;après-midi.",
-            time: "14:00",
-            location: "Salle staff anesthésie",
-            team: "Dr. Benali · IADE équipe",
-            status: "todo",
-          },
-        ],
-        tasks: [
-          {
-            id: "TMR-TASK-01",
-            title: "Réaffecter les créneaux bloc 3",
-            details:
-              "Maintenance partielle en cours : coordonner avec le service biomédical et ajuster la planification des équipes.",
-            done: false,
-          },
-          {
-            id: "TMR-TASK-02",
-            title: "Répondre au message cardiologie",
-            details:
-              "Analyser le retour du Dr Evans sur l'ECG du patient Carter et adapter la prise en charge.",
-            done: false,
-          },
-        ],
-        patients: [],
-      },
-      [formatDateKey(addDays(baseDate, 2))]: {
-        activities: [
-          {
-            id: "D2-ACT-01",
-            type: "consultation",
-            title: "Consultation de suivi - Mme. Laurier",
-            description:
-              "Contrôle cicatrice et lecture des résultats d&apos;imagerie post-op.",
-            time: "09:15",
-            location: "Salle 4 · Chirurgie",
-            team: "Interne Hugo T.",
-            status: "todo",
-          },
-          {
-            id: "D2-ACT-02",
-            type: "tournee",
-            title: "Visite coordination HAD",
-            description:
-              "Préparation sortie anticipée de M. Diallo et organisation des soins à domicile.",
-            time: "15:30",
-            location: "Service hôpital de jour",
-            team: "Coordinatrice Amélie B.",
-            status: "todo",
-          },
-        ],
-        tasks: [
-          {
-            id: "D2-TASK-01",
-            title: "Suivi EVA patient Diallo",
-            details:
-              "Programmer un passage IDE pour évaluer la douleur et réévaluer le schéma analgésique.",
-            done: false,
-          },
-        ],
-        patients: [],
-      },
-    };
+    return getInitialScheduleSeeds(baseDate);
   }, [baseDate]);
 
   const [scheduleData, setScheduleData] =
@@ -1010,7 +560,7 @@ export default function DashboardPage() {
     return (
       <Card
         key={options?.key ?? stat.label}
-        className={cn("border-none hidden lg: flex", stat.theme.card, options?.className)}
+        className={cn("border-none", stat.theme.card, options?.className)}
       >
         <CardHeader className="flex flex-row items-start justify-between pb-3">
           <div className="space-y-1">
@@ -1055,7 +605,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="flex h-full flex-col overflow-auto pb-20 lg:pb-0">
+    <div className="flex h-full flex-col overflow-y-auto pb-20 lg:pb-0 overflow-x-hidden">
       <section className="shrink-0 hidden lg:flex">
         {!hasStats ? (
           <Card className="border-dashed border-slate-200 bg-white/70 p-6 text-center text-sm text-slate-500">
@@ -1108,13 +658,13 @@ export default function DashboardPage() {
       </section>
 
       <div className="mt-6 flex-1 min-h-0 lg:w-full">
-        <div className="grid h-full min-h-0 grid-cols-1 gap-6 xl:grid-cols-3">
+        <div className="grid h-full min-h-0 grid-cols-1 gap-6 xl:grid-cols-4">
           <div className="hidden h-full min-h-0 flex-col gap-6 xl:flex">
             {renderCalendarCard()}
             {renderTasksCard()}
           </div>
 
-          <Card className="flex h-full min-h-0 flex-col border-none bg-white/90">
+          <Card className="flex h-full min-h-0 flex-col border-none bg-white/90 xl:col-span-2">
             <CardHeader className="flex flex-col gap-4 pb-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
@@ -1192,7 +742,7 @@ export default function DashboardPage() {
                 <div className="h-full min-h-0 overflow-y-auto pr-1">
                   <ul className="space-y-3">
                     {filteredActivities.map((activity) => {
-                      const meta = activityTypeMeta[activity.type];
+                      const meta = activityTypeMeta[activity.type as ActivityType];
                       const Icon = meta.icon;
                       const done = activity.status === "done";
 
@@ -1290,7 +840,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="flex h-full min-h-0 flex-col border-none bg-white/90 hidden xl:block">
+          <Card className="flex h-full flex-col border-none bg-white/90 hidden xl:block h-[100%]">
             <CardHeader className="flex flex-wrap items-center justify-between gap-3 pb-4">
               <div>
                 <CardTitle>Patients du Service</CardTitle>
@@ -1347,14 +897,11 @@ export default function DashboardPage() {
                             {patient.diagnosis}
                           </td>
                           <td className="px-4 py-3">
-                            <Badge
-                              className={cn(
-                                "px-3 py-1 text-xs font-semibold",
-                                patientStatusMeta[patient.status].badgeClass,
-                              )}
+                            <span
+                              className="px-3 py-1 text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200"
                             >
                               {patientStatusMeta[patient.status].label}
-                            </Badge>
+                            </span>
                           </td>
                           
                         </tr>
@@ -1561,10 +1108,10 @@ export default function DashboardPage() {
               variant="muted"
               className={cn(
                 "bg-white/70",
-                activityTypeMeta[activityDetail.type].badgeClass,
+                activityTypeMeta[activityDetail.type as ActivityType].badgeClass,
               )}
             >
-              {activityTypeMeta[activityDetail.type].label}
+              {activityTypeMeta[activityDetail.type as ActivityType].label}
             </Badge>
             <p className="leading-relaxed">{activityDetail.description}</p>
             {activityDetail.location ? (

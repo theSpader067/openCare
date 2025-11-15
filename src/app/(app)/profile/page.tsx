@@ -206,6 +206,7 @@ export default function ProfilePage() {
 
   // Pending requests dropdown
   const [isPendingRequestsOpen, setIsPendingRequestsOpen] = useState(false);
+  const [processingRequestId, setProcessingRequestId] = useState<string | null>(null);
 
   // Personal info form with loading state
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo | null>(null);
@@ -427,6 +428,65 @@ export default function ProfilePage() {
     } catch (error) {
       console.error("Error joining team:", error);
       setJoiningTeamId(null);
+    }
+  };
+
+  const handleAcceptRequest = async (requestId: string) => {
+    setProcessingRequestId(requestId);
+
+    try {
+      const response = await fetch(`/api/team-requests/${requestId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to accept request");
+      }
+
+      // Remove the request from the list
+      setJoinRequests(joinRequests.filter((r) => r.id !== requestId));
+
+      // Refresh teams list to show the new member added
+      const teamsResponse = await fetch("/api/teams");
+      if (teamsResponse.ok) {
+        const teamsData = await teamsResponse.json();
+        setUserTeams(teamsData.teams);
+      }
+
+      setProcessingRequestId(null);
+    } catch (error) {
+      console.error("Error accepting request:", error);
+      setProcessingRequestId(null);
+    }
+  };
+
+  const handleDeclineRequest = async (requestId: string) => {
+    setProcessingRequestId(requestId);
+
+    try {
+      const response = await fetch(`/api/team-requests/${requestId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to decline request");
+      }
+
+      // Remove the request from the list
+      setJoinRequests(joinRequests.filter((r) => r.id !== requestId));
+
+      setProcessingRequestId(null);
+    } catch (error) {
+      console.error("Error declining request:", error);
+      setProcessingRequestId(null);
     }
   };
 
@@ -1065,26 +1125,30 @@ export default function ProfilePage() {
                                 {/* Action Buttons */}
                                 <div className="flex gap-2">
                                   <button
-                                    onClick={() => {
-                                      // Handle accept
-                                      setJoinRequests(joinRequests.filter(r => r.id !== request.id));
-                                    }}
-                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition font-medium text-sm"
+                                    onClick={() => handleAcceptRequest(request.id)}
+                                    disabled={processingRequestId === request.id}
+                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                     title="Accepter"
                                   >
-                                    <Check className="h-4 w-4" />
-                                    Accepter
+                                    {processingRequestId === request.id ? (
+                                      <div className="h-4 w-4 rounded-full border-2 border-emerald-300 border-t-emerald-700 animate-spin" />
+                                    ) : (
+                                      <Check className="h-4 w-4" />
+                                    )}
+                                    {processingRequestId === request.id ? "..." : "Accepter"}
                                   </button>
                                   <button
-                                    onClick={() => {
-                                      // Handle decline
-                                      setJoinRequests(joinRequests.filter(r => r.id !== request.id));
-                                    }}
-                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition font-medium text-sm"
+                                    onClick={() => handleDeclineRequest(request.id)}
+                                    disabled={processingRequestId === request.id}
+                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                     title="Refuser"
                                   >
-                                    <X className="h-4 w-4" />
-                                    Refuser
+                                    {processingRequestId === request.id ? (
+                                      <div className="h-4 w-4 rounded-full border-2 border-red-300 border-t-red-700 animate-spin" />
+                                    ) : (
+                                      <X className="h-4 w-4" />
+                                    )}
+                                    {processingRequestId === request.id ? "..." : "Refuser"}
                                   </button>
                                 </div>
                               </div>

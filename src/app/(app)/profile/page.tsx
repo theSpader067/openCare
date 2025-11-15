@@ -23,6 +23,7 @@ import {
   Stethoscope,
   Edit2,
   Trash2,
+  MoreVertical,
 } from "lucide-react";
 import {
   pendingJoinRequests,
@@ -184,6 +185,15 @@ export default function ProfilePage() {
   const [isUpdatingTeam, setIsUpdatingTeam] = useState(false);
   const [teamUpdateError, setTeamUpdateError] = useState<string | null>(null);
 
+  // Delete team modal
+  const [isDeleteTeamOpen, setIsDeleteTeamOpen] = useState(false);
+  const [deletingTeamId, setDeletingTeamId] = useState<string | null>(null);
+  const [isDeletingTeam, setIsDeletingTeam] = useState(false);
+  const [teamDeleteError, setTeamDeleteError] = useState<string | null>(null);
+
+  // Team menu dropdown
+  const [openMenuTeamId, setOpenMenuTeamId] = useState<string | null>(null);
+
   // Personal info form with loading state
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo | null>(null);
   const [originalPersonalInfo, setOriginalPersonalInfo] = useState<PersonalInfo | null>(null);
@@ -242,6 +252,9 @@ export default function ProfilePage() {
           name: team.name,
           members: team.members?.length || 0,
           joined: true,
+          adminId: team.adminId?.toString(),
+          hospital: team.hospital,
+          service: team.service,
           description: team.service ? `Service: ${team.service}` : (team.hospital ? `Hôpital: ${team.hospital}` : "Équipe"),
           teamMembers: team.members?.map((member: any) => ({
             id: member.id.toString(),
@@ -1072,7 +1085,7 @@ export default function ProfilePage() {
               </div>
 
               {/* Teams List */}
-              <div className="space-y-4">
+              <div className="space-y-4 mb-4">
                 {userTeams.map((team, idx) => {
                   const colors = [
                     { bg: "from-indigo-600 to-indigo-700", light: "bg-indigo-100", text: "text-indigo-900" },
@@ -1082,8 +1095,7 @@ export default function ProfilePage() {
                   ];
                   const colorScheme = colors[idx % colors.length];
                   const adminCount = team.teamMembers?.filter((m: any) => m.role === "Admin").length || 0;
-                  const isAdmin = team.teamMembers?.some((m: any) => m.role === "Admin" && m.id === (personalInfo?.avatar));
-
+                  const isAdmin = team.adminId === (session?.user as any).id;
                   return (
                     <div
                       key={team.id}
@@ -1095,8 +1107,8 @@ export default function ProfilePage() {
                           <div className={`h-12 w-12 rounded-lg bg-white/20 flex items-center justify-center text-white font-bold text-lg flex-shrink-0`}>
                             {team.name.charAt(0).toUpperCase()}
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <h3 className="text-white font-semibold text-base">{team.name}</h3>
+                          <div className="min-w-0 flex-1 my-auto">
+                            <h1 className="text-white font-semibold my-auto text-2xl">{team.name}</h1>
                             {(team.hospital || team.service) && (
                               <div className="flex items-center gap-2 mt-1.5 text-xs text-white/70">
                                 {team.hospital && <span>{team.hospital}</span>}
@@ -1107,22 +1119,50 @@ export default function ProfilePage() {
                           </div>
                         </div>
 
-                        {/* Edit Button - Only visible if user is admin */}
+                        {/* Menu Button - Only visible if user is admin */}
                         {isAdmin && (
-                          <button
-                            onClick={() => {
-                              setEditingTeamId(team.id);
-                              setEditTeamName(team.name);
-                              setEditTeamHospital(team.hospital || "");
-                              setEditTeamService(team.service || "");
-                              setSelectedMembers(new Set(team.teamMembers?.map((m: any) => m.id) || []));
-                              setIsEditTeamOpen(true);
-                              setTeamUpdateError(null);
-                            }}
-                            className="flex-shrink-0 p-2 rounded-lg bg-white/20 text-white hover:bg-white/30 transition"
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </button>
+                          <div className="relative">
+                            <button
+                              onClick={() => setOpenMenuTeamId(openMenuTeamId === team.id ? null : team.id)}
+                              className="flex-shrink-0 p-2 rounded-lg bg-white/20 text-white hover:bg-white/30 transition hover:cursor-pointer"
+                            >
+                              <MoreVertical className="h-5 w-5" />
+                            </button>
+
+                            {/* Dropdown Menu */}
+                            {openMenuTeamId === team.id && (
+                              <div className="absolute right-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                                <button
+                                  onClick={() => {
+                                    setEditingTeamId(team.id);
+                                    setEditTeamName(team.name);
+                                    setEditTeamHospital(team.hospital || "");
+                                    setEditTeamService(team.service || "");
+                                    setSelectedMembers(new Set(team.teamMembers?.map((m: any) => m.id) || []));
+                                    setIsEditTeamOpen(true);
+                                    setTeamUpdateError(null);
+                                    setOpenMenuTeamId(null);
+                                  }}
+                                  className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition"
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                  Modifier
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setDeletingTeamId(team.id);
+                                    setIsDeleteTeamOpen(true);
+                                    setTeamDeleteError(null);
+                                    setOpenMenuTeamId(null);
+                                  }}
+                                  className="w-full text-left px-4 py-2.5 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2 transition border-t border-slate-200"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  Supprimer
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         )}
                       </div>
 
@@ -1458,9 +1498,60 @@ export default function ProfilePage() {
                     </Button>
                     <Button
                       variant="primary"
-                      onClick={() => {
-                        // TODO: Implement team update API call
-                        setIsEditTeamOpen(false);
+                      onClick={async () => {
+                        if (!editingTeamId) return;
+
+                        setIsUpdatingTeam(true);
+                        setTeamUpdateError(null);
+
+                        try {
+                          const response = await fetch(`/api/teams/${editingTeamId}`, {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              name: editTeamName,
+                              hospital: editTeamHospital,
+                              service: editTeamService,
+                              members: Array.from(selectedMembers),
+                            }),
+                          });
+
+                          if (!response.ok) {
+                            throw new Error("Failed to update team");
+                          }
+
+                          // Refresh teams list
+                          const teamsResponse = await fetch("/api/teams");
+                          if (teamsResponse.ok) {
+                            const data = await teamsResponse.json();
+                            const transformedTeams = (data.teams || []).map((team: any) => ({
+                              id: team.id.toString(),
+                              name: team.name,
+                              members: team.members?.length || 0,
+                              joined: true,
+                              adminId: team.adminId?.toString(),
+                              hospital: team.hospital,
+                              service: team.service,
+                              description: team.service ? `Service: ${team.service}` : (team.hospital ? `Hôpital: ${team.hospital}` : "Équipe"),
+                              teamMembers: team.members?.map((member: any) => ({
+                                id: member.id.toString(),
+                                name: `${member.firstName || ""} ${member.lastName || ""}`.trim(),
+                                avatar: `${member.firstName?.[0] || ""}${member.lastName?.[0] || ""}`.toUpperCase(),
+                                role: team.adminId === member.id ? "Admin" : "Membre",
+                                specialty: member.specialty || "",
+                              })),
+                            }));
+                            setUserTeams(transformedTeams);
+                          }
+
+                          setIsEditTeamOpen(false);
+                          setEditingTeamId(null);
+                        } catch (error) {
+                          console.error("Error updating team:", error);
+                          setTeamUpdateError("Erreur lors de la modification de l'équipe");
+                        } finally {
+                          setIsUpdatingTeam(false);
+                        }
                       }}
                       disabled={!editTeamName || isUpdatingTeam}
                       className="flex-1"
@@ -1476,6 +1567,92 @@ export default function ProfilePage() {
                     </Button>
                   </div>
                 </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Delete Team Confirmation Modal */}
+          {isDeleteTeamOpen && deletingTeamId && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+              <Card className="w-full max-w-md border-none shadow-xl">
+                <CardHeader>
+                  <CardTitle>Supprimer l'équipe</CardTitle>
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-red-50 border border-red-200">
+                    <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-red-800">
+                      <span className="font-semibold">Attention:</span> Cette action est irreversible. L'équipe et toutes ses données seront supprimées définitivement.
+                    </p>
+                  </div>
+
+                  {teamDeleteError && (
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700">
+                      <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                      <p className="text-sm">{teamDeleteError}</p>
+                    </div>
+                  )}
+
+                  <p className="text-sm text-slate-700">
+                    Êtes-vous sûr de vouloir supprimer <span className="font-semibold">"{userTeams.find(t => t.id === deletingTeamId)?.name}"</span>?
+                  </p>
+                </CardContent>
+
+                <div className="flex gap-3 px-6 py-4 border-t border-slate-200 bg-slate-50">
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setIsDeleteTeamOpen(false);
+                      setDeletingTeamId(null);
+                      setTeamDeleteError(null);
+                    }}
+                    disabled={isDeletingTeam}
+                    className="flex-1"
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={async () => {
+                      if (!deletingTeamId) return;
+
+                      setIsDeletingTeam(true);
+                      setTeamDeleteError(null);
+
+                      try {
+                        const response = await fetch(`/api/teams/${deletingTeamId}`, {
+                          method: "DELETE",
+                        });
+
+                        if (!response.ok) {
+                          throw new Error("Failed to delete team");
+                        }
+
+                        // Remove team from list
+                        setUserTeams(userTeams.filter(t => t.id !== deletingTeamId));
+                        setIsDeleteTeamOpen(false);
+                        setDeletingTeamId(null);
+                      } catch (error) {
+                        console.error("Error deleting team:", error);
+                        setTeamDeleteError("Erreur lors de la suppression de l'équipe");
+                      } finally {
+                        setIsDeletingTeam(false);
+                      }
+                    }}
+                    disabled={isDeletingTeam}
+                    className="flex-1 bg-red-600 hover:bg-red-700"
+                  >
+                    {isDeletingTeam ? (
+                      <>
+                        <Loader className="mr-2 h-4 w-4 animate-spin" />
+                        Suppression...
+                      </>
+                    ) : (
+                      "Supprimer"
+                    )}
+                  </Button>
+                </div>
               </Card>
             </div>
           )}

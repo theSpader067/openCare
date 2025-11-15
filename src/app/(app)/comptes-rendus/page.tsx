@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Calendar, FilePlus, MailPlus, Plus, Stethoscope, User, X } from "lucide-react";
+import { Calendar, FilePlus, Stethoscope, User, X, Plus, MoreVertical, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataListLayout } from "@/components/document/DataListLayout";
 import { PatientModal } from "@/components/document/PatientModal";
 import type { Patient } from "@/types/document";
-import { operationTypes, teamMembers, mockPatients, mockOperations } from "@/data/comptes-rendus/comptes-rendus-data";
+import { operationTypes, teamMembers, mockPatients } from "@/data/comptes-rendus/comptes-rendus-data";
+import { createCompteRendu, getComptesRendus, deleteCompteRendu } from "@/lib/api/comptes-rendus";
+import type { DocumentItem } from "@/types/document";
 
 type Operation = {
   id: string;
@@ -19,6 +21,9 @@ type Operation = {
   details: string;
   postNotes: string;
   patient?: Patient;
+  patientName?: string;
+  patientAge?: string;
+  patientHistory?: string;
   createdAt: string;
   createdBy: string;
 };
@@ -44,19 +49,60 @@ function formatDate(dateString: string) {
 }
 
 export default function ComptesRendusPage() {
-  const [operations, setOperations] = useState<Operation[]>(mockOperations);
-  const [activeOperationId, setActiveOperationId] = useState<string | null>(
-    mockOperations[0]?.id ?? null
-  );
+  const [operations, setOperations] = useState<Operation[]>([]);
+  const [activeOperationId, setActiveOperationId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
-  const [mobilePanelMode, setMobilePanelMode] = useState<"view" | "create" | null>(
-    null
-  );
+  const [mobilePanelMode, setMobilePanelMode] = useState<"view" | "create" | null>(null);
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [showOperatorSelect, setShowOperatorSelect] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  // Load comptes-rendus from API on mount
+  useEffect(() => {
+    const loadOperations = async () => {
+      try {
+        setIsLoading(true);
+        const result = await getComptesRendus();
+        if (result.success && result.data) {
+          const convertedOps = result.data.map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            type: item.type,
+            date: item.date,
+            duration: item.duration,
+            operators: item.operators,
+            details: item.details,
+            postNotes: item.postNotes,
+            patient: item.patient,
+            patientName: item.patientName,
+            patientAge: item.patientAge,
+            patientHistory: item.patientHistory,
+            createdAt: item.createdAt,
+            createdBy: "Vous",
+          }));
+          setOperations(convertedOps);
+          if (convertedOps.length > 0) {
+            setActiveOperationId(convertedOps[0].id);
+          }
+        } else {
+          console.error("Failed to load comptes-rendus:", result.error);
+        }
+      } catch (error) {
+        console.error("Error loading comptes-rendus:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadOperations();
+  }, []);
 
   const [createForm, setCreateForm] = useState({
     title: "",
@@ -65,37 +111,81 @@ export default function ComptesRendusPage() {
     duration: "",
     operators: [] as Operator[],
     patient: null as Patient | null,
+    patientSource: null as "db" | "new" | null,
+    patientName: "",
+    patientAge: "",
+    patientHistory: "",
     details: "",
     postNotes: "",
   });
 
+  const userOperations = useMemo(() => {
+    return operations.filter((op) => op.createdBy === "Vous");
+  }, [operations]);
+
   const filteredOperations = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
-    return operations.filter((op) => {
+    return userOperations.filter((op) => {
       return (
         !query ||
-        op.type.toLowerCase().includes(query) ||
         op.title.toLowerCase().includes(query) ||
-        op.createdBy.toLowerCase().includes(query) ||
+        op.type.toLowerCase().includes(query) ||
         op.details.toLowerCase().includes(query) ||
         op.patient?.fullName.toLowerCase().includes(query) ||
+        op.patientName?.toLowerCase().includes(query) ||
         op.operators.some((o) => o.name.toLowerCase().includes(query))
       );
     });
-  }, [operations, searchTerm]);
+  }, [userOperations, searchTerm]);
+
+  const parsedOperations = useMemo(() => {
+    return operations.map((op) => ({
+      id: op.id,
+      title: op.title,
+      date: op.date,
+      type: op.type,
+      duration: op.duration,
+      operators: op.operators,
+      details: op.details,
+      postNotes: op.postNotes,
+      patient: op.patient,
+      patientName: op.patientName,
+      patientAge: op.patientAge,
+      patientHistory: op.patientHistory,
+      createdAt: op.createdAt,
+      createdBy: op.createdBy,
+    } as DocumentItem));
+  }, [operations]);
+
+  const parsedFilteredOperations = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    return parsedOperations
+      .filter((op) => op.createdBy === "Vous")
+      .filter((op) => {
+        return (
+          !query ||
+          op.title.toLowerCase().includes(query) ||
+          ((op as any).type && (op as any).type.toLowerCase().includes(query)) ||
+          ((op as any).details && (op as any).details.toLowerCase().includes(query)) ||
+          (op.patient?.fullName && op.patient.fullName.toLowerCase().includes(query)) ||
+          ((op as any).patientName && (op as any).patientName.toLowerCase().includes(query)) ||
+          ((op as any).operators && (op as any).operators.some((o: any) => o.name.toLowerCase().includes(query)))
+        );
+      });
+  }, [parsedOperations, searchTerm]);
 
   useEffect(() => {
-    if (!isCreateMode && !activeOperationId && filteredOperations.length > 0) {
-      setActiveOperationId(filteredOperations[0].id);
+    if (!isCreateMode && !activeOperationId && parsedFilteredOperations.length > 0) {
+      setActiveOperationId(parsedFilteredOperations[0].id);
     }
-  }, [activeOperationId, filteredOperations, isCreateMode]);
+  }, [activeOperationId, parsedFilteredOperations, isCreateMode]);
 
   const activeOperation = useMemo(() => {
     if (!activeOperationId) {
       return null;
     }
-    return operations.find((op) => op.id === activeOperationId) ?? null;
-  }, [activeOperationId, operations]);
+    return parsedOperations.find((op) => op.id === activeOperationId) as Operation | null ?? null;
+  }, [activeOperationId, parsedOperations]);
 
   const closeMobilePanel = () => {
     setIsMobilePanelOpen(false);
@@ -125,6 +215,10 @@ export default function ComptesRendusPage() {
       duration: "",
       operators: [],
       patient: null,
+      patientSource: null,
+      patientName: "",
+      patientAge: "",
+      patientHistory: "",
       details: "",
       postNotes: "",
     });
@@ -162,7 +256,14 @@ export default function ComptesRendusPage() {
   };
 
   const handleSelectPatient = (patient: Patient) => {
-    setCreateForm((prev) => ({ ...prev, patient }));
+    setCreateForm((prev) => ({
+      ...prev,
+      patient,
+      patientSource: "db",
+      patientName: "",
+      patientAge: "",
+      patientHistory: "",
+    }));
     setShowPatientModal(false);
   };
 
@@ -170,52 +271,141 @@ export default function ComptesRendusPage() {
     if (!formData.fullName?.trim()) {
       return;
     }
-    const newPatient: Patient = {
-      id: `P-${Date.now()}`,
-      fullName: formData.fullName,
-      histoire: formData.histoire || "",
-    };
-    setCreateForm((prev) => ({ ...prev, patient: newPatient }));
+
+    setCreateForm((prev) => ({
+      ...prev,
+      patientSource: "new",
+      patientName: formData.fullName.trim(),
+      patientAge: formData.age?.trim() || "",
+      patientHistory: formData.histoire?.trim() || "",
+      patient: null,
+    }));
     setShowPatientModal(false);
   };
 
-  const handleCreateOperation = () => {
+  const handleCreateOperation = async () => {
     if (
-      !createForm.type ||
       !createForm.title ||
+      !createForm.type ||
       !createForm.date ||
       !createForm.duration ||
       !createForm.details ||
       !createForm.postNotes ||
       createForm.operators.length === 0 ||
-      !createForm.patient
+      !createForm.patientSource
     ) {
       return;
     }
+
     setIsSubmitting(true);
-    const newOperation: Operation = {
-      id: `OP-${Date.now()}`,
-      title: createForm.title,
-      type: createForm.type,
-      date: createForm.date,
-      duration: parseInt(createForm.duration),
-      operators: createForm.operators,
-      patient: createForm.patient,
-      details: createForm.details,
-      postNotes: createForm.postNotes,
-      createdAt: new Date().toISOString(),
-      createdBy: "Dr. Marie Dupont",
-    };
-    setTimeout(() => {
-      setOperations((previous) => [newOperation, ...previous]);
-      setIsCreateMode(false);
-      if (typeof window !== "undefined" && window.innerWidth < 1280) {
-        setMobilePanelMode("view");
-        setIsMobilePanelOpen(true);
+
+    try {
+      // Prepare API data based on patient source
+      const apiData = {
+        title: createForm.title,
+        type: createForm.type,
+        date: createForm.date,
+        duration: parseInt(createForm.duration),
+        details: createForm.details,
+        postNotes: createForm.postNotes,
+      };
+
+      if (createForm.patientSource === "db" && createForm.patient) {
+        // Use existing patient from DB
+        Object.assign(apiData, {
+          patientId: createForm.patient.id,
+          patientName: '',
+          patientAge: '',
+          patientHistory: '',
+        });
+      } else {
+        // Use new patient data
+        Object.assign(apiData, {
+          patientId: '',
+          patientName: createForm.patientName,
+          patientAge: createForm.patientAge,
+          patientHistory: createForm.patientHistory,
+        });
       }
-      setActiveOperationId(newOperation.id);
+
+      // Prepare operator IDs
+      const operatorIds = createForm.operators.map((op) => parseInt(op.id) || op.id);
+      console.log(apiData)
+      const result = await createCompteRendu({
+        ...apiData,
+        operatorIds,
+      } as any);
+
+      if (result.success && result.data) {
+        // Convert the response data to match our Operation type
+        const newOperation: Operation = {
+          id: result.data.id,
+          title: result.data.title,
+          type: result.data.type,
+          date: result.data.date,
+          duration: result.data.duration,
+          operators: result.data.operators,
+          details: result.data.details,
+          postNotes: result.data.postNotes,
+          patient: result.data.patient,
+          createdAt: result.data.createdAt,
+          createdBy: "Vous",
+        };
+
+        setOperations((prev) => [newOperation, ...prev]);
+        setIsCreateMode(false);
+        closeMobilePanel();
+        setActiveOperationId(newOperation.id);
+        setCreateForm({
+          title: "",
+          type: "",
+          date: new Date().toISOString().split("T")[0],
+          duration: "",
+          operators: [],
+          patient: null,
+          patientSource: null,
+          patientName: "",
+          patientAge: "",
+          patientHistory: "",
+          details: "",
+          postNotes: "",
+        });
+      } else {
+        console.error("Failed to create compte-rendu:", result.error);
+      }
+    } catch (error) {
+      console.error("Error creating compte-rendu:", error);
+    } finally {
       setIsSubmitting(false);
-    }, 350);
+    }
+  };
+
+  const handleDeleteOperation = async () => {
+    if (!deleteTargetId) return;
+
+    setIsDeleting(true);
+    try {
+      const result = await deleteCompteRendu(deleteTargetId);
+      if (result.success) {
+        // Remove from list
+        setOperations((prev) => prev.filter((op) => op.id !== deleteTargetId));
+        // Clear selection if it was the active item
+        if (activeOperationId === deleteTargetId) {
+          setActiveOperationId(null);
+          setIsCreateMode(false);
+        }
+        // Close dialog
+        setShowDeleteConfirm(false);
+        setDeleteTargetId(null);
+      } else {
+        console.error("Failed to delete rapport:", result.error);
+      }
+    } catch (error) {
+      console.error("Error deleting rapport:", error);
+    } finally {
+      setIsDeleting(false);
+      setOpenMenuId(null);
+    }
   };
 
   const availableOperators = teamMembers.filter(
@@ -230,7 +420,7 @@ export default function ComptesRendusPage() {
     createForm.details &&
     createForm.postNotes &&
     createForm.operators.length > 0 &&
-    createForm.patient;
+    createForm.patientSource;
 
   const createFormContent = (
     <div className="space-y-4">
@@ -310,19 +500,114 @@ export default function ComptesRendusPage() {
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
           Patient
         </label>
-        <button
-          type="button"
-          onClick={() => setShowPatientModal(true)}
-          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-        >
-          {createForm.patient ? (
-            <span className="font-medium text-slate-900">
-              {createForm.patient.fullName}
-            </span>
-          ) : (
-            <span className="text-slate-500">Sélectionner un patient</span>
-          )}
-        </button>
+
+        {!createForm.patientSource ? (
+          // Show patient selection button
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowPatientModal(true)}
+            className="w-full justify-center"
+          >
+            <User className="mr-2 h-4 w-4" />
+            Sélectionner un patient
+          </Button>
+        ) : createForm.patientSource === "db" ? (
+          // Show selected patient from DB
+          <div className="space-y-2">
+            <input
+              type="text"
+              value={createForm.patient?.fullName || ""}
+              readOnly
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700"
+            />
+            <input
+              type="hidden"
+              value={createForm.patient?.id || ""}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() =>
+                setCreateForm((prev) => ({
+                  ...prev,
+                  patientSource: null,
+                  patient: null,
+                }))
+              }
+              className="w-full text-sm"
+            >
+              Changer de patient
+            </Button>
+          </div>
+        ) : (
+          // Show new patient fields
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                Nom du patient
+              </label>
+              <input
+                type="text"
+                value={createForm.patientName}
+                onChange={(e) =>
+                  setCreateForm((prev) => ({ ...prev, patientName: e.target.value }))
+                }
+                placeholder="Ex: Jean Dupont"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 mt-1"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                Âge du patient
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="150"
+                value={createForm.patientAge}
+                onChange={(e) =>
+                  setCreateForm((prev) => ({ ...prev, patientAge: e.target.value }))
+                }
+                placeholder="Ex: 65"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 mt-1"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                Antécédents du patient
+              </label>
+              <textarea
+                value={createForm.patientHistory}
+                onChange={(e) =>
+                  setCreateForm((prev) => ({ ...prev, patientHistory: e.target.value }))
+                }
+                placeholder="Historique médical, allergies, traitements actuels..."
+                rows={2}
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 mt-1"
+              />
+            </div>
+
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() =>
+                setCreateForm((prev) => ({
+                  ...prev,
+                  patientSource: null,
+                  patientName: "",
+                  patientAge: "",
+                  patientHistory: "",
+                }))
+              }
+              className="w-full text-sm"
+            >
+              Sélectionner un autre patient
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Operators */}
@@ -423,7 +708,7 @@ export default function ComptesRendusPage() {
     <>
       {/* Header with Type/Surgeon and Date */}
       <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-200">
-        <div>
+        <div className="flex-1">
           <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
             Chirurgien principal
           </p>
@@ -431,7 +716,7 @@ export default function ComptesRendusPage() {
             {activeOperation.createdBy}
           </p>
         </div>
-        <div className="text-right">
+        <div className="text-right flex-1">
           <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
             Date
           </p>
@@ -452,18 +737,81 @@ export default function ComptesRendusPage() {
       </div>
 
       {/* Patient Info */}
-      {activeOperation.patient && (
+      {(activeOperation.patient || activeOperation.patientName) && (
         <section className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50 p-4 shadow-sm">
           <header className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-indigo-600">
             <User className="h-4 w-4" />
             Patient
           </header>
-          <p className="text-sm font-semibold text-slate-900">
-            {activeOperation.patient.fullName}
-          </p>
-          <p className="text-sm text-slate-700 mt-2 leading-relaxed">
-            {(activeOperation.patient as any).histoire}
-          </p>
+          <div className="space-y-3">
+            {/* Patient from DB */}
+            {activeOperation.patient && (
+              <>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-indigo-500 font-semibold mb-1">
+                    Nom
+                  </p>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {activeOperation.patient.fullName}
+                  </p>
+                </div>
+                {(activeOperation.patient as any).age && (
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-indigo-500 font-semibold mb-1">
+                      Âge
+                    </p>
+                    <p className="text-sm font-medium text-slate-800">
+                      {(activeOperation.patient as any).age} ans
+                    </p>
+                  </div>
+                )}
+                {(activeOperation.patient as any).histoire && (
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-indigo-500 font-semibold mb-1">
+                      Antécédents
+                    </p>
+                    <p className="text-sm text-slate-700 leading-relaxed">
+                      {(activeOperation.patient as any).histoire}
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Inline Patient Data */}
+            {!activeOperation.patient && activeOperation.patientName && (
+              <>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-indigo-500 font-semibold mb-1">
+                    Nom
+                  </p>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {activeOperation.patientName}
+                  </p>
+                </div>
+                {activeOperation.patientAge && (
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-indigo-500 font-semibold mb-1">
+                      Âge
+                    </p>
+                    <p className="text-sm font-medium text-slate-800">
+                      {activeOperation.patientAge} ans
+                    </p>
+                  </div>
+                )}
+                {activeOperation.patientHistory && (
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-indigo-500 font-semibold mb-1">
+                      Antécédents
+                    </p>
+                    <p className="text-sm text-slate-700 leading-relaxed">
+                      {activeOperation.patientHistory}
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </section>
       )}
 
@@ -540,38 +888,71 @@ export default function ComptesRendusPage() {
     </>
   ) : null;
 
-  const renderListItemContent = (operation: Operation) => (
-    <>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-1">
-          <p className="text-sm font-semibold text-slate-800">
-            {operation.title}
-          </p>
-          <p className="text-xs text-slate-500">
-            {operation.type} • {operation.createdBy}
-          </p>
+  const renderListItemContent = (item: DocumentItem) => {
+    const operation = item as Operation;
+    return (
+      <>
+        <div className="flex flex-wrap items-start justify-between gap-3 relative">
+          <div className="space-y-1 flex-1">
+            <p className="text-sm font-semibold text-slate-800">
+              {operation.title}
+            </p>
+            <p className="text-xs text-slate-500">
+              {(operation as any).type} • Créé par {operation.createdBy}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-400">
+              {formatDate(operation.date)}
+            </span>
+            <div className="relative">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenMenuId(openMenuId === operation.id ? null : operation.id);
+                }}
+                className="p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </button>
+              {openMenuId === operation.id && (
+                <div className="absolute right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteTargetId(operation.id);
+                      setShowDeleteConfirm(true);
+                      setOpenMenuId(null);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 rounded-t-lg"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Supprimer
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-        <span className="text-xs text-slate-400">
-          {formatDate(operation.date)}
-        </span>
-      </div>
-      {operation.patient && (
-        <div className="mt-3 rounded-xl border border-slate-200/70 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+        {(operation.patient || (operation as any).patientName) && (
+          <div className="mt-3 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
+            <User className="h-4 w-4 text-slate-400 flex-shrink-0" />
+            <p className="font-semibold text-slate-700 text-xs">
+              {operation.patient?.fullName || (operation as any).patientName}
+            </p>
+          </div>
+        )}
+        <div className="mt-3 space-y-1 text-xs text-slate-600">
           <p className="font-semibold text-slate-700">
-            {operation.patient.fullName}
+            {(operation as any).duration}min • {(operation as any).operators.length} opérateurs
+          </p>
+          <p className="text-xs text-slate-500 line-clamp-1">
+            {(operation as any).operators.map((o: any) => o.name).join(", ")}
           </p>
         </div>
-      )}
-      <div className="mt-3 space-y-1 text-xs text-slate-600">
-        <p className="font-semibold text-slate-700">
-          {operation.duration}min • {operation.operators.length} opérateurs
-        </p>
-        <p className="text-xs text-slate-500 line-clamp-1">
-          {operation.operators.map((o) => o.name).join(", ")}
-        </p>
-      </div>
-    </>
-  );
+      </>
+    );
+  };
 
   return (
     <>
@@ -579,7 +960,7 @@ export default function ComptesRendusPage() {
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Comptes rendus opératoires</h1>
           <p className="text-sm text-slate-500">
-          Documentez vos interventions chirurgicales et consultez les détails de chaque opération.
+            Documentez vos interventions chirurgicales et consultez les détails de chaque opération.
           </p>
         </div>
         <Button
@@ -587,26 +968,26 @@ export default function ComptesRendusPage() {
           className="w-full sm:w-auto hidden xl:flex"
           onClick={handleOpenCreate}
         >
-          <MailPlus className="mr-2 h-4 w-4" />
-          nouveau compte rendu
+          <FilePlus className="mr-2 h-4 w-4" />
+          Nouveau compte rendu
         </Button>
       </section>
       <DataListLayout
-        items={operations}
-        filteredItems={filteredOperations}
+        items={parsedOperations}
+        filteredItems={parsedFilteredOperations}
         activeItemId={activeOperationId}
         isCreateMode={isCreateMode}
         isMobilePanelOpen={isMobilePanelOpen}
         mobilePanelMode={mobilePanelMode}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        onSelectItem={(item) => handleSelectOperation(item.id)}
+        onSelectItem={(item: DocumentItem) => handleSelectOperation(item.id)}
         onOpenCreate={handleOpenCreate}
         onCancelCreate={handleCancelCreate}
         onCloseMobilePanel={closeMobilePanel}
         title="Comptes rendus opératoires"
         renderListItemContent={renderListItemContent}
-        renderDetailViewContent={detailViewContent ? () => detailViewContent : () => null}
+        renderDetailViewContent={activeOperation ? () => detailViewContent : () => null}
         createFormContent={createFormContent}
         emptyIcon={Stethoscope}
         emptyTitle="Aucun compte rendu"
@@ -617,6 +998,7 @@ export default function ComptesRendusPage() {
         createDescription="Enregistrez une nouvelle intervention chirurgicale"
         saveButtonText="Enregistrer"
         isFormValid={isFormValid as boolean}
+        isLoading={isLoading}
         onSave={handleCreateOperation}
       />
 
@@ -625,9 +1007,51 @@ export default function ComptesRendusPage() {
         onClose={() => setShowPatientModal(false)}
         patients={mockPatients}
         onSelectPatient={handleSelectPatient}
-        newPatientFields={["fullName", "histoire"]}
+        newPatientFields={["fullName", "age","histoire"]}
         onCreatePatient={handleCreateNewPatient}
       />
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-sm shadow-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-red-100 rounded-full">
+                <Trash2 className="h-6 w-6 text-red-600" />
+              </div>
+              <h2 className="text-xl font-bold text-slate-900">Supprimer le compte rendu</h2>
+            </div>
+            <p className="text-slate-600 mb-6">
+              Êtes-vous sûr de vouloir supprimer ce compte rendu? Cette action est irréversible.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setDeleteTargetId(null);
+                }}
+                className="flex-1 px-4 py-2 rounded-lg border border-slate-200 text-slate-700 font-medium hover:bg-slate-50"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleDeleteOperation}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Suppression...
+                  </>
+                ) : (
+                  "Supprimer"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

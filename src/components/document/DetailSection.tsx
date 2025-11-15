@@ -1,6 +1,6 @@
 "use client";
 
-import { LucideIcon, Plus } from "lucide-react";
+import { Loader, LucideIcon, Plus } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -89,13 +89,13 @@ export function DetailSection<T extends DocumentItem>({
             onClick={onSave}
             disabled={!isFormValid || isSubmitting}
           >
-            <Plus className="mr-2 h-4 w-4" />
+            {isSubmitting? <Loader className="animate-spin mr-2 h-4 w-4"/>:<Plus className="mr-2 h-4 w-4" />}
             {isSubmitting ? "Enregistrement…" : saveButtonText}
           </Button>
         </div>
       </>
     ) : !activeItem ? (
-      <CardContent className="flex flex-1 items-center justify-center py-12 px-6">
+      <CardContent className="flex flex-1 items-center justify-center py-12 px-6 pt-10 w-full">
         <EmptyState
           icon={emptyIcon as unknown as LucideIcon}
           title={emptyTitle || "Sélectionnez un élément"}

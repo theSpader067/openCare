@@ -65,6 +65,13 @@ import {
   updateActivity,
   deleteActivity,
 } from "@/lib/api/activities";
+import {
+  createTask,
+  updateTask,
+  deleteTask,
+  toggleTaskCompletion,
+} from "@/lib/api/tasks";
+import { getPatients } from "@/lib/api/patients";
 import { useSession } from "next-auth/react";
 
 type ActivityStatus = "done" | "todo";
@@ -226,6 +233,48 @@ export default function DashboardPage() {
     }
   }, [isAddPatientModalOpen]);
 
+  // Helper function to map API status to dashboard status
+  const mapPatientStatus = (apiStatus: string): string => {
+    const statusMap: { [key: string]: string } = {
+      "Hospitalisé": "Post-op",
+      "Consultation": "Surveillance",
+      "Suivi": "Surveillance",
+    };
+    return statusMap[apiStatus] || "Surveillance";
+  };
+
+  // Load patients from API
+  useEffect(() => {
+    const loadPatients = async () => {
+      setIsServicePatientsLoading(true);
+      try {
+        const result = await getPatients();
+        if (result.success && result.data) {
+          // Transform API patient data to PatientItem format
+          const transformedPatients: PatientItem[] = result.data.map((patient: any) => ({
+            id: String(patient.id),
+            name: patient.name,
+            service: patient.service || "",
+            diagnosis: patient.diagnosis?.label || "",
+            // Map API status to PatientItem status values
+            status: mapPatientStatus(patient.status) as "Pré-op" | "Post-op" | "Surveillance" | "Rééducation",
+            labs: {
+              status: "na" as const,
+              note: "",
+            },
+          }));
+          setServicePatients(transformedPatients);
+        }
+      } catch (error) {
+        console.error("Error loading patients:", error);
+        setServicePatients([]);
+      } finally {
+        setIsServicePatientsLoading(false);
+      }
+    };
+
+    loadPatients();
+  }, []);
 
   const selectedDayData = scheduleData? scheduleData[selectedDate] : createEmptyDay();
   const selectedDateObj = useMemo(() => parseKeyToDate(selectedDate), [selectedDate]);
@@ -353,8 +402,76 @@ export default function DashboardPage() {
   };
 
   const handleToggleTaskDone = async (taskId: string) => {
-    // Task toggle is now handled by TasksSection, refresh after toggling
-    await tasksSectionRef.current?.refresh();
+    try {
+      const taskIdNum = parseInt(taskId);
+      await toggleTaskCompletion(taskIdNum);
+      await tasksSectionRef.current?.refresh();
+    } catch (error) {
+      console.error("Error toggling task:", error);
+    }
+  };
+
+  const handleTaskAdd = async (formData: { titles: string[]; taskType?: "team" | "private"; patientId?: string | number; patientName?: string; patientAge?: string; patientHistory?: string }) => {
+    const createdTasks: TaskItem[] = [];
+    try {
+      // Create a task for each title
+      for (const title of formData.titles) {
+        const result = await createTask({
+          title: title.trim(),
+          isPrivate: formData.taskType === "private",
+          patientId: formData.patientId,
+          patientName: formData.patientName,
+          patientAge: formData.patientAge,
+          patientHistory: formData.patientHistory,
+        });
+        if (result.success && result.data) {
+          createdTasks.push(result.data);
+        }
+      }
+
+      // Add newly created tasks directly to the UI without reloading
+      if (createdTasks.length > 0) {
+        tasksSectionRef.current?.addTasks(createdTasks);
+      }
+      return createdTasks.length > 0 ? createdTasks : null;
+    } catch (error) {
+      console.error("Error adding tasks:", error);
+      return null;
+    }
+  };
+
+  const handleTaskEdit = async (updatedTask: TaskItem) => {
+    try {
+      const taskIdNum = parseInt(updatedTask.id);
+      const result = await updateTask({
+        taskId: taskIdNum,
+        title: updatedTask.title,
+        isPrivate: updatedTask.taskType === "private",
+        patientId: updatedTask.patientId,
+        patientName: updatedTask.patientName,
+        patientAge: updatedTask.patientAge,
+        patientHistory: updatedTask.patientHistory,
+      });
+
+      // Refresh tasks to ensure UI is in sync with backend
+      if (result.success) {
+        await tasksSectionRef.current?.refresh();
+      } else {
+        console.error("Failed to update task:", result.error);
+      }
+    } catch (error) {
+      console.error("Error editing task:", error);
+    }
+  };
+
+  const handleTaskDelete = async (taskId: string) => {
+    try {
+      const taskIdNum = parseInt(taskId);
+      await deleteTask(taskIdNum);
+      await tasksSectionRef.current?.refresh();
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
   };
 
   const handleAddActivity = async () => {
@@ -370,6 +487,7 @@ export default function DashboardPage() {
         time: activityForm.time,
         location: activityForm.location.trim() || undefined,
         activityDay: activityForm.activityDay,
+        team: activityForm.team.trim() || undefined,
       });
 
       if (result.success) {
@@ -413,6 +531,7 @@ export default function DashboardPage() {
           time: activityForm.time,
           location: activityForm.location.trim() || undefined,
           activityDay: activityForm.activityDay,
+          team: activityForm.team.trim() || undefined,
         });
 
         if (result.success) {
@@ -633,20 +752,9 @@ export default function DashboardPage() {
               title="Consignes du jour"
               showReloadButton={true}
               onTaskToggle={handleToggleTaskDone}
-              onTaskAdd={async (formData) => {
-                // Tasks are created via TasksSection's internal API
-                // Just refresh after adding
-                await tasksSectionRef.current?.refresh();
-                return [];
-              }}
-              onTaskEdit={async (updatedTask) => {
-                // Update task via API
-                await tasksSectionRef.current?.refresh();
-              }}
-              onTaskDelete={async (taskId) => {
-                // Delete task via API
-                await tasksSectionRef.current?.refresh();
-              }}
+              onTaskAdd={handleTaskAdd}
+              onTaskEdit={handleTaskEdit}
+              onTaskDelete={handleTaskDelete}
               patients={mockPatients}
               favoriteTasks={mockFavoriteTasks}
               cardClassName="flex min-h-0 flex-1 flex-col border-none bg-white/90 min-h-[500px]"
@@ -729,12 +837,9 @@ export default function DashboardPage() {
                 <EmptyState
                   icon={UsersRound}
                   title="Aucun patient attribué"
-                  description="Les patients apparaîtront ici dès qu&apos;ils seront programmés pour cette journée."
+                  description="Les patients apparaîtront ici dès qu&apos;ils seront ajoutés."
                   action={
-                    <Button variant="outline" onClick={() => setIsAddPatientModalOpen(true)}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Ajouter un patient
-                    </Button>
+                    <></>
                   }
                 />
               ) : (
@@ -838,16 +943,9 @@ export default function DashboardPage() {
               title="Consignes du jour"
               showReloadButton={true}
               onTaskToggle={handleToggleTaskDone}
-              onTaskAdd={async (formData) => {
-                await tasksSectionRef.current?.refresh();
-                return [];
-              }}
-              onTaskEdit={async (updatedTask) => {
-                await tasksSectionRef.current?.refresh();
-              }}
-              onTaskDelete={async (taskId) => {
-                await tasksSectionRef.current?.refresh();
-              }}
+              onTaskAdd={handleTaskAdd}
+              onTaskEdit={handleTaskEdit}
+              onTaskDelete={handleTaskDelete}
               patients={mockPatients}
               favoriteTasks={mockFavoriteTasks}
               cardClassName="border border-slate-200/70 bg-white/95 shadow-md shadow-indigo-100/50 min-h-0"

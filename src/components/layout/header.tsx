@@ -23,7 +23,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
-import { patientsSeed } from "@/data/patients/patients-data";
 
 
 const formatBirthDate = (value: string) => {

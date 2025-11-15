@@ -1,102 +1,88 @@
 export type Specialty =
-  | "Cardiologie"
-  | "Chirurgie générale"
-  | "Chirurgie viscérale"
-  | "Chirurgie thoracique"
-  | "Neurochirurgie"
-  | "Orthopédie"
-  | "Urologie"
-  | "Gynécologie-Obstétrique"
-  | "Pédiatrie"
   | "Anesthésie-Réanimation"
-  | "Radiologie"
-  | "Pathologie"
-  | "Oncologie"
-  | "Gastro-entérologie"
-  | "Pneumologie"
-  | "Médecine interne"
-  | "Rhumatologie"
+  | "Cardiologie"
+  | "Cardiochirurgie"
+  | "Chirurgie générale"
+  | "Chirurgie thoracique"
+  | "Chirurgie vasculaire"
+  | "Chirurgie viscérale"
   | "Dermatologie"
+  | "Dentisterie"
+  | "Endocrinologie"
+  | "Gastro-entérologie"
+  | "Gériatrie"
+  | "Gynécologie-Obstétrique"
+  | "Hématologie"
+  | "Immunologie"
+  | "Infectiologie"
+  | "Médecin généraliste"
+  | "Médecine d'urgence"
+  | "Médecine interne"
+  | "Médecine physique et réadaptation"
+  | "Neurochirurgie"
   | "Neurologie"
+  | "Oncologie"
   | "Ophtalmologie"
   | "ORL"
-  | "Dentisterie"
+  | "Orthopédie"
+  | "Pathologie"
+  | "Pédiatrie"
+  | "Pharmacie"
+  | "Pneumologie"
+  | "Psychiatrie"
+  | "Radiologie"
+  | "Réanimation"
+  | "Rhumatologie"
+  | "Sage-femme"
+  | "Stomatologie"
+  | "Urologie"
   | "Autre";
 
 export const specialties: Specialty[] = [
-  "Cardiologie",
-  "Chirurgie générale",
-  "Chirurgie viscérale",
-  "Chirurgie thoracique",
-  "Neurochirurgie",
-  "Orthopédie",
-  "Urologie",
-  "Gynécologie-Obstétrique",
-  "Pédiatrie",
   "Anesthésie-Réanimation",
-  "Radiologie",
-  "Pathologie",
-  "Oncologie",
-  "Gastro-entérologie",
-  "Pneumologie",
-  "Médecine interne",
-  "Rhumatologie",
+  "Cardiologie",
+  "Cardiochirurgie",
+  "Chirurgie générale",
+  "Chirurgie thoracique",
+  "Chirurgie vasculaire",
+  "Chirurgie viscérale",
   "Dermatologie",
+  "Dentisterie",
+  "Endocrinologie",
+  "Gastro-entérologie",
+  "Gériatrie",
+  "Gynécologie-Obstétrique",
+  "Hématologie",
+  "Immunologie",
+  "Infectiologie",
+  "Médecin généraliste",
+  "Médecine d'urgence",
+  "Médecine interne",
+  "Médecine physique et réadaptation",
+  "Neurochirurgie",
   "Neurologie",
+  "Oncologie",
   "Ophtalmologie",
   "ORL",
-  "Dentisterie",
+  "Orthopédie",
+  "Pathologie",
+  "Pédiatrie",
+  "Pharmacie",
+  "Pneumologie",
+  "Psychiatrie",
+  "Radiologie",
+  "Réanimation",
+  "Rhumatologie",
+  "Sage-femme",
+  "Stomatologie",
+  "Urologie",
   "Autre",
 ];
 
-export type Hospital =
-  | "Hôpital Bicêtre (APHP)"
-  | "Hôpital Broussais (APHP)"
-  | "Hôpital Cochin (APHP)"
-  | "Hôpital de la Pitié-Salpêtrière (APHP)"
-  | "Hôpital Lariboisière (APHP)"
-  | "Hôpital Saint-Louis (APHP)"
-  | "Hôpital Américain de Paris"
-  | "Clinique du Val d'Or"
-  | "Hospices Civils de Lyon"
-  | "CHU de Marseille"
-  | "CHU de Nice"
-  | "CHU de Toulouse"
-  | "CHU de Bordeaux"
-  | "CHU de Montpellier"
-  | "CHU de Nancy"
-  | "CHU de Strasbourg"
-  | "CHU de Grenoble"
-  | "CHU de Lille"
-  | "CHU de Rennes"
-  | "CHU de Rouen"
-  | "Autre";
-
-export const hospitals: Hospital[] = [
-  "Hôpital Bicêtre (APHP)",
-  "Hôpital Broussais (APHP)",
-  "Hôpital Cochin (APHP)",
-  "Hôpital de la Pitié-Salpêtrière (APHP)",
-  "Hôpital Lariboisière (APHP)",
-  "Hôpital Saint-Louis (APHP)",
-  "Hôpital Américain de Paris",
-  "Clinique du Val d'Or",
-  "Hospices Civils de Lyon",
-  "CHU de Marseille",
-  "CHU de Nice",
-  "CHU de Toulouse",
-  "CHU de Bordeaux",
-  "CHU de Montpellier",
-  "CHU de Nancy",
-  "CHU de Strasbourg",
-  "CHU de Grenoble",
-  "CHU de Lille",
-  "CHU de Rennes",
-  "CHU de Rouen",
-  "Autre",
-];
-
-export type Year =
+export type Status =
+  | "Étudiant"
+  | "Interne"
+  | "Infirmier"
   | "1ère année"
   | "2ème année"
   | "3ème année"
@@ -104,7 +90,10 @@ export type Year =
   | "5ème année"
   | "Spécialiste";
 
-export const years: Year[] = [
+export const statuses: Status[] = [
+  "Étudiant",
+  "Interne",
+  "Infirmier",
   "1ère année",
   "2ème année",
   "3ème année",

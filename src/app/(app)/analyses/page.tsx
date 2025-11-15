@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ComponentType } from "react";
-import { Activity, Beaker, Download, FlaskConical, List, Search, ClipboardList, X, Plus } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { Activity, Beaker, Download, FlaskConical, List, Search, ClipboardList, X, Plus, Loader } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -21,17 +22,19 @@ import {
   statusBadgeMap,
   bilanTypeMap,
   bilanCategoryBadgeMap,
-  pendingSeed,
-  completedSeed,
+  bilanStructure,
   analyseDetails,
   mockPatientsAnalyses,
 } from "@/data/analyses/analyses-data";
 
 import { HistoryFilters } from "./history-filters";
 import { PendingAnalyseCard } from "./pending-analyse-card";
+import { PatientCreate } from "@/components/document/PatientCreate";
+import { createAnalyse, fetchAnalyses } from "@/lib/api/analyses";
 
-type Analyse = {
+export type Analyse = {
   id: string;
+  apiId?: number; // Numeric ID from API for PATCH requests
   patient: string;
   type: string;
   requestedAt: string;
@@ -43,6 +46,14 @@ type Analyse = {
     id: string;
     label: string;
     value?: string;
+  }>;
+  labEntries?: Array<{
+    id?: number;
+    name?: string | null;
+    value?: string | null;
+    interpretation?: string | null;
+    analyseId?: number;
+    [key: string]: any;
   }>;
 };
 
@@ -101,47 +112,91 @@ function formatAnalyseDateTime(date: string) {
   }).format(new Date(date));
 }
 
-const historySeed: Analyse[] = completedSeed;
-
-
-function useSectionData<T>(seed: T[], delay = 600) {
-  const [data, setData] = useState<T[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setData(seed);
-      setIsLoading(false);
-    }, delay);
-
-    return () => clearTimeout(timer);
-  }, [delay, seed]);
-
-  return { data, isLoading };
-}
-
 export default function AnalysesPage() {
+  const { data: session } = useSession();
   const [pendingAnalyses, setPendingAnalyses] = useState<Analyse[]>([]);
   const [historyAnalyses, setHistoryAnalyses] = useState<Analyse[]>([]);
   const [pendingLoading, setPendingLoading] = useState(true);
   const [historyLoading, setHistoryLoading] = useState(true);
+  const [isSavingAnalyse, setIsSavingAnalyse] = useState(false);
 
+  // Load pending analyses from API (status = "En cours")
   useEffect(() => {
-    const pendingTimer = setTimeout(() => {
-      setPendingAnalyses(pendingSeed);
-      setPendingLoading(false);
-    }, 700);
+    const loadPendingAnalyses = async () => {
+      setPendingLoading(true);
+      try {
+        const apiAnalyses = await fetchAnalyses();
+        console.log("All analyses from API:", apiAnalyses);
 
-    const historyTimer = setTimeout(() => {
-      setHistoryAnalyses(historySeed);
-      setHistoryLoading(false);
-    }, 900);
+        // Filter to pending analyses (status = "En cours") and convert
+        const convertedAnalyses = apiAnalyses
+          .filter((analyse) => !analyse.status || analyse.status === "En cours")
+          .map((analyse) => ({
+            id: analyse.labId || analyse.id.toString(),
+            apiId: analyse.id,
+            patient: analyse.patient?.fullName || analyse.patientName || "",
+            type: analyse.title || "",
+            requestedAt: "Aujourd'hui",
+            requestedDate: analyse.createdAt,
+            requester: "Current User",
+            status: ("En cours" as "En cours" | "Terminée" | "Urgent"),
+            bilanCategory: (analyse.category as "bilan" | "imagerie" | "anapath" | "autres") || "bilan",
+            labEntries: analyse.labEntries || [],
+          }));
 
-    return () => {
-      clearTimeout(pendingTimer);
-      clearTimeout(historyTimer);
+        setPendingAnalyses(convertedAnalyses);
+      } catch (error) {
+        console.error("Error loading pending analyses:", error);
+        // Show empty state on error instead of seed data
+        setPendingAnalyses([]);
+      } finally {
+        setPendingLoading(false);
+      }
     };
-  }, []);
+
+    if (session?.user) {
+      loadPendingAnalyses();
+    } else {
+      setPendingLoading(false);
+    }
+  }, [session?.user]);
+
+  // Load history analyses from API
+  useEffect(() => {
+    const loadHistoryAnalyses = async () => {
+      setHistoryLoading(true);
+      try {
+        const apiAnalyses = await fetchAnalyses();
+        // Filter to completed/history analyses and convert
+        const convertedAnalyses = apiAnalyses
+          .filter((analyse) => analyse.status === "Terminée")
+          .map((analyse) => ({
+            id: analyse.labId || analyse.id.toString(),
+            apiId: analyse.id,
+            patient: analyse.patient?.fullName || analyse.patientName || "",
+            type: analyse.title || "",
+            requestedAt: "Aujourd'hui",
+            requestedDate: analyse.createdAt,
+            requester: "Current User",
+            status: (analyse.status as "En cours" | "Terminée" | "Urgent") || "Terminée",
+            bilanCategory: (analyse.category as "bilan" | "imagerie" | "anapath" | "autres") || "bilan",
+            labEntries: analyse.labEntries || [],
+          }));
+        setHistoryAnalyses(convertedAnalyses);
+      } catch (error) {
+        console.error("Error loading history analyses:", error);
+        setHistoryAnalyses([]);
+      } finally {
+        setHistoryLoading(false);
+      }
+    };
+
+    if (session?.user) {
+      loadHistoryAnalyses();
+    } else {
+      setHistoryLoading(false);
+    }
+  }, [session?.user]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [historyFilters, setHistoryFilters] = useState({
@@ -254,7 +309,11 @@ export default function AnalysesPage() {
     name: "",
     patient: "",
     comment: "",
+    selectedBilans: [] as string[],
+    customBilans: "",
   });
+  const [editedLabValues, setEditedLabValues] = useState<Record<number, string>>({});
+  const [isSavingLabValues, setIsSavingLabValues] = useState(false);
 
   const mockPatients: Patient[] = mockPatientsAnalyses;
 
@@ -278,14 +337,15 @@ export default function AnalysesPage() {
     setPatientSearch("");
   };
 
-  const handleCreateNewPatient = () => {
-    if (!newPatientForm.fullName.trim()) {
+  const handleCreateNewPatient = async (formData: Record<string, string>) => {
+    if (!formData.fullName?.trim()) {
       return;
     }
     const newPatient: Patient = {
       id: `P-${Date.now()}`,
-      fullName: newPatientForm.fullName,
-      histoire: newPatientForm.histoire,
+      fullName: formData.fullName,
+      histoire: formData.histoire || formData.histoire,
+      age: formData.age ? parseInt(formData.age) : undefined,
     };
     setSelectedPatient(newPatient);
     setNewRequestForm((prev) => ({ ...prev, patient: newPatient.fullName }));
@@ -293,44 +353,181 @@ export default function AnalysesPage() {
     setPatientMode("select");
   };
 
-  const handleSaveNewDemande = () => {
-    if (!newRequestForm.category || !newRequestForm.name || !newRequestForm.patient) {
+  const handleSaveNewDemande = async () => {
+    // Validate category and patient
+    if (!newRequestForm.category || !newRequestForm.patient) {
       return;
     }
 
-    // Create new analysis record
-    const newAnalyse: Analyse = {
-      id: `LAB-${String(Math.floor(Math.random() * 100000)).padStart(5, "0")}`,
-      patient: newRequestForm.patient,
-      type: newRequestForm.name,
-      requestedAt: "Aujourd'hui",
-      requestedDate: new Date().toISOString(),
-      requester: "Current User",
-      status: "En cours",
-      bilanCategory: newRequestForm.category as "bilan" | "imagerie" | "anapath" | "autres",
-      pendingTests: newRequestForm.category === "bilan"
-        ? [
-            { id: "test-1", label: "Test 1" },
-            { id: "test-2", label: "Test 2" },
-          ]
-        : undefined,
-    };
+    // Validate name based on category
+    let analysisName = newRequestForm.name;
+    let selectedBilans: string[] = [];
+    let customBilans = "";
 
-    // Add to pending analyses
-    setPendingAnalyses((prev) => [newAnalyse, ...prev]);
+    if (newRequestForm.category === "bilan") {
+      if (newRequestForm.selectedBilans.length === 0) {
+        return;
+      }
+      selectedBilans = newRequestForm.selectedBilans;
+      customBilans = newRequestForm.customBilans;
+      // Create analysis name from selected bilans
+      const allBilans = [...newRequestForm.selectedBilans];
+      if (newRequestForm.customBilans.trim()) {
+        const customItems = newRequestForm.customBilans
+          .split(",")
+          .map((item) => item.trim())
+          .filter((item) => item.length > 0);
+        allBilans.push(...customItems);
+      }
+      analysisName = allBilans.join(", ");
+    } else {
+      if (!newRequestForm.name) {
+        return;
+      }
+    }
 
-    // Close modal and reset form
-    setCreateModalOpen(false);
-    setPatientMode("select");
-    setPatientSearch("");
-    setNewPatientForm({ fullName: "", histoire: "" });
-    setSelectedPatient(null);
-    setNewRequestForm({
-      category: "",
-      name: "",
-      patient: "",
-      comment: "",
-    });
+    setIsSavingAnalyse(true);
+
+    try {
+      // Call API to create analyse
+      const createdAnalyse = await createAnalyse({
+        category: newRequestForm.category as "bilan" | "imagerie" | "anapath" | "autres",
+        title: analysisName,
+        patientName: selectedPatient?.fullName || newPatientForm.fullName,
+        patientAge: (selectedPatient as any)?.age || undefined,
+        patientHistory: (selectedPatient as any)?.histoire || newPatientForm.histoire,
+        details: newRequestForm.comment,
+        comment: newRequestForm.comment,
+        selectedBilans: selectedBilans,
+        customBilans: customBilans,
+      });
+
+      // Create new analysis record for UI
+      const newAnalyse: Analyse = {
+        id: createdAnalyse.labId || createdAnalyse.id.toString(),
+        apiId: createdAnalyse.id,
+        patient: createdAnalyse.patient?.fullName || createdAnalyse.patientName || "",
+        type: createdAnalyse.title || "",
+        requestedAt: "Aujourd'hui",
+        requestedDate: createdAnalyse.createdAt,
+        requester: "Current User",
+        status: (createdAnalyse.status as "En cours" | "Terminée" | "Urgent") || "En cours",
+        bilanCategory: (createdAnalyse.category as "bilan" | "imagerie" | "anapath" | "autres") || "bilan",
+        labEntries: createdAnalyse.labEntries || [],
+      };
+
+      // Add to pending analyses at top
+      setPendingAnalyses((prev) => [newAnalyse, ...prev]);
+
+      // Close modal and reset form
+      setCreateModalOpen(false);
+      setPatientMode("select");
+      setPatientSearch("");
+      setNewPatientForm({ fullName: "", histoire: "" });
+      setSelectedPatient(null);
+      setNewRequestForm({
+        category: "",
+        name: "",
+        patient: "",
+        comment: "",
+        selectedBilans: [],
+        customBilans: "",
+      });
+
+      setIsSavingAnalyse(false);
+    } catch (error) {
+      console.error("Error saving analyse:", error);
+      setIsSavingAnalyse(false);
+      // Handle error - could show toast notification
+    }
+  };
+
+  const handleSaveLabValues = async () => {
+    if (!selectedBilan || !selectedBilan.apiId || !selectedBilan.labEntries || selectedBilan.labEntries.length === 0) {
+      return;
+    }
+
+    setIsSavingLabValues(true);
+
+    try {
+      // Prepare lab entries to update - only include entries with non-empty values
+      const labEntriesToUpdate = selectedBilan.labEntries
+        .filter((entry: any) => {
+          const editedValue = editedLabValues[entry.id];
+          return entry.id && editedValue !== undefined && editedValue.trim().length > 0;
+        })
+        .map((entry: any) => ({
+          id: entry.id,
+          value: editedLabValues[entry.id].trim(),
+          interpretation: entry.interpretation || undefined,
+        }));
+
+      // Validate that at least one value is provided
+      if (labEntriesToUpdate.length === 0) {
+        console.warn("No non-empty lab values to save");
+        setIsSavingLabValues(false);
+        return;
+      }
+
+      // Call the API to update lab entries and mark analysis as complete
+      const response = await fetch(`/api/analyses/${selectedBilan.apiId}/labentries`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          labEntries: labEntriesToUpdate,
+          status: "Terminée", // Mark analysis as complete
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to save lab values");
+      }
+
+      const result = await response.json();
+      console.log("Lab values saved successfully:", result);
+
+      if (!result.analyse) {
+        throw new Error("Analysis status not updated");
+      }
+
+      // Update lab entries with the returned data
+      const labEntriesMap = new Map(
+        (result.data || []).map((entry: any) => [entry.id, entry])
+      );
+
+      // Create updated analysis with new status and updated lab entries
+      const updatedAnalysis: Analyse = {
+        ...selectedBilan,
+        status: "Terminée",
+        labEntries: selectedBilan.labEntries.map((entry: any) => {
+          return labEntriesMap.get(entry.id) || entry;
+        }),
+      };
+
+      console.log("Updated analysis:", updatedAnalysis);
+
+      // Remove from pending analyses
+      setPendingAnalyses((prev) => prev.filter((a) => a.id !== selectedBilan.id));
+
+      // Add to history analyses at the top
+      setHistoryAnalyses((prev) => [updatedAnalysis, ...prev]);
+
+      // Clear edited values
+      setEditedLabValues({});
+
+      // Close the modal
+      setSelectedBilan(null);
+
+      console.log("✓ Analysis marked as complete and moved to history");
+      setIsSavingLabValues(false);
+    } catch (error) {
+      console.error("Error saving lab values:", error);
+      setIsSavingLabValues(false);
+      // Could show error toast notification here
+    }
   };
 
   const selectedDetails = selectedBilan
@@ -346,6 +543,9 @@ export default function AnalysesPage() {
       [key]: value,
     }));
   };
+
+
+  
 
   const resetHistoryFilters = () =>
     setHistoryFilters({
@@ -481,11 +681,7 @@ export default function AnalysesPage() {
                   icon={Activity}
                   title="Aucun bilan disponible"
                   description="Une fois les analyses validées par le laboratoire, elles apparaîtront automatiquement dans cette liste."
-                  action={
-                    <Button variant="primary" onClick={() => setCreateModalOpen(true)}>
-                      Créer une demande
-                    </Button>
-                  }
+                  
                 />
               ) : (
                 <div className="flex h-48 items-center justify-center px-6 py-10 text-sm text-slate-500">
@@ -717,7 +913,10 @@ export default function AnalysesPage() {
 
       <Modal
         open={Boolean(selectedBilan)}
-        onClose={() => setSelectedBilan(null)}
+        onClose={() => {
+          setSelectedBilan(null);
+          setEditedLabValues({});
+        }}
         title={selectedBilan ? `Bilan ${selectedBilan.id}` : undefined}
         description={
           selectedBilan
@@ -725,13 +924,16 @@ export default function AnalysesPage() {
             : undefined
         }
         footer={
-          <Button variant="outline" onClick={() => setSelectedBilan(null)}>
+          <Button variant="outline" onClick={() => {
+            setSelectedBilan(null);
+            setEditedLabValues({});
+          }}>
             Fermer
           </Button>
         }
       >
         {selectedBilan ? (
-          <div className="space-y-4 h-[65vh] overflow-y-auto flex flex-col">
+          <div className="space-y-4 h-[45vh] overflow-y-auto flex flex-col">
             <div className="grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
               <p>
                 <span className="font-semibold text-slate-800">Demande :</span>{" "}
@@ -742,17 +944,60 @@ export default function AnalysesPage() {
             {/* Content adapted by type */}
             {selectedBilan.bilanCategory === "bilan" ? (
               <>
-                {/* BILAN: Results table view */}
+                {/* BILAN: Results input form */}
                 <div className="rounded-2xl border border-slate-200 bg-white/80 p-4">
-                  <h3 className="text-sm font-semibold text-slate-800">
-                    Résultats
+                  <h3 className="text-sm font-semibold text-slate-800 mb-4">
+                    Saisie des résultats
                   </h3>
-                  {selectedDetails ? (
-                    <ul className="mt-3 space-y-2 text-sm text-slate-700">
+                  {(selectedBilan as any).labEntries && (selectedBilan as any).labEntries.length > 0 ? (
+                    <div className="space-y-3">
+                      {(selectedBilan as any).labEntries.map((entry: any) => (
+                        <div
+                          key={`${selectedBilan.id}-${entry.id}`}
+                          className="flex items-center gap-3 rounded-xl bg-indigo-50/40 px-3 py-2"
+                        >
+                          <span className="font-medium text-slate-800 min-w-fit">
+                            {entry.name}
+                          </span>
+                          <input
+                            type="text"
+                            placeholder="Entrez la valeur"
+                            value={editedLabValues[entry.id] !== undefined ? editedLabValues[entry.id] : (entry.value || "")}
+                            onChange={(e) =>
+                              setEditedLabValues((prev) => ({
+                                ...prev,
+                                [entry.id]: e.target.value,
+                              }))
+                            }
+                            className="flex-1 rounded-lg border border-indigo-200 bg-white px-3 py-1 text-sm text-slate-700 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                          />
+                        </div>
+                      ))}
+                      <Button
+                        variant="primary"
+                        onClick={handleSaveLabValues}
+                        disabled={
+                          isSavingLabValues ||
+                          !Object.values(editedLabValues).some((val) => val && val.trim().length > 0)
+                        }
+                        className="mt-4 w-full"
+                      >
+                        {isSavingLabValues ? (
+                          <>
+                            <Loader className="mr-2 h-4 w-4 animate-spin" />
+                            Sauvegarde...
+                          </>
+                        ) : (
+                          "Sauvegarder les résultats"
+                        )}
+                      </Button>
+                    </div>
+                  ) : selectedDetails ? (
+                    <ul className="mt-3 space-y-1 text-sm text-slate-700">
                       {selectedDetails.results.map((item) => (
                         <li
                           key={`${selectedBilan.id}-${item.label}`}
-                          className="flex items-center justify-between rounded-xl bg-indigo-50/40 px-3 py-2"
+                          className="flex items-center justify-between rounded-xl bg-indigo-50/40 px-3 py-1"
                         >
                           <span className="font-medium text-slate-800">
                             {item.label}
@@ -849,8 +1094,11 @@ export default function AnalysesPage() {
             name: "",
             patient: "",
             comment: "",
+            selectedBilans: [],
+            customBilans: "",
           });
         }}
+        
         title="Nouvelle demande d'analyse"
         description="Renseignez les informations nécessaires pour envoyer l'échantillon au laboratoire."
         footer={
@@ -866,6 +1114,8 @@ export default function AnalysesPage() {
                 name: "",
                 patient: "",
                 comment: "",
+                selectedBilans: [],
+                customBilans: "",
               });
             }}>
               Annuler
@@ -873,14 +1123,30 @@ export default function AnalysesPage() {
             <Button
               variant="primary"
               onClick={handleSaveNewDemande}
-              disabled={!newRequestForm.category || !newRequestForm.name || !newRequestForm.patient}
+              disabled={
+                isSavingAnalyse ||
+                !newRequestForm.category ||
+                !newRequestForm.patient ||
+                (newRequestForm.category === "bilan"
+                  ? newRequestForm.selectedBilans.length === 0
+                  : !newRequestForm.name
+                )
+              }
+              className="flex items-center gap-2"
             >
-              Enregistrer la demande
+              {isSavingAnalyse ? (
+                <>
+                  <Loader className="h-4 w-4 animate-spin" />
+                  Enregistrement...
+                </>
+              ) : (
+                "Enregistrer la demande"
+              )}
             </Button>
           </div>
         }
       >
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-[50vh] overflow-y-auto">
           {/* Category Selection */}
           <div className="space-y-2">
             <label
@@ -908,154 +1174,207 @@ export default function AnalysesPage() {
             </select>
           </div>
 
-          {/* Name d'analyse */}
-          <div className="space-y-2">
-            <label
-              htmlFor="new-request-name"
-              className="text-sm font-semibold text-[#221b5b]"
-            >
-              Nom de l&apos;analyse
-            </label>
-            <input
-              id="new-request-name"
-              className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-[#7c3aed] focus:outline-none focus:ring-2 focus:ring-[#dcd0ff]"
-              value={newRequestForm.name}
-              onChange={(event) =>
-                setNewRequestForm((previous) => ({
-                  ...previous,
-                  name: event.target.value,
-                }))
-              }
-              placeholder="Ex. Gaz du sang artériel"
-            />
-          </div>
+          {/* Name d'analyse or Bilan Selector */}
+          {newRequestForm.category === "bilan" ? (
+            <div className="space-y-3">
+              <label className="text-sm font-semibold text-[#221b5b]">
+                Bilan
+              </label>
+
+              {/* Bilan Categories as Badges */}
+              <div className="flex flex-wrap gap-2">
+                {bilanStructure.categories.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => {
+                      // Toggle category selection
+                      const categoryItems = category.items;
+                      const allSelected = categoryItems.every(item =>
+                        newRequestForm.selectedBilans.includes(item)
+                      );
+
+                      if (allSelected) {
+                        // Deselect all items in category
+                        setNewRequestForm((prev) => ({
+                          ...prev,
+                          selectedBilans: prev.selectedBilans.filter(
+                            item => !categoryItems.includes(item)
+                          ),
+                        }));
+                      } else {
+                        // Select all items in category
+                        setNewRequestForm((prev) => ({
+                          ...prev,
+                          selectedBilans: Array.from(
+                            new Set([...prev.selectedBilans, ...categoryItems])
+                          ),
+                        }));
+                      }
+                    }}
+                    className={`px-3 py-1 rounded-full text-xs font-medium transition ${
+                      bilanStructure.categories.find(c => c.id === category.id)?.items.every(item =>
+                        newRequestForm.selectedBilans.includes(item)
+                      )
+                        ? "bg-violet-600 text-white"
+                        : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+                    }`}
+                  >
+                    {category.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Detailed Bilan Items Grid */}
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
+                {bilanStructure.allItems.map((item) => (
+                  <label
+                    key={item}
+                    className="flex items-center gap-2 p-1 rounded-lg hover:bg-slate-100 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={newRequestForm.selectedBilans.includes(item)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setNewRequestForm((prev) => ({
+                            ...prev,
+                            selectedBilans: [...prev.selectedBilans, item],
+                          }));
+                        } else {
+                          setNewRequestForm((prev) => ({
+                            ...prev,
+                            selectedBilans: prev.selectedBilans.filter(
+                              (b) => b !== item
+                            ),
+                          }));
+                        }
+                      }}
+                      className="rounded border-slate-300"
+                    />
+                    <span className="text-sm text-slate-700">{item}</span>
+                  </label>
+                ))}
+              </div>
+
+              {/* Custom Bilans Field */}
+              <div className="space-y-2 pt-2 border-t border-slate-200">
+                <label
+                  htmlFor="custom-bilans"
+                  className="text-sm font-semibold text-[#221b5b]"
+                >
+                  Autres analyses
+                </label>
+                <input
+                  id="custom-bilans"
+                  type="text"
+                  className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-[#7c3aed] focus:outline-none focus:ring-2 focus:ring-[#dcd0ff]"
+                  value={newRequestForm.customBilans}
+                  onChange={(e) =>
+                    setNewRequestForm((prev) => ({
+                      ...prev,
+                      customBilans: e.target.value,
+                    }))
+                  }
+                  placeholder="Entrez d'autres bilans séparés par des virgules..."
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <label
+                htmlFor="new-request-name"
+                className="text-sm font-semibold text-[#221b5b]"
+              >
+                Nom de l&apos;analyse
+              </label>
+              <input
+                id="new-request-name"
+                className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-[#7c3aed] focus:outline-none focus:ring-2 focus:ring-[#dcd0ff]"
+                value={newRequestForm.name}
+                onChange={(event) =>
+                  setNewRequestForm((previous) => ({
+                    ...previous,
+                    name: event.target.value,
+                  }))
+                }
+                placeholder="Ex. Gaz du sang artériel"
+              />
+            </div>
+          )}
 
           {/* Patient Selection */}
           <div className="space-y-3">
-            <label className="text-sm font-semibold text-[#221b5b]">
-              Patient
-            </label>
-
-            {/* Mode Tabs */}
-            <div className="flex gap-2 border-b border-slate-200">
-              <button
-                type="button"
-                onClick={() => setPatientMode("select")}
-                className={cn(
-                  "px-4 py-2 text-sm font-medium border-b-2 transition",
-                  patientMode === "select"
-                    ? "border-indigo-600 text-indigo-600"
-                    : "border-transparent text-slate-600"
-                )}
-              >
-                Existants
-              </button>
-              <button
-                type="button"
-                onClick={() => setPatientMode("new")}
-                className={cn(
-                  "px-4 py-2 text-sm font-medium border-b-2 transition",
-                  patientMode === "new"
-                    ? "border-indigo-600 text-indigo-600"
-                    : "border-transparent text-slate-600"
-                )}
-              >
-                Nouveau
-              </button>
-            </div>
-
-            {/* Patient Mode Content */}
-            {patientMode === "select" ? (
-              <div className="space-y-3">
-                {/* Search Input */}
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-slate-50">
-                  <Search className="h-4 w-4 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="Rechercher un patient..."
-                    value={patientSearch}
-                    onChange={(e) => setPatientSearch(e.target.value)}
-                    className="flex-1 bg-transparent text-sm text-slate-600 outline-none placeholder:text-slate-400"
-                  />
-                </div>
-                {/* Patients List */}
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {filteredPatients.length > 0 ? (
-                    filteredPatients.map((patient) => (
-                      <button
-                        key={patient.id}
-                        type="button"
-                        onClick={() => handleSelectPatient(patient)}
-                        className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition"
-                      >
-                        <p className="font-medium text-slate-900">
-                          {patient.fullName}
-                        </p>
-                        <p className="text-xs text-slate-500 line-clamp-2">
-                          {patient.histoire}
-                        </p>
-                      </button>
-                    ))
-                  ) : (
-                    <p className="text-center text-sm text-slate-500 py-4">
-                      Aucun patient trouvé
-                    </p>
-                  )}
-                </div>
-              </div>
+            {!newRequestForm.patient ? (
+              // Show PatientCreate when no patient selected
+              <PatientCreate
+                patients={[]}
+                onSelectPatient={handleSelectPatient}
+                onCreatePatient={handleCreateNewPatient}
+                newPatientFields={["fullName", "age", "histoire"]}
+                showTabs={true}
+                skipSuccessDisplay={true}
+              />
             ) : (
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold uppercase text-slate-600">
-                    Nom et prénom
-                  </label>
-                  <input
-                    type="text"
-                    value={newPatientForm.fullName}
-                    onChange={(e) =>
-                      setNewPatientForm((prev) => ({
-                        ...prev,
-                        fullName: e.target.value,
-                      }))
-                    }
-                    placeholder="Entrez le nom et prénom..."
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold uppercase text-slate-600">
-                    Historique / Notes
-                  </label>
-                  <textarea
-                    value={newPatientForm.histoire}
-                    onChange={(e) =>
-                      setNewPatientForm((prev) => ({
-                        ...prev,
-                        histoire: e.target.value,
-                      }))
-                    }
-                    placeholder="Entrez l'historique..."
-                    rows={2}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                  />
-                </div>
-                <Button
-                  onClick={handleCreateNewPatient}
-                  disabled={!newPatientForm.fullName?.trim()}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Créer et sélectionner
-                </Button>
-              </div>
-            )}
+              // Show selected patient info with change button
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-[#221b5b]">
+                  Patient sélectionné
+                </label>
 
-            {/* Selected Patient Display */}
-            {selectedPatient && (
-              <div className="p-3 rounded-lg border border-indigo-200 bg-indigo-50">
-                <p className="text-sm font-medium text-indigo-900">
-                  ✓ {selectedPatient.fullName}
-                </p>
+                {/* Patient Info Fields Display */}
+                <div className="space-y-2">
+                  {/* Patient Name */}
+                  <div className="rounded-xl border border-violet-200 bg-violet-50/50 p-3">
+                    <p className="text-xs uppercase tracking-wide text-violet-600 font-semibold mb-1">
+                      Nom
+                    </p>
+                    <p className="text-sm font-medium text-slate-900">
+                      {selectedPatient?.fullName || newPatientForm.fullName}
+                    </p>
+                  </div>
+
+                  {/* Patient Age */}
+                  {selectedPatient || newPatientForm.histoire ? (
+                    <div className="rounded-xl border border-violet-200 bg-violet-50/50 p-3">
+                      <p className="text-xs uppercase tracking-wide text-violet-600 font-semibold mb-1">
+                        Âge
+                      </p>
+                      <p className="text-sm text-slate-700">
+                        {(selectedPatient as any)?.age || newPatientForm.histoire
+                          ? "Non spécifié"
+                          : ""}
+                      </p>
+                    </div>
+                  ) : null}
+
+                  {/* Patient History */}
+                  {(selectedPatient as any)?.histoire || newPatientForm.histoire ? (
+                    <div className="rounded-xl border border-violet-200 bg-violet-50/50 p-3">
+                      <p className="text-xs uppercase tracking-wide text-violet-600 font-semibold mb-1">
+                        Antécédents
+                      </p>
+                      <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                        {(selectedPatient as any)?.histoire || newPatientForm.histoire}
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
+
+                {/* Change Patient Button */}
+                <button
+                  onClick={() => {
+                    setSelectedPatient(null);
+                    setNewRequestForm((prev) => ({
+                      ...prev,
+                      patient: "",
+                    }));
+                    setNewPatientForm({ fullName: "", histoire: "" });
+                    setPatientMode("select");
+                  }}
+                  className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm font-medium text-violet-600 hover:bg-violet-50 transition-colors"
+                >
+                  Changer de patient
+                </button>
               </div>
             )}
           </div>

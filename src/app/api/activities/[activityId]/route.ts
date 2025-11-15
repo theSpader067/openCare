@@ -12,10 +12,17 @@ function convertActivityToActivityItem(activity: any): ActivityItem {
     description: activity.details || "",
     time: activity.horaire || "",
     location: activity.place,
-    team: undefined,
+    team: activity.équipe || undefined,
     status: "todo",
     createdAt: activity.createdAt,
     activityDay: activity.activityDay,
+    creator: activity.creator ? {
+      id: activity.creator.id,
+      firstName: activity.creator.firstName,
+      lastName: activity.creator.lastName,
+      email: activity.creator.email,
+      username: activity.creator.username,
+    } : undefined,
   };
 }
 
@@ -45,7 +52,15 @@ export async function GET(
     const activity = await prisma.activity.findUnique({
       where: { id: activityId },
       include: {
-        participants: true,
+        creator: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            username: true,
+          },
+        },
       },
     });
 
@@ -107,7 +122,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { title, type, description, time, location, activityDay } = body;
+    const { title, type, description, time, location, activityDay, team } = body;
 
     const updatedActivity = await prisma.activity.update({
       where: { id: activityId },
@@ -118,6 +133,18 @@ export async function PUT(
         ...(time !== undefined && { horaire: time }),
         ...(location !== undefined && { place: location }),
         ...(activityDay !== undefined && { activityDay: new Date(activityDay) }),
+        ...(team !== undefined && { équipe: team || null }),
+      },
+      include: {
+        creator: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            username: true,
+          },
+        },
       },
     });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, FilePlus } from "lucide-react";
+import { ArrowLeft, FilePlus, Loader } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -47,6 +47,7 @@ interface DataListLayoutProps<T extends DocumentItem> {
   isFormValid?: boolean;
   hideListCount?: boolean;
   showDetailScrollArea?: boolean;
+  isLoading?: boolean;
   onSave: () => void;
 }
 
@@ -78,6 +79,7 @@ export function DataListLayout<T extends DocumentItem>({
   isFormValid = true,
   hideListCount = false,
   showDetailScrollArea = true,
+  isLoading = false,
   onSave,
 }: DataListLayoutProps<T>) {
   const activeItem = items.find((item) => item.id === activeItemId) ?? null;
@@ -99,6 +101,7 @@ export function DataListLayout<T extends DocumentItem>({
           emptyDescription={emptyDescription}
           searchPlaceholder={searchPlaceholder}
           hideCount={hideListCount}
+          isLoading={isLoading}
         />
 
         <DetailSection
@@ -138,6 +141,7 @@ export function DataListLayout<T extends DocumentItem>({
           emptyDescription={emptyDescription}
           searchPlaceholder={searchPlaceholder}
           hideCount={hideListCount}
+          isLoading={isLoading}
         />
       </section>
 
@@ -210,7 +214,7 @@ export function DataListLayout<T extends DocumentItem>({
                     onClick={onSave}
                     disabled={!isFormValid || isSubmitting}
                   >
-                    <FilePlus className="h-4 w-4 mr-2" />
+                    {isSubmitting ?<Loader className="animate-spin h-4 w-4 mr-2"/>:<FilePlus className="h-4 w-4 mr-2" />}
                     {isSubmitting ? "Enregistrement…" : saveButtonText}
                   </Button>
                 </div>

@@ -18,25 +18,15 @@ import { Spinner } from "@/components/ui/spinner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
-import { Patient, PatientStatus, RiskLevel, PatientType, patientsSeed } from "@/data/patients/patients-data";
+import { getPatients, deletePatient } from "@/lib/api/patients";
 import { ObservationTimeline } from "./observation-timeline";
 import { PatientFilters } from "./patient-filters";
+import { Patient } from "@/types/document";
+import { HistoryGroup, PatientStatus, PatientType } from "@/data/patients/patients-data";
 
-function useSectionData<T>(seed: T[], delay = 650) {
-  const [data, setData] = useState<T[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setData(seed);
-      setIsLoading(false);
-    }, delay);
+const uniqueStatuses:PatientStatus[] = ['Hospitalisé', 'Consultation', 'Suivi']
 
-    return () => clearTimeout(timer);
-  }, [delay, seed]);
-
-  return { data, isLoading };
-}
 
 const PAGE_SIZE = 10;
 
@@ -50,6 +40,8 @@ const TAG_COLOR_CLASSES = [
   "bg-violet-100 text-violet-700 ring-violet-200",
 ];
 
+
+
 const STATUS_BADGE_CLASSES: Record<PatientStatus, string> = {
   Hospitalisé:
     "bg-gradient-to-r from-[#fecaca] via-[#fda4af] to-[#fb7185] text-[#7f1d1d] shadow-sm shadow-rose-200/60",
@@ -59,14 +51,6 @@ const STATUS_BADGE_CLASSES: Record<PatientStatus, string> = {
     "bg-gradient-to-r from-[#bbf7d0] via-[#86efac] to-[#4ade80] text-[#166534] shadow-sm shadow-emerald-200/60",
 };
 
-const RISK_BADGE_CLASSES: Record<RiskLevel, string> = {
-  Élevé:
-    "bg-gradient-to-r from-[#fed7aa] via-[#fb923c] to-[#f97316] text-[#7c2d12]",
-  Modéré:
-    "bg-gradient-to-r from-[#fde68a] via-[#facc15] to-[#fbbf24] text-[#78350f]",
-  Standard:
-    "bg-gradient-to-r from-[#bfdbfe] via-[#93c5fd] to-[#60a5fa] text-[#1d4ed8]",
-};
 
 const SERVICE_BADGE_CLASS =
   "border border-sky-200 bg-sky-100 text-sky-700 shadow-sm shadow-sky-200/60";
@@ -116,10 +100,7 @@ function formatRelativeTimeFromNow(timestamp: string) {
 
 export default function PatientsPage() {
   const router = useRouter();
-  const {
-    data: seededPatients,
-    isLoading: patientsLoading,
-  } = useSectionData(patientsSeed);
+
   const [patientsData, setPatientsData] = useState<Patient[]>([]);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(
     null,
@@ -128,7 +109,8 @@ export default function PatientsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [editPatient, setEditPatient] = useState<Patient | null>(null);
   const [editForm, setEditForm] = useState<Patient | null>(null);
-  const [deletePatient, setDeletePatient] = useState<Patient | null>(null);
+  const [toDeletePatient, setToDeletePatient] = useState<Patient | null>(null);
+  const [patientsLoading, setPatientsLoading] = useState(false);
   const [filters, setFilters] = useState({
     query: "",
     status: "all",
@@ -137,11 +119,26 @@ export default function PatientsPage() {
     to: "",
   });
 
+  // Fetch patients from API
   useEffect(() => {
-    if (!patientsLoading && patientsData.length === 0) {
-      setPatientsData(seededPatients);
-    }
-  }, [patientsLoading, seededPatients, patientsData.length]);
+    const fetchPatients = async () => {
+      try {
+        const result = await getPatients();
+        if (result.success && result.data) {
+          // Transform API patient data to Patient type
+          const transformedPatients:Patient[] = result.data;
+          console.log(result.data)
+          setPatientsData(transformedPatients);
+        }
+      } catch (error) {
+        console.error("Error fetching patients:", error);
+        
+      }
+    };
+
+    fetchPatients();
+  }, []);
+
 
   useEffect(() => {
     if (
@@ -176,10 +173,6 @@ export default function PatientsPage() {
     });
     setCurrentPage(1);
   };
-
-  const uniqueStatuses = useMemo(() => {
-    return Array.from(new Set(seededPatients.map((p) => p.status)));
-  }, [seededPatients]);
 
   const isFilterActive = useMemo(() => {
     return (
@@ -285,20 +278,34 @@ export default function PatientsPage() {
     setEditForm(null);
   };
 
-  const handleDeleteConfirm = () => {
-    if (!deletePatient) {
+  const handleDeleteConfirm = async () => {
+    if (!toDeletePatient) {
       return;
     }
 
-    setPatientsData((previous) =>
-      previous.filter((patient) => patient.id !== deletePatient.id),
-    );
+    try {
+      // Call API to delete the patient
+      const result = await deletePatient(parseInt(toDeletePatient.id));
 
-    if (selectedPatientId === deletePatient.id) {
-      setSelectedPatientId(null);
+      if (result.success) {
+        // Only remove from local state if deletion was successful
+        setPatientsData((previous) =>
+          previous.filter((patient) => patient.id !== toDeletePatient.id),
+        );
+
+        if (selectedPatientId === toDeletePatient.id) {
+          setSelectedPatientId(null);
+        }
+
+        setToDeletePatient(null);
+      } else {
+        console.error("Error deleting patient:", result.error);
+        // Could optionally show error toast/notification here
+      }
+    } catch (error) {
+      console.error("Error during patient deletion:", error);
+      // Could optionally show error toast/notification here
     }
-
-    setDeletePatient(null);
   };
 
   const renderPreviewContent = (variant: "desktop" | "mobile") => {
@@ -340,8 +347,7 @@ export default function PatientsPage() {
       );
     }
 
-    const statusBadgeClass = STATUS_BADGE_CLASSES[selectedPatient.status];
-    const riskBadgeClass = RISK_BADGE_CLASSES[selectedPatient.riskLevel];
+    const statusBadgeClass = STATUS_BADGE_CLASSES[selectedPatient.status as PatientStatus];
 
     return (
       <div className="flex flex-col gap-6 pb-6">
@@ -358,7 +364,7 @@ export default function PatientsPage() {
                     {selectedPatient.name}
                   </h2>
                   <span className="text-xs font-semibold text-slate-600">
-                    {selectedPatient.id}
+                    {selectedPatient.pid}
                   </span>
                   <p className="text-xs text-slate-600">
                     {formatFullDate(selectedPatient.birthDate)} · {selectedPatient.age} ans
@@ -409,14 +415,7 @@ export default function PatientsPage() {
                   >
                     {selectedPatient.type === "privé" ? "Privé" : "Équipe"}
                   </span>
-                    <span
-                    className={cn(
-                      "px-3 py-1 text-xs font-semibold",
-                      "bg-slate-100 text-slate-700",
-                    )}
-                  >
-                    Risque {selectedPatient.riskLevel}
-                  </span>
+                    
                 </div>
               </div>
           </div>
@@ -443,7 +442,7 @@ export default function PatientsPage() {
                   Identifiant patient
                 </p>
                 <p className="mt-1 text-sm font-semibold text-slate-800">
-                  {selectedPatient.id}
+                  {selectedPatient.pid}
                 </p>
               </div>
               <div>
@@ -472,14 +471,7 @@ export default function PatientsPage() {
               Autres éléments
             </h3>
             <div className="mt-4 space-y-4">
-              {selectedPatient.histories.other.map((group) => (
-                <div key={group.label} className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    {group.label}
-                  </p>
-                  <TagGroup tags={group.values} emptyLabel="Non renseigné" />
-                </div>
-              ))}
+              {selectedPatient.histories.other}
             </div>
           </div>
         </div>
@@ -522,11 +514,29 @@ export default function PatientsPage() {
                           </span>
                         </div>
                         <div className="rounded-lg bg-slate-50 border border-slate-200 p-3">
-                          <p className="text-sm text-slate-700 leading-relaxed line-clamp-3">
                             {observation.note.length > 150
-                              ? `${observation.note.substring(0, 150)}...`
-                              : observation.note}
-                          </p>
+                              ? `${observation.note.includes("<") ? (
+                                <div
+                                  className="text-sm text-slate-700 leading-relaxed [&_p]:m-0 [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-lg [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_strong]:font-semibold [&_em]:italic [&_u]:underline"
+                                  dangerouslySetInnerHTML={{ __html: observation.note.substring(0,150) }}
+                                />
+                              ) : (
+                                <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                                  {observation.note.substring(0,150)}
+                                </p>
+                              )}}...`
+                              : 
+                                observation.note.includes("<") ? (
+                                  <div
+                                    className="text-sm text-slate-700 leading-relaxed [&_p]:m-0 [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-lg [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_strong]:font-semibold [&_em]:italic [&_u]:underline"
+                                    dangerouslySetInnerHTML={{ __html: observation.note }}
+                                  />
+                                ) : (
+                                  <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                                    {observation.note}
+                                  </p>
+                                )}
+                              
                           {observation.note.length > 150 && (
                             <p className="text-xs text-indigo-600 font-medium mt-2">
                               Afficher plus
@@ -692,14 +702,14 @@ export default function PatientsPage() {
                           <span
                             className="px-3 py-1 text-xs font-semibold bg-slate-100 text-slate-700"
                           >
-                            {patient.id}
+                            {patient.pid}
                           </span>
                         </td>
                         <td className="px-4 py-3">
                           <Badge
                             className={cn(
                               "px-3 py-1 text-xs font-semibold",
-                              STATUS_BADGE_CLASSES[patient.status],
+                              STATUS_BADGE_CLASSES[patient.status as PatientStatus],
                             )}
                           >
                             {patient.status}
@@ -729,25 +739,14 @@ export default function PatientsPage() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-9 w-9 rounded-full p-0 text-slate-600 hover:text-indigo-600"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                handleOpenEdit(patient);
-                              }}
-                              aria-label={`Modifier ${patient.name}`}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
+                            
                             <Button
                               variant="ghost"
                               size="sm"
                               className="h-9 w-9 rounded-full p-0 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
                               onClick={(event) => {
                                 event.stopPropagation();
-                                setDeletePatient(patient);
+                                setToDeletePatient(patient);
                               }}
                               aria-label={`Supprimer ${patient.name}`}
                             >
@@ -973,17 +972,17 @@ export default function PatientsPage() {
       </Modal>
 
       <Modal
-        open={Boolean(deletePatient)}
-        onClose={() => setDeletePatient(null)}
+        open={Boolean(toDeletePatient)}
+        onClose={() => setToDeletePatient(null)}
         title={
-          deletePatient
-            ? `Supprimer ${deletePatient.name} ?`
+          toDeletePatient
+            ? `Supprimer ${toDeletePatient.name} ?`
             : "Confirmer la suppression"
         }
         description="Cette action retirera le dossier de la liste. Vous pourrez le retrouver dans l’historique si nécessaire."
         footer={
           <>
-            <Button variant="outline" onClick={() => setDeletePatient(null)}>
+            <Button variant="outline" onClick={() => setToDeletePatient(null)}>
               Annuler
             </Button>
             <Button
@@ -995,14 +994,14 @@ export default function PatientsPage() {
           </>
         }
       >
-        {deletePatient ? (
+        {toDeletePatient ? (
           <div className="space-y-3 text-sm text-slate-600">
             <p>
               Êtes-vous sûr de vouloir supprimer le dossier patient{" "}
               <span className="font-semibold text-rose-600">
-                {deletePatient.name}
+                {toDeletePatient.name}
               </span>{" "}
-              ({deletePatient.id}) ?
+              ({toDeletePatient.id}) ?
             </p>
             <p>
               Cette action ne peut pas être annulée immédiatement et nécessite

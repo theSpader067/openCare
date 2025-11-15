@@ -76,6 +76,65 @@ export const bilanCategoryBadgeMap: Record<"bilan" | "imagerie" | "anapath" | "a
   autres: { label: "Autres", color: "bg-slate-500/15 text-slate-700" },
 };
 
+// Bilan structure with categories and detailed items
+export const bilanStructure = {
+  categories: [
+    {
+      id: "crase",
+      label: "Bilan de crase",
+      items: ["Hémoglobine", "Hématocrite", "VGM", "TCMH", "CCMH", "GB", "Plaquettes"]
+    },
+    {
+      id: "ionogramme-sanguin",
+      label: "Ionogramme sanguin",
+      items: ["Na+", "K+", "Cl-", "CO2", "Osmolalité", "Densité urinaire"]
+    },
+    {
+      id: "ionogramme-urinaire",
+      label: "Ionogramme urinaire",
+      items: ["Urée urinaire", "Créatinine urinaire", "Sodium urinaire", "Potassium urinaire"]
+    },
+    {
+      id: "bilan-infectieux",
+      label: "Bilan infectieux standard",
+      items: ["CRP", "PCT", "Fibrinogène", "Globulines", "VSH", "Leucocytes"]
+    },
+    {
+      id: "fonction-renale",
+      label: "Fonction rénale",
+      items: ["Urée", "Créatinine"]
+    },
+    {
+      id: "cholestase",
+      label: "Cholestase",
+      items: ["GGT", "PAL", "Bilirubine totale"]
+    },
+    {
+      id: "cytolyse",
+      label: "Cytolyse",
+      items: ["GOT", "GPT"]
+    },
+    {
+      id: "bilan-hepatique",
+      label: "Bilan hépatique",
+      items: ["ALAT", "ASAT", "GGT", "Phosphatase alcaline", "Bilirubine", "Albumine"]
+    },
+    {
+      id: "bilan-renal",
+      label: "Bilan rénal",
+      items: ["Créatinine", "Urée", "Clearance créatinine", "Potassium", "Acide urique"]
+    }
+  ],
+  allItems: [
+    "CRP", "PCT", "NFS", "TP", "TCA", "INR", "Fibrinogène",
+    "Créatinine", "Urée", "Na+", "K+", "Cl-", "Glucose", "Triglycérides",
+    "Cholestérol", "ALAT", "ASAT", "GGT", "Bilirubine", "Bilirubine totale", "Albumine",
+    "Hémoglobine", "Hématocrite", "VGM", "TCMH", "Plaquettes", "GB",
+    "Acide urique", "Phosphate", "Magnésium", "Calcium", "Protéine totale",
+    "PAL", "GOT", "GPT"
+  ]
+};
+
 function deriveRequestedDate(label: string): string {
   const parts = label.split("·").map((part) => part.trim());
   const dayPart = (parts[0] ?? "").toLowerCase();

@@ -10,7 +10,10 @@ function convertTaskToTaskItem(task: any): TaskItem {
     title: task.title,
     details: task.details || "",
     done: task.isComplete,
-    patientName: undefined,
+    patientName: task.patientName,
+    patientAge: task.patientAge,
+    patientHistory: task.patientHistory,
+    patientId: task.patientId,
     taskType: task.isPrivate ? "private" : "team",
   };
 }
@@ -100,15 +103,69 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { title, isComplete, isPrivate } = body;
+    const { title, isComplete, isPrivate, patientId, patientName, patientAge, patientHistory } = body;
+
+    console.log("Updating task with data:", { title, isComplete, isPrivate, patientId, patientName, patientAge, patientHistory });
+
+    // Build update data object
+    const updateData: any = {};
+
+    if (title !== undefined) {
+      updateData.title = title.trim();
+    }
+    if (isComplete !== undefined) {
+      updateData.isComplete = isComplete;
+    }
+    if (isPrivate !== undefined) {
+      updateData.isPrivate = isPrivate;
+    }
+
+    // Handle patient data
+    if (patientId !== undefined && patientId !== null && patientId !== "") {
+      // If patientId is provided, validate and link to existing patient
+      const parsedPatientId = parseInt(String(patientId));
+      if (!isNaN(parsedPatientId) && parsedPatientId > 0) {
+        updateData.patientId = parsedPatientId;
+        // Clear patient name/age/history when linking to a patient
+        updateData.patientName = null;
+        updateData.patientAge = null;
+        updateData.patientHistory = null;
+      } else {
+        // Invalid patientId, treat as new patient (clear patientId)
+        console.warn("Invalid patientId provided, clearing it:", patientId);
+        updateData.patientId = null;
+        if (patientName !== undefined) {
+          updateData.patientName = patientName ? String(patientName).trim() : null;
+        }
+        if (patientAge !== undefined) {
+          updateData.patientAge = patientAge ? String(patientAge).trim() : null;
+        }
+        if (patientHistory !== undefined) {
+          updateData.patientHistory = patientHistory ? String(patientHistory).trim() : null;
+        }
+      }
+    } else if (patientName !== undefined || patientAge !== undefined || patientHistory !== undefined) {
+      // If any patient field is provided without patientId, it's a new/unlinked patient
+      updateData.patientId = null;
+      if (patientName !== undefined) {
+        updateData.patientName = patientName ? String(patientName).trim() : null;
+      }
+      if (patientAge !== undefined) {
+        updateData.patientAge = patientAge ? String(patientAge).trim() : null;
+      }
+      if (patientHistory !== undefined) {
+        updateData.patientHistory = patientHistory ? String(patientHistory).trim() : null;
+      }
+    } else if (patientId === null || patientId === undefined) {
+      // Explicitly clear patientId if provided as null/undefined
+      updateData.patientId = null;
+    }
+
+    console.log("Final updateData:", updateData);
 
     const updatedTask = await prisma.task.update({
       where: { id: taskId },
-      data: {
-        ...(title !== undefined && { title: title.trim() }),
-        ...(isComplete !== undefined && { isComplete }),
-        ...(isPrivate !== undefined && { isPrivate }),
-      },
+      data: updateData,
     });
 
     return NextResponse.json({

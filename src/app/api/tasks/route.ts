@@ -10,7 +10,10 @@ function convertTaskToTaskItem(task: any): TaskItem {
     title: task.title,
     details: task.details || "",
     done: task.isComplete,
-    patientName: undefined,
+    patientId: task.patientId || undefined,
+    patientName: task.patientName || undefined,
+    patientAge: task.patientAge || undefined,
+    patientHistory: task.patientHistory || undefined,
     taskType: task.isPrivate ? "private" : "team",
   };
 }
@@ -42,6 +45,7 @@ export async function GET(request: NextRequest) {
         ],
       },
       orderBy: { createdAt: "desc" },
+      
     });
 
     const convertedTasks = tasks.map(convertTaskToTaskItem);
@@ -78,7 +82,17 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, isPrivate = false } = body;
+    const { title, isPrivate = false, patientId, patientName, patientAge, patientHistory } = body;
+
+    console.log("API received task data:", {
+      title,
+      isPrivate,
+      patientId,
+      patientName,
+      patientAge,
+      patientHistory,
+      fullBody: body
+    });
 
     if (!title || !title.trim()) {
       return NextResponse.json(
@@ -87,13 +101,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Build the data object for task creation
+    const taskData: any = {
+      title: title.trim(),
+      creatorId: parseInt(userId),
+      isPrivate: isPrivate,
+      isComplete: false,
+    };
+
+    // If an existing patient is selected, use patientId
+    if (patientId) {
+      taskData.patientId = parseInt(patientId);
+    } else {
+      // Otherwise, store patient name and history if provided
+      if (patientName) {
+        const trimmedName = String(patientName).trim();
+        if (trimmedName) {
+          taskData.patientName = trimmedName;
+        }
+      }
+      if (patientAge) {
+        const trimmedAge = String(patientAge).trim();
+        if (trimmedAge) {
+          taskData.patientAge = trimmedAge;
+        }
+      }
+      if (patientHistory) {
+        const trimmedHistory = String(patientHistory).trim();
+        if (trimmedHistory) {
+          taskData.patientHistory = trimmedHistory;
+        }
+      }
+    }
+
+    console.log("Prisma creating task with data:", taskData);
+
     const task = await prisma.task.create({
-      data: {
-        title: title.trim(),
-        creatorId: parseInt(userId),
-        isPrivate: isPrivate,
-        isComplete: false,
-      },
+      data: taskData,
     });
 
     return NextResponse.json({

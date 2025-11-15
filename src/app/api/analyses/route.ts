@@ -1,0 +1,224 @@
+import { getSession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { NextRequest, NextResponse } from "next/server";
+import { bilanStructure } from "@/data/analyses/analyses-data";
+
+export async function GET(req: NextRequest) {
+  try {
+    const session = await getSession();
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = (session.user as any).id;
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userIdNum = parseInt(userId as string);
+
+    // Get analyses created by this user
+    const analyses = await prisma.analyse.findMany({
+      where: {
+        creatorId: userIdNum,
+      },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            fullName: true,
+            dateOfBirth: true,
+          },
+        },
+        creator: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+        labEntries: {
+          select:{
+            id:true,
+            name:true,
+            value:true,
+            interpretation:true,
+          }
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return NextResponse.json({
+      data: analyses,
+    });
+  } catch (error) {
+    console.error("Error fetching analyses:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch analyses" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await getSession();
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = (session.user as any).id;
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userIdNum = parseInt(userId as string);
+
+    const data = await req.json();
+    const {
+      category,
+      title,
+      patientId,
+      patientName,
+      patientAge,
+      patientHistory,
+      details,
+      comment,
+      selectedBilans,
+      customBilans,
+    } = data;
+
+
+    console.log('ANALYSE DATA @@@@@@@@@@@@@@@@')
+    console.log(data)
+
+    if (!title && !selectedBilans) {
+      return NextResponse.json(
+        { error: "Title or bilans are required" },
+        { status: 400 }
+      );
+    }
+
+    let finalTitle = title;
+    let categoriesForTitle: string[] = [];
+    let allLabItems: string[] = [];
+
+    if (selectedBilans && selectedBilans.length > 0) {
+      // For bilans, map items back to category labels
+      // Find which categories contain the selected items
+      const selectedSet = new Set(selectedBilans);
+
+      bilanStructure.categories.forEach((cat) => {
+        // Check if any items from this category are selected
+        const hasSelectedItems = cat.items.some((item) => selectedSet.has(item));
+        if (hasSelectedItems) {
+          categoriesForTitle.push(cat.label);
+          // Collect all items from selected categories
+          cat.items.forEach((item) => {
+            if (selectedSet.has(item)) {
+              allLabItems.push(item);
+            }
+          });
+        }
+      });
+
+      // Add custom bilans to the list
+      if (customBilans?.trim()) {
+        const customItems = customBilans
+          .split(",")
+          .map((item: string) => item.trim())
+          .filter((item: string) => item.length > 0);
+        allLabItems.push(...customItems);
+      }
+
+      // Set title as comma-separated category labels
+      finalTitle = categoriesForTitle.join(", ");
+      console.log('FINALE title')
+      console.log(finalTitle)
+    }
+
+    // Create analyse
+    const analyseData: any = {
+      category: category || "bilan",
+      title: finalTitle,
+      details: details || comment || undefined,
+      status: "En cours",
+      patientName: patientName || undefined,
+      patientAge: patientAge ? String(patientAge) : undefined,
+      patientHistory: patientHistory || undefined,
+      creatorId: userIdNum, // Set creator to current user
+    };
+
+    if (patientId) {
+      analyseData.patient = {
+        connect: {
+          id: patientId,
+        },
+      };
+    }
+
+    const analyse = await prisma.analyse.create({
+      data: analyseData,
+      include: {
+        patient: {
+          select: {
+            id: true,
+            fullName: true,
+          },
+        },
+        creator: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+        labEntries: true,
+      },
+    });
+
+    // If type is bilan, create LabEntry records for each selected item
+    if (category === "bilan" && allLabItems.length > 0) {
+      const labEntries = await Promise.all(
+        allLabItems.map((itemName) =>
+          prisma.labEntry.create({
+            data: {
+              name: itemName,
+              value: null,
+              interpretation: null,
+              analyse: {
+                connect:{
+                  id:analyse.id,
+                }
+              },
+            },
+          })
+        )
+      );
+
+      // Add lab entries to the response
+      analyse.labEntries = labEntries;
+    }
+
+    return NextResponse.json({
+      data: analyse,
+      message: "Analyse créée avec succès",
+    });
+  } catch (error) {
+    console.error("Error creating analyse:", error);
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to create analyse",
+      },
+      { status: 500 }
+    );
+  }
+}

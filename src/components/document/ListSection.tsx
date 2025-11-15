@@ -25,6 +25,7 @@ interface ListSectionProps<T extends DocumentItem> {
   emptyDescription?: string;
   searchPlaceholder?: string;
   hideCount?: boolean;
+  isLoading?: boolean;
 }
 
 export function ListSection<T extends DocumentItem>({
@@ -40,6 +41,7 @@ export function ListSection<T extends DocumentItem>({
   emptyDescription,
   searchPlaceholder = "Rechercher…",
   hideCount = false,
+  isLoading = false,
 }: ListSectionProps<T>) {
   return (
     <Card className="flex h-full w-full flex-col border-none bg-white/95">
@@ -71,7 +73,23 @@ export function ListSection<T extends DocumentItem>({
         </div>
       </CardHeader>
       <CardContent className="flex-1 min-h-0 px-6 pb-6">
-        {items.length === 0 ? (
+        {isLoading ? (
+          <div className="flex max-h-150 flex-col overflow-y-auto pt-4">
+            <ul className="flex flex-col gap-3">
+              {[...Array(3)].map((_, i) => (
+                <li key={`skeleton-${i}`}>
+                  <div className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+                    <div className="space-y-3">
+                      <div className="h-4 bg-slate-200 rounded w-3/4 animate-pulse"></div>
+                      <div className="h-3 bg-slate-100 rounded w-1/2 animate-pulse"></div>
+                      <div className="h-3 bg-slate-100 rounded w-2/3 animate-pulse mt-2"></div>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : items.length === 0 ? (
           <EmptyState
             icon={emptyIcon as unknown as LucideIcon}
             title={emptyTitle || "Aucun élément"}
@@ -80,7 +98,7 @@ export function ListSection<T extends DocumentItem>({
             }
           />
         ) : (
-          <div className="flex h-full flex-col overflow-y-auto pt-4">
+          <div className="flex max-h-150 flex-col overflow-y-auto pt-4">
             <ul className="flex flex-col gap-3">
               {items.map((item) => {
                 const isActive = item.id === activeItemId;

@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Save, UserRound, X, ChevronLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, UserRound, X, ChevronLeft, Loader2, Sparkles, Dices } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -21,43 +21,44 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Separator } from "@/components/ui/separator";
-import { Patient, PatientStatus, RiskLevel, PatientType, patientsSeed, ObservationEntry } from "@/data/patients/patients-data";
+import { Patient, PatientStatus, PatientType, ObservationEntry } from "@/data/patients/patients-data";
 import { WYSIWYGEditor } from "@/components/wysiwyg-editor";
+import { createPatient, getPatientByPid, updatePatient, saveObservation } from "@/lib/api/patients";
 
 type PatientFormState = {
+  id:number,
+  pid:string,
   name: string;
   birthDate: string;
   identifier: string;
   service: string;
   status: PatientStatus;
-  riskLevel: RiskLevel;
   type: PatientType;
   nextVisit: string;
-  diagnosisCode: string;
-  diagnosisLabel: string;
+  diagnosisCode:string,
+  diagnosisLabel:string,
   medicalHistory: string;
   surgicalHistory: string;
   otherHistory: string;
-  observationDraft: string;
-  instructions: string;
+  initialObservation?: string;
 };
 
 const emptyForm: PatientFormState = {
+  id:0,
+  pid:"",
   name: "",
   birthDate: "",
   identifier: "",
   service: "",
   status: "Hospitalisé",
-  riskLevel: "Standard",
   type: "équipe",
   nextVisit: "",
-  diagnosisCode: "",
-  diagnosisLabel: "",
+  diagnosisCode:"",
+  diagnosisLabel:"",
   medicalHistory: "",
   surgicalHistory: "",
   otherHistory: "",
-  observationDraft: "",
-  instructions: "",
+  initialObservation: "",
 };
 
 function toFormState(patient?: Patient | null): PatientFormState {
@@ -66,23 +67,20 @@ function toFormState(patient?: Patient | null): PatientFormState {
   }
 
   return {
+    id:0,
+    pid:patient.pid,
     name: patient.name,
     birthDate: patient.birthDate,
     identifier: patient.id,
     service: patient.service,
     status: patient.status,
-    riskLevel: patient.riskLevel,
     type: patient.type,
     nextVisit: patient.nextVisit,
     diagnosisCode: patient.diagnosis.code,
-    diagnosisLabel: patient.diagnosis.label,
+    diagnosisLabel:patient.diagnosis.label,
     medicalHistory: patient.histories.medical.join("\n"),
     surgicalHistory: patient.histories.surgical.join("\n"),
-    otherHistory: patient.histories.other
-      .map((group) => `${group.label}: ${group.values.join(", ")}`)
-      .join("\n"),
-    observationDraft: "",
-    instructions: patient.instructions.join("\n"),
+    otherHistory: patient.histories.other.join('\n')
   };
 }
 
@@ -92,12 +90,26 @@ export default function PatientDossierPage() {
   const patientId = searchParams.get("id");
   const mode = searchParams.get("mode");
 
-  const patient = useMemo(
-    () => patientsSeed.find((item) => item.id === patientId) ?? null,
-    [patientId],
-  );
 
-  const isExistingPatient = Boolean(patient);
+  const [isExistingPatient,setIsExistingPatient] = useState(false);
+  let patient: Patient = {
+    id:'',
+    pid:'',
+    name:'',
+    birthDate:'',
+    age:0,
+    service:'',
+    status:'Suivi',
+    nextVisit:'',
+    type:'privé',
+    diagnosis:{code:'', label:''},
+    histories:{
+        medical:[],
+        surgical:[],
+        other:[]
+    },
+    observations: []
+  }
 
   const [formData, setFormData] = useState<PatientFormState>(() =>
     toFormState(isExistingPatient ? patient : null),
@@ -109,21 +121,88 @@ export default function PatientDossierPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [selectedObservationIndex, setSelectedObservationIndex] = useState<number | null>(null);
   const [isObservationPanelOpen, setIsObservationPanelOpen] = useState(false);
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [observationDraft, setObservationDraft] = useState("");
+  const [isSavingObservation, setIsSavingObservation] = useState(false);
+  const [observationSaved, setObservationSaved] = useState(false);
+  const observationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isLoadingObservations,setIsLoadingObservations] = useState(false)
 
+  // Load patient data from API if patientId exists but patient is not in seeded data
   useEffect(() => {
-    setFormData(toFormState(isExistingPatient ? patient : null));
-    setObservations(patient?.observations ?? []);
-  }, [isExistingPatient, patient]);
+    setIsSaving(true)
+    setIsLoadingObservations(true)
+    const loadPatientFromAPI = async () => {
+      if (patientId && !isExistingPatient) {
+        try {
+          console.log('loading patient from api by id')
+          const result = await getPatientByPid(patientId);
+          if (result.success && result.data) {
+            const apiPatient = result.data;
+            console.log(result.data)
+            // Transform API patient data to Patient interface
+            const transformedPatient: Patient = {
+              id: apiPatient.id,
+              pid: apiPatient.pid,
+              name: apiPatient.name,
+              birthDate: apiPatient.birthDate ? apiPatient.birthDate.split('T')[0] : '',
+              age: apiPatient.dateOfBirth ? (() => {
+                const today = new Date();
+                const birthDate = new Date(apiPatient.dateOfBirth);
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                  age--;
+                }
+                return age;
+              })() : 0,
+              service: apiPatient.service || '',
+              status: (apiPatient.status || 'Consultation') as PatientStatus,
+              nextVisit: apiPatient.nextVisit,
+              type: (apiPatient.type as PatientType),
+              diagnosis: {
+                code: apiPatient.diagnosis.code || '',
+                label: apiPatient.diagnosis.label || '',
+              },
+              histories: {
+                medical: apiPatient.histories.medical ? [apiPatient.histories.medical] : [],
+                surgical: apiPatient.histories.surgical ? [apiPatient.histories.surgical] : [],
+                other: apiPatient.histories.other ? [apiPatient.histories.other] : [],
+              },
+              observations: apiPatient.observations,
+            };
 
-  useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
+            // Update formData with loaded patient data
+            setFormData({
+              id:parseInt(transformedPatient.id),
+              name: transformedPatient.name,
+              pid:transformedPatient.pid,
+              birthDate: transformedPatient.birthDate,
+              identifier: transformedPatient.pid,
+              service: transformedPatient.service,
+              status: transformedPatient.status,
+              type: transformedPatient.type,
+              nextVisit: transformedPatient.nextVisit,
+              diagnosisCode: transformedPatient.diagnosis.code,
+              diagnosisLabel:transformedPatient.diagnosis.label,
+              medicalHistory: transformedPatient.histories.medical.join("\n"),
+              surgicalHistory: transformedPatient.histories.surgical.join("\n"),
+              otherHistory: transformedPatient.histories.other.join("\n"),
+            });
+            setObservations(apiPatient.observations)
+            setIsLoadingObservations(false)
+            setIsExistingPatient(true)
+          }
+        } catch (error) {
+          console.error("Error loading patient from API:", error);
+        }
       }
     };
-  }, []);
 
+    loadPatientFromAPI();
+    setIsSaving(false)
+  }, [patientId]);
+
+  
   const pageTitle = isExistingPatient
     ? `Dossier patient · ${patient?.name ?? ""}`
     : "Créer un patient";
@@ -131,14 +210,10 @@ export default function PatientDossierPage() {
     ? "Visualisez et mettez à jour le dossier médical complet du patient sélectionné."
     : "Renseignez l'ensemble des informations nécessaires pour créer un nouveau dossier patient.";
 
-  const sortedObservations = useMemo(() => {
-    return [...observations].sort(
-      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-    );
-  }, [observations]);
+
 
   const selectedObservation =
-    selectedObservationIndex !== null ? sortedObservations[selectedObservationIndex] : null;
+    selectedObservationIndex !== null ? observations[selectedObservationIndex] : null;
 
   const formatObservationTimestamp = (timestamp: string) => {
     return new Intl.DateTimeFormat("fr-FR", {
@@ -159,55 +234,92 @@ export default function PatientDossierPage() {
       }));
     };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const generateRandomPatientId = () => {
+    // Get current time in seconds
+    const timeInSeconds = Math.floor(Date.now() / 1000);
+
+    // Generate random 4-character hex string
+    const randomHex = Math.random().toString(16).substring(2, 6).toUpperCase();
+
+    // Format as P-{timestamp}-{randomHex}
+    const patientId = `P-${timeInSeconds}-${randomHex}`;
+
+    // Update the form data with the generated ID
+    setFormData((previous) => ({
+      ...previous,
+      pid: patientId,
+    }));
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setIsSaving(true);
 
-    // Check if there's a new observation to add
-    if (formData.observationDraft.trim()) {
-      setIsSaving(true);
+    try {
+      if (isExistingPatient) {
+        // Update existing patient
+        const result = await updatePatient(formData.id, {
+          fullName: formData.name.trim(),
+          pid:formData.pid,
+          birthdate: formData.birthDate,
+          service: formData.service?.trim(),
+          diagnostic: formData.diagnosisLabel?.trim(),
+          cim: formData.diagnosisCode?.trim(),
+          atcdsMedical:formData.medicalHistory?.trim(),
+          atcdsChirurgical: formData.surgicalHistory?.trim(),
+          atcdsExtra: formData.otherHistory?.trim(),
+          status: formData.status?.trim(),
+          nextContact: formData.nextVisit ? String(formData.nextVisit).trim() : undefined,
+          isPrivate: formData.type,
+        });
 
-      // Show loading state for 1 second
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-      saveTimeoutRef.current = setTimeout(() => {
-        // Create new observation entry
-        const newObservation: ObservationEntry = {
-          id: `obs-${Date.now()}`,
-          timestamp: new Date().toISOString(),
-          note: formData.observationDraft,
-        };
-
-        // Add to observations list
-        const updatedObservations = [newObservation, ...observations];
-        setObservations(updatedObservations);
-
-        // Clear the observation draft
-        setFormData((prev) => ({
-          ...prev,
-          observationDraft: "",
-        }));
-
-        // Select the newly added observation
-        setSelectedObservationIndex(0);
-
-        // Stop loading state
-        setIsSaving(false);
-
-        // Show saved feedback
-        setIsSaved(true);
-        setTimeout(() => {
+        if (result.success) {
+          setIsSaved(true);
+          // Show success feedback for 2 seconds
+          setTimeout(() => {
+            setIsSaved(false);
+          }, 2000);
+        } else {
+          console.error("Error updating patient:", result.error);
           setIsSaved(false);
-        }, 2000);
+        }
+      } else {
+        // Create new patient
+        const result = await createPatient({
+          pid : formData.pid,
+          fullName: formData.name.trim(),
+          birthdate: formData.birthDate,
+          service: formData.service?.trim(),
+          diagnostic: formData.diagnosisLabel?.trim(),
+          histoire: formData.medicalHistory?.trim(),
+          cim: formData.diagnosisCode?.trim(),
+          atcdsMedical: formData.medicalHistory?.trim(),
+          atcdsChirurgical: formData.surgicalHistory?.trim(),
+          atcdsExtra: formData.otherHistory?.trim(),
+          status: formData.status?.trim(),
+          nextContact: formData.nextVisit ? String(formData.nextVisit).trim() : undefined,
+          isPrivate: formData.type,
+          initialObservation: observationDraft,
+        });
 
-        saveTimeoutRef.current = null;
-      }, 1000);
-    } else {
-      // If no new observation, just show save feedback
-      setIsSaved(true);
-      setTimeout(() => {
-        setIsSaved(false);
-      }, 2000);
+        if (result.success) {
+          // Show saved feedback
+          setIsSaved(true);
+
+          // Redirect to patients list after 2 seconds
+          setTimeout(() => {
+            router.push("/patients");
+          }, 2000);
+        } else {
+          console.error("Error creating patient:", result.error);
+          setIsSaved(false);
+        }
+      }
+    } catch (error) {
+      console.error("Error saving patient:", error);
+      setIsSaved(false);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -257,10 +369,6 @@ export default function PatientDossierPage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Retour à la liste
           </Button>
-          <Button variant="primary" type="submit">
-            <Save className="mr-2 h-4 w-4" />
-            Enregistrer
-          </Button>
         </div>
       </section>
 
@@ -289,14 +397,34 @@ export default function PatientDossierPage() {
               onChange={handleInputChange("birthDate")}
               required
             />
-            <InputField
-              label="Identifiant dossier"
-              id="patient-id"
-              value={formData.identifier}
-              onChange={handleInputChange("identifier")}
-              placeholder="Ex. P-2024-013"
-              required
-            />
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <label htmlFor="patient-id" className="text-sm font-medium text-[#221b5b]">
+                  Identifiant dossier
+                </label>
+                
+              </div>
+              <div className="flex items-center justify-between">
+              <button
+                  type="button"
+                  onClick={generateRandomPatientId}
+                  className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 hover:text-indigo-700 transition-colors"
+                  title="Générer un identifiant aléatoire"
+                  aria-label="Générer un identifiant aléatoire"
+                >
+                  <Dices className="h-4 w-4" />
+                </button>
+              <input
+                id="patient-id"
+                type="text"
+                value={formData.pid}
+                onChange={handleInputChange("pid")}
+                placeholder="Ex. P-2024-013"
+                required
+                className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm transition focus:border-[#7c3aed] focus:outline-none focus:ring-2 focus:ring-[#dcd0ff]"
+              />
+              </div>
+            </div>
             <InputField
               label="Service d'affectation"
               id="patient-service"
@@ -316,17 +444,6 @@ export default function PatientDossierPage() {
                 { label: "Hospitalisé", value: "Hospitalisé" },
                 { label: "Consultation", value: "Consultation" },
                 { label: "Suivi", value: "Suivi" },
-              ]}
-            />
-            <SelectField
-              label="Niveau de risque"
-              id="patient-risk"
-              value={formData.riskLevel}
-              onChange={handleInputChange("riskLevel")}
-              options={[
-                { label: "Élevé", value: "Élevé" },
-                { label: "Modéré", value: "Modéré" },
-                { label: "Standard", value: "Standard" },
               ]}
             />
             <SelectField
@@ -429,10 +546,10 @@ export default function PatientDossierPage() {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Observations Section */}
-          {sortedObservations.length > 0 && (
+          {observations.length > 0 && (
             <div>
               <h3 className="text-sm font-semibold text-slate-800 mb-4">
-                Historique des observations ({sortedObservations.length})
+                Historique des observations ({observations.length})
               </h3>
 
               {/* XL Screen: Two-column layout */}
@@ -440,7 +557,7 @@ export default function PatientDossierPage() {
                 {/* Left: Dates List */}
                 <div className="xl:border-r xl:border-slate-200 xl:pr-4">
                   <div className="space-y-1.5 max-h-96 overflow-y-auto">
-                    {sortedObservations.map((observation, index) => {
+                    {observations.map((observation, index) => {
                       const obsDate = new Date(observation.timestamp);
                       const formattedDate = new Intl.DateTimeFormat("fr-FR", {
                         day: "numeric",
@@ -481,7 +598,7 @@ export default function PatientDossierPage() {
                           {formatObservationTimestamp(selectedObservation.timestamp)}
                         </p>
                         <p className="text-xs text-slate-500 mt-1">
-                          Observation {sortedObservations.findIndex(o => o.id === selectedObservation.id) + 1} sur {sortedObservations.length}
+                          Observation {observations.findIndex(o => o.id === selectedObservation.id) + 1} sur {observations.length}
                         </p>
                       </div>
                       <div className="bg-white rounded-lg border border-slate-200 p-4 flex-1 overflow-y-auto prose prose-sm max-w-none">
@@ -508,7 +625,7 @@ export default function PatientDossierPage() {
               {/* Smaller Screens: Dates List with Sliding Panel */}
               <div className="xl:hidden">
                 <div className="border border-slate-200 rounded-xl bg-white p-3 space-y-1 max-h-60 overflow-y-auto">
-                  {sortedObservations.map((observation, index) => {
+                  {observations.map((observation, index) => {
                     const obsDate = new Date(observation.timestamp);
                     const formattedDate = new Intl.DateTimeFormat("fr-FR", {
                       day: "numeric",
@@ -574,7 +691,7 @@ export default function PatientDossierPage() {
                             {formatObservationTimestamp(selectedObservation.timestamp)}
                           </p>
                           <p className="text-xs text-slate-500 mt-2">
-                            Observation {sortedObservations.findIndex(o => o.id === selectedObservation.id) + 1} sur {sortedObservations.length}
+                            Observation {observations.findIndex(o => o.id === selectedObservation.id) + 1} sur {observations.length}
                           </p>
                         </div>
                         <div className="bg-slate-50 rounded-lg border border-slate-200 p-4 flex-1 overflow-y-auto prose prose-sm max-w-none">
@@ -607,19 +724,81 @@ export default function PatientDossierPage() {
                 : "Observations initiales"}
             </label>
             <WYSIWYGEditor
-              value={formData.observationDraft}
-              onChange={(value) =>
-                setFormData((previous) => ({
-                  ...previous,
-                  observationDraft: value,
-                }))
-              }
+              value={observationDraft}
+              onChange={setObservationDraft}
               placeholder="Saisissez une observation, elle sera horodatée lors de l'enregistrement."
               className="min-h-64"
             />
             <p className="text-xs text-slate-500">
               Utilisez les outils de formatage pour structurer votre observation (gras, italique, titres, listes, etc.)
             </p>
+
+            {/* Save Observation Button - Only for existing patients */}
+            {isExistingPatient && (
+              <div className="mt-4 flex items-center gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    if (!observationDraft.trim()) {
+                      return;
+                    }
+
+                    setIsSavingObservation(true);
+                    try {
+                      // Call API to save observation
+                      const result = await saveObservation(formData.id, observationDraft);
+
+                      if (result.success && result.data) {
+                        // Add the returned observation to the list
+                        const newObservation: ObservationEntry = {
+                          id: String(result.data.id),
+                          timestamp: result.data.timestamp,
+                          note: result.data.note,
+                        };
+
+                        setObservations((prev) => [newObservation, ...prev]);
+                        setObservationDraft("");
+                        setObservationSaved(true);
+
+                        // Clear success message after 2 seconds
+                        if (observationTimeoutRef.current) {
+                          clearTimeout(observationTimeoutRef.current);
+                        }
+                        observationTimeoutRef.current = setTimeout(() => {
+                          setObservationSaved(false);
+                        }, 2000);
+                      } else {
+                        console.error("Failed to save observation:", result.error);
+                      }
+                    } catch (error) {
+                      console.error("Error saving observation:", error);
+                    } finally {
+                      setIsSavingObservation(false);
+                    }
+                  }}
+                  disabled={isSavingObservation || !observationDraft.trim()}
+                >
+                  {isSavingObservation ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Enregistrement...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Enregistrer l'observation
+                    </>
+                  )}
+                </Button>
+                {observationSaved && (
+                  <p className="text-xs text-emerald-600 font-medium">
+                    ✓ Observation enregistrée
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <Separator />
@@ -644,7 +823,7 @@ export default function PatientDossierPage() {
           ) : (
             <>
               <Save className="mr-2 h-4 w-4" />
-              Enregistrer
+              {isExistingPatient? 'Mettre à jour':'Enregistrer'}
             </>
           )}
         </Button>

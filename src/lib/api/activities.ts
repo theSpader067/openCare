@@ -10,6 +10,7 @@ export async function createActivity({
   time,
   location,
   activityDay,
+  team,
 }: {
   title: string;
   type: string;
@@ -17,6 +18,7 @@ export async function createActivity({
   time?: string;
   location?: string;
   activityDay?: Date;
+  team?: string;
 }): Promise<{ success: boolean; data?: ActivityItem; error?: string }> {
   try {
     const response = await fetch("/api/activities", {
@@ -24,7 +26,7 @@ export async function createActivity({
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ title, type, description, time, location, activityDay }),
+      body: JSON.stringify({ title, type, description, time, location, activityDay, team }),
     });
 
     const result = await response.json();
@@ -55,8 +57,6 @@ export async function getActivities(): Promise<{
     });
 
     const result = await response.json();
-    console.log('activties @@@@@@@@@@')
-    console.log(result)
     return result;
   } catch (error) {
     console.error("Error fetching activities:", error);
@@ -105,6 +105,7 @@ export async function updateActivity({
   time,
   location,
   activityDay,
+  team,
 }: {
   activityId: number;
   title?: string;
@@ -113,6 +114,7 @@ export async function updateActivity({
   time?: string;
   location?: string;
   activityDay?: Date;
+  team?: string;
 }): Promise<{ success: boolean; data?: ActivityItem; error?: string }> {
   try {
     const response = await fetch(`/api/activities/${activityId}`, {
@@ -120,7 +122,7 @@ export async function updateActivity({
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ title, type, description, time, location, activityDay }),
+      body: JSON.stringify({ title, type, description, time, location, activityDay, team }),
     });
 
     const result = await response.json();

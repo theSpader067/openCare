@@ -1,0 +1,27 @@
+{
+  "name": "remotion",
+  "version": "1.0.0",
+  "description": "Remotion promo/explainer scenes for the Open Care app",
+  "main": "src/Root.tsx",
+  "scripts": {
+    "start": "remotion preview",
+    "studio": "remotion studio",
+    "render:scene-one": "remotion render PromoSceneOne out/promo-scene-one.mp4",
+    "render:scene-two": "remotion render PromoSceneTwo out/promo-scene-two.mp4"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@remotion/cli": "^4.0.375",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "remotion": "^4.0.375"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.4",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3"
+  }
+}

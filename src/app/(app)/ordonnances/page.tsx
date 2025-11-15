@@ -1,26 +1,38 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Calendar, FilePlus, Pill, User } from "lucide-react";
+import { Calendar, FilePlus, Pill, User, Lock, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataListLayout } from "@/components/document/DataListLayout";
 import { PatientModal } from "@/components/document/PatientModal";
 import type { Patient } from "@/types/document";
 import { mockPatients, mockOrdonnances } from "@/data/ordonnances/ordonnances-data";
+import {
+  createOrdonnance,
+  getOrdonnances,
+  deleteOrdonnance,
+} from "@/lib/api/ordonnances";
+import type { DocumentItem } from "@/types/document";
 
 type Ordonnance = {
   id: string;
   title: string;
-  date: string;
+  date: string | null;
   patient?: Patient;
-  clinicalInfo: string;
-  prescriptionDetails: string;
+  clinicalInfo?: string;
+  prescriptionDetails?: string;
   createdAt: string;
   createdBy: string;
   age?: number;
+  patientId?: number;
+  patientName?: string;
+  patientAge?: string;
+  patientHistory?: string;
+  isPrivate?: boolean;
 };
 
-function formatDate(dateString: string) {
+function formatDate(dateString: string | null | undefined) {
+  if (!dateString) return "N/A";
   return new Intl.DateTimeFormat("fr-FR", {
     day: "2-digit",
     month: "short",
@@ -29,10 +41,8 @@ function formatDate(dateString: string) {
 }
 
 export default function OrdonnancesPage() {
-  const [ordonnances, setOrdonnances] = useState<Ordonnance[]>(mockOrdonnances);
-  const [activeOrdonnanceId, setActiveOrdonnanceId] = useState<string | null>(
-    mockOrdonnances[0]?.id ?? null
-  );
+  const [ordonnances, setOrdonnances] = useState<Ordonnance[]>([]);
+  const [activeOrdonnanceId, setActiveOrdonnanceId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
@@ -41,14 +51,59 @@ export default function OrdonnancesPage() {
   );
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [createForm, setCreateForm] = useState({
     title: "",
     date: new Date().toISOString().split("T")[0],
     patient: null as Patient | null,
+    patientSource: null as "db" | "new" | null,
+    patientName: "",
+    patientAge: "",
+    patientHistory: "",
     clinicalInfo: "",
     prescriptionDetails: "",
+    isPrivate: false,
   });
+
+  // Load ordonnances from API on mount
+  useEffect(() => {
+    const loadOrdonnances = async () => {
+      try {
+        setIsLoading(true);
+        const result = await getOrdonnances();
+        if (result.success && result.data) {
+          const convertedOrdonnances = result.data.map((ord: any) => ({
+            id: ord.id.toString(),
+            title: ord.title,
+            date: ord.date,
+            patient: ord.patient,
+            clinicalInfo: ord.clinicalInfo,
+            prescriptionDetails: ord.prescriptionDetails,
+            createdAt: ord.createdAt,
+            createdBy: "Vous",
+            patientId: ord.patientId,
+            patientName: ord.patientName,
+            patientAge: ord.patientAge,
+            patientHistory: ord.patientHistory,
+            isPrivate: ord.isPrivate || false,
+          }));
+          setOrdonnances(convertedOrdonnances);
+          if (convertedOrdonnances.length > 0) {
+            setActiveOrdonnanceId(convertedOrdonnances[0].id);
+          }
+        } else {
+          console.error("Failed to load ordonnances:", result.error);
+        }
+      } catch (error) {
+        console.error("Error loading ordonnances:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadOrdonnances();
+  }, []);
 
   const userOrdonnances = useMemo(() => {
     return ordonnances.filter((ord) => ord.createdBy === "Vous");
@@ -60,24 +115,56 @@ export default function OrdonnancesPage() {
       return (
         !query ||
         ord.title.toLowerCase().includes(query) ||
-        ord.prescriptionDetails.toLowerCase().includes(query) ||
+        ord.prescriptionDetails?.toLowerCase().includes(query) ||
         ord.patient?.fullName.toLowerCase().includes(query)
       );
     });
   }, [userOrdonnances, searchTerm]);
 
+  const parsedOrdonnances = useMemo(() => {
+    return ordonnances.map((ord) => ({
+      id: ord.id,
+      title: ord.title,
+      date: ord.date || new Date().toISOString().split("T")[0],
+      patient: ord.patient,
+      createdAt: ord.createdAt,
+      createdBy: ord.createdBy,
+      clinicalInfo: ord.clinicalInfo,
+      prescriptionDetails: ord.prescriptionDetails,
+      patientId: ord.patientId,
+      patientName: ord.patientName,
+      patientAge: ord.patientAge,
+      patientHistory: ord.patientHistory,
+      isPrivate: ord.isPrivate,
+    } as DocumentItem));
+  }, [ordonnances]);
+
+  const parsedFilteredOrdonnances = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    return parsedOrdonnances
+      .filter((ord) => ord.createdBy === "Vous")
+      .filter((ord) => {
+        return (
+          !query ||
+          ord.title.toLowerCase().includes(query) ||
+          (ord.prescriptionDetails && ord.prescriptionDetails.toLowerCase().includes(query)) ||
+          (ord.patient?.fullName && ord.patient.fullName.toLowerCase().includes(query))
+        );
+      });
+  }, [parsedOrdonnances, searchTerm]);
+
   useEffect(() => {
-    if (!isCreateMode && !activeOrdonnanceId && filteredOrdonnances.length > 0) {
-      setActiveOrdonnanceId(filteredOrdonnances[0].id);
+    if (!isCreateMode && !activeOrdonnanceId && parsedFilteredOrdonnances.length > 0) {
+      setActiveOrdonnanceId(parsedFilteredOrdonnances[0].id);
     }
-  }, [activeOrdonnanceId, filteredOrdonnances, isCreateMode]);
+  }, [activeOrdonnanceId, parsedFilteredOrdonnances, isCreateMode]);
 
   const activeOrdonnance = useMemo(() => {
     if (!activeOrdonnanceId) {
       return null;
     }
-    return ordonnances.find((ord) => ord.id === activeOrdonnanceId) ?? null;
-  }, [activeOrdonnanceId, ordonnances]);
+    return parsedOrdonnances.find((ord) => ord.id === activeOrdonnanceId) as Ordonnance | null ?? null;
+  }, [activeOrdonnanceId, parsedOrdonnances]);
 
   const closeMobilePanel = () => {
     setIsMobilePanelOpen(false);
@@ -104,8 +191,13 @@ export default function OrdonnancesPage() {
       title: "",
       date: new Date().toISOString().split("T")[0],
       patient: null,
+      patientSource: null,
+      patientName: "",
+      patientAge: "",
+      patientHistory: "",
       clinicalInfo: "",
       prescriptionDetails: "",
+      isPrivate: false,
     });
 
     if (typeof window !== "undefined" && window.innerWidth < 1280) {
@@ -119,68 +211,120 @@ export default function OrdonnancesPage() {
   };
 
   const handleSelectPatient = (patient: Patient) => {
-    setCreateForm((prev) => ({ ...prev, patient }));
+    setCreateForm((prev) => ({
+      ...prev,
+      patient,
+      patientSource: "db",
+      patientName: "",
+      patientAge: "",
+      patientHistory: "",
+    }));
     setShowPatientModal(false);
   };
 
   const handleCreateNewPatient = (formData: Record<string, string>) => {
-    if (!formData.fullName?.trim() || !formData.age) {
+    if (!formData.fullName?.trim()) {
       return;
     }
-    const newPatient: Patient = {
-      id: `P-${Date.now()}`,
-      fullName: formData.fullName.trim(),
-      age: parseInt(formData.age, 10),
-      histoire: formData.histoire?.trim() || "",
-    };
-    setCreateForm((prev) => ({ ...prev, patient: newPatient }));
+
+    setCreateForm((prev) => ({
+      ...prev,
+      patientSource: "new",
+      patientName: formData.fullName.trim(),
+      patientAge: formData.age?.trim() || "",
+      patientHistory: formData.histoire?.trim() || "",
+      patient: null,
+    }));
     setShowPatientModal(false);
   };
 
-  const handleCreateOrdonnance = () => {
+  const handleCreateOrdonnance = async () => {
     if (
       !createForm.title ||
       !createForm.date ||
-      !createForm.patient ||
       !createForm.clinicalInfo ||
-      !createForm.prescriptionDetails
+      !createForm.prescriptionDetails ||
+      !createForm.patientSource
     ) {
       return;
     }
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      const newOrdonnance: Ordonnance = {
-        id: `ORD-${Date.now()}`,
+    try {
+      // Prepare the data for API
+      const apiData = {
         title: createForm.title,
         date: createForm.date,
-        patient: createForm.patient ?? undefined,
         clinicalInfo: createForm.clinicalInfo,
         prescriptionDetails: createForm.prescriptionDetails,
-        createdAt: new Date().toISOString(),
-        createdBy: "Vous",
+        isPrivate: createForm.isPrivate,
       };
 
-      setOrdonnances((prev) => [newOrdonnance, ...prev]);
+      if (createForm.patientSource === "db" && createForm.patient) {
+        // Use existing patient from DB
+        Object.assign(apiData, {
+          patientId: createForm.patient.id,
+        });
+      } else {
+        // Use new patient data
+        Object.assign(apiData, {
+          patientName: createForm.patientName,
+          patientAge: createForm.patientAge,
+          patientHistory: createForm.patientHistory,
+        });
+      }
+
+      const result = await createOrdonnance(apiData as any);
+
+      if (result.success && result.data) {
+        // Convert the response data to match our Ordonnance type
+        const newOrdonnance: Ordonnance = {
+          id: result.data.id.toString(),
+          title: result.data.title,
+          date: result.data.date,
+          patient: result.data.patient,
+          clinicalInfo: result.data.clinicalInfo,
+          prescriptionDetails: result.data.prescriptionDetails,
+          createdAt: result.data.createdAt,
+          createdBy: "Vous",
+          patientId: result.data.patientId,
+          patientName: result.data.patientName,
+          patientAge: result.data.patientAge,
+          patientHistory: result.data.patientHistory,
+          isPrivate: result.data.isPrivate || false,
+        };
+
+        setOrdonnances((prev) => [newOrdonnance, ...prev]);
+        setIsCreateMode(false);
+        closeMobilePanel();
+        setActiveOrdonnanceId(newOrdonnance.id);
+        setCreateForm({
+          title: "",
+          date: new Date().toISOString().split("T")[0],
+          patient: null,
+          patientSource: null,
+          patientName: "",
+          patientAge: "",
+          patientHistory: "",
+          clinicalInfo: "",
+          prescriptionDetails: "",
+          isPrivate: false,
+        });
+      } else {
+        console.error("Failed to create ordonnance:", result.error);
+      }
+    } catch (error) {
+      console.error("Error creating ordonnance:", error);
+    } finally {
       setIsSubmitting(false);
-      setIsCreateMode(false);
-      closeMobilePanel();
-      setActiveOrdonnanceId(newOrdonnance.id);
-      setCreateForm({
-        title: "",
-        date: new Date().toISOString().split("T")[0],
-        patient: null,
-        clinicalInfo: "",
-        prescriptionDetails: "",
-      });
-    }, 520);
+    }
   };
 
   const isFormValid =
     createForm.title &&
     createForm.date &&
-    createForm.patient &&
+    createForm.patientSource &&
     createForm.clinicalInfo &&
     createForm.prescriptionDetails;
 
@@ -217,24 +361,156 @@ export default function OrdonnancesPage() {
         />
       </div>
 
+      {/* Privacy Toggle */}
+      <div className="space-y-2">
+        <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+          Type de partage
+        </label>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() =>
+              setCreateForm((prev) => ({ ...prev, isPrivate: true }))
+            }
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 transition-all ${
+              createForm.isPrivate
+                ? "border-red-300 bg-red-50 text-red-700"
+                : "border-slate-200 bg-white hover:border-slate-300"
+            }`}
+          >
+            <Lock className="h-4 w-4" />
+            <span className="text-sm font-medium">Privée</span>
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              setCreateForm((prev) => ({ ...prev, isPrivate: false }))
+            }
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 transition-all ${
+              !createForm.isPrivate
+                ? "border-blue-300 bg-blue-50 text-blue-700"
+                : "border-slate-200 bg-white hover:border-slate-300"
+            }`}
+          >
+            <Users className="h-4 w-4" />
+            <span className="text-sm font-medium">Équipe</span>
+          </button>
+        </div>
+      </div>
+
       {/* Patient Selection */}
       <div className="space-y-2">
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
           Patient
         </label>
-        <button
-          type="button"
-          onClick={() => setShowPatientModal(true)}
-          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-        >
-          {createForm.patient ? (
-            <span className="font-medium text-slate-900">
-              {createForm.patient.fullName}
-            </span>
-          ) : (
-            <span className="text-slate-500">Sélectionner un patient</span>
-          )}
-        </button>
+
+        {!createForm.patientSource ? (
+          // Show patient selection button
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowPatientModal(true)}
+            className="w-full justify-center"
+          >
+            <User className="mr-2 h-4 w-4" />
+            Sélectionner un patient
+          </Button>
+        ) : createForm.patientSource === "db" ? (
+          // Show selected patient from DB
+          <div className="space-y-2">
+            <input
+              type="text"
+              value={createForm.patient?.fullName || ""}
+              readOnly
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700"
+            />
+            <input
+              type="hidden"
+              value={createForm.patient?.id || ""}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() =>
+                setCreateForm((prev) => ({
+                  ...prev,
+                  patientSource: null,
+                  patient: null,
+                }))
+              }
+              className="w-full text-sm"
+            >
+              Changer de patient
+            </Button>
+          </div>
+        ) : (
+          // Show new patient fields
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                Nom du patient
+              </label>
+              <input
+                type="text"
+                value={createForm.patientName}
+                onChange={(e) =>
+                  setCreateForm((prev) => ({ ...prev, patientName: e.target.value }))
+                }
+                placeholder="Ex: Jean Dupont"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 mt-1"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                Âge du patient
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="150"
+                value={createForm.patientAge}
+                onChange={(e) =>
+                  setCreateForm((prev) => ({ ...prev, patientAge: e.target.value }))
+                }
+                placeholder="Ex: 65"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 mt-1"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                Antécédents du patient
+              </label>
+              <textarea
+                value={createForm.patientHistory}
+                onChange={(e) =>
+                  setCreateForm((prev) => ({ ...prev, patientHistory: e.target.value }))
+                }
+                placeholder="Historique médical, allergies, traitements actuels..."
+                rows={2}
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 mt-1"
+              />
+            </div>
+
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() =>
+                setCreateForm((prev) => ({
+                  ...prev,
+                  patientSource: null,
+                  patientName: "",
+                  patientAge: "",
+                  patientHistory: "",
+                }))
+              }
+              className="w-full text-sm"
+            >
+              Sélectionner un autre patient
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Clinical Info */}
@@ -286,7 +562,7 @@ export default function OrdonnancesPage() {
             ID Patient
           </p>
           <p className="text-lg font-bold text-slate-900 mt-1">
-            {activeOrdonnance.patient?.id}
+            {activeOrdonnance.patient?.id || activeOrdonnance.patientId || "N/A"}
           </p>
         </div>
         <div className="text-right">
@@ -304,9 +580,37 @@ export default function OrdonnancesPage() {
         <p className="text-xs uppercase tracking-wide text-indigo-600 font-semibold mb-2">
           Ordonnance
         </p>
-        <h2 className="text-2xl font-bold text-slate-900">
-          {activeOrdonnance.title}
-        </h2>
+        <div className="flex items-start justify-between gap-4">
+          <h2 className="text-2xl font-bold text-slate-900">
+            {activeOrdonnance.title}
+          </h2>
+          {/* Privacy Badge */}
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-lg whitespace-nowrap ${
+            activeOrdonnance.isPrivate
+              ? "bg-red-50 border border-red-200"
+              : "bg-blue-50 border border-blue-200"
+          }`}>
+            {activeOrdonnance.isPrivate ? (
+              <>
+                <Lock className="h-4 w-4 text-red-600" />
+                <span className={`text-xs font-semibold ${
+                  activeOrdonnance.isPrivate ? "text-red-700" : "text-blue-700"
+                }`}>
+                  Privée
+                </span>
+              </>
+            ) : (
+              <>
+                <Users className="h-4 w-4 text-blue-600" />
+                <span className={`text-xs font-semibold ${
+                  activeOrdonnance.isPrivate ? "text-red-700" : "text-blue-700"
+                }`}>
+                  Équipe
+                </span>
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Patient Info */}
@@ -347,36 +651,39 @@ export default function OrdonnancesPage() {
     </>
   ) : null;
 
-  const renderListItemContent = (ordonnance: Ordonnance) => (
-    <>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-1">
-          <p className="text-sm font-semibold text-slate-800">
-            {ordonnance.title}
-          </p>
-          <p className="text-xs text-slate-500">
-            Créé par {ordonnance.createdBy}
-          </p>
+  const renderListItemContent = (item: DocumentItem) => {
+    const ordonnance = item as Ordonnance;
+    return (
+      <>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-slate-800">
+              {ordonnance.title}
+            </p>
+            <p className="text-xs text-slate-500">
+              Créé par {ordonnance.createdBy}
+            </p>
+          </div>
+          <span className="text-xs text-slate-400">
+            {formatDate(ordonnance.date)}
+          </span>
         </div>
-        <span className="text-xs text-slate-400">
-          {formatDate(ordonnance.date)}
-        </span>
-      </div>
-      {ordonnance.patient && (
-        <div className="mt-3 rounded-xl border border-slate-200/70 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-          <p className="font-semibold text-slate-700">
-            {ordonnance.patient.fullName}
-          </p>
-          <p className="text-xs text-slate-500 mt-1">
-            {(ordonnance.patient as any).age} ans
-          </p>
-        </div>
-      )}
-      <p className="mt-3 text-sm text-slate-600 line-clamp-2">
-        {ordonnance.prescriptionDetails}
-      </p>
-    </>
-  );
+        {ordonnance.patient && (
+          <div className="mt-3 rounded-xl border border-slate-200/70 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+            <p className="font-semibold text-slate-700">
+              {ordonnance.patient.fullName}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              {(ordonnance.patient as any).age} ans
+            </p>
+          </div>
+        )}
+        <p className="mt-3 text-sm text-slate-600 line-clamp-2">
+          {ordonnance.prescriptionDetails}
+        </p>
+      </>
+    );
+  };
 
   return (
     <>
@@ -397,15 +704,15 @@ export default function OrdonnancesPage() {
         </Button>
       </section>
       <DataListLayout
-        items={ordonnances}
-        filteredItems={filteredOrdonnances}
+        items={parsedOrdonnances}
+        filteredItems={parsedFilteredOrdonnances}
         activeItemId={activeOrdonnanceId}
         isCreateMode={isCreateMode}
         isMobilePanelOpen={isMobilePanelOpen}
         mobilePanelMode={mobilePanelMode}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        onSelectItem={(item: Ordonnance) => handleSelectOrdonnance(item.id)}
+        onSelectItem={(item: DocumentItem) => handleSelectOrdonnance(item.id)}
         onOpenCreate={handleOpenCreate}
         onCancelCreate={handleCancelCreate}
         onCloseMobilePanel={closeMobilePanel}
@@ -422,6 +729,7 @@ export default function OrdonnancesPage() {
         createDescription="Enregistrez une nouvelle prescription"
         saveButtonText="Enregistrer"
         isFormValid={isFormValid as unknown as boolean}
+        isLoading={isLoading}
         onSave={handleCreateOrdonnance}
       />
 

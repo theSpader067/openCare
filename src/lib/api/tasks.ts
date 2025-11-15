@@ -6,9 +6,17 @@ import type { TaskItem } from "@/types/tasks";
 export async function createTask({
   title,
   isPrivate = false,
+  patientId,
+  patientName,
+  patientAge,
+  patientHistory,
 }: {
   title: string;
   isPrivate?: boolean;
+  patientId?: string | number;
+  patientName?: string;
+  patientAge?: string;
+  patientHistory?: string;
 }): Promise<{ success: boolean; data?: TaskItem; error?: string }> {
   try {
     const response = await fetch("/api/tasks", {
@@ -16,7 +24,7 @@ export async function createTask({
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ title, isPrivate }),
+      body: JSON.stringify({ title, isPrivate, patientId, patientName, patientAge, patientHistory }),
     });
 
     const result = await response.json();
@@ -92,11 +100,19 @@ export async function updateTask({
   title,
   isComplete,
   isPrivate,
+  patientId,
+  patientName,
+  patientAge,
+  patientHistory,
 }: {
   taskId: number;
   title?: string;
   isComplete?: boolean;
   isPrivate?: boolean;
+  patientId?: string | number | null;
+  patientName?: string;
+  patientAge?: string;
+  patientHistory?: string;
 }): Promise<{ success: boolean; data?: TaskItem; error?: string }> {
   try {
     const response = await fetch(`/api/tasks/${taskId}`, {
@@ -104,7 +120,15 @@ export async function updateTask({
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ title, isComplete, isPrivate }),
+      body: JSON.stringify({
+        title,
+        isComplete,
+        isPrivate,
+        patientId,
+        patientName,
+        patientAge,
+        patientHistory,
+      }),
     });
 
     const result = await response.json();

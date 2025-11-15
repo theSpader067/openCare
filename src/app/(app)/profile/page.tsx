@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,14 +19,16 @@ import {
   Check,
   Clock,
   Loader,
+  AlertCircle,
+  Stethoscope,
 } from "lucide-react";
 import {
-  userProfile,
   pendingJoinRequests,
   availableTeams,
   hospitals,
   services,
 } from "@/data/profile/profile-data";
+import { statuses } from "@/data/onboarding/onboarding-content";
 
 interface TeamMemberUser {
   id: string;
@@ -129,14 +132,32 @@ function BarChart({ data, title, yLabel }: { data: { label: string; value: numbe
   );
 }
 
+interface PersonalInfo {
+  avatar: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  email: string;
+  phone: string;
+  specialty: string;
+  year:string;
+  hospital: string;
+  address: string;
+  bio: string;
+  notifyByEmail: boolean;
+  notifyByPush: boolean;
+  profileVisible: boolean;
+}
+
 export default function ProfilePage() {
+  const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState<"personal" | "equipes" | "statistiques">("personal");
   const [isEditing, setIsEditing] = useState(false);
   const [searchTeams, setSearchTeams] = useState("");
-  const [teams, setTeams] = useState(availableTeams);
-  const [userTeams, setUserTeams] = useState(
-    availableTeams.filter((team) => team.joined)
-  );
+  const [teams, setTeams] = useState<any[]>([]);
+  const [userTeams, setUserTeams] = useState<any[]>([]);
+  const [isLoadingTeams, setIsLoadingTeams] = useState(false);
+  const [teamsError, setTeamsError] = useState<string | null>(null);
 
   // Create team modal
   const [isCreateTeamOpen, setIsCreateTeamOpen] = useState(false);
@@ -145,17 +166,172 @@ export default function ProfilePage() {
   const [selectedService, setSelectedService] = useState("");
   const [isCreatingTeam, setIsCreatingTeam] = useState(false);
   const [teamCreated, setTeamCreated] = useState(false);
+  const [teamCreationError, setTeamCreationError] = useState<string | null>(null);
 
   // Join requests
   const [joinRequests, setJoinRequests] = useState(pendingJoinRequests);
   const [isRequestsPanelOpen, setIsRequestsPanelOpen] = useState(false);
 
-  // Personal info form
-  const [personalInfo, setPersonalInfo] = useState(userProfile);
+  // Personal info form with loading state
+  const [personalInfo, setPersonalInfo] = useState<PersonalInfo | null>(null);
+  const [originalPersonalInfo, setOriginalPersonalInfo] = useState<PersonalInfo | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const handleSavePersonal = () => {
-    setIsEditing(false);
-    // In a real app, this would save to backend
+  // Fetch user profile data and teams
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setIsLoadingProfile(true);
+        setProfileError(null);
+
+        const response = await fetch("/api/profile");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch profile");
+        }
+
+        const data = await response.json();
+        setPersonalInfo(data);
+        setOriginalPersonalInfo(data);
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        setProfileError("Failed to load profile. Please try again.");
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+
+    if (status === "authenticated") {
+      fetchProfile();
+    }
+  }, [status]);
+
+  // Fetch user's teams
+  useEffect(() => {
+    const fetchTeams = async () => {
+      try {
+        setIsLoadingTeams(true);
+        setTeamsError(null);
+
+        const response = await fetch("/api/teams");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch teams");
+        }
+
+        const data = await response.json();
+
+        // Transform teams to match UI expectations
+        const transformedTeams = (data.teams || []).map((team: any) => ({
+          id: team.id.toString(),
+          name: team.name,
+          members: team.members?.length || 0,
+          joined: true,
+          description: team.service ? `Service: ${team.service}` : (team.hospital ? `Hôpital: ${team.hospital}` : "Équipe"),
+          teamMembers: team.members?.map((member: any) => ({
+            id: member.id.toString(),
+            name: `${member.firstName || ""} ${member.lastName || ""}`.trim(),
+            avatar: `${member.firstName?.[0] || ""}${member.lastName?.[0] || ""}`.toUpperCase(),
+            role: team.adminId === member.id ? "Admin" : "Membre",
+            specialty: member.specialty || "",
+          })),
+        }));
+
+        setUserTeams(transformedTeams);
+        // For now, use all teams as available teams (you can add filtering logic later)
+        setTeams(availableTeams);
+      } catch (error) {
+        console.error("Error fetching teams:", error);
+        setTeamsError("Failed to load teams.");
+      } finally {
+        setIsLoadingTeams(false);
+      }
+    };
+
+    if (status === "authenticated") {
+      fetchTeams();
+    }
+  }, [status]);
+
+  // Check if any data has been modified
+  const hasDataChanged = (): boolean => {
+    if (!originalPersonalInfo || !personalInfo) return false;
+
+    return (
+      personalInfo.firstName !== originalPersonalInfo.firstName ||
+      personalInfo.lastName !== originalPersonalInfo.lastName ||
+      personalInfo.username !== originalPersonalInfo.username ||
+      personalInfo.phone !== originalPersonalInfo.phone ||
+      personalInfo.specialty !== originalPersonalInfo.specialty ||
+      personalInfo.hospital !== originalPersonalInfo.hospital ||
+      personalInfo.year !== originalPersonalInfo.year ||
+      personalInfo.address !== originalPersonalInfo.address ||
+      personalInfo.bio !== originalPersonalInfo.bio ||
+      personalInfo.notifyByEmail !== originalPersonalInfo.notifyByEmail ||
+      personalInfo.notifyByPush !== originalPersonalInfo.notifyByPush ||
+      personalInfo.profileVisible !== originalPersonalInfo.profileVisible
+    );
+  };
+
+  const handleSavePersonal = async () => {
+    if (!personalInfo) return;
+
+    // Check if any data has changed
+    if (!hasDataChanged()) {
+      // No changes, just exit edit mode
+      setIsEditing(false);
+      return;
+    }
+
+    try {
+      setIsSavingProfile(true);
+      setProfileError(null);
+
+      const response = await fetch("/api/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          firstName: personalInfo.firstName,
+          lastName: personalInfo.lastName,
+          username: personalInfo.username,
+          phone: personalInfo.phone,
+          specialty: personalInfo.specialty,
+          hospital: personalInfo.hospital,
+          year: personalInfo.year,
+          address: personalInfo.address,
+          bio: personalInfo.bio,
+          notifyByEmail: personalInfo.notifyByEmail,
+          notifyByPush: personalInfo.notifyByPush,
+          profileVisible: personalInfo.profileVisible,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save profile");
+      }
+
+      // Update original data to match current data
+      setOriginalPersonalInfo(personalInfo);
+
+      // Show success message
+      setSaveSuccess(true);
+      setIsEditing(false);
+
+      // Hide success message after 2 seconds
+      setTimeout(() => {
+        setSaveSuccess(false);
+      }, 2000);
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      setProfileError("Failed to save profile. Please try again.");
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   const handleJoinTeam = (teamId: string) => {
@@ -169,37 +345,65 @@ export default function ProfilePage() {
   const handleCreateTeam = async () => {
     if (!selectedTeamName || !selectedHospital || !selectedService) return;
 
-    setIsCreatingTeam(true);
-    // Simulate API call to check if service exists
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      setIsCreatingTeam(true);
+      setTeamCreationError(null);
 
-    // Simulate successful team creation
-    const serviceName = services.find((s) => s.id === selectedService)?.name || "";
+      const response = await fetch("/api/teams", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: selectedTeamName,
+          hospital: selectedHospital,
+          service: selectedService,
+        }),
+      });
 
-    const newTeam: TeamMember = {
-      id: `TEAM-${Date.now()}`,
-      name: selectedTeamName,
-      description: `Équipe créée pour ${serviceName}`,
-      members: 1,
-      joined: true,
-      teamMembers: [
-        { id: "ME", name: "Dr. Alain Benali", avatar: "AB", role: "Admin", specialty: "Chef de service" },
-      ],
-    };
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to create team");
+      }
 
-    setTeams([...teams, newTeam]);
-    setUserTeams([...userTeams, newTeam]);
-    setTeamCreated(true);
-    setIsCreatingTeam(false);
+      const data = await response.json();
+      const newTeam = data.team;
 
-    // Reset form after 1.5 seconds
-    setTimeout(() => {
-      setSelectedTeamName("");
-      setSelectedHospital("");
-      setSelectedService("");
-      setTeamCreated(false);
-      setIsCreateTeamOpen(false);
-    }, 1500);
+      // Transform the team data to match the TeamMember interface
+      const transformedTeam = {
+        id: newTeam.id.toString(),
+        name: newTeam.name,
+        members: newTeam.members?.length || 1,
+        joined: true,
+        description: newTeam.service ? `Service: ${newTeam.service}` : "Nouvelle équipe",
+        teamMembers: newTeam.members?.map((member: any) => ({
+          id: member.id.toString(),
+          name: `${member.firstName || ""} ${member.lastName || ""}`.trim(),
+          avatar: `${member.firstName?.[0] || ""}${member.lastName?.[0] || ""}`.toUpperCase(),
+          role: newTeam.adminId === member.id ? "Admin" : "Membre",
+          specialty: member.specialty || "",
+        })),
+      };
+
+      setUserTeams([...userTeams, transformedTeam]);
+      setTeamCreated(true);
+      setIsCreatingTeam(false);
+
+      // Reset form after 1.5 seconds
+      setTimeout(() => {
+        setSelectedTeamName("");
+        setSelectedHospital("");
+        setSelectedService("");
+        setTeamCreated(false);
+        setIsCreateTeamOpen(false);
+      }, 1500);
+    } catch (error) {
+      console.error("Error creating team:", error);
+      setTeamCreationError(
+        error instanceof Error ? error.message : "Failed to create team"
+      );
+      setIsCreatingTeam(false);
+    }
   };
 
   const handleAcceptJoinRequest = (requestId: string) => {
@@ -216,6 +420,45 @@ export default function ProfilePage() {
       team.name.toLowerCase().includes(searchTeams.toLowerCase()) ||
       team.description.toLowerCase().includes(searchTeams.toLowerCase())
   );
+
+  if (isLoadingProfile) {
+    return (
+      <div className="space-y-6 pb-20 lg:pb-0">
+        <Card className="border-none bg-gradient-to-r from-indigo-50 to-blue-50 shadow-md">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center h-20">
+              <Loader className="h-6 w-6 text-indigo-600 animate-spin" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (profileError || !personalInfo) {
+    return (
+      <div className="space-y-6 pb-20 lg:pb-0">
+        <Card className="border-none bg-red-50 shadow-md">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3 text-red-700">
+              <AlertCircle className="h-5 w-5 flex-shrink-0" />
+              <div>
+                <p className="font-semibold">{profileError || "Failed to load profile"}</p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => window.location.reload()}
+                >
+                  Retry
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pb-20 lg:pb-0">
@@ -246,6 +489,10 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-1">
                   <Mail className="h-4 w-4 text-indigo-600" />
                   {personalInfo.email}
+                </div>
+                <div className="flex items-center gap-1">
+                  <Stethoscope className="h-4 w-4 text-indigo-600" />
+                  {personalInfo.year}
                 </div>
               </div>
             </div>
@@ -293,6 +540,18 @@ export default function ProfilePage() {
       {/* Personal Tab */}
       {activeTab === "personal" && (
         <div className="space-y-6">
+          {profileError && (
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700">
+              <AlertCircle className="h-5 w-5 flex-shrink-0" />
+              <p className="text-sm">{profileError}</p>
+            </div>
+          )}
+          {saveSuccess && (
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 animate-in fade-in">
+              <Check className="h-5 w-5 flex-shrink-0" />
+              <p className="text-sm font-medium">Profil mis à jour avec succès!</p>
+            </div>
+          )}
           <Card className="border-none bg-white/90">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
@@ -304,8 +563,14 @@ export default function ProfilePage() {
               <Button
                 variant={isEditing ? "ghost" : "primary"}
                 onClick={() => (isEditing ? handleSavePersonal() : setIsEditing(true))}
+                disabled={isSavingProfile}
               >
-                {isEditing ? (
+                {isSavingProfile ? (
+                  <>
+                    <Loader className="mr-2 h-4 w-4 animate-spin" />
+                    Enregistrement...
+                  </>
+                ) : isEditing ? (
                   <>
                     <Save className="mr-2 h-4 w-4" />
                     Enregistrer
@@ -368,7 +633,7 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-3">
                 <div className="grid gap-2">
                   <label className="text-sm font-semibold text-slate-700">Spécialité</label>
                   <input
@@ -380,6 +645,38 @@ export default function ProfilePage() {
                     className="px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 disabled:bg-slate-50 disabled:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                   />
                 </div>
+                <div className="grid gap-2">
+                  <label className="text-sm font-semibold text-slate-700">Hôpital</label>
+                  <input
+                    disabled={!isEditing}
+                    value={personalInfo.hospital}
+                    onChange={(e) =>
+                      setPersonalInfo({ ...personalInfo, hospital: e.target.value })
+                    }
+                    className="px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 disabled:bg-slate-50 disabled:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm font-semibold text-slate-700">Année / Statut</label>
+                  <select
+                    disabled={!isEditing}
+                    value={personalInfo.year}
+                    onChange={(e) =>
+                      setPersonalInfo({ ...personalInfo, year: e.target.value })
+                    }
+                    className="px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 disabled:bg-slate-50 disabled:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                  >
+                    <option value="">Sélectionner un statut</option>
+                    {statuses.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-1">
                 <div className="grid gap-2">
                   <label className="text-sm font-semibold text-slate-700">Adresse</label>
                   <input
@@ -419,21 +716,54 @@ export default function ProfilePage() {
                   <p className="font-medium text-slate-900">Notifications par email</p>
                   <p className="text-sm text-slate-600">Recevoir les mises à jour importantes</p>
                 </div>
-                <input type="checkbox" defaultChecked className="w-4 h-4" />
+                <input
+                  type="checkbox"
+                  checked={personalInfo.notifyByEmail}
+                  onChange={(e) =>
+                    setPersonalInfo({
+                      ...personalInfo,
+                      notifyByEmail: e.target.checked,
+                    })
+                  }
+                  disabled={!isEditing}
+                  className="w-4 h-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                />
               </div>
               <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200">
                 <div>
                   <p className="font-medium text-slate-900">Notifications push</p>
                   <p className="text-sm text-slate-600">Alertes temps réel sur l'application</p>
                 </div>
-                <input type="checkbox" defaultChecked className="w-4 h-4" />
+                <input
+                  type="checkbox"
+                  checked={personalInfo.notifyByPush}
+                  onChange={(e) =>
+                    setPersonalInfo({
+                      ...personalInfo,
+                      notifyByPush: e.target.checked,
+                    })
+                  }
+                  disabled={!isEditing}
+                  className="w-4 h-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                />
               </div>
               <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200">
                 <div>
                   <p className="font-medium text-slate-900">Visibilité du profil</p>
                   <p className="text-sm text-slate-600">Rendre votre profil visible aux collègues</p>
                 </div>
-                <input type="checkbox" defaultChecked className="w-4 h-4" />
+                <input
+                  type="checkbox"
+                  checked={personalInfo.profileVisible}
+                  onChange={(e) =>
+                    setPersonalInfo({
+                      ...personalInfo,
+                      profileVisible: e.target.checked,
+                    })
+                  }
+                  disabled={!isEditing}
+                  className="w-4 h-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                />
               </div>
             </CardContent>
           </Card>
@@ -447,7 +777,10 @@ export default function ProfilePage() {
           <div className="flex gap-3">
             <Button
               variant="primary"
-              onClick={() => setIsCreateTeamOpen(true)}
+              onClick={() => {
+                setIsCreateTeamOpen(true);
+                setTeamCreationError(null);
+              }}
               className="h-10 flex-shrink-0"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -719,57 +1052,97 @@ export default function ProfilePage() {
           )}
 
           {/* My Teams */}
-          {userTeams.map((team) => (
-            <Card key={team.id} className="border-none bg-white/90">
-              <CardHeader className="pb-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-xl">{team.name}</CardTitle>
-                    <CardDescription>{team.description}</CardDescription>
-                  </div>
-                  <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 h-fit">
-                    <Check className="h-3 w-3 mr-1" />
-                    Rejoint
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Team Members Grid */}
-                  <div>
-                    <h4 className="text-sm font-semibold text-slate-900 mb-3">
-                      Membres ({team.teamMembers?.length || 0})
-                    </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {team.teamMembers?.map((member) => (
-                        <div
-                          key={member.id}
-                          className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30 transition"
-                        >
-                          <div className="flex-shrink-0">
-                            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 text-white flex items-center justify-center text-xs font-semibold">
-                              {member.avatar}
-                            </div>
+          {userTeams.length > 0 ? (
+            <div className="space-y-3">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-slate-900">Mes Équipes ({userTeams.length})</h2>
+              </div>
+
+              {/* Teams List */}
+              <div className="space-y-3">
+                {userTeams.map((team, idx) => {
+                  const gradients = [
+                    "from-indigo-500 to-blue-500",
+                    "from-purple-500 to-pink-500",
+                    "from-emerald-500 to-cyan-500",
+                    "from-orange-500 to-red-500",
+                  ];
+                  const gradient = gradients[idx % gradients.length];
+                  const adminCount = team.teamMembers?.filter((m: any) => m.role === "Admin").length || 0;
+
+                  return (
+                    <div
+                      key={team.id}
+                      className="group border border-slate-200 rounded-xl overflow-hidden hover:border-slate-300 hover:shadow-md transition-all duration-200 bg-white"
+                    >
+                      {/* Header */}
+                      <div className={`bg-gradient-to-r ${gradient} px-4 py-3 flex items-center justify-between`}>
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={`h-9 w-9 rounded-lg bg-white/20 flex items-center justify-center text-white font-bold text-sm flex-shrink-0`}>
+                            {team.name.charAt(0).toUpperCase()}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-900 truncate">
-                              {member.name}
-                            </p>
-                            <p className="text-xs text-slate-600 truncate">
-                              {member.role}
-                            </p>
-                            <p className="text-xs text-slate-500 truncate">
-                              {member.specialty}
-                            </p>
+                          <div className="min-w-0">
+                            <h3 className="text-white font-semibold text-sm truncate">{team.name}</h3>
+                            <p className="text-white/80 text-xs truncate">{team.description}</p>
                           </div>
                         </div>
-                      ))}
+                        <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                          <span className="text-white text-xs font-semibold">{team.teamMembers?.length || 0}</span>
+                          <span className="text-white/70 text-xs">👥</span>
+                        </div>
+                      </div>
+
+                      {/* Members */}
+                      <div className="px-4 py-3">
+                        <div className="flex items-center gap-1 flex-wrap">
+                          {team.teamMembers?.slice(0, 6).map((member: any) => (
+                            <div
+                              key={member.id}
+                              className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 text-white flex items-center justify-center text-xs font-bold border border-slate-200 hover:scale-110 transition-transform cursor-pointer relative group/tooltip"
+                              title={member.name}
+                            >
+                              {member.avatar}
+                              {member.role === "Admin" && (
+                                <div className="absolute -top-1 -right-1 text-xs">⭐</div>
+                              )}
+                              {/* Tooltip */}
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-50">
+                                {member.name}
+                              </div>
+                            </div>
+                          ))}
+                          {(team.teamMembers?.length || 0) > 6 && (
+                            <div className="h-8 w-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold border border-slate-200 text-xs">
+                              +{(team.teamMembers?.length || 0) - 6}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50">
+              <Briefcase className="h-10 w-10 text-slate-400 mb-3" />
+              <h3 className="font-semibold text-slate-900 mb-1">Aucune équipe</h3>
+              <p className="text-sm text-slate-600 mb-4">Créez votre première équipe</p>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => {
+                  setIsCreateTeamOpen(true);
+                  setTeamCreationError(null);
+                }}
+                className="gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Créer
+              </Button>
+            </div>
+          )}
 
           {/* Create Team Modal */}
           {isCreateTeamOpen && (
@@ -792,11 +1165,19 @@ export default function ProfilePage() {
                 </CardHeader>
 
                 <CardContent className="space-y-4">
+                  {/* Error State */}
+                  {teamCreationError && (
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700">
+                      <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                      <p className="text-sm">{teamCreationError}</p>
+                    </div>
+                  )}
+
                   {/* Loading State */}
                   {isCreatingTeam && (
                     <div className="flex flex-col items-center justify-center py-8 gap-3">
                       <Loader className="h-8 w-8 text-indigo-600 animate-spin" />
-                      <p className="text-sm text-slate-600 font-medium">Vérification de l'équipe...</p>
+                      <p className="text-sm text-slate-600 font-medium">Création de l'équipe...</p>
                     </div>
                   )}
 
@@ -826,18 +1207,13 @@ export default function ProfilePage() {
 
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-slate-700">Hôpital</label>
-                        <select
+                        <input
                           value={selectedHospital}
+                          placeholder="hôpital"
                           onChange={(e) => setSelectedHospital(e.target.value)}
                           className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                        >
-                          <option value="">Sélectionner un hôpital</option>
-                          {hospitals.map((hospital) => (
-                            <option key={hospital.id} value={hospital.id}>
-                              {hospital.name}
-                            </option>
-                          ))}
-                        </select>
+                       
+                        />
                       </div>
 
                       <div className="space-y-2">
@@ -849,7 +1225,7 @@ export default function ProfilePage() {
                         >
                           <option value="">Sélectionner un service</option>
                           {services.map((service) => (
-                            <option key={service.id} value={service.id}>
+                            <option key={service.id} value={service.name}>
                               {service.name}
                             </option>
                           ))}
@@ -872,10 +1248,17 @@ export default function ProfilePage() {
                         <Button
                           variant="primary"
                           onClick={handleCreateTeam}
-                          disabled={!selectedTeamName || !selectedHospital || !selectedService}
+                          disabled={!selectedTeamName || !selectedHospital || !selectedService || isCreatingTeam}
                           className="flex-1"
                         >
-                          Créer l'équipe
+                          {isCreatingTeam ? (
+                            <>
+                              <Loader className="mr-2 h-4 w-4 animate-spin" />
+                              Création...
+                            </>
+                          ) : (
+                            "Créer l'équipe"
+                          )}
                         </Button>
                       </div>
                     </>

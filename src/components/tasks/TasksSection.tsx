@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { getTasks } from "@/lib/api/tasks";
 import {
   CheckCircle2,
@@ -12,9 +12,13 @@ import {
   RotateCw,
   Trash2,
   Users,
+  User as UserIcon,
   X,
   Star,
+  MoreVertical,
+  Search,
 } from "lucide-react";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,20 +27,26 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
 import type { TaskItem, TaskFormState } from "@/types/tasks";
+import { PatientCreate, type PatientCreateRef } from "@/components/document/PatientCreate";
 
 interface Patient {
-  id: string;
-  name: string;
+  id: string | number;
+  name?: string;
+  fullName?: string;
 }
 
 interface TaskFormData {
   titles: string[];
   taskType?: "team" | "private";
+  patientId?: string;
   patientName?: string;
+  patientAge?: string;
+  patientHistory?: string;
 }
 
 export interface TasksSectionRef {
   refresh: () => Promise<void>;
+  addTasks: (newTasks: TaskItem[]) => void;
 }
 
 interface TasksSectionProps {
@@ -67,6 +77,13 @@ interface TasksSectionProps {
   contentClassName?: string;
 }
 
+const getUserDisplayName = (user: any): string => {
+  if (user.firstName && user.lastName) {
+    return `${user.firstName} ${user.lastName}`;
+  }
+  return user.email || "Unknown";
+};
+
 export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
   function TasksSection({
     title = "Consignes du jour",
@@ -86,6 +103,9 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
     contentClassName,
   }: TasksSectionProps, ref) {
     const [tasks, setTasks] = useState<TaskItem[]>([]);
+    const [patientSearch,setPatientSearch] = useState('');
+    const [patientMode,setPatientMode] = useState('select');
+    const [newPatientForm,setNewPatientForm] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
     const [isEditTaskModalOpen, setIsEditTaskModalOpen] = useState(false);
@@ -94,18 +114,22 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
       titles: [""],
       patientId: undefined,
       patientName: "",
+      patientAge: "",
+      patientHistory: "",
       taskType: "team",
     });
     const [taskToEdit, setTaskToEdit] = useState<TaskItem | null>(null);
     const [taskToDelete, setTaskToDelete] = useState<TaskItem | null>(null);
     const [swipedTaskId, setSwipedTaskId] = useState<string | null>(null);
-    const [patientSearch, setPatientSearch] = useState("");
-    const [showPatientDropdown, setShowPatientDropdown] = useState(false);
     const [isAddingFavoriteTask, setIsAddingFavoriteTask] = useState(false);
     const [newFavoriteTask, setNewFavoriteTask] = useState("");
     const [localFavoriteTasks, setLocalFavoriteTasks] = useState(favoriteTasks);
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // Refs for PatientCreate in add and edit modals
+    const patientCreateAddRef = useRef<PatientCreateRef>(null);
+    const patientCreateEditRef = useRef<PatientCreateRef>(null);
 
     // Fetch tasks on mount
     const loadTasks = async () => {
@@ -123,9 +147,12 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
       }
     };
 
-    // Expose refresh method to parent components
+    // Expose refresh and addTasks methods to parent components
     useImperativeHandle(ref, () => ({
       refresh: loadTasks,
+      addTasks: (newTasks: TaskItem[]) => {
+        setTasks((prevTasks) => [...newTasks, ...prevTasks]);
+      },
     }), []);
 
     // Load tasks on mount
@@ -139,22 +166,20 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
   const completedTasks = tasks?.filter((task) => task.done).length;
   const tasksCount = tasks?.length;
 
-  // Filter patients based on search
-  const filteredPatients = patients.filter((patient) =>
-    patient.name.toLowerCase().includes(patientSearch.toLowerCase())
-  );
-
   // Task handlers
   const handleOpenAddTaskModal = () => {
     setTaskForm({
       titles: [""],
       patientId: undefined,
       patientName: "",
+      patientAge: "",
+      patientHistory: "",
       taskType: "team",
     });
     setTaskToEdit(null);
+    setPatientMode("select");
     setPatientSearch("");
-    setShowPatientDropdown(false);
+    setNewPatientForm({ fullName: "" });
     setIsAddingFavoriteTask(false);
     setNewFavoriteTask("");
     setIsAddTaskModalOpen(true);
@@ -163,8 +188,10 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
   const handleOpenEditTaskModal = (task: TaskItem) => {
     setTaskForm({
       titles: [task.title],
-      patientId: undefined,
+      patientId: task.patientId?.toString(),
       patientName: task.patientName,
+      patientAge: task.patientAge,
+      patientHistory: task.patientHistory,
       taskType: task.taskType,
     });
     setTaskToEdit(task);
@@ -182,25 +209,77 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
     // Filter out empty titles
     const validTitles = taskForm.titles.filter((t) => t.trim());
     if (validTitles.length === 0) return;
-
     setIsSaving(true);
     try {
       if (taskToEdit) {
         // Edit existing task - use first title
+        // Check if PatientCreate is in "Nouveau" mode and get form data from ref
+        let patientName = taskForm.patientName;
+        let patientAge = taskForm.patientAge;
+        let patientHistory = taskForm.patientHistory;
+        let patientId = taskForm.patientId;
+
+        const patientCreateMode = patientCreateEditRef.current?.getMode();
+        if (patientCreateMode === "new") {
+          // Get the new patient form data from PatientCreate
+          const newPatientData = patientCreateEditRef.current?.getNewPatientFormData() || {};
+          patientName = newPatientData.fullName || "";
+          patientAge = newPatientData.age || "";
+          patientHistory = newPatientData.histoire || newPatientData.history || "";
+          patientId = undefined; // Clear patientId for new patients
+        }
+
         await onTaskEdit({
           ...taskToEdit,
           title: validTitles[0],
-          patientName: taskForm.patientName,
+          patientId: patientId ? parseInt(patientId) : undefined,
+          patientName,
+          patientAge,
+          patientHistory,
           taskType: taskForm.taskType || "team",
         });
         setIsEditTaskModalOpen(false);
+        // Reset form
+        setTaskForm({
+          titles: [""],
+          patientId: undefined,
+          patientName: "",
+          patientAge: "",
+          patientHistory: "",
+          taskType: "team",
+        });
+        // Trigger tasks reload to refresh all tasks from server
+        await loadTasks();
       } else {
         // Add new tasks - pass form data to parent handler
-        const createdTasks = await onTaskAdd({
+        // Check if PatientCreate is in "Nouveau" mode and get form data from ref
+        let patientName = taskForm.patientName;
+        let patientAge = taskForm.patientAge;
+        let patientHistory = taskForm.patientHistory;
+        let patientId = taskForm.patientId;
+
+        const patientCreateMode = patientCreateAddRef.current?.getMode();
+        if (patientCreateMode === "new") {
+          // Get the new patient form data from PatientCreate
+          const newPatientData = patientCreateAddRef.current?.getNewPatientFormData() || {};
+          patientName = newPatientData.fullName || "";
+          patientAge = newPatientData.age || "";
+          patientHistory = newPatientData.histoire || newPatientData.history || "";
+          patientId = undefined; // Clear patientId for new patients
+        }
+
+        const taskData = {
           titles: validTitles,
           taskType: taskForm.taskType || "team",
-          patientName: taskForm.patientName,
-        });
+          patientId,
+          patientName,
+          patientAge,
+          patientHistory,
+        };
+
+        console.log("Saving task with patient data:", taskData);
+
+        const createdTasks = await onTaskAdd(taskData);
 
         // If tasks were successfully created, close modal and reset form
         if (createdTasks && createdTasks.length > 0) {
@@ -210,8 +289,13 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
             titles: [""],
             patientId: undefined,
             patientName: "",
+            patientAge: "",
+            patientHistory: "",
             taskType: "team",
           });
+
+          // Trigger tasks reload to refresh all tasks from server
+          await loadTasks();
         }
       }
     } catch (error) {
@@ -225,15 +309,58 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
     if (taskToDelete) {
       setIsDeleting(true);
       try {
+        // Call the parent's delete handler
         await onTaskDelete(taskToDelete.id);
+
+        // Remove task from local state
+        setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskToDelete.id));
+
+        // Close modal and reset state
         setIsDeleteTaskModalOpen(false);
         setTaskToDelete(null);
+
+        console.log("Task deleted successfully:", taskToDelete.id);
       } catch (error) {
         console.error("Error deleting task:", error);
       } finally {
         setIsDeleting(false);
       }
     }
+  };
+
+  const handleSelectPatient = (patient: Patient) => {
+    setTaskForm({
+      ...taskForm,
+      patientId: String(patient.id),
+      patientName: patient.fullName || patient.name,
+      patientAge: "",
+      patientHistory: "",
+    });
+  };
+
+  const handleCreateNewPatient = (formData: Record<string, string>) => {
+    if (!formData.fullName?.trim()) {
+      return;
+    }
+    // When creating a new patient, we set patientName, patientAge, and patientHistory
+    // patientId is intentionally not set for new patients
+    const age = String(formData.age || "").trim();
+    const history = String(formData.histoire || formData.history || "").trim();
+
+    console.log("handleCreateNewPatient called with:", {
+      fullName: formData.fullName,
+      age,
+      history,
+      allFormData: formData
+    });
+
+    setTaskForm({
+      ...taskForm,
+      patientId: undefined,
+      patientName: formData.fullName.trim(),
+      patientAge: age,
+      patientHistory: history,
+    });
   };
 
   // Touch handlers for swipe
@@ -305,7 +432,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
 
         <CardContent
           className={cn(
-            "flex-1 h-fit overflow-hidden pt-0",
+            "flex-1 h-fit overflow-x-hidden pt-0",
             contentClassName
           )}
         >
@@ -391,9 +518,9 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
                             </p>
                             <div className="flex flex-wrap items-center gap-2">
                               {task.patientName && (
-                                <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded">
-                                  👤 {task.patientName}
-                                </span>
+                                <div className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded">
+                                  <div className="flex gap-1 justify-center items-center"><UserIcon className="h-2 w-2"/> {task.patientName}</div>
+                                   </div>
                               )}
                               {task.taskType && (
                                 <span
@@ -420,11 +547,12 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
                             </div>
                           </div>
                         </div>
-                        <div className="flex gap-2 flex-row items-center justify-end sm:w-auto">
+                        <div className="flex gap-1 flex-col items-center justify-center sm:w-auto">
+                          {/* Edit Button */}
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
-                            className="h-9 w-9 rounded-full border-indigo-200 text-indigo-600 transition hover:bg-indigo-50/80"
+                            className="h-8 w-8 rounded-md text-indigo-600 hover:bg-indigo-50 transition"
                             onClick={(event) => {
                               event.stopPropagation();
                               handleOpenEditTaskModal(task);
@@ -432,10 +560,12 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
+
+                          {/* Delete Button */}
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-9 w-9 rounded-full text-rose-600 transition hover:bg-rose-50/80"
+                            className="h-8 w-8 rounded-md text-rose-600 hover:bg-rose-50 transition"
                             onClick={(event) => {
                               event.stopPropagation();
                               handleOpenDeleteTaskModal(task);
@@ -509,7 +639,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
           </>
         }
       >
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-[65vh] overflow-y-auto">
           {/* Task Type Toggle - At the top */}
           <div className="flex items-center gap-2">
             <button
@@ -543,72 +673,23 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
           </div>
 
           {/* Patient Selection */}
-          {patients.length > 0 && (
-            <div className="grid gap-2 relative">
-              <label className="text-sm font-semibold text-[#1f184f]">
-                Patient <span className="text-xs font-normal text-slate-500">(optional)</span>
-              </label>
-              <input
-                value={taskForm.patientName || patientSearch}
-                onChange={(e) => {
-                  setPatientSearch(e.target.value);
-                  setTaskForm({ ...taskForm, patientName: e.target.value, patientId: undefined });
-                  setShowPatientDropdown(true);
-                }}
-                onFocus={() => setShowPatientDropdown(true)}
-                placeholder="Sélectionner ou taper le nom du patient..."
-                className={cn(
-                  "w-full rounded-2xl border px-4 py-2 text-sm shadow-inner focus:border-[#7c3aed] focus:outline-none",
-                  taskForm.patientId
-                    ? "border-indigo-300 bg-indigo-50/80 text-[#1f184f]"
-                    : "border-slate-200 bg-white/80 text-[#1f184f]"
-                )}
-              />
-              {/* Patient Dropdown */}
-              {showPatientDropdown && patientSearch && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-lg z-10 max-h-56 overflow-y-auto">
-                  {/* Matching patients */}
-                  {filteredPatients.map((patient) => (
-                    <button
-                      key={patient.id}
-                      onClick={() => {
-                        setTaskForm({
-                          ...taskForm,
-                          patientId: patient.id,
-                          patientName: patient.name,
-                        });
-                        setPatientSearch(patient.name);
-                        setShowPatientDropdown(false);
-                      }}
-                      className={cn(
-                        "w-full px-4 py-2 text-left text-sm transition border-b border-slate-100 last:border-b-0",
-                        taskForm.patientId === patient.id
-                          ? "bg-indigo-100 hover:bg-indigo-150"
-                          : "hover:bg-slate-100"
-                      )}
-                    >
-                      {patient.name}
-                    </button>
-                  ))}
+          <div className="grid gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <label className="text-sm font-semibold text-[#1f184f]">
+              Patient <span className="text-xs font-normal text-slate-500">(optional)</span>
+            </label>
+            <PatientCreate
+              ref={patientCreateAddRef}
+              patients={[]}
+              onSelectPatient={handleSelectPatient}
+              onCreatePatient={handleCreateNewPatient}
+              newPatientFields={["fullName", "age", "histoire"]}
+              newPatientDefaults={{}}
+              searchPlaceholder="Rechercher un patient..."
+              noResultsText="Aucun patient trouvé"
+              showTabs={true}
+            />
+          </div>
 
-                  {/* Add new patient option */}
-                  <button
-                    onClick={() => {
-                      setTaskForm({
-                        ...taskForm,
-                        patientId: undefined,
-                        patientName: patientSearch,
-                      });
-                      setShowPatientDropdown(false);
-                    }}
-                    className="w-full px-4 py-2 text-left text-sm bg-slate-50 hover:bg-slate-100 transition border-t border-slate-200 text-slate-700 font-medium"
-                  >
-                    + Ajouter nouveau: {patientSearch}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
 
           {/* Multiple Intitulés */}
           <div className="grid gap-2">
@@ -806,72 +887,23 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
           </div>
 
           {/* Patient Selection */}
-          {patients.length > 0 && (
-            <div className="grid gap-2 relative">
-              <label className="text-sm font-semibold text-[#1f184f]">
-                Patient <span className="text-xs font-normal text-slate-500">(optional)</span>
-              </label>
-              <input
-                value={taskForm.patientName || patientSearch}
-                onChange={(e) => {
-                  setPatientSearch(e.target.value);
-                  setTaskForm({ ...taskForm, patientName: e.target.value, patientId: undefined });
-                  setShowPatientDropdown(true);
-                }}
-                onFocus={() => setShowPatientDropdown(true)}
-                placeholder="Sélectionner ou taper le nom du patient..."
-                className={cn(
-                  "w-full rounded-2xl border px-4 py-2 text-sm shadow-inner focus:border-[#7c3aed] focus:outline-none",
-                  taskForm.patientId
-                    ? "border-indigo-300 bg-indigo-50/80 text-[#1f184f]"
-                    : "border-slate-200 bg-white/80 text-[#1f184f]"
-                )}
-              />
-              {/* Patient Dropdown */}
-              {showPatientDropdown && patientSearch && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-lg z-10 max-h-56 overflow-y-auto">
-                  {/* Matching patients */}
-                  {filteredPatients.map((patient) => (
-                    <button
-                      key={patient.id}
-                      onClick={() => {
-                        setTaskForm({
-                          ...taskForm,
-                          patientId: patient.id,
-                          patientName: patient.name,
-                        });
-                        setPatientSearch(patient.name);
-                        setShowPatientDropdown(false);
-                      }}
-                      className={cn(
-                        "w-full px-4 py-2 text-left text-sm transition border-b border-slate-100 last:border-b-0",
-                        taskForm.patientId === patient.id
-                          ? "bg-indigo-100 hover:bg-indigo-150"
-                          : "hover:bg-slate-100"
-                      )}
-                    >
-                      {patient.name}
-                    </button>
-                  ))}
+          <div className="grid gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <label className="text-sm font-semibold text-[#1f184f]">
+              Patient <span className="text-xs font-normal text-slate-500">(optional)</span>
+            </label>
+            <PatientCreate
+              ref={patientCreateEditRef}
+              patients={[]}
+              onSelectPatient={handleSelectPatient}
+              onCreatePatient={handleCreateNewPatient}
+              newPatientFields={["fullName", "age", "histoire"]}
+              newPatientDefaults={{}}
+              searchPlaceholder="Rechercher un patient..."
+              noResultsText="Aucun patient trouvé"
+              showTabs={true}
+            />
+          </div>
 
-                  {/* Add new patient option */}
-                  <button
-                    onClick={() => {
-                      setTaskForm({
-                        ...taskForm,
-                        patientId: undefined,
-                        patientName: patientSearch,
-                      });
-                      setShowPatientDropdown(false);
-                    }}
-                    className="w-full px-4 py-2 text-left text-sm bg-slate-50 hover:bg-slate-100 transition border-t border-slate-200 text-slate-700 font-medium"
-                  >
-                    + Ajouter nouveau: {patientSearch}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
 
           {/* Intitulé */}
           <div className="grid gap-2">

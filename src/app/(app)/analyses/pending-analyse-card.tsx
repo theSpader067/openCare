@@ -1,26 +1,12 @@
 "use client";
 
-import { Clock, Download, User, Camera, X } from "lucide-react";
+import { Clock, Download, User, Camera, X, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnalysisScannerModal } from "@/components/analysis-scanner-modal";
+import { Analyse } from "./page";
 
-type Analyse = {
-  id: string;
-  patient: string;
-  type: string;
-  requestedAt: string;
-  requestedDate: string;
-  requester: string;
-  status: "En cours" | "Terminée" | "Urgent";
-  bilanCategory: "bilan" | "imagerie" | "anapath" | "autres";
-  pendingTests?: Array<{
-    id: string;
-    label: string;
-    value?: string;
-  }>;
-};
 
 const statusConfig: Record<
   Analyse["status"],
@@ -62,9 +48,10 @@ export function PendingAnalyseCard({
   const config = statusConfig[analyse.status];
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [testValues, setTestValues] = useState<Record<string, string>>(
-    analyse.pendingTests?.reduce((acc, test) => {
-      acc[test.id] = test.value || "";
+    analyse.labEntries?.reduce((acc, test) => {
+      acc[test.id!] = test.value || "";
       return acc;
     }, {} as Record<string, string>) || {}
   );
@@ -74,114 +61,87 @@ export function PendingAnalyseCard({
     setTestValues((prev) => ({ ...prev, [testId]: value }));
   };
 
+  const handleSaveResults = async () => {
+    if (!analyse.apiId) {
+      console.error("No API ID available for analyse");
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      if (analyse.bilanCategory === "bilan" && analyse.labEntries) {
+        // Prepare lab entries with entered values
+        const labEntriesToUpdate = analyse.labEntries
+          .filter((entry) => entry.id && testValues[entry.id])
+          .map((entry) => ({
+            id: entry.id,
+            value: testValues[entry.id!].trim(),
+            interpretation: entry.interpretation || undefined,
+          }));
+
+        if (labEntriesToUpdate.length === 0) {
+          console.warn("No lab values to save");
+          setIsSaving(false);
+          return;
+        }
+
+        // Call API to update lab entries
+        const response = await fetch(`/api/analyses/${analyse.apiId}/labentries`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            labEntries: labEntriesToUpdate,
+            status: "Terminée",
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "Failed to save lab values");
+        }
+
+        const result = await response.json();
+        console.log("✓ Lab values saved successfully:", result);
+
+        // Call the parent callback if provided
+        if (onCompleted) {
+          onCompleted(analyse, testValues);
+        }
+
+        // Close modal
+        setIsModalOpen(false);
+      } else {
+        // Handle imagerie/anapath/autres with textarea
+        if (!textareaResults.trim()) {
+          console.warn("No results to save");
+          setIsSaving(false);
+          return;
+        }
+
+        // For non-bilan types, just call the callback
+        if (onCompleted) {
+          onCompleted(analyse, { results: textareaResults });
+        }
+
+        setIsModalOpen(false);
+      }
+
+      console.log("Analysis results saved");
+    } catch (error) {
+      console.error("Error saving results:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleScanComplete = (data: {
     imageUrl: string;
     extractedText: string;
   }) => {
     console.log("Scan completed. Extracted text:", data.extractedText);
-
-    if (analyse.bilanCategory === "bilan" && analyse.pendingTests) {
-      const updatedValues = { ...testValues };
-      const text = data.extractedText;
-
-      // Split into lines and words for better parsing
-      const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-      const fullText = text.toLowerCase();
-
-      analyse.pendingTests.forEach((test) => {
-        const testLabel = test.label.toLowerCase();
-        const testWords = testLabel.split(/\s+/);
-        const firstWord = testWords[0];
-
-        console.log(`Looking for test: ${test.label}`);
-
-        // Strategy 1: Look for exact label match in lines
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i];
-          const lowerLine = line.toLowerCase();
-
-          // Check if line contains the test name
-          if (lowerLine.includes(testLabel) ||
-              lowerLine.includes(firstWord) ||
-              testWords.some(word => word.length > 3 && lowerLine.includes(word))) {
-
-            // Extract all numbers from this line and nearby lines
-            const numbers = line.match(/\d+[.,]?\d*/g);
-
-            if (numbers && numbers.length > 0) {
-              // Find the most likely value (usually the first or last number in the line)
-              // Prefer numbers that look like lab values (with decimals)
-              const valueCandidate = numbers.find(n => n.includes('.') || n.includes(',')) || numbers[numbers.length - 1];
-
-              if (valueCandidate) {
-                // Normalize decimal separator
-                const normalizedValue = valueCandidate.replace(',', '.');
-                updatedValues[test.id] = normalizedValue;
-                console.log(`Found value for ${test.label}: ${normalizedValue}`);
-                break;
-              }
-            }
-
-            // If no number on this line, check next line (value might be on next line)
-            if (i + 1 < lines.length) {
-              const nextLine = lines[i + 1];
-              const nextNumbers = nextLine.match(/\d+[.,]?\d*/g);
-              if (nextNumbers && nextNumbers.length > 0) {
-                const valueCandidate = nextNumbers.find(n => n.includes('.') || n.includes(',')) || nextNumbers[0];
-                const normalizedValue = valueCandidate.replace(',', '.');
-                updatedValues[test.id] = normalizedValue;
-                console.log(`Found value for ${test.label} on next line: ${normalizedValue}`);
-                break;
-              }
-            }
-          }
-        }
-
-        // Strategy 2: If still not found, try fuzzy matching with common abbreviations
-        if (!updatedValues[test.id]) {
-          // Common lab abbreviations
-          const abbreviations: Record<string, string[]> = {
-            'ph': ['ph', 'p.h'],
-            'po2': ['po2', 'po₂', 'pao2', 'pao₂', 'p02'],
-            'pco2': ['pco2', 'pco₂', 'paco2', 'paco₂', 'pc02'],
-            'hco3': ['hco3', 'hco₃', 'bicarbonate'],
-            'glucose': ['glucose', 'glu', 'glycémie', 'glycemie'],
-            'sodium': ['sodium', 'na', 'na+'],
-            'potassium': ['potassium', 'k', 'k+'],
-            'chlore': ['chlore', 'cl', 'cl-'],
-            'calcium': ['calcium', 'ca', 'ca++'],
-            'créatinine': ['créatinine', 'creatinine', 'créat', 'creat'],
-            'urée': ['urée', 'uree', 'bun'],
-            'lactate': ['lactate', 'lac'],
-          };
-
-          for (const [key, aliases] of Object.entries(abbreviations)) {
-            if (testLabel.includes(key)) {
-              for (const alias of aliases) {
-                const regex = new RegExp(`${alias}[\\s:=-]*([\\d.,]+)`, 'gi');
-                const match = fullText.match(regex);
-                if (match && match.length > 0) {
-                  const valueMatch = match[0].match(/[\d.,]+/);
-                  if (valueMatch) {
-                    const normalizedValue = valueMatch[0].replace(',', '.');
-                    updatedValues[test.id] = normalizedValue;
-                    console.log(`Found value for ${test.label} using abbreviation: ${normalizedValue}`);
-                    break;
-                  }
-                }
-              }
-              if (updatedValues[test.id]) break;
-            }
-          }
-        }
-      });
-
-      setTestValues(updatedValues);
-      console.log("Updated test values:", updatedValues);
-    } else if (analyse.bilanCategory !== "bilan") {
-      // For imagerie/anapath, set the textarea with extracted text
-      setTextareaResults(data.extractedText);
-    }
 
     setIsScannerOpen(false);
   };
@@ -352,18 +312,18 @@ export function PendingAnalyseCard({
 
                   {/* Bilan: Test inputs */}
                   {analyse.bilanCategory === "bilan" ? (
-                    analyse.pendingTests && analyse.pendingTests.length > 0 ? (
-                      <div className="space-y-2 sm:space-y-3 sm:space-y-4">
-                        {analyse.pendingTests.map((test) => (
-                          <div key={test.id} className="flex items-center gap-2 sm:gap-3">
+                    analyse.labEntries && analyse.labEntries.length > 0 ? (
+                      <div className="space-y-2 sm:space-y-3 sm:space-y-4 max-h-[200px] overflow-y-auto">
+                        {analyse.labEntries.map((test) => (
+                          <div key={test.id} className="flex items-center gap-2 sm:gap-3 ">
                             <label className="flex-1 text-xs sm:text-sm font-medium text-slate-700">
-                              {test.label}
+                              {test.name}
                             </label>
                             <input
                               type="text"
-                              value={testValues[test.id] || ""}
+                              value={testValues[test.id!] || ""}
                               onChange={(e) =>
-                                handleTestValueChange(test.id, e.target.value)
+                                handleTestValueChange(String(test.id!), e.target.value)
                               }
                               placeholder="–"
                               maxLength={4}
@@ -394,6 +354,7 @@ export function PendingAnalyseCard({
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsModalOpen(false)}
+                  disabled={isSaving}
                 >
                   Annuler
                 </Button>
@@ -401,22 +362,23 @@ export function PendingAnalyseCard({
                   variant="primary"
                   size="sm"
                   disabled={
-                    analyse.bilanCategory === "bilan"
-                      ? !analyse.pendingTests ||
-                        analyse.pendingTests.some((test) => !testValues[test.id]?.trim())
-                      : !textareaResults.trim()
+                    isSaving || (
+                      analyse.bilanCategory === "bilan"
+                        ? !analyse.labEntries ||
+                          !analyse.labEntries.some((test) => testValues[test.id!]?.trim())
+                        : !textareaResults.trim()
+                    )
                   }
-                  onClick={() => {
-                    if (onCompleted) {
-                      const resultsToPass = analyse.bilanCategory === "bilan"
-                        ? testValues
-                        : { results: textareaResults };
-                      onCompleted(analyse, resultsToPass);
-                    }
-                    setIsModalOpen(false);
-                  }}
+                  onClick={handleSaveResults}
                 >
-                  Enregistrer
+                  {isSaving ? (
+                    <>
+                      <Loader className="mr-2 h-4 w-4 animate-spin" />
+                      Enregistrement...
+                    </>
+                  ) : (
+                    "Enregistrer"
+                  )}
                 </Button>
               </div>
             </div>
@@ -430,8 +392,8 @@ export function PendingAnalyseCard({
         onClose={() => setIsScannerOpen(false)}
         onScan={handleScanComplete}
         testLabels={
-          analyse.bilanCategory === "bilan" && analyse.pendingTests
-            ? analyse.pendingTests.map((test) => test.label)
+          analyse.bilanCategory === "bilan" && analyse.labEntries
+            ? analyse.labEntries.map((test) => test.name!)
             : []
         }
       />

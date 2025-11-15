@@ -44,10 +44,11 @@ model User {
   teamsAsMember Team[]   @relation("TeamMembers")
   createdTasks Task[]    @relation("TaskCreator")
   createdFavouriteTasks FavouriteTask[] @relation("FavouriteTaskCreator")
-  activities  Activity[] @relation("ActivityParticipants")
+  createdActivities Activity[] @relation("ActivityCreator")
   createdOrdonnances Ordonnance[] @relation("OrdonnanceCreator")
   createdAvis Avis[] @relation("AvisCreator")
   createdRapports Rapport[] @relation("RapportCreator")
+  createdAnalyses Analyse[]
   rapportParticipations Rapport[] @relation("RapportParticipants")
 }
 
@@ -70,7 +71,7 @@ model Patient {
   userId            Int
   user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   isPrivate         Boolean        @default(false)
-  nextContact       DateTime?
+  nextContact       String?
   diagnostic        String?
   cim               String?
   atcdsMedical      String?
@@ -81,6 +82,7 @@ model Patient {
   avis              Avis[]
   rapports          Rapport[]
   analyses          Analyse[]
+  tasks             Task[]
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
 }
@@ -98,14 +100,19 @@ model Team {
 }
 
 model Task {
-  id        Int       @id @default(autoincrement())
-  title     String
-  creatorId Int
-  creator   User      @relation("TaskCreator", fields: [creatorId], references: [id], onDelete: Cascade)
-  isPrivate Boolean   @default(false)
-  isComplete Boolean  @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id              Int       @id @default(autoincrement())
+  title           String
+  creatorId       Int
+  creator         User      @relation("TaskCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  patientId       Int?
+  patient         Patient?  @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  patientName     String?
+  patientAge      String?
+  patientHistory  String?   @db.Text
+  isPrivate       Boolean   @default(false)
+  isComplete      Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
 model FavouriteTask {
@@ -125,7 +132,9 @@ model Activity {
   details      String?
   place        String?
   activityDay  DateTime?
-  participants User[]    @relation("ActivityParticipants")
+  équipe       String?
+  creatorId    Int
+  creator      User      @relation("ActivityCreator", fields: [creatorId], references: [id], onDelete: Cascade)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 }
@@ -143,15 +152,16 @@ model Notification {
 model Ordonnance {
   id                    Int       @id @default(autoincrement())
   title                 String
+  date                  DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
-  patientId             Int
-  patient               Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId             Int?
+  patient               Patient?  @relation(fields: [patientId], references: [id], onDelete: SetNull)
   patientName           String?
   patientAge            String?
   patientHistory        String?
-  renseignementClinique String?
-  details               String?
+  renseignementClinique String?   @db.Text
+  details               String?   @db.Text
   creatorId             Int
   creator               User      @relation("OrdonnanceCreator", fields: [creatorId], references: [id], onDelete: Cascade)
   isPrivate             Boolean   @default(false)
@@ -159,47 +169,50 @@ model Ordonnance {
 
 model Avis {
   id             Int       @id @default(autoincrement())
-  title          String
+  destination_specialty   String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
-  patientId      Int
-  patient        Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId      Int?
+  patient        Patient?  @relation(fields: [patientId], references: [id], onDelete: SetNull)
   patientName    String?
   patientAge     String?
   patientHistory String?
   creatorId      Int
   creator        User      @relation("AvisCreator", fields: [creatorId], references: [id], onDelete: Cascade)
   details        String?
+  answer         String?
+  answer_date           DateTime?
 }
 
 model Rapport {
   id             Int       @id @default(autoincrement())
   title          String
   category       String?
+  date           DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   duration       String?
-  patientId      Int
-  patient        Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId      Int?
+  patient        Patient?  @relation(fields: [patientId], references: [id], onDelete: SetNull)
   patientName    String?
   patientAge     String?
   patientHistory String?
   participants   User[]    @relation("RapportParticipants")
-  details        String?
-  recommandations String?
+  details        String?   @db.Text
+  recommandations String?  @db.Text
   creatorId      Int
   creator        User      @relation("RapportCreator", fields: [creatorId], references: [id], onDelete: Cascade)
 }
 
 model LabEntry {
-  id        Int       @id @default(autoincrement())
-  analyse   String?
-  labKey    String?
-  labValue  String?
-  analyseId Int
-  analyse_relation Analyse @relation(fields: [analyseId], references: [id], onDelete: Cascade)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id             Int       @id @default(autoincrement())
+  name           String?
+  value          String?
+  interpretation String?
+  analyseId      Int
+  analyse        Analyse   @relation(fields: [analyseId], references: [id], onDelete: Cascade)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
 model Analyse {
@@ -207,9 +220,9 @@ model Analyse {
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
   category       String?
-  title          String
-  patientId      Int
-  patient        Patient    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  title          String?
+  patientId      Int?
+  patient        Patient?   @relation(fields: [patientId], references: [id], onDelete: SetNull)
   patientName    String?
   patientAge     String?
   patientHistory String?
@@ -217,7 +230,9 @@ model Analyse {
   labEntries     LabEntry[]
   interpretation String?
   status         String?
-  labId          String?
+  labId          String    @unique @default(cuid())
+  creatorId      Int
+  creator        User       @relation(fields: [creatorId], references: [id], onDelete: Cascade)
 }
 
 model Account {

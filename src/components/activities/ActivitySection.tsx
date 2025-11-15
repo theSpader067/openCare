@@ -21,6 +21,9 @@ import {
   MapPin,
   Calendar as CalendarIcon,
   ListChecks,
+  User as UserIcon,
+  Users as UsersIcon,
+  MoreVertical,
 } from "lucide-react";
 import type { ActivityItem, ActivityFormState, ActivityType } from "@/types/tasks";
 import { activityTypeMeta } from "@/data/dashboard/dashboard-metadata";
@@ -65,6 +68,11 @@ const formatDateKey = (date: Date) => {
   return `${year}-${month}-${day}`;
 };
 
+
+const getCreatorDisplay = (creator: any): string => {
+  return creator.username || (creator.firstName && creator.lastName ? `${creator.firstName} ${creator.lastName}` : creator.email);
+};
+
 export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionProps>(
   function ActivitySection({
     selectedDate,
@@ -95,6 +103,7 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
   }: ActivitySectionProps, ref) {
     const [activities, setActivities] = useState<ActivityItem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
     const loadActivities = async () => {
     setIsLoading(true);
@@ -202,7 +211,7 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
                     >
                       <div
                         className={cn(
-                          "flex flex-col gap-4 rounded-2xl border bg-white/80 p-4 shadow-sm sm:flex-row sm:items-start sm:justify-between transition-transform duration-300 ease-out",
+                          "relative flex flex-col gap-4 rounded-2xl border bg-white/80 p-4 shadow-sm sm:flex-row sm:items-start sm:justify-between transition-transform duration-300 ease-out",
                           done
                             ? "border-emerald-200 bg-emerald-50/80"
                             : "border-transparent hover:-translate-y-[1px] hover:border-slate-200"
@@ -211,6 +220,34 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
                           transform: swipedActivityId === activity.id ? "translateX(-96px)" : "translateX(0)",
                         }}
                       >
+                        {/* Dropdown menu button */}
+                        <div className="absolute top-3 right-3">
+                          <button
+                            onClick={() => setOpenMenuId(openMenuId === activity.id ? null : activity.id)}
+                            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-slate-100 transition"
+                            type="button"
+                            title="Menu"
+                          >
+                            <MoreVertical className="h-4 w-4 text-slate-600" />
+                          </button>
+
+                          {/* Dropdown menu */}
+                          {openMenuId === activity.id && (
+                            <div className="absolute right-0 top-10 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50">
+                              <button
+                                onClick={() => {
+                                  onDeleteClick(activity);
+                                  setOpenMenuId(null);
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-lg flex items-center gap-2 first:rounded-t-lg last:rounded-b-lg"
+                                type="button"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Supprimer
+                              </button>
+                            </div>
+                          )}
+                        </div>
                         <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
                           <button
                             onClick={() => onToggleClick(activity.id)}
@@ -243,7 +280,7 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
                               </div>
                               <Badge
                                 variant="muted"
-                                className="self-start bg-[#f1f0ff] text-[#4338ca]"
+                                className="self-start bg-[#f1f0ff] text-[#4338ca] mr-6"
                               >
                                 {activity.time}
                               </Badge>
@@ -265,7 +302,24 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
                                   {activity.team}
                                 </span>
                               ) : null}
+                              {activity.creator ? (
+                                <span className="flex items-center gap-1">
+                                  <UserIcon className="h-3.5 w-3.5" />
+                                  {getCreatorDisplay(activity.creator)}
+                                </span>
+                              ) : null}
                             </div>
+                            {activity.participants && activity.participants.length > 0 ? (
+                              <div className="flex flex-wrap items-start gap-3 text-xs text-[#6f66c4] pt-2 border-t border-slate-200">
+                                <span className="flex items-center gap-1 basis-full sm:basis-auto">
+                                  <UsersIcon className="h-3.5 w-3.5 flex-shrink-0" />
+                                  <span className="font-medium">Participants ({activity.participants.length}):</span>
+                                </span>
+                                <div className="flex flex-wrap gap-2 basis-full">
+                                  {activity.participants}
+                                </div>
+                              </div>
+                            ) : null}
                           </div>
                         </div>
                       </div>

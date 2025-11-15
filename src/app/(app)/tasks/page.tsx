@@ -451,7 +451,7 @@ export default function TasksPage() {
     }
   };
 
-  const handleTaskAdd = async (formData: { titles: string[]; taskType?: "team" | "private"; patientName?: string }) => {
+  const handleTaskAdd = async (formData: { titles: string[]; taskType?: "team" | "private"; patientId?: string | number; patientName?: string; patientAge?: string; patientHistory?: string }) => {
     const createdTasks: TaskItem[] = [];
     try {
       // Create a task for each title
@@ -459,14 +459,20 @@ export default function TasksPage() {
         const result = await createTask({
           title: title.trim(),
           isPrivate: formData.taskType === "private",
+          patientId: formData.patientId,
+          patientName: formData.patientName,
+          patientAge: formData.patientAge,
+          patientHistory: formData.patientHistory,
         });
         if (result.success && result.data) {
           createdTasks.push(result.data);
         }
       }
 
-      // Refresh tasks list after creation
-      await tasksSectionRef.current?.refresh();
+      // Add newly created tasks directly to the UI without reloading
+      if (createdTasks.length > 0) {
+        tasksSectionRef.current?.addTasks(createdTasks);
+      }
       return createdTasks.length > 0 ? createdTasks : null;
     } catch (error) {
       console.error("Error adding tasks:", error);

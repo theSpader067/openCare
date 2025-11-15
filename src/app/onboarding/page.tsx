@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
-import { specialties, hospitals, years } from "@/data/onboarding/onboarding-content";
+import { specialties, statuses } from "@/data/onboarding/onboarding-content";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -30,7 +30,7 @@ export default function OnboardingPage() {
     );
   }
 
-  const handleChange = (field: keyof typeof formState) => (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleChange = (field: keyof typeof formState) => (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
     setFormState((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
@@ -115,27 +115,22 @@ export default function OnboardingPage() {
 
               <div className="space-y-2">
                 <label htmlFor="hospital" className="text-sm font-semibold text-slate-700">
-                  Établissement hospitalier
+                  Établissement
                 </label>
-                <select
+                <input
                   id="hospital"
+                  type="text"
                   required
+                  placeholder="Entrez votre établissement (ex: CHU de Lyon)"
                   value={formState.hospital}
                   onChange={handleChange("hospital")}
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                >
-                  <option value="">Sélectionnez votre établissement</option>
-                  {hospitals.map((hospital) => (
-                    <option key={hospital} value={hospital}>
-                      {hospital}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div className="space-y-2">
                 <label htmlFor="year" className="text-sm font-semibold text-slate-700">
-                  Année de formation / Statut
+                  Statut
                 </label>
                 <select
                   id="year"
@@ -144,10 +139,10 @@ export default function OnboardingPage() {
                   onChange={handleChange("year")}
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 >
-                  <option value="">Sélectionnez votre année</option>
-                  {years.map((year) => (
-                    <option key={year} value={year}>
-                      {year}
+                  <option value="">Sélectionnez votre statut</option>
+                  {statuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
                     </option>
                   ))}
                 </select>

@@ -9,8 +9,20 @@ export interface TaskItem {
   title: string;
   details: string;
   done: boolean;
+  patientId?: number;
   patientName?: string;
+  patientAge?: string;
+  patientHistory?: string;
   taskType?: TaskType;
+  participants?: User[];
+}
+
+export interface User {
+  id: number;
+  firstName?: string | null;
+  lastName?: string | null;
+  email: string;
+  username?: string | null;
 }
 
 export interface ActivityItem {
@@ -24,12 +36,16 @@ export interface ActivityItem {
   status: ActivityStatus;
   createdAt?: string | Date;
   activityDay?: string | Date;
+  creator?: User;
+  participants?: String[];
 }
 
 export interface TaskFormState {
   titles: string[];
   patientId?: string;
   patientName?: string;
+  patientAge?: string;
+  patientHistory?: string;
   taskType?: TaskType;
 }
 

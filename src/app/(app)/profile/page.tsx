@@ -1075,10 +1075,10 @@ export default function ProfilePage() {
               <div className="space-y-4">
                 {userTeams.map((team, idx) => {
                   const colors = [
-                    { bg: "from-stone-600 to-stone-700", light: "bg-stone-100", text: "text-stone-900" },
-                    { bg: "from-slate-600 to-slate-700", light: "bg-slate-100", text: "text-slate-900" },
-                    { bg: "from-zinc-600 to-zinc-700", light: "bg-zinc-100", text: "text-zinc-900" },
-                    { bg: "from-gray-600 to-gray-700", light: "bg-gray-100", text: "text-gray-900" },
+                    { bg: "from-indigo-600 to-indigo-700", light: "bg-indigo-100", text: "text-indigo-900" },
+                    { bg: "from-purple-600 to-purple-700", light: "bg-purple-100", text: "text-purple-900" },
+                    { bg: "from-blue-600 to-blue-700", light: "bg-blue-100", text: "text-blue-900" },
+                    { bg: "from-violet-600 to-violet-700", light: "bg-violet-100", text: "text-violet-900" },
                   ];
                   const colorScheme = colors[idx % colors.length];
                   const adminCount = team.teamMembers?.filter((m: any) => m.role === "Admin").length || 0;
@@ -1139,7 +1139,7 @@ export default function ProfilePage() {
                               className="flex items-center gap-3 p-2.5 rounded-lg bg-slate-50 hover:bg-slate-100 transition"
                             >
                               {/* Avatar */}
-                              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-stone-500 to-stone-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
                                 {member.avatar}
                               </div>
 
@@ -1412,7 +1412,7 @@ export default function ProfilePage() {
                           />
 
                           {/* Member Info */}
-                          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-stone-500 to-stone-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
                             {member.avatar}
                           </div>
 

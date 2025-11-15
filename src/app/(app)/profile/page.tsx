@@ -816,68 +816,9 @@ export default function ProfilePage() {
             </Button>
           </div>
 
-          {/* Mobile Search Bar - Always visible */}
-          <div className="lg:hidden">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Rechercher une équipe..."
-                value={searchTeams}
-                onChange={(e) => setSearchTeams(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-              />
-            </div>
-
-            {/* Mobile Search Results */}
-            {searchTeams && (
-              <div className="space-y-4 mt-4">
-                {filteredTeams
-                  .filter((team) => !team.joined)
-                  .length > 0 ? (
-                  filteredTeams
-                    .filter((team) => !team.joined)
-                    .map((team) => (
-                    <div
-                      key={team.id}
-                      className="rounded-2xl border border-slate-200 hover:border-indigo-300 transition overflow-hidden"
-                    >
-                      <div className="p-4 flex items-start justify-between">
-                        <div>
-                          <p className="font-medium text-slate-900">{team.name}</p>
-                          <p className="text-sm text-slate-600">{team.description}</p>
-                          <p className="text-xs text-slate-500 mt-2">{team.members} membres</p>
-                        </div>
-                        {team.requestPending ? (
-                          <Badge className="bg-amber-100 text-amber-700 border-amber-200 h-fit flex-shrink-0">
-                            <Clock className="h-3 w-3 mr-1" />
-                            En attente
-                          </Badge>
-                        ) : (
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => handleJoinTeam(team.id)}
-                            className="h-8 flex-shrink-0"
-                          >
-                            <Plus className="h-3 w-3 mr-1" />
-                            Rejoindre
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                    ))
-                ) : (
-                  <div className="text-center py-8 text-slate-500">
-                    <p className="text-sm">Aucune équipe trouvée</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
+         
           {/* Large Screen Dynamic Search */}
-          <div className="hidden lg:block">
+          <div className="block">
             <Card className="border-none bg-white/90">
               <CardHeader className="flex items-start justify-between">
                 <div className="flex-1">
@@ -902,50 +843,59 @@ export default function ProfilePage() {
                       </button>
 
                       {/* Pending Requests Dropdown */}
-                      {isPendingRequestsOpen && joinRequests.length > 0 && (
-                        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-slate-200 z-50 overflow-hidden">
+                      {isPendingRequestsOpen && (
+                        <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden">
+                          {/* Dropdown Header */}
                           <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
-                            <h3 className="font-semibold text-slate-900 text-sm">
-                              Demandes d'adhésion ({joinRequests.length})
-                            </h3>
+                            <h3 className="font-semibold text-amber-900">Demandes en attente</h3>
+                            <p className="text-xs text-amber-700">{joinRequests.length} demande{joinRequests.length > 1 ? "s" : ""}</p>
                           </div>
-                          <div className="max-h-96 overflow-y-auto space-y-2 p-2">
+
+                          {/* Requests List */}
+                          <div className="max-h-96 overflow-y-auto">
                             {joinRequests.map((request) => (
-                              <div
-                                key={request.id}
-                                className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition"
-                              >
-                                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
-                                  {request.residentAvatar}
+                              <div key={request.id} className="border-b border-slate-100 last:border-b-0 p-4 hover:bg-slate-50 transition">
+                                {/* Header with avatar and name */}
+                                <div className="flex items-start gap-3 mb-3">
+                                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-semibold flex-shrink-0">
+                                    {request.residentAvatar}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-semibold text-slate-900 truncate">{request.residentName}</p>
+                                    <p className="text-xs text-slate-600 truncate">{request.specialty}</p>
+                                  </div>
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium text-slate-900 truncate">
-                                    {request.residentName}
-                                  </p>
-                                  <p className="text-xs text-slate-600">
-                                    {request.residentRole} • {request.teamName}
-                                  </p>
+
+                                {/* Info row */}
+                                <div className="flex items-center gap-2 mb-3 text-xs">
+                                  <span className="px-2 py-1 bg-slate-100 text-slate-700 rounded-full">{request.year}</span>
+                                  <span className="text-slate-500">•</span>
+                                  <span className="font-medium text-slate-700 truncate">{request.teamName}</span>
                                 </div>
-                                <div className="flex gap-1 flex-shrink-0">
+
+                                {/* Action Buttons */}
+                                <div className="flex gap-2">
                                   <button
                                     onClick={() => {
-                                      handleAcceptJoinRequest(request.id);
-                                      setIsPendingRequestsOpen(false);
+                                      // Handle accept
+                                      setJoinRequests(joinRequests.filter(r => r.id !== request.id));
                                     }}
-                                    className="p-1.5 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition"
+                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition font-medium text-sm"
                                     title="Accepter"
                                   >
                                     <Check className="h-4 w-4" />
+                                    Accepter
                                   </button>
                                   <button
                                     onClick={() => {
-                                      handleDeclineJoinRequest(request.id);
-                                      setIsPendingRequestsOpen(false);
+                                      // Handle decline
+                                      setJoinRequests(joinRequests.filter(r => r.id !== request.id));
                                     }}
-                                    className="p-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition"
+                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition font-medium text-sm"
                                     title="Refuser"
                                   >
                                     <X className="h-4 w-4" />
+                                    Refuser
                                   </button>
                                 </div>
                               </div>
@@ -1036,116 +986,6 @@ export default function ProfilePage() {
             </Card>
           </div>
 
-          {/* Pending Join Requests Panel - Large Screen */}
-          {joinRequests.length > 0 && (
-            <div className="hidden lg:block">
-              <Card className="border-none bg-white/90 border-l-4 border-l-amber-500">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-amber-600" />
-                    Demandes d'adhésion en attente
-                  </CardTitle>
-                  <CardDescription>Residents demandant à rejoindre votre équipe</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {joinRequests.map((request) => (
-                    <div
-                      key={request.id}
-                      className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-amber-200 hover:bg-amber-50/50 transition"
-                    >
-                      <div className="flex items-center gap-3 flex-1">
-                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
-                          {request.residentAvatar}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900 truncate">
-                            {request.residentName}
-                          </p>
-                          <p className="text-xs text-slate-600">
-                            {request.residentRole} • {request.teamName}
-                          </p>
-                          <p className="text-xs text-slate-500 mt-0.5">
-                            Demandé le {new Date(request.requestDate).toLocaleDateString("fr-FR")}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex gap-2 flex-shrink-0">
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => handleAcceptJoinRequest(request.id)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Check className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeclineJoinRequest(request.id)}
-                          className="h-8 w-8 p-0 text-rose-600 hover:bg-rose-50"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Sliding Panel for Requests - Mobile */}
-          {isRequestsPanelOpen && joinRequests.length > 0 && (
-            <div className="lg:hidden space-y-3 p-4 rounded-2xl border border-amber-200 bg-amber-50">
-              <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-                <Clock className="h-4 w-4 text-amber-600" />
-                Demandes d'adhésion ({joinRequests.length})
-              </h3>
-              {joinRequests.map((request) => (
-                <div
-                  key={request.id}
-                  className="flex flex-col gap-2 p-3 rounded-lg bg-white border border-amber-100"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
-                      {request.residentAvatar}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-900 truncate">
-                        {request.residentName}
-                      </p>
-                      <p className="text-xs text-slate-600">
-                        {request.residentRole}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-xs text-slate-600 pl-10">
-                    {request.teamName}
-                  </p>
-                  <div className="flex gap-2 mt-2">
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={() => handleAcceptJoinRequest(request.id)}
-                      className="flex-1 h-8"
-                    >
-                      <Check className="h-3 w-3 mr-1" />
-                      Accepter
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeclineJoinRequest(request.id)}
-                      className="flex-1 h-8 text-rose-600 hover:bg-rose-50"
-                    >
-                      <X className="h-3 w-3 mr-1" />
-                      Refuser
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
 
           {/* Join Requests Badge for Mobile - Collapsible trigger */}
           {joinRequests.length > 0 && (

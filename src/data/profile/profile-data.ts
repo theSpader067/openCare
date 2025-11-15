@@ -22,6 +22,8 @@ export interface JoinRequest {
   residentName: string;
   residentAvatar: string;
   residentRole: string;
+  specialty: string;
+  year: string;
   teamId: string;
   teamName: string;
   requestDate: string;
@@ -72,6 +74,8 @@ export const pendingJoinRequests: JoinRequest[] = [
     residentName: "Dr. Léa Martin",
     residentAvatar: "LM",
     residentRole: "Interne",
+    specialty: "Urologie",
+    year: "DES-2",
     teamId: "TEAM-001",
     teamName: "Service Urologie B",
     requestDate: "2024-11-05",
@@ -82,6 +86,8 @@ export const pendingJoinRequests: JoinRequest[] = [
     residentName: "Dr. Hugo Tessier",
     residentAvatar: "HT",
     residentRole: "Interne senior",
+    specialty: "Chirurgie digestive",
+    year: "DES-3",
     teamId: "TEAM-002",
     teamName: "Chirurgie digestive",
     requestDate: "2024-11-04",
@@ -92,6 +98,8 @@ export const pendingJoinRequests: JoinRequest[] = [
     residentName: "Dr. Maxime Benali",
     residentAvatar: "MB",
     residentRole: "Interne",
+    specialty: "Urologie",
+    year: "DES-1",
     teamId: "TEAM-001",
     teamName: "Service Urologie B",
     requestDate: "2024-11-03",

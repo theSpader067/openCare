@@ -180,8 +180,10 @@ export default function ProfilePage() {
   const [teamCreationError, setTeamCreationError] = useState<string | null>(null);
 
   // Join requests
-  const [joinRequests, setJoinRequests] = useState(pendingJoinRequests);
+  const [joinRequests, setJoinRequests] = useState<any[]>([]);
   const [isRequestsPanelOpen, setIsRequestsPanelOpen] = useState(false);
+  const [isLoadingRequests, setIsLoadingRequests] = useState(false);
+  const [requestsError, setRequestsError] = useState<string | null>(null);
 
   // Edit team modal
   const [isEditTeamOpen, setIsEditTeamOpen] = useState(false);
@@ -289,8 +291,32 @@ export default function ProfilePage() {
 
     if (status === "authenticated") {
       fetchTeams();
+      fetchTeamRequests();
     }
   }, [status]);
+
+  // Fetch pending team requests
+  const fetchTeamRequests = async () => {
+    setIsLoadingRequests(true);
+    setRequestsError(null);
+
+    try {
+      const response = await fetch("/api/team-requests/pending");
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch team requests");
+      }
+
+      const data = await response.json();
+      setJoinRequests(data.requests || []);
+    } catch (error) {
+      console.error("Error fetching team requests:", error);
+      setRequestsError("Failed to load requests");
+      setJoinRequests([]);
+    } finally {
+      setIsLoadingRequests(false);
+    }
+  };
 
   // Check if any data has been modified
   const hasDataChanged = (): boolean => {

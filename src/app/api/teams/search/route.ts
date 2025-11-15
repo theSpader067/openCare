@@ -34,15 +34,15 @@ export async function GET(req: NextRequest) {
               { service: { contains: query, mode: "insensitive" } },
             ],
           },
-          // User is not already a member or admin
-          // {
-          //   NOT: {
-          //     OR: [
-          //       { adminId: userId },
-          //       { members: { some: { id: userId } } },
-          //     ],
-          //   },
-          // },
+          //User is not already a member or admin
+          {
+            NOT: {
+              OR: [
+                { adminId: userId },
+                { members: { some: { id: userId } } },
+              ],
+            },
+          },
         ],
       },
       include: {

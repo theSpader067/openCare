@@ -50,6 +50,7 @@ model User {
   createdRapports Rapport[] @relation("RapportCreator")
   createdAnalyses Analyse[]
   rapportParticipations Rapport[] @relation("RapportParticipants")
+  teamRequests TeamRequest[] @relation("TeamRequestSender")
 }
 
 model Observation {
@@ -95,6 +96,7 @@ model Team {
   adminId   Int
   admin     User      @relation("TeamAdmin", fields: [adminId], references: [id], onDelete: Cascade)
   members   User[]    @relation("TeamMembers")
+  teamRequests TeamRequest[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -233,6 +235,17 @@ model Analyse {
   labId          String    @unique @default(cuid())
   creatorId      Int
   creator        User       @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+}
+
+model TeamRequest {
+  id        Int       @id @default(autoincrement())
+  senderId  Int
+  sender    User      @relation("TeamRequestSender", fields: [senderId], references: [id], onDelete: Cascade)
+  teamId    Int
+  team      Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  accepted  Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Account {

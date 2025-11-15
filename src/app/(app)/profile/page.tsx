@@ -21,6 +21,8 @@ import {
   Loader,
   AlertCircle,
   Stethoscope,
+  Edit2,
+  Trash2,
 } from "lucide-react";
 import {
   pendingJoinRequests,
@@ -171,6 +173,16 @@ export default function ProfilePage() {
   // Join requests
   const [joinRequests, setJoinRequests] = useState(pendingJoinRequests);
   const [isRequestsPanelOpen, setIsRequestsPanelOpen] = useState(false);
+
+  // Edit team modal
+  const [isEditTeamOpen, setIsEditTeamOpen] = useState(false);
+  const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
+  const [editTeamName, setEditTeamName] = useState("");
+  const [editTeamHospital, setEditTeamHospital] = useState("");
+  const [editTeamService, setEditTeamService] = useState("");
+  const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
+  const [isUpdatingTeam, setIsUpdatingTeam] = useState(false);
+  const [teamUpdateError, setTeamUpdateError] = useState<string | null>(null);
 
   // Personal info form with loading state
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo | null>(null);
@@ -1062,32 +1074,31 @@ export default function ProfilePage() {
               {/* Teams List */}
               <div className="space-y-4">
                 {userTeams.map((team, idx) => {
-                  const gradients = [
-                    "from-indigo-500 to-blue-500",
-                    "from-purple-500 to-pink-500",
-                    "from-emerald-500 to-cyan-500",
-                    "from-orange-500 to-red-500",
+                  const colors = [
+                    { bg: "from-stone-600 to-stone-700", light: "bg-stone-100", text: "text-stone-900" },
+                    { bg: "from-slate-600 to-slate-700", light: "bg-slate-100", text: "text-slate-900" },
+                    { bg: "from-zinc-600 to-zinc-700", light: "bg-zinc-100", text: "text-zinc-900" },
+                    { bg: "from-gray-600 to-gray-700", light: "bg-gray-100", text: "text-gray-900" },
                   ];
-                  const gradient = gradients[idx % gradients.length];
+                  const colorScheme = colors[idx % colors.length];
                   const adminCount = team.teamMembers?.filter((m: any) => m.role === "Admin").length || 0;
                   const isAdmin = team.teamMembers?.some((m: any) => m.role === "Admin" && m.id === (personalInfo?.avatar));
 
                   return (
                     <div
                       key={team.id}
-                      className="group border border-slate-200 rounded-xl overflow-hidden hover:border-slate-300 hover:shadow-lg transition-all duration-200 bg-white"
+                      className="border border-slate-200 rounded-xl overflow-hidden hover:border-slate-300 hover:shadow-lg transition-all duration-200 bg-white"
                     >
                       {/* Header with Info */}
-                      <div className={`bg-gradient-to-r ${gradient} px-5 py-4 flex items-start justify-between gap-4`}>
+                      <div className={`bg-gradient-to-r ${colorScheme.bg} px-5 py-4 flex items-start justify-between gap-4`}>
                         <div className="flex items-start gap-4 min-w-0 flex-1">
                           <div className={`h-12 w-12 rounded-lg bg-white/20 flex items-center justify-center text-white font-bold text-lg flex-shrink-0`}>
                             {team.name.charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0 flex-1">
                             <h3 className="text-white font-semibold text-base">{team.name}</h3>
-                            <p className="text-white/80 text-sm mt-1">{team.description}</p>
                             {(team.hospital || team.service) && (
-                              <div className="flex items-center gap-2 mt-2 text-xs text-white/70">
+                              <div className="flex items-center gap-2 mt-1.5 text-xs text-white/70">
                                 {team.hospital && <span>{team.hospital}</span>}
                                 {team.hospital && team.service && <span>•</span>}
                                 {team.service && <span>{team.service}</span>}
@@ -1095,57 +1106,61 @@ export default function ProfilePage() {
                             )}
                           </div>
                         </div>
-                      </div>
 
-                      {/* Stats Row */}
-                      <div className="px-5 py-3 border-b border-slate-100 bg-slate-50 flex items-center justify-between text-xs">
-                        <div className="flex gap-4">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-slate-600">Membres:</span>
-                            <span className="font-semibold text-slate-900">{team.teamMembers?.length || 0}</span>
-                          </div>
-                          {adminCount > 0 && (
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-slate-600">Admins:</span>
-                              <span className="font-semibold text-slate-900">{adminCount}</span>
-                            </div>
-                          )}
-                        </div>
+                        {/* Edit Button - Only visible if user is admin */}
                         {isAdmin && (
-                          <div className="text-indigo-600 font-semibold">Vous êtes admin</div>
+                          <button
+                            onClick={() => {
+                              setEditingTeamId(team.id);
+                              setEditTeamName(team.name);
+                              setEditTeamHospital(team.hospital || "");
+                              setEditTeamService(team.service || "");
+                              setSelectedMembers(new Set(team.teamMembers?.map((m: any) => m.id) || []));
+                              setIsEditTeamOpen(true);
+                              setTeamUpdateError(null);
+                            }}
+                            className="flex-shrink-0 p-2 rounded-lg bg-white/20 text-white hover:bg-white/30 transition"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </button>
                         )}
                       </div>
 
                       {/* Members Section */}
-                      <div className="px-5 py-4">
+                      <div className="px-5 py-4 space-y-3">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 flex-wrap flex-1">
-                            {team.teamMembers?.slice(0, 8).map((member: any) => (
-                              <div
-                                key={member.id}
-                                className="relative group/tooltip"
-                              >
-                                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 text-white flex items-center justify-center text-xs font-bold border-2 border-white shadow-sm hover:shadow-md hover:scale-110 transition-all cursor-pointer"
-                                  title={member.name}
-                                >
-                                  {member.avatar}
-                                </div>
-                                {member.role === "Admin" && (
-                                  <div className="absolute -top-1 -right-1 text-sm">⭐</div>
-                                )}
-                                {/* Tooltip */}
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-900 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
-                                  <div className="font-medium">{member.name}</div>
-                                  {member.specialty && <div className="text-white/80">{member.specialty}</div>}
+                          <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Membres ({team.teamMembers?.length || 0})</p>
+                        </div>
+
+                        <div className="space-y-2">
+                          {team.teamMembers?.map((member: any) => (
+                            <div
+                              key={member.id}
+                              className="flex items-center gap-3 p-2.5 rounded-lg bg-slate-50 hover:bg-slate-100 transition"
+                            >
+                              {/* Avatar */}
+                              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-stone-500 to-stone-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                {member.avatar}
+                              </div>
+
+                              {/* Name and Status */}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-slate-900">{member.name}</p>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                    member.role === "Admin"
+                                      ? "bg-amber-100 text-amber-800"
+                                      : "bg-blue-100 text-blue-800"
+                                  }`}>
+                                    {member.role === "Admin" ? "⭐ Admin" : "👤 Membre"}
+                                  </span>
+                                  {member.specialty && (
+                                    <span className="text-xs text-slate-600">{member.specialty}</span>
+                                  )}
                                 </div>
                               </div>
-                            ))}
-                            {(team.teamMembers?.length || 0) > 8 && (
-                              <div className="h-10 w-10 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold border-2 border-white shadow-sm text-xs">
-                                +{(team.teamMembers?.length || 0) - 8}
-                              </div>
-                            )}
-                          </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -1292,6 +1307,174 @@ export default function ProfilePage() {
                       </div>
                     </>
                   )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Edit Team Modal */}
+          {isEditTeamOpen && editingTeamId && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+              <Card className="w-full max-w-2xl border-none shadow-xl max-h-[90vh] overflow-y-auto">
+                <CardHeader className="relative">
+                  <CardTitle>Modifier l'équipe</CardTitle>
+                  <button
+                    onClick={() => {
+                      setIsEditTeamOpen(false);
+                      setEditingTeamId(null);
+                      setEditTeamName("");
+                      setEditTeamHospital("");
+                      setEditTeamService("");
+                      setSelectedMembers(new Set());
+                    }}
+                    className="absolute top-4 right-4 p-1 hover:bg-slate-100 rounded-lg transition"
+                  >
+                    <X className="h-5 w-5 text-slate-500" />
+                  </button>
+                </CardHeader>
+
+                <CardContent className="space-y-6">
+                  {/* Error State */}
+                  {teamUpdateError && (
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700">
+                      <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                      <p className="text-sm">{teamUpdateError}</p>
+                    </div>
+                  )}
+
+                  {/* Team Details Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">Détails de l'équipe</h3>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-700">Nom de l'équipe</label>
+                      <input
+                        type="text"
+                        value={editTeamName}
+                        onChange={(e) => setEditTeamName(e.target.value)}
+                        placeholder="Ex. Chirurgie B"
+                        className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-slate-700">Hôpital</label>
+                        <input
+                          value={editTeamHospital}
+                          placeholder="Nom de l'hôpital"
+                          onChange={(e) => setEditTeamHospital(e.target.value)}
+                          className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-slate-700">Service</label>
+                        <input
+                          value={editTeamService}
+                          placeholder="Nom du service"
+                          onChange={(e) => setEditTeamService(e.target.value)}
+                          className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Members Section */}
+                  <div className="space-y-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-xs text-blue-800">
+                        <span className="font-semibold">💡 Astuce:</span> Les membres non sélectionnés seront supprimés de l'équipe.
+                      </p>
+                    </div>
+
+                    <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">Membres</h3>
+
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {userTeams.find(t => t.id === editingTeamId)?.teamMembers?.map((member: any) => (
+                        <div
+                          key={member.id}
+                          className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedMembers.has(member.id)}
+                            onChange={(e) => {
+                              const newSelected = new Set(selectedMembers);
+                              if (e.target.checked) {
+                                newSelected.add(member.id);
+                              } else {
+                                newSelected.delete(member.id);
+                              }
+                              setSelectedMembers(newSelected);
+                            }}
+                            className="h-4 w-4 rounded cursor-pointer"
+                          />
+
+                          {/* Member Info */}
+                          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-stone-500 to-stone-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                            {member.avatar}
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-slate-900">{member.name}</p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                member.role === "Admin"
+                                  ? "bg-amber-100 text-amber-800"
+                                  : "bg-blue-100 text-blue-800"
+                              }`}>
+                                {member.role === "Admin" ? "⭐ Admin" : "👤 Membre"}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Will be deleted indicator */}
+                          {!selectedMembers.has(member.id) && (
+                            <div className="flex-shrink-0 px-2 py-1 rounded bg-red-50 border border-red-200">
+                              <p className="text-xs text-red-700 font-semibold">À supprimer</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 pt-4 border-t border-slate-200">
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setIsEditTeamOpen(false);
+                        setEditingTeamId(null);
+                        setEditTeamName("");
+                        setEditTeamHospital("");
+                        setEditTeamService("");
+                        setSelectedMembers(new Set());
+                      }}
+                      className="flex-1"
+                    >
+                      Annuler
+                    </Button>
+                    <Button
+                      variant="primary"
+                      onClick={() => {
+                        // TODO: Implement team update API call
+                        setIsEditTeamOpen(false);
+                      }}
+                      disabled={!editTeamName || isUpdatingTeam}
+                      className="flex-1"
+                    >
+                      {isUpdatingTeam ? (
+                        <>
+                          <Loader className="mr-2 h-4 w-4 animate-spin" />
+                          Modification...
+                        </>
+                      ) : (
+                        "Enregistrer les modifications"
+                      )}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </div>

@@ -1053,14 +1053,14 @@ export default function ProfilePage() {
 
           {/* My Teams */}
           {userTeams.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {/* Header */}
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-slate-900">Mes Équipes ({userTeams.length})</h2>
               </div>
 
               {/* Teams List */}
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {userTeams.map((team, idx) => {
                   const gradients = [
                     "from-indigo-500 to-blue-500",
@@ -1070,53 +1070,82 @@ export default function ProfilePage() {
                   ];
                   const gradient = gradients[idx % gradients.length];
                   const adminCount = team.teamMembers?.filter((m: any) => m.role === "Admin").length || 0;
+                  const isAdmin = team.teamMembers?.some((m: any) => m.role === "Admin" && m.id === (personalInfo?.avatar));
 
                   return (
                     <div
                       key={team.id}
-                      className="group border border-slate-200 rounded-xl overflow-hidden hover:border-slate-300 hover:shadow-md transition-all duration-200 bg-white"
+                      className="group border border-slate-200 rounded-xl overflow-hidden hover:border-slate-300 hover:shadow-lg transition-all duration-200 bg-white"
                     >
-                      {/* Header */}
-                      <div className={`bg-gradient-to-r ${gradient} px-4 py-3 flex items-center justify-between`}>
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className={`h-9 w-9 rounded-lg bg-white/20 flex items-center justify-center text-white font-bold text-sm flex-shrink-0`}>
+                      {/* Header with Info */}
+                      <div className={`bg-gradient-to-r ${gradient} px-5 py-4 flex items-start justify-between gap-4`}>
+                        <div className="flex items-start gap-4 min-w-0 flex-1">
+                          <div className={`h-12 w-12 rounded-lg bg-white/20 flex items-center justify-center text-white font-bold text-lg flex-shrink-0`}>
                             {team.name.charAt(0).toUpperCase()}
                           </div>
-                          <div className="min-w-0">
-                            <h3 className="text-white font-semibold text-sm truncate">{team.name}</h3>
-                            <p className="text-white/80 text-xs truncate">{team.description}</p>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="text-white font-semibold text-base">{team.name}</h3>
+                            <p className="text-white/80 text-sm mt-1">{team.description}</p>
+                            {(team.hospital || team.service) && (
+                              <div className="flex items-center gap-2 mt-2 text-xs text-white/70">
+                                {team.hospital && <span>{team.hospital}</span>}
+                                {team.hospital && team.service && <span>•</span>}
+                                {team.service && <span>{team.service}</span>}
+                              </div>
+                            )}
                           </div>
-                        </div>
-                        <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                          <span className="text-white text-xs font-semibold">{team.teamMembers?.length || 0}</span>
-                          <span className="text-white/70 text-xs">👥</span>
                         </div>
                       </div>
 
-                      {/* Members */}
-                      <div className="px-4 py-3">
-                        <div className="flex items-center gap-1 flex-wrap">
-                          {team.teamMembers?.slice(0, 6).map((member: any) => (
-                            <div
-                              key={member.id}
-                              className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 text-white flex items-center justify-center text-xs font-bold border border-slate-200 hover:scale-110 transition-transform cursor-pointer relative group/tooltip"
-                              title={member.name}
-                            >
-                              {member.avatar}
-                              {member.role === "Admin" && (
-                                <div className="absolute -top-1 -right-1 text-xs">⭐</div>
-                              )}
-                              {/* Tooltip */}
-                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-50">
-                                {member.name}
-                              </div>
-                            </div>
-                          ))}
-                          {(team.teamMembers?.length || 0) > 6 && (
-                            <div className="h-8 w-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold border border-slate-200 text-xs">
-                              +{(team.teamMembers?.length || 0) - 6}
+                      {/* Stats Row */}
+                      <div className="px-5 py-3 border-b border-slate-100 bg-slate-50 flex items-center justify-between text-xs">
+                        <div className="flex gap-4">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-slate-600">Membres:</span>
+                            <span className="font-semibold text-slate-900">{team.teamMembers?.length || 0}</span>
+                          </div>
+                          {adminCount > 0 && (
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-slate-600">Admins:</span>
+                              <span className="font-semibold text-slate-900">{adminCount}</span>
                             </div>
                           )}
+                        </div>
+                        {isAdmin && (
+                          <div className="text-indigo-600 font-semibold">Vous êtes admin</div>
+                        )}
+                      </div>
+
+                      {/* Members Section */}
+                      <div className="px-5 py-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 flex-wrap flex-1">
+                            {team.teamMembers?.slice(0, 8).map((member: any) => (
+                              <div
+                                key={member.id}
+                                className="relative group/tooltip"
+                              >
+                                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 text-white flex items-center justify-center text-xs font-bold border-2 border-white shadow-sm hover:shadow-md hover:scale-110 transition-all cursor-pointer"
+                                  title={member.name}
+                                >
+                                  {member.avatar}
+                                </div>
+                                {member.role === "Admin" && (
+                                  <div className="absolute -top-1 -right-1 text-sm">⭐</div>
+                                )}
+                                {/* Tooltip */}
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-900 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
+                                  <div className="font-medium">{member.name}</div>
+                                  {member.specialty && <div className="text-white/80">{member.specialty}</div>}
+                                </div>
+                              </div>
+                            ))}
+                            {(team.teamMembers?.length || 0) > 8 && (
+                              <div className="h-10 w-10 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold border-2 border-white shadow-sm text-xs">
+                                +{(team.teamMembers?.length || 0) - 8}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>

@@ -167,6 +167,8 @@ export default function ProfilePage() {
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [joiningTeamId, setJoiningTeamId] = useState<string | null>(null);
+  const [sentRequests, setSentRequests] = useState<Set<string>>(new Set());
 
   // Create team modal
   const [isCreateTeamOpen, setIsCreateTeamOpen] = useState(false);
@@ -368,12 +370,38 @@ export default function ProfilePage() {
     }
   };
 
-  const handleJoinTeam = (teamId: string) => {
-    setTeams(
-      teams.map((team) =>
-        team.id === teamId ? { ...team, requestPending: true } : team
-      )
-    );
+  const handleJoinTeam = async (teamId: string) => {
+    setJoiningTeamId(teamId);
+
+    try {
+      const response = await fetch("/api/team-requests", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ teamId }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error("Error joining team:", error);
+        setJoiningTeamId(null);
+        return;
+      }
+
+      const data = await response.json();
+
+      // Add the new request to the joinRequests list
+      setJoinRequests([...joinRequests, data.request]);
+
+      // Mark team as sent request
+      setSentRequests(new Set([...sentRequests, teamId]));
+
+      setJoiningTeamId(null);
+    } catch (error) {
+      console.error("Error joining team:", error);
+      setJoiningTeamId(null);
+    }
   };
 
   const handleCreateTeam = async () => {
@@ -1133,15 +1161,32 @@ export default function ProfilePage() {
                               <p className="text-sm text-slate-600">{team.description}</p>
                               <p className="text-xs text-slate-500 mt-2">{team.members} membres</p>
                             </div>
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              onClick={() => handleJoinTeam(team.id)}
-                              className="h-8 flex-shrink-0"
-                            >
-                              <Plus className="h-3 w-3 mr-1" />
-                              Rejoindre
-                            </Button>
+                            {sentRequests.has(team.id) ? (
+                              <Badge className="bg-amber-100 text-amber-700 border-amber-200 h-fit flex-shrink-0">
+                                <Check className="h-3 w-3 mr-1" />
+                                Envoyé
+                              </Badge>
+                            ) : (
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={() => handleJoinTeam(team.id)}
+                                disabled={joiningTeamId === team.id}
+                                className="h-8 flex-shrink-0"
+                              >
+                                {joiningTeamId === team.id ? (
+                                  <>
+                                    <Loader className="h-3 w-3 mr-1 animate-spin" />
+                                    Envoi...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Plus className="h-3 w-3 mr-1" />
+                                    Rejoindre
+                                  </>
+                                )}
+                              </Button>
+                            )}
                           </div>
                         </div>
                       ))

@@ -20,6 +20,9 @@ export async function GET(req: NextRequest) {
 
     // Search for teams by name, hospital, or service
     // Only return teams the user is not already a member of
+
+    console.log('SEARCH @@@@@')
+    console.log(query)
     const teams = await prisma.team.findMany({
       where: {
         AND: [
@@ -32,14 +35,14 @@ export async function GET(req: NextRequest) {
             ],
           },
           // User is not already a member or admin
-          {
-            NOT: {
-              OR: [
-                { adminId: userId },
-                { members: { some: { id: userId } } },
-              ],
-            },
-          },
+          // {
+          //   NOT: {
+          //     OR: [
+          //       { adminId: userId },
+          //       { members: { some: { id: userId } } },
+          //     ],
+          //   },
+          // },
         ],
       },
       include: {
@@ -66,18 +69,20 @@ export async function GET(req: NextRequest) {
       const adminLastName = team.admin.lastName || "";
       const adminInitials = `${adminFirstName[0] || ""}${adminLastName[0] || ""}`.toUpperCase();
       const adminName = `${adminFirstName} ${adminLastName}`.trim();
-
+      const teamDescription = team.service && team.hospital 
+      ? `${team.hospital}: ${team.service}`
+      : team.hospital
+        ? `Hôpital: ${team.hospital}`
+      : team.service
+        ? `Service: ${team.service}`
+        : "Équipe"
       return {
         id: team.id.toString(),
         name: team.name,
         members: team.members?.length || 0,
         joined: false,
         requestPending: false,
-        description: team.service
-          ? `Service: ${team.service}`
-          : team.hospital
-            ? `Hôpital: ${team.hospital}`
-            : "Équipe",
+        description: teamDescription,
         hospital: team.hospital,
         service: team.service,
         adminId: team.adminId?.toString(),
@@ -92,6 +97,8 @@ export async function GET(req: NextRequest) {
         ],
       };
     });
+
+    console.log(transformedTeams)
 
     return NextResponse.json({ teams: transformedTeams });
   } catch (error) {

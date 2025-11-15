@@ -14,7 +14,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = parseInt((session.user as any).id);
     const { teamId: teamIdStr } = await params;
     const teamId = parseInt(teamIdStr);
 
@@ -83,7 +83,7 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = parseInt((session.user as any).id);
     const { teamId: teamIdStr } = await params;
     const teamId = parseInt(teamIdStr);
 
@@ -109,15 +109,32 @@ export async function PUT(
       );
     }
 
-    const { name, hospital, service } = await req.json();
+    const { name, hospital, service, members: memberIds } = await req.json();
+
+    // Validate input
+    if (!name || !name.trim()) {
+      return NextResponse.json(
+        { error: "Team name is required" },
+        { status: 400 }
+      );
+    }
+
+    // Convert memberIds to integers and filter valid IDs
+    const validMemberIds = (memberIds || [])
+      .map((id: string) => parseInt(id))
+      .filter((id: number) => !isNaN(id));
 
     // Update team
     const updatedTeam = await prisma.team.update({
       where: { id: teamId },
       data: {
-        name: name || undefined,
+        name: name.trim(),
         hospital: hospital || null,
         service: service || null,
+        // Replace members with the new list (removes members not in the list)
+        members: {
+          set: validMemberIds.map((id: number) => ({ id })),
+        },
       },
       include: {
         admin: {
@@ -161,7 +178,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = parseInt((session.user as any).id);
     const { teamId: teamIdStr } = await params;
     const teamId = parseInt(teamIdStr);
 

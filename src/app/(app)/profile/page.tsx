@@ -801,31 +801,145 @@ export default function ProfilePage() {
       {/* Équipes Tab */}
       {activeTab === "equipes" && (
         <div className="space-y-6">
-          {/* Create Team Button - Top */}
-          <div className="flex gap-3">
-            <Button
-              variant="primary"
-              onClick={() => {
-                setIsCreateTeamOpen(true);
-                setTeamCreationError(null);
-              }}
-              className="h-10 flex-shrink-0"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Créer une équipe
-            </Button>
-          </div>
+          {/* Two-column layout: Search on right, Teams on left (on XL screens) */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            {/* My Teams - Left side on XL, Full width on smaller screens */}
+            <div className="xl:order-2">
+              {userTeams.length > 0 ? (
+                <div className="space-y-4">
+                  {/* Header */}
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-slate-900">Mes Équipes ({userTeams.length})</h2>
+                  </div>
 
-         
-          {/* Large Screen Dynamic Search */}
-          <div className="block">
-            <Card className="border-none bg-white/90">
-              <CardHeader className="flex items-start justify-between">
-                <div className="flex-1">
-                  <CardTitle>Rechercher des équipes</CardTitle>
-                  <CardDescription>Trouvez et rejoignez d'autres équipes (tapez pour rechercher)</CardDescription>
+                  {/* Teams List */}
+                  <div className="space-y-4 mb-4">
+                    {userTeams.map((team, idx) => {
+                      const colors = [
+                        { bg: "from-indigo-600 to-indigo-700", light: "bg-indigo-100", text: "text-indigo-900" },
+                        { bg: "from-purple-600 to-purple-700", light: "bg-purple-100", text: "text-purple-900" },
+                        { bg: "from-blue-600 to-blue-700", light: "bg-blue-100", text: "text-blue-900" },
+                        { bg: "from-violet-600 to-violet-700", light: "bg-violet-100", text: "text-violet-900" },
+                      ];
+                      const colorScheme = colors[idx % colors.length];
+                      const adminCount = team.teamMembers?.filter((m: any) => m.role === "Admin").length || 0;
+                      const isAdmin = team.adminId === (session?.user as any).id;
+                      return (
+                        <div
+                          key={team.id}
+                          className="border border-slate-200 rounded-xl overflow-hidden hover:border-slate-300 hover:shadow-lg transition-all duration-200 bg-white"
+                        >
+                          {/* Header with Info */}
+                          <div className={`bg-gradient-to-r ${colorScheme.bg} px-5 py-4 flex items-start justify-between gap-4`}>
+                            <div className="flex items-start gap-4 min-w-0 flex-1">
+                              <div className={`h-12 w-12 rounded-lg bg-white/20 flex items-center justify-center text-white font-bold text-lg flex-shrink-0`}>
+                                {team.name.charAt(0).toUpperCase()}
+                              </div>
+                              <div className="min-w-0 flex-1 my-auto">
+                                <h1 className="text-white font-semibold my-auto text-2xl">{team.name}</h1>
+                                {(team.hospital || team.service) && (
+                                  <div className="flex items-center gap-2 mt-1.5 text-xs text-white/70">
+                                    {team.hospital && <span>{team.hospital}</span>}
+                                    {team.hospital && team.service && <span>•</span>}
+                                    {team.service && <span>{team.service}</span>}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Menu Button - Only visible if user is admin */}
+                            {isAdmin && (
+                              <div className="relative">
+                                <button
+                                  onClick={() => setOpenMenuTeamId(openMenuTeamId === team.id ? null : team.id)}
+                                  className="flex-shrink-0 p-2 rounded-lg bg-white/20 text-white hover:bg-white/30 transition hover:cursor-pointer"
+                                >
+                                  <MoreVertical className="h-5 w-5" />
+                                </button>
+
+                                {/* Dropdown Menu */}
+                                {openMenuTeamId === team.id && (
+                                  <div className="absolute right-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
+                                    <button
+                                      onClick={() => {
+                                        setEditingTeamId(team.id);
+                                        setEditTeamName(team.name);
+                                        setEditTeamHospital(team.hospital || "");
+                                        setEditTeamService(team.service || "");
+                                        setSelectedMembers(new Set(team.teamMembers?.map((m: any) => m.id) || []));
+                                        setIsEditTeamOpen(true);
+                                        setTeamUpdateError(null);
+                                        setOpenMenuTeamId(null);
+                                      }}
+                                      className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition"
+                                    >
+                                      <Edit2 className="h-4 w-4" />
+                                      Modifier
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setDeletingTeamId(team.id);
+                                        setIsDeleteTeamOpen(true);
+                                        setTeamDeleteError(null);
+                                        setOpenMenuTeamId(null);
+                                      }}
+                                      className="w-full text-left px-4 py-2.5 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2 transition border-t border-slate-200"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                      Supprimer
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Members Section */}
+                          <div className="px-5 py-4 bg-slate-50/50 border-t border-slate-200">
+                            <div className="space-y-3">
+                              {team.teamMembers && team.teamMembers.length > 0 ? (
+                                team.teamMembers.map((member: any) => (
+                                  <div key={member.id} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-100">
+                                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-slate-400 to-slate-600 text-white flex items-center justify-center font-semibold text-xs flex-shrink-0">
+                                      {member.avatar}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium text-slate-900 truncate">{member.name}</p>
+                                      <div className="flex items-center gap-2 text-xs text-slate-600">
+                                        <span>{member.specialty}</span>
+                                        {member.role === "Admin" && (
+                                          <Badge className="bg-indigo-100 text-indigo-700 h-fit text-xs">Admin</Badge>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (
+                                <p className="text-xs text-slate-500 text-center py-2">Aucun membre</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+              ) : (
+                <div className="text-center py-12 text-slate-500">
+                  <p className="text-sm">Vous n'êtes membre d'aucune équipe</p>
+                </div>
+              )}
+            </div>
+
+            {/* Search Component - Right side on XL, Full width on smaller screens */}
+            <div className="xl:order-1">
+              <Card className="border-none bg-white/90 sticky top-20">
+                <CardHeader className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <CardTitle>Rechercher des équipes</CardTitle>
+                    <CardDescription>Trouvez et rejoignez d'autres équipes (tapez pour rechercher)</CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
                   {/* Pending Requests Button */}
                   {joinRequests.length > 0 && (
                     <div className="relative">
@@ -845,12 +959,7 @@ export default function ProfilePage() {
                       {/* Pending Requests Dropdown */}
                       {isPendingRequestsOpen && (
                         <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden">
-                          {/* Dropdown Header */}
-                          <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
-                            <h3 className="font-semibold text-amber-900">Demandes en attente</h3>
-                            <p className="text-xs text-amber-700">{joinRequests.length} demande{joinRequests.length > 1 ? "s" : ""}</p>
-                          </div>
-
+                        
                           {/* Requests List */}
                           <div className="max-h-96 overflow-y-auto">
                             {joinRequests.map((request) => (
@@ -862,15 +971,8 @@ export default function ProfilePage() {
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <p className="font-semibold text-slate-900 truncate">{request.residentName}</p>
-                                    <p className="text-xs text-slate-600 truncate">{request.specialty}</p>
+                                    <p className="text-xs text-slate-600 truncate">{request.specialty} → {request.teamName}</p>
                                   </div>
-                                </div>
-
-                                {/* Info row */}
-                                <div className="flex items-center gap-2 mb-3 text-xs">
-                                  <span className="px-2 py-1 bg-slate-100 text-slate-700 rounded-full">{request.year}</span>
-                                  <span className="text-slate-500">•</span>
-                                  <span className="font-medium text-slate-700 truncate">{request.teamName}</span>
                                 </div>
 
                                 {/* Action Buttons */}
@@ -984,178 +1086,8 @@ export default function ProfilePage() {
                 )}
               </CardContent>
             </Card>
+            </div>
           </div>
-
-
-          {/* Join Requests Badge for Mobile - Collapsible trigger */}
-          {joinRequests.length > 0 && (
-            <div className="lg:hidden">
-              <button
-                onClick={() => setIsRequestsPanelOpen(!isRequestsPanelOpen)}
-                className="w-full flex items-center justify-between p-4 rounded-2xl border border-amber-200 bg-amber-50 hover:bg-amber-100 transition"
-              >
-                <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-amber-600" />
-                  <span className="font-medium text-amber-900">
-                    {joinRequests.length} demande{joinRequests.length > 1 ? "s" : ""} en attente
-                  </span>
-                </div>
-                <span className="text-amber-600">{isRequestsPanelOpen ? "▼" : "▶"}</span>
-              </button>
-            </div>
-          )}
-
-          {/* My Teams */}
-          {userTeams.length > 0 ? (
-            <div className="space-y-4">
-              {/* Header */}
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-slate-900">Mes Équipes ({userTeams.length})</h2>
-              </div>
-
-              {/* Teams List */}
-              <div className="space-y-4 mb-4">
-                {userTeams.map((team, idx) => {
-                  const colors = [
-                    { bg: "from-indigo-600 to-indigo-700", light: "bg-indigo-100", text: "text-indigo-900" },
-                    { bg: "from-purple-600 to-purple-700", light: "bg-purple-100", text: "text-purple-900" },
-                    { bg: "from-blue-600 to-blue-700", light: "bg-blue-100", text: "text-blue-900" },
-                    { bg: "from-violet-600 to-violet-700", light: "bg-violet-100", text: "text-violet-900" },
-                  ];
-                  const colorScheme = colors[idx % colors.length];
-                  const adminCount = team.teamMembers?.filter((m: any) => m.role === "Admin").length || 0;
-                  const isAdmin = team.adminId === (session?.user as any).id;
-                  return (
-                    <div
-                      key={team.id}
-                      className="border border-slate-200 rounded-xl overflow-hidden hover:border-slate-300 hover:shadow-lg transition-all duration-200 bg-white"
-                    >
-                      {/* Header with Info */}
-                      <div className={`bg-gradient-to-r ${colorScheme.bg} px-5 py-4 flex items-start justify-between gap-4`}>
-                        <div className="flex items-start gap-4 min-w-0 flex-1">
-                          <div className={`h-12 w-12 rounded-lg bg-white/20 flex items-center justify-center text-white font-bold text-lg flex-shrink-0`}>
-                            {team.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div className="min-w-0 flex-1 my-auto">
-                            <h1 className="text-white font-semibold my-auto text-2xl">{team.name}</h1>
-                            {(team.hospital || team.service) && (
-                              <div className="flex items-center gap-2 mt-1.5 text-xs text-white/70">
-                                {team.hospital && <span>{team.hospital}</span>}
-                                {team.hospital && team.service && <span>•</span>}
-                                {team.service && <span>{team.service}</span>}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Menu Button - Only visible if user is admin */}
-                        {isAdmin && (
-                          <div className="relative">
-                            <button
-                              onClick={() => setOpenMenuTeamId(openMenuTeamId === team.id ? null : team.id)}
-                              className="flex-shrink-0 p-2 rounded-lg bg-white/20 text-white hover:bg-white/30 transition hover:cursor-pointer"
-                            >
-                              <MoreVertical className="h-5 w-5" />
-                            </button>
-
-                            {/* Dropdown Menu */}
-                            {openMenuTeamId === team.id && (
-                              <div className="absolute right-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                                <button
-                                  onClick={() => {
-                                    setEditingTeamId(team.id);
-                                    setEditTeamName(team.name);
-                                    setEditTeamHospital(team.hospital || "");
-                                    setEditTeamService(team.service || "");
-                                    setSelectedMembers(new Set(team.teamMembers?.map((m: any) => m.id) || []));
-                                    setIsEditTeamOpen(true);
-                                    setTeamUpdateError(null);
-                                    setOpenMenuTeamId(null);
-                                  }}
-                                  className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition"
-                                >
-                                  <Edit2 className="h-4 w-4" />
-                                  Modifier
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setDeletingTeamId(team.id);
-                                    setIsDeleteTeamOpen(true);
-                                    setTeamDeleteError(null);
-                                    setOpenMenuTeamId(null);
-                                  }}
-                                  className="w-full text-left px-4 py-2.5 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2 transition border-t border-slate-200"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                  Supprimer
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Members Section */}
-                      <div className="px-5 py-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Membres ({team.teamMembers?.length || 0})</p>
-                        </div>
-
-                        <div className="space-y-2">
-                          {team.teamMembers?.map((member: any) => (
-                            <div
-                              key={member.id}
-                              className="flex items-center gap-3 p-2.5 rounded-lg bg-slate-50 hover:bg-slate-100 transition"
-                            >
-                              {/* Avatar */}
-                              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
-                                {member.avatar}
-                              </div>
-
-                              {/* Name and Status */}
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-slate-900">{member.name}</p>
-                                <div className="flex items-center gap-1.5 mt-0.5">
-                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
-                                    member.role === "Admin"
-                                      ? "bg-amber-100 text-amber-800"
-                                      : "bg-blue-100 text-blue-800"
-                                  }`}>
-                                    {member.role === "Admin" ? "⭐ Admin" : "👤 Membre"}
-                                  </span>
-                                  {member.specialty && (
-                                    <span className="text-xs text-slate-600">{member.specialty}</span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50">
-              <Briefcase className="h-10 w-10 text-slate-400 mb-3" />
-              <h3 className="font-semibold text-slate-900 mb-1">Aucune équipe</h3>
-              <p className="text-sm text-slate-600 mb-4">Créez votre première équipe</p>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => {
-                  setIsCreateTeamOpen(true);
-                  setTeamCreationError(null);
-                }}
-                className="gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Créer
-              </Button>
-            </div>
-          )}
 
           {/* Create Team Modal */}
           {isCreateTeamOpen && (

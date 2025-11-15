@@ -162,6 +162,12 @@ export default function ProfilePage() {
   const [isLoadingTeams, setIsLoadingTeams] = useState(false);
   const [teamsError, setTeamsError] = useState<string | null>(null);
 
+  // Search teams state
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+
   // Create team modal
   const [isCreateTeamOpen, setIsCreateTeamOpen] = useState(false);
   const [selectedTeamName, setSelectedTeamName] = useState("");
@@ -443,11 +449,38 @@ export default function ProfilePage() {
     setJoinRequests(joinRequests.filter((req) => req.id !== requestId));
   };
 
-  const filteredTeams = teams.filter(
-    (team) =>
-      team.name.toLowerCase().includes(searchTeams.toLowerCase()) ||
-      team.description.toLowerCase().includes(searchTeams.toLowerCase())
-  );
+  const handleSearchTeams = async () => {
+    if (!searchTeams.trim()) {
+      setSearchResults([]);
+      setHasSearched(false);
+      return;
+    }
+
+    setIsSearching(true);
+    setSearchError(null);
+    setHasSearched(true);
+
+    try {
+      const response = await fetch(
+        `/api/teams/search?q=${encodeURIComponent(searchTeams)}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to search teams");
+      }
+
+      const data = await response.json();
+      setSearchResults(data.teams || []);
+    } catch (error) {
+      console.error("Error searching teams:", error);
+      setSearchError(
+        error instanceof Error ? error.message : "Failed to search teams"
+      );
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   if (isLoadingProfile) {
     return (
@@ -1022,66 +1055,112 @@ export default function ProfilePage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="Rechercher une équipe..."
-                    value={searchTeams}
-                    onChange={(e) => setSearchTeams(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                  />
+                {/* Search Input with Button */}
+                <div className="flex gap-2">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Rechercher une équipe par nom, hôpital ou service..."
+                      value={searchTeams}
+                      onChange={(e) => setSearchTeams(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleSearchTeams();
+                        }
+                      }}
+                      className="w-full pl-10 pr-4 py-2 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    />
+                  </div>
+                  <button
+                    onClick={handleSearchTeams}
+                    disabled={isSearching || !searchTeams.trim()}
+                    className="flex-shrink-0 p-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition"
+                    title="Rechercher"
+                  >
+                    {isSearching ? (
+                      <Loader className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <Search className="h-5 w-5" />
+                    )}
+                  </button>
                 </div>
 
-                {/* Large Screen Search Results - Only show when searching */}
-                {searchTeams && (
+                {/* Search Error */}
+                {searchError && (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-red-900">Erreur de recherche</p>
+                      <p className="text-sm text-red-700">{searchError}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Loading Skeletons */}
+                {isSearching && (
                   <div className="space-y-4">
-                    {filteredTeams
-                      .filter((team) => !team.joined)
-                      .length > 0 ? (
-                      filteredTeams
-                        .filter((team) => !team.joined)
-                        .map((team) => (
-                          <div
-                            key={team.id}
-                            className="rounded-2xl border border-slate-200 hover:border-indigo-300 transition overflow-hidden"
-                          >
-                            <div className="p-4 flex items-start justify-between">
-                              <div>
-                                <p className="font-medium text-slate-900">{team.name}</p>
-                                <p className="text-sm text-slate-600">{team.description}</p>
-                                <p className="text-xs text-slate-500 mt-2">{team.members} membres</p>
-                              </div>
-                              {team.requestPending ? (
-                                <Badge className="bg-amber-100 text-amber-700 border-amber-200 h-fit flex-shrink-0">
-                                  <Clock className="h-3 w-3 mr-1" />
-                                  En attente
-                                </Badge>
-                              ) : (
-                                <Button
-                                  variant="primary"
-                                  size="sm"
-                                  onClick={() => handleJoinTeam(team.id)}
-                                  className="h-8 flex-shrink-0"
-                                >
-                                  <Plus className="h-3 w-3 mr-1" />
-                                  Rejoindre
-                                </Button>
-                              )}
-                            </div>
+                    {[1, 2].map((i) => (
+                      <div
+                        key={i}
+                        className="rounded-2xl border border-slate-200 p-4 bg-slate-50 animate-pulse"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 space-y-3">
+                            <div className="h-5 bg-slate-200 rounded w-40"></div>
+                            <div className="h-4 bg-slate-200 rounded w-full"></div>
+                            <div className="h-3 bg-slate-200 rounded w-24"></div>
                           </div>
-                        ))
+                          <div className="h-8 bg-slate-200 rounded w-24 flex-shrink-0"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Search Results */}
+                {hasSearched && !isSearching && (
+                  <div className="space-y-4">
+                    {searchResults.length > 0 ? (
+                      searchResults.map((team) => (
+                        <div
+                          key={team.id}
+                          className="rounded-2xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition overflow-hidden"
+                        >
+                          <div className="p-4 flex items-start justify-between">
+                            <div>
+                              <p className="font-medium text-slate-900">{team.name}</p>
+                              <p className="text-sm text-slate-600">{team.description}</p>
+                              <p className="text-xs text-slate-500 mt-2">{team.members} membres</p>
+                            </div>
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => handleJoinTeam(team.id)}
+                              className="h-8 flex-shrink-0"
+                            >
+                              <Plus className="h-3 w-3 mr-1" />
+                              Rejoindre
+                            </Button>
+                          </div>
+                        </div>
+                      ))
                     ) : (
-                      <div className="text-center py-8 text-slate-500">
-                        <p className="text-sm">Aucune équipe trouvée</p>
+                      <div className="text-center py-12 text-slate-500">
+                        <Search className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                        <p className="font-medium text-slate-900 mb-1">Aucune équipe trouvée</p>
+                        <p className="text-sm">Essayez une autre recherche ou créez une nouvelle équipe</p>
                       </div>
                     )}
                   </div>
                 )}
 
-                {!searchTeams && (
-                  <div className="text-center py-8 text-slate-500">
-                    <p className="text-sm">Commencez à taper pour rechercher des équipes</p>
+                {/* Initial State */}
+                {!hasSearched && (
+                  <div className="text-center py-12 text-slate-500">
+                    <Search className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                    <p className="font-medium text-slate-900 mb-1">Cherchez une équipe</p>
+                    <p className="text-sm">Entrez un nom, un hôpital ou un service pour commencer</p>
                   </div>
                 )}
               </CardContent>

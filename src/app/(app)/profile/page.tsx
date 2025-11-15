@@ -194,6 +194,9 @@ export default function ProfilePage() {
   // Team menu dropdown
   const [openMenuTeamId, setOpenMenuTeamId] = useState<string | null>(null);
 
+  // Pending requests dropdown
+  const [isPendingRequestsOpen, setIsPendingRequestsOpen] = useState(false);
+
   // Personal info form with loading state
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo | null>(null);
   const [originalPersonalInfo, setOriginalPersonalInfo] = useState<PersonalInfo | null>(null);
@@ -876,9 +879,95 @@ export default function ProfilePage() {
           {/* Large Screen Dynamic Search */}
           <div className="hidden lg:block">
             <Card className="border-none bg-white/90">
-              <CardHeader>
-                <CardTitle>Rechercher des équipes</CardTitle>
-                <CardDescription>Trouvez et rejoignez d'autres équipes (tapez pour rechercher)</CardDescription>
+              <CardHeader className="flex items-start justify-between">
+                <div className="flex-1">
+                  <CardTitle>Rechercher des équipes</CardTitle>
+                  <CardDescription>Trouvez et rejoignez d'autres équipes (tapez pour rechercher)</CardDescription>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {/* Pending Requests Button */}
+                  {joinRequests.length > 0 && (
+                    <div className="relative">
+                      <button
+                        onClick={() => setIsPendingRequestsOpen(!isPendingRequestsOpen)}
+                        className="relative p-2 rounded-lg border border-slate-200 hover:bg-amber-50 text-amber-600 transition"
+                        title={`${joinRequests.length} demande(s) en attente`}
+                      >
+                        <Clock className="h-5 w-5" />
+                        {joinRequests.length > 0 && (
+                          <span className="absolute top-0 right-0 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
+                            {joinRequests.length}
+                          </span>
+                        )}
+                      </button>
+
+                      {/* Pending Requests Dropdown */}
+                      {isPendingRequestsOpen && joinRequests.length > 0 && (
+                        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-slate-200 z-50 overflow-hidden">
+                          <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
+                            <h3 className="font-semibold text-slate-900 text-sm">
+                              Demandes d'adhésion ({joinRequests.length})
+                            </h3>
+                          </div>
+                          <div className="max-h-96 overflow-y-auto space-y-2 p-2">
+                            {joinRequests.map((request) => (
+                              <div
+                                key={request.id}
+                                className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition"
+                              >
+                                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
+                                  {request.residentAvatar}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-slate-900 truncate">
+                                    {request.residentName}
+                                  </p>
+                                  <p className="text-xs text-slate-600">
+                                    {request.residentRole} • {request.teamName}
+                                  </p>
+                                </div>
+                                <div className="flex gap-1 flex-shrink-0">
+                                  <button
+                                    onClick={() => {
+                                      handleAcceptJoinRequest(request.id);
+                                      setIsPendingRequestsOpen(false);
+                                    }}
+                                    className="p-1.5 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition"
+                                    title="Accepter"
+                                  >
+                                    <Check className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      handleDeclineJoinRequest(request.id);
+                                      setIsPendingRequestsOpen(false);
+                                    }}
+                                    className="p-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition"
+                                    title="Refuser"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Quick Create Team Button */}
+                  <button
+                    onClick={() => {
+                      setIsCreateTeamOpen(true);
+                      setTeamCreationError(null);
+                    }}
+                    className="p-2 rounded-lg border border-slate-200 hover:bg-indigo-50 text-indigo-600 transition"
+                    title="Créer une équipe rapidement"
+                  >
+                    <Plus className="h-5 w-5" />
+                  </button>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="relative">

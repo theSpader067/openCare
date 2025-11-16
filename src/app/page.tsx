@@ -710,12 +710,16 @@ export default function LandingPage() {
                       <div
                         onClick={() => setTopZComponent("planning")}
                         className={cn(
-                          "absolute top-0 left-0 w-2/3 h-2/3 rounded-[32px] border border-indigo-100 overflow-hidden shadow-2xl shadow-indigo-100 bg-white flex flex-col cursor-pointer transition-all duration-300",
+                          "absolute top-0 left-0 w-2/3 h-2/3 rounded-[32px] border overflow-hidden shadow-2xl bg-white flex flex-col cursor-pointer transition-all duration-300",
                           topZComponent === "planning" ? "z-20" : "z-10"
                         )}
+                        style={{
+                          borderColor: "rgba(76, 110, 245, 0.2)",
+                          boxShadow: "0 25px 50px -12px rgba(76, 110, 245, 0.15)"
+                        }}
                       >
                         {/* Header */}
-                        <div className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white p-4 flex-shrink-0">
+                        <div className="bg-gradient-to-r from-[#4c6ef5] via-[#8b5cf6] to-[#0ea5e9] text-white p-4 flex-shrink-0">
                           <p className="text-xs font-semibold uppercase tracking-wide">Créer une tâche</p>
                           <h3 className="text-lg font-bold mt-2">Nouvelle consigne</h3>
                         </div>
@@ -778,9 +782,13 @@ export default function LandingPage() {
                       <div
                         onClick={() => setTopZComponent(null)}
                         className={cn(
-                          "absolute bottom-0 right-0 w-2/3 h-2/3 rounded-[32px] border border-indigo-100 bg-white shadow-2xl shadow-indigo-100 p-6 cursor-pointer transition-all duration-300",
+                          "absolute bottom-0 right-0 w-2/3 h-2/3 rounded-[32px] border bg-white shadow-2xl p-6 cursor-pointer transition-all duration-300",
                           topZComponent !== "planning" ? "z-20" : "z-10"
                         )}
+                        style={{
+                          borderColor: "rgba(76, 110, 245, 0.2)",
+                          boxShadow: "0 25px 50px -12px rgba(76, 110, 245, 0.15)"
+                        }}
                       >
                         <div className="relative h-full flex flex-col justify-center">
                           <div className="space-y-3">
@@ -848,7 +856,13 @@ export default function LandingPage() {
 
                   {/* Single Display - Patients */}
                   {activeTab === "patients" && (
-                    <div className="rounded-[32px] border border-indigo-100 overflow-hidden shadow-2xl shadow-indigo-100 bg-white h-full relative flex">
+                    <div
+                      className="rounded-[32px] border overflow-hidden shadow-2xl bg-white h-full relative flex"
+                      style={{
+                        borderColor: "rgba(236, 72, 153, 0.2)",
+                        boxShadow: "0 25px 50px -12px rgba(236, 72, 153, 0.15)"
+                      }}
+                    >
                       
                       {/* Patients List */}
                       <div className="flex-1 p-6 overflow-auto flex flex-col">
@@ -901,7 +915,7 @@ export default function LandingPage() {
                             className="absolute inset-y-0 right-0 w-96 bg-gradient-to-b from-white to-slate-50 border-l-2 border-indigo-200 shadow-2xl flex flex-col overflow-hidden"
                           >
                             {/* Header */}
-                            <div className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-blue-500 text-white p-6 flex-shrink-0">
+                            <div className="bg-gradient-to-r from-[#ec4899] via-[#8b5cf6] to-[#14b8a6] text-white p-6 flex-shrink-0">
                               <button
                                 onClick={() => setSelectedPatient(null)}
                                 className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition"
@@ -1060,7 +1074,13 @@ export default function LandingPage() {
 
                   {/* Single Display - Smart Editor */}
                   {activeTab === "editor" && (
-                    <div className="rounded-[32px] border border-indigo-100 overflow-hidden shadow-2xl shadow-indigo-100 bg-white flex flex-col h-full">
+                    <div
+                      className="rounded-[32px] border overflow-hidden shadow-2xl bg-white flex flex-col h-full"
+                      style={{
+                        borderColor: "rgba(56, 189, 248, 0.2)",
+                        boxShadow: "0 25px 50px -12px rgba(56, 189, 248, 0.15)"
+                      }}
+                    >
                       {/* Toolbar */}
                       <div className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 p-4 flex items-center gap-2 flex-shrink-0">
                         <p className="text-xs font-semibold text-slate-600 uppercase mr-2">Outils</p>
@@ -1149,12 +1169,16 @@ export default function LandingPage() {
                       <div
                         onClick={() => setTopZComponent("analytics")}
                         className={cn(
-                          "absolute top-0 left-0 w-2/3 h-2/3 rounded-[32px] border border-indigo-100 overflow-hidden shadow-2xl shadow-indigo-100 bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col cursor-pointer transition-all duration-300",
+                          "absolute top-0 left-0 w-2/3 h-2/3 rounded-[32px] border overflow-hidden shadow-2xl bg-gradient-to-br from-amber-50 to-orange-50 flex flex-col cursor-pointer transition-all duration-300",
                           topZComponent === "analytics" ? "z-20" : "z-10"
                         )}
+                        style={{
+                          borderColor: "rgba(245, 158, 11, 0.2)",
+                          boxShadow: "0 25px 50px -12px rgba(245, 158, 11, 0.15)"
+                        }}
                       >
                         {/* Header */}
-                        <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-4 flex-shrink-0">
+                        <div className="bg-gradient-to-r from-[#f59e0b] via-[#ef4444] to-[#ec4899] text-white p-4 flex-shrink-0">
                           <p className="text-xs font-semibold uppercase tracking-wide">Scanner de lab</p>
                           <h3 className="text-lg font-bold mt-2">Capturez un résultat</h3>
                         </div>
@@ -1201,9 +1225,13 @@ export default function LandingPage() {
                       <div
                         onClick={() => setTopZComponent(null)}
                         className={cn(
-                          "absolute bottom-0 right-0 w-2/3 h-2/3 rounded-[32px] border border-indigo-100 bg-white shadow-2xl shadow-indigo-100 p-6 overflow-auto cursor-pointer transition-all duration-300",
+                          "absolute bottom-0 right-0 w-2/3 h-2/3 rounded-[32px] border bg-white shadow-2xl p-6 overflow-auto cursor-pointer transition-all duration-300",
                           topZComponent !== "analytics" ? "z-20" : "z-10"
                         )}
+                        style={{
+                          borderColor: "rgba(245, 158, 11, 0.2)",
+                          boxShadow: "0 25px 50px -12px rgba(245, 158, 11, 0.15)"
+                        }}
                       >
                         <div className="space-y-4">
                           {/* Header */}
@@ -1261,12 +1289,16 @@ export default function LandingPage() {
                       <div
                         onClick={() => setTopZComponent("documents")}
                         className={cn(
-                          "absolute top-0 left-0 w-2/3 h-2/3 rounded-[32px] border border-indigo-100 overflow-hidden shadow-2xl shadow-indigo-100 bg-white flex flex-col cursor-pointer transition-all duration-300",
+                          "absolute top-0 left-0 w-2/3 h-2/3 rounded-[32px] border overflow-hidden shadow-2xl bg-white flex flex-col cursor-pointer transition-all duration-300",
                           topZComponent === "documents" ? "z-20" : "z-10"
                         )}
+                        style={{
+                          borderColor: "rgba(16, 185, 129, 0.2)",
+                          boxShadow: "0 25px 50px -12px rgba(16, 185, 129, 0.15)"
+                        }}
                       >
                         {/* Header */}
-                        <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-4 flex-shrink-0">
+                        <div className="bg-gradient-to-r from-[#10b981] via-[#06b6d4] to-[#8b5cf6] text-white p-4 flex-shrink-0">
                           <p className="text-xs font-semibold uppercase tracking-wide">Modèles</p>
                           <h3 className="text-lg font-bold mt-2">Choisissez un modèle</h3>
                         </div>
@@ -1280,7 +1312,21 @@ export default function LandingPage() {
                           ].map((doc, idx) => (
                             <button
                               key={idx}
-                              className="w-full p-4 border border-slate-200 rounded-xl hover:border-green-300 hover:bg-green-50 transition text-left"
+                              className="w-full p-4 border border-slate-200 rounded-xl transition text-left"
+                              style={{
+                                ":hover": {
+                                  borderColor: "rgba(16, 185, 129, 0.5)",
+                                  backgroundColor: "rgba(16, 185, 129, 0.05)"
+                                }
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.borderColor = "rgba(16, 185, 129, 0.5)";
+                                e.currentTarget.style.backgroundColor = "rgba(16, 185, 129, 0.05)";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.borderColor = "";
+                                e.currentTarget.style.backgroundColor = "";
+                              }}
                             >
                               <div className="flex items-center gap-3">
                                 <span className="text-2xl">{doc.icon}</span>
@@ -1299,9 +1345,13 @@ export default function LandingPage() {
                       <div
                         onClick={() => setTopZComponent(null)}
                         className={cn(
-                          "absolute bottom-0 right-0 w-2/3 h-2/3 rounded-[32px] border border-indigo-100 bg-white shadow-2xl shadow-indigo-100 p-6 overflow-auto cursor-pointer transition-all duration-300 flex flex-col",
+                          "absolute bottom-0 right-0 w-2/3 h-2/3 rounded-[32px] border bg-white shadow-2xl p-6 overflow-auto cursor-pointer transition-all duration-300 flex flex-col",
                           topZComponent !== "documents" ? "z-20" : "z-10"
                         )}
+                        style={{
+                          borderColor: "rgba(16, 185, 129, 0.2)",
+                          boxShadow: "0 25px 50px -12px rgba(16, 185, 129, 0.15)"
+                        }}
                       >
                         <div className="space-y-3">
                           {/* Header */}
@@ -1348,7 +1398,7 @@ export default function LandingPage() {
 
                           {/* Action Buttons */}
                           <div className="space-y-2">
-                            <button className="w-full px-4 py-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white text-sm font-semibold hover:shadow-lg transition">
+                            <button className="w-full px-4 py-2 rounded-xl bg-gradient-to-r from-[#10b981] via-[#06b6d4] to-[#8b5cf6] text-white text-sm font-semibold hover:shadow-lg transition">
                               Sauvegarder le compte-rendu
                             </button>
                             <button className="w-full px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold hover:bg-slate-200 transition">

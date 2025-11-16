@@ -166,14 +166,9 @@ export interface FAQ {
 
 export const faqs: FAQ[] = [
   {
-    question: "OpenCare est-il conforme aux standards de sécurité hospitaliers ?",
+    question: "Mes données patients sont-elles sécurisées ?",
     answer:
-      "Oui. OpenCare est hébergé sur une infrastructure certifiée HDS, applique le chiffrement des données au repos & en transit et respecte les exigences RGPD pour le secteur médical.",
-  },
-  {
-    question: "Comment se déroule l'intégration avec nos systèmes existants ?",
-    answer:
-      "Nos équipes vous accompagnent sur un audit technique et déploient des connecteurs HL7/FHIR vers votre DPI, LIS et systèmes de planification. La mise en production s'effectue en moins de 4 semaines.",
+      "Oui. OpenCare utilise le chiffrement end-to-end et une infrastructure sécurisée conforme aux standards hospitaliers. Vos données restent sous votre contrôle.",
   },
   {
     question: "Les praticiens peuvent-ils personnaliser leurs tableaux de bord ?",
@@ -183,22 +178,12 @@ export const faqs: FAQ[] = [
   {
     question: "Proposez-vous une application mobile ?",
     answer:
-      "Une Progressive Web App est disponible pour consulter vos listes de patients, accéder aux protocoles et répondre rapidement aux notifications critiques.",
+      "Une Web App Prgressive est disponible pour consulter vos listes de patients, accéder aux protocoles et répondre rapidement aux notifications critiques. Une application mobile est en cours de développment",
   },
   {
     question: "Quelles équipes peuvent utiliser OpenCare ?",
     answer:
-      "Chirurgiens, anesthésistes, IADE, cadres de bloc, coordonnateurs de parcours et services d'imagerie/laboratoire : la plateforme facilite la collaboration inter-disciplinaire.",
-  },
-  {
-    question: "OpenCare permet-il de mesurer la satisfaction patient ?",
-    answer:
-      "Nous intégrons des enquêtes post-séjour, calculons des scores NPS et fournissons des insights pour améliorer les processus de prise en charge.",
-  },
-  {
-    question: "Peut-on tester la solution avant déploiement ?",
-    answer:
-      "Un environnement pilote vous est proposé pour évaluer les workflows avec un échantillon de services. Nos équipes vous accompagnent sur la configuration et la formation.",
+      "Internes, Résidents, Spécialistes, anesthésistes, IADE, cadres de bloc, coordonnateurs de parcours et services d'imagerie/laboratoire : la plateforme facilite la collaboration inter-disciplinaire.",
   },
   {
     question: "Comment fonctionne l'assistance ?",

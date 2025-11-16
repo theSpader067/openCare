@@ -74,6 +74,14 @@ export default function LandingPage() {
   const [currentGapIndex, setCurrentGapIndex] = useState(0);
   const [typedCharCount, setTypedCharCount] = useState(0);
   const [gapOrder, setGapOrder] = useState<number[]>([0, 1, 2, 3, 4]);
+  const [contactFormData, setContactFormData] = useState({
+    fullName: "",
+    email: "",
+    specialty: "",
+    message: "",
+  });
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [isSubmittingContact, setIsSubmittingContact] = useState(false);
 
   const typingGaps = [
     { section: "Anesthésie", placeholder: "Rachianesthésie" },
@@ -273,6 +281,40 @@ export default function LandingPage() {
           ? { ...task, done: !task.done }
           : task
       ));
+    }
+  };
+
+  const handleContactSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmittingContact(true);
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(contactFormData),
+      });
+
+      if (response.ok) {
+        setShowSuccessMessage(true);
+        setContactFormData({
+          fullName: "",
+          email: "",
+          specialty: "",
+          message: "",
+        });
+
+        // Hide success message after 5 seconds
+        setTimeout(() => {
+          setShowSuccessMessage(false);
+        }, 5000);
+      }
+    } catch (error) {
+      console.error("Contact form submission error:", error);
+    } finally {
+      setIsSubmittingContact(false);
     }
   };
 
@@ -1351,10 +1393,6 @@ export default function LandingPage() {
                   Des résultats mesurés<br />par les équipes de soins.
                 </h2>
               </div>
-              <p className="max-w-md text-sm text-slate-300">
-                OpenCare est éprouvé sur des établissements de toutes tailles. Notre IA opérationnelle optimise blocs,
-                parcours et coordination pour un impact mesurable dès les premières semaines d&apos;exploitation.
-              </p>
             </motion.div>
 
             <motion.div
@@ -1396,9 +1434,7 @@ export default function LandingPage() {
                       </div>
                       <div>
                         <p className="text-4xl font-bold text-white">{value}</p>
-                        <p className="mt-2 text-xs text-slate-400">
-                          Consolidé Q1 2025
-                        </p>
+                        
                       </div>
                     </div>
                   </div>
@@ -1503,7 +1539,7 @@ export default function LandingPage() {
               <div className="mt-10 space-y-4 text-sm">
                 <p className="flex items-center gap-3 text-white/90">
                   <ShieldCheck className="h-5 w-5" />
-                  Hébergement HDS, conformité RGPD, authentification forte inclus.
+                  Infrastructure sécurisée et authentification forte inclus.
                 </p>
                 <p className="flex items-center gap-3 text-white/90">
                   <Brain className="h-5 w-5" />
@@ -1517,6 +1553,7 @@ export default function LandingPage() {
             </motion.div>
 
             <motion.form
+              onSubmit={handleContactSubmit}
               className="rounded-3xl border border-slate-200 bg-white p-8 shadow-xl"
               initial="hidden"
               whileInView="visible"
@@ -1524,6 +1561,16 @@ export default function LandingPage() {
               custom={0.2}
               variants={containerVariants}
             >
+              {showSuccessMessage && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mb-4 rounded-xl bg-green-50 p-4 text-sm text-green-700 border border-green-200"
+                >
+                  ✓ Votre demande a été envoyée avec succès. Nous vous recontacterons sous 24h.
+                </motion.div>
+              )}
               <div className="grid gap-4">
                 <div className="grid gap-2">
                   <label htmlFor="name" className="text-sm font-semibold text-slate-700">
@@ -1533,7 +1580,10 @@ export default function LandingPage() {
                     id="name"
                     required
                     placeholder="Dr. Elise Fontaine"
-                    className="rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                    value={contactFormData.fullName}
+                    onChange={(e) => setContactFormData({ ...contactFormData, fullName: e.target.value })}
+                    disabled={isSubmittingContact}
+                    className="rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-100 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div className="grid gap-2">
@@ -1545,7 +1595,10 @@ export default function LandingPage() {
                     type="email"
                     required
                     placeholder="prenom.nom@hopital.fr"
-                    className="rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                    value={contactFormData.email}
+                    onChange={(e) => setContactFormData({ ...contactFormData, email: e.target.value })}
+                    disabled={isSubmittingContact}
+                    className="rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-100 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div className="grid gap-2">
@@ -1556,7 +1609,10 @@ export default function LandingPage() {
                     id="service"
                     required
                     placeholder="Bloc, chirurgie, coordination..."
-                    className="rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                    value={contactFormData.specialty}
+                    onChange={(e) => setContactFormData({ ...contactFormData, specialty: e.target.value })}
+                    disabled={isSubmittingContact}
+                    className="rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-100 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div className="grid gap-2">
@@ -1566,13 +1622,22 @@ export default function LandingPage() {
                   <textarea
                     id="message"
                     rows={4}
+                    required
                     placeholder="Parlez-nous de vos enjeux ou besoins spécifiques."
-                    className="rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                    value={contactFormData.message}
+                    onChange={(e) => setContactFormData({ ...contactFormData, message: e.target.value })}
+                    disabled={isSubmittingContact}
+                    className="rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-100 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
-              <Button type="submit" variant="primary" className="mt-6 w-full rounded-full">
-                Envoyer ma demande
+              <Button
+                type="submit"
+                variant="primary"
+                className="mt-6 w-full rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isSubmittingContact}
+              >
+                {isSubmittingContact ? "Envoi en cours..." : "Envoyer ma demande"}
               </Button>
               <p className="mt-3 text-center text-xs text-slate-500">
                 Nous vous recontactons sous 24h ouvrées. Données sécurisées et utilisées uniquement pour le suivi de votre demande.

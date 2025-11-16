@@ -29,20 +29,31 @@ export async function POST(request: NextRequest) {
 
     // Send email notification (non-blocking - don't wait for it)
     const recipientEmail = process.env.CONTACT_EMAIL_RECIPIENT || process.env.SMTP_USER;
+    console.log("[CONTACT_API] Recipient email:", recipientEmail);
+
     if (recipientEmail) {
-      sendContactEmail({
-        data: {
-          fullName,
-          email,
-          specialty,
-          message,
-          submittedAt: contact.createdAt,
-        },
-        recipientEmail,
-      }).catch((error) => {
-        console.error("Failed to send contact notification email:", error);
-        // Don't throw - email failure shouldn't fail the API request
-      });
+      console.log("[CONTACT_API] Sending contact notification email...");
+      // Use setTimeout to ensure this runs asynchronously without blocking the response
+      setTimeout(async () => {
+        try {
+          await sendContactEmail({
+            data: {
+              fullName,
+              email,
+              specialty,
+              message,
+              submittedAt: contact.createdAt,
+            },
+            recipientEmail,
+          });
+          console.log("[CONTACT_API] ✓ Email notification sent successfully");
+        } catch (error) {
+          console.error("[CONTACT_API] ✗ Failed to send contact notification email:", error);
+          // Don't throw - email failure shouldn't fail the API request
+        }
+      }, 0);
+    } else {
+      console.warn("[CONTACT_API] ⚠ No email recipient configured. Set CONTACT_EMAIL_RECIPIENT or SMTP_USER env var.");
     }
 
     return NextResponse.json(

@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(/tmp/previous_version.tsx)",
+      "Bash(git checkout:*)",
+      "Bash(git status:*)",
+      "Bash(ls:*)",
+      "Bash(wc:*)",
+      "Bash(tail:*)",
+      "Bash(head:*)",
+      "Bash(cat:*)",
+      "Bash(tree:*)",
+      "Bash(npm install:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(npx prisma generate:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -21,8 +21,6 @@ export async function GET(req: NextRequest) {
     // Search for teams by name, hospital, or service
     // Only return teams the user is not already a member of
 
-    console.log('SEARCH @@@@@')
-    console.log(query)
     const teams = await prisma.team.findMany({
       where: {
         AND: [
@@ -98,7 +96,6 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    console.log(transformedTeams)
 
     return NextResponse.json({ teams: transformedTeams });
   } catch (error) {

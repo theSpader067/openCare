@@ -33,6 +33,7 @@ export async function GET(req: NextRequest) {
             id: true,
             firstName: true,
             lastName: true,
+            username:true,
             specialty: true,
           },
         },
@@ -41,13 +42,13 @@ export async function GET(req: NextRequest) {
             id: true,
             firstName: true,
             lastName: true,
+            username:true,
             specialty: true,
           },
         },
       },
       orderBy: { createdAt: "desc" },
     });
-
     return NextResponse.json({ teams: userTeams });
   } catch (error) {
     console.error("Error fetching teams:", error);

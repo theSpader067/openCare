@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  Activity,
   ArrowRight,
   Beaker,
   Brain,
@@ -18,14 +17,20 @@ import {
   ShieldCheck,
   Sparkles,
   Stethoscope,
-  Users,
+  PlayCircle,
   X,
+  Wand2,
+  Check,
+  Copy,
+  Bold,
+  Italic,
+  List,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { navLinks, heroHighlights, featureTabs, stats, faqs, mockTasksData, mockPatientData, mockAnalysisData, mockCompteRenduData } from "@/data/landing/landing-content";
+import { navLinks, featureTabs, stats, faqs, mockTasksData, mockPatientData, mockAnalysisData, mockCompteRenduData } from "@/data/landing/landing-content";
 import type { TaskItem } from "@/types/tasks";
-
+import tasks_screen from '../../public/tasks_screen.png'
 const containerVariants = {
   hidden: { opacity: 0, y: 30 },
   visible: (delay = 0) => ({
@@ -35,20 +40,240 @@ const containerVariants = {
   }),
 };
 
+const heroPillars = [
+  { title: "Coordination IA", description: "Bloc, lit, imagerie et logistique alignés" },
+  { title: "Expérience patient", description: "Portails intuitifs, messages rassurants" },
+  { title: "Pilotage temps réel", description: "KPIs live, alertes et trajectoires" },
+];
+
+const heroCreativeBursts = [
+  { title: "Flux patient", detail: "12 parcours synchronisés", gradient: "from-cyan-400 to-sky-500" },
+  { title: "Cellule bloc", detail: "3 salles libérées", gradient: "from-fuchsia-400 to-rose-500" },
+  { title: "Alertes IA", detail: "5 actions prioritaires", gradient: "from-amber-400 to-orange-500" },
+];
+
+const heroCreativeTimeline = [
+  { label: "Captation terrain", value: "Flux IoT & DPI" },
+  { label: "Traduction IA", value: "Synthèse contexte" },
+  { label: "Activation équipe", value: "Checklists + SMS" },
+];
+
 export default function LandingPage() {
   const [activeTab, setActiveTab] = useState(featureTabs[0].id);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const [showcaseTasks, setShowcaseTasks] = useState<TaskItem[]>(mockTasksData);
-  const [showCameraPreview, setShowCameraPreview] = useState(false);
+  const [showDemoVideo, setShowDemoVideo] = useState(false);
+  const [mockupTasks, setMockupTasks] = useState({
+    "task-private": true,
+    "task-public-1": false,
+    "task-public-2": false,
+  });
+  const [selectedPatient, setSelectedPatient] = useState<string | null>("PAT-002");
+  const [topZComponent, setTopZComponent] = useState<"planning" | "analytics" | "documents" | null>(null);
+  const [currentGapIndex, setCurrentGapIndex] = useState(0);
+  const [typedCharCount, setTypedCharCount] = useState(0);
+  const [gapOrder, setGapOrder] = useState<number[]>([0, 1, 2, 3, 4]);
+
+  const typingGaps = [
+    { section: "Anesthésie", placeholder: "Rachianesthésie" },
+    { section: "Voie d'abord", placeholder: "Médiane sus-ombilicale" },
+    { section: "Diagnostic opératoire", placeholder: "Appendicite perforée" },
+    { section: "Geste réalisé", placeholder: "Appendicectomie, drainage" },
+    { section: "Hémostase", placeholder: "Suturée à l'Acide polyglactique" },
+  ];
+
+  const getRandomGapOrder = () => {
+    const order = [0, 1, 2, 3, 4];
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    return order;
+  };
+
+  // Observation lines for building the mockup
+  const observationLines = [
+    "Il s'agit d'un patient agé de 58 ans, qui s'est présenté aux urgences avec douleur abdominal au nv de FID.",
+    "Examen clinique: FC: 72/min, TA: 125/80, FR: 16/min, T°: 37.2°C.",
+    "Abdomen sensible à la palpation au niveau de la FID, défense localisée. Pas de contracture diffuse.",
+    "Bilan biologique: NFS normale, CRP légèrement élevée à 15 mg/L. Bilan hépatique et rénal sans particularités.",
+    "Imagerie (TDM abdominale): petite collection intra-abdominale. Appendice dilaté avec paroi épaissie.",
+    "Diagnostic retenu: appendicite aiguë compliquée.",
+    "Traitement initié: antalgiques, antibiotiques IV (céphalotine et métronidazole).",
+    "Décision chirurgicale prise après consultation avec le service de chirurgie.",
+    "Intervention programmée: appendicectomie en urgence sous anesthésie générale.",
+    "Patient informé des risques et bénéfices. Consentement écrit obtenu.",
+    "Préparation per-opératoire réalisée: jeûne, voie veineuse établie, prémédication administrée.",
+    "Patient en attente de salle opératoire. Signes vitaux stables. Surveillance continue.",
+  ];
+
+  const [currentLineIndex, setCurrentLineIndex] = useState(0);
+  const [editorText, setEditorText] = useState("");
+  const [showSuggestion, setShowSuggestion] = useState(false);
+  const [isAccepting, setIsAccepting] = useState(false);
+  const [currentSuggestion, setCurrentSuggestion] = useState("");
   const activeFeature = featureTabs.find((item) => item.id === activeTab) ?? featureTabs[0];
 
+  // Documents typing animation loop - char by char
+  useEffect(() => {
+    if (activeTab !== "documents") return;
+
+    const typingLoop = async () => {
+      const gapIdx = gapOrder[currentGapIndex];
+      const currentGap = typingGaps[gapIdx];
+      const currentText = currentGap.placeholder;
+
+      // Type out the current gap character by character
+      if (typedCharCount < currentText.length) {
+        await new Promise(resolve => setTimeout(resolve, 80)); // Typing speed
+        setTypedCharCount(typedCharCount + 1);
+      } else {
+        // Finished typing this gap, move to next
+        await new Promise(resolve => setTimeout(resolve, 1500)); // Pause before next gap
+        const nextGapIdx = (currentGapIndex + 1) % gapOrder.length;
+
+        if (nextGapIdx === 0) {
+          // Cycle complete, randomize new order
+          setGapOrder(getRandomGapOrder());
+        }
+
+        setCurrentGapIndex(nextGapIdx);
+        setTypedCharCount(0);
+      }
+    };
+
+    typingLoop();
+  }, [typedCharCount, currentGapIndex, activeTab, gapOrder]);
+
+  // Smart Editor animation loop - cycling through observation lines
+  useEffect(() => {
+    if (activeTab !== "editor") return;
+
+    const animationLoop = async () => {
+      // If we're cycling back to the first line, clear the editor
+      if (currentLineIndex === 0 && editorText !== "") {
+        setEditorText("");
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
+      const nextIndex = currentLineIndex;
+      const nextLine = observationLines[nextIndex];
+
+      // Wait before showing suggestion
+      await new Promise(resolve => setTimeout(resolve, 1200));
+
+      // Show suggestion (the next line)
+      setCurrentSuggestion(nextLine);
+      setShowSuggestion(true);
+
+      // Wait while showing suggestion
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Accept suggestion
+      setIsAccepting(true);
+      await new Promise(resolve => setTimeout(resolve, 600));
+
+      // Add the line to the editor text
+      setEditorText(prev => prev + (prev ? "\n" : "") + nextLine);
+
+      // Reset animation states
+      setShowSuggestion(false);
+      setIsAccepting(false);
+      setCurrentSuggestion("");
+
+      // Move to next line, or restart from beginning
+      const nextIdx = (nextIndex + 1) % observationLines.length;
+      setCurrentLineIndex(nextIdx);
+    };
+
+    animationLoop();
+  }, [currentLineIndex, activeTab, editorText]);
+
+  // Mockup patients data
+  const mockupPatients = [
+    {
+      id: "PAT-001",
+      name: "Marie Bernard",
+      age: 58,
+      service: "Chirurgie digestive",
+      status: "Post-op",
+      admission: "2025-11-02",
+      doctor: "Dr. Paul Martin",
+      diagnosis: "Colectomie laparoscopique · J+7",
+      vitals: { temp: 37.2, hr: 72, bp: "125/80", o2: 98 },
+      labs: { hemoglobin: "11.5 g/dL", crp: "12 mg/L", glucose: "98 mg/dL" },
+      medications: ["Amoxicilline 500mg", "Paracétamol 1000mg", "Oméprazole 20mg"]
+    },
+    {
+      id: "PAT-002",
+      name: "Jean Dupont",
+      age: 65,
+      service: "Chirurgie générale",
+      status: "J+3",
+      admission: "2025-11-05",
+      doctor: "Dr. Sophie Bernard",
+      diagnosis: "Herniorraphie inguinale · J+3",
+      vitals: { temp: 36.8, hr: 68, bp: "130/82", o2: 99 },
+      labs: { hemoglobin: "12.8 g/dL", crp: "5 mg/L", glucose: "102 mg/dL" },
+      medications: ["Ibuprofen 400mg", "Cephalexin 500mg", "Melatonin 5mg"]
+    },
+    {
+      id: "PAT-003",
+      name: "Fatou Diop",
+      age: 42,
+      service: "Orthopédie",
+      status: "En cours",
+      admission: "2025-11-08",
+      doctor: "Dr. Michel Lefevre",
+      diagnosis: "Fracture tibia · J+2",
+      vitals: { temp: 37.0, hr: 75, bp: "118/76", o2: 97 },
+      labs: { hemoglobin: "13.2 g/dL", crp: "8 mg/L", glucose: "95 mg/dL" },
+      medications: ["Tramadol 50mg", "Thromboprophylaxie", "Vitamine C"]
+    },
+    {
+      id: "PAT-004",
+      name: "Luc Moreau",
+      age: 71,
+      service: "Cardiologie",
+      status: "Stable",
+      admission: "2025-11-06",
+      doctor: "Dr. Anne Dubois",
+      diagnosis: "Infarctus du myocarde · J+5",
+      vitals: { temp: 36.9, hr: 62, bp: "128/80", o2: 98 },
+      labs: { hemoglobin: "12.1 g/dL", troponin: "0.8 ng/mL", glucose: "110 mg/dL" },
+      medications: ["Aspirine 100mg", "Atorvastatine 40mg", "Bisoprolol 2.5mg"]
+    },
+    {
+      id: "PAT-005",
+      name: "Claire Rousseau",
+      age: 52,
+      service: "Neurochirurgie",
+      status: "Stable",
+      admission: "2025-11-04",
+      doctor: "Dr. Jacques Martin",
+      diagnosis: "Craniotomie · J+6",
+      vitals: { temp: 37.1, hr: 70, bp: "124/78", o2: 99 },
+      labs: { hemoglobin: "11.8 g/dL", crp: "15 mg/L", glucose: "108 mg/dL" },
+      medications: ["Lévétiracétam 500mg", "Décaméthasone 4mg", "Morphine 10mg"]
+    },
+  ];
+
+  const selectedPatientData = mockupPatients.find(p => p.id === selectedPatient);
+
   const handleToggleTask = (taskId: string) => {
-    setShowcaseTasks(prev => prev.map(task =>
-      task.id === taskId
-        ? { ...task, done: !task.done }
-        : task
-    ));
+    if (taskId in mockupTasks) {
+      setMockupTasks(prev => ({
+        ...prev,
+        [taskId]: !prev[taskId as keyof typeof prev]
+      }));
+    } else {
+      setShowcaseTasks(prev => prev.map(task =>
+        task.id === taskId
+          ? { ...task, done: !task.done }
+          : task
+      ));
+    }
   };
 
   return (
@@ -166,11 +391,11 @@ export default function LandingPage() {
                 Plateforme dédiée aux équipes de soins
               </span>
               <h1 className="text-4xl font-semibold leading-tight text-[#1d184f] sm:text-5xl">
-                Reliez vos <u>patients</u>, vos <u>actes</u> et vos <u>décision</u> dans une seule boucle opérationnelle.
+                Reliez vos <u>patients</u>, vos <u>actes</u> et vos <u>décisions</u> dans une seule boucle opérationnelle.
               </h1>
               <p className="max-w-xl text-lg text-slate-600">
-                OpenCare orchestre les soins en temps réel : coordination IA, dossiers augmentés et analytics immédiat.
-                Un cockpit élégant pour les praticiens, un parcours sans couture pour vos patients.
+                OpenCare orchestre les soins en temps réel : coordination IA, dossiers augmentés et analytics immédiats.
+                Conçu comme un cockpit clinique pour synchroniser terrain, cellule planification et pilotage patient.
               </p>
               <div className="flex flex-wrap gap-4">
                 <Button size="lg" variant="primary" className="rounded-full px-8 py-3 bg-gradient-to-r from-fuchsia-500 to-purple-600 hover:from-fuchsia-600 hover:to-purple-700 border-0 shadow-lg shadow-fuchsia-400/50">
@@ -179,32 +404,18 @@ export default function LandingPage() {
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-3">
-                {heroHighlights.map(({ label, value, icon: Icon }, idx) => {
-                  const gradients = [
-                    "from-blue-500/20 to-cyan-500/20",
-                    "from-fuchsia-500/20 to-pink-500/20",
-                    "from-amber-500/20 to-orange-500/20"
-                  ];
-                  const accentColors = ["text-blue-600", "text-fuchsia-600", "text-amber-600"];
-                  const borderColors = ["border-blue-200", "border-fuchsia-200", "border-amber-200"];
-
-                  return (
-                    <div
-                      key={label}
-                      className={`rounded-2xl border ${borderColors[idx]} bg-gradient-to-br ${gradients[idx]} backdrop-blur px-4 py-5 shadow-lg shadow-white/20 hover:shadow-xl transition`}
-                    >
-                      <div className={`flex items-center justify-between text-xs font-semibold uppercase tracking-wide ${accentColors[idx]}`}>
-                        {label}
-                        <span className={`flex h-8 w-8 items-center justify-center rounded-2xl bg-white/40 ${accentColors[idx]}`}>
-                          <Icon className="h-4 w-4" />
-                        </span>
-                      </div>
-                      <p className="mt-2 text-2xl font-semibold text-slate-800">{value}</p>
-                    </div>
-                  );
-                })}
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="rounded-full border-indigo-200/80 bg-white/70 px-8 py-3 text-[#1d184f]"
+                  type="button"
+                  onClick={() => setShowDemoVideo(true)}
+                >
+                  <span className="flex items-center gap-2 font-semibold text-[#1d184f]">
+                    Voir la démo guidée
+                    <PlayCircle className="h-4 w-4" />
+                  </span>
+                </Button>
               </div>
             </motion.div>
 
@@ -215,172 +426,144 @@ export default function LandingPage() {
               variants={containerVariants}
               className="relative h-full"
             >
-              <div className="relative h-full rounded-[32px] border border-indigo-100 bg-white/50 p-6 shadow-2xl shadow-indigo-100 backdrop-blur overflow-hidden">
-                {/* Animated background gradient orbs */}
-                <div className="absolute inset-0 overflow-hidden rounded-[32px]">
-                  <div className="absolute -top-32 -right-32 h-64 w-64 rounded-full bg-gradient-to-br from-fuchsia-300/40 to-pink-300/30 blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
-                  <div className="absolute -bottom-32 -left-32 h-64 w-64 rounded-full bg-gradient-to-tr from-cyan-300/40 to-blue-300/30 blur-3xl animate-pulse" style={{ animationDelay: '2s', animationDuration: '4s' }} />
-                  <div className="absolute top-1/2 left-1/2 h-48 w-48 rounded-full bg-gradient-to-br from-purple-300/20 to-indigo-300/20 blur-3xl animate-pulse" style={{ animationDelay: '1s', animationDuration: '5s' }} />
+              <div className="relative h-full overflow-hidden rounded-[40px] border border-white/30 bg-gradient-to-br from-[#1c0f47] via-[#5b21b6] to-[#f43f5e] p-8 text-white shadow-[0_20px_80px_rgba(76,29,149,0.5)]">
+                <motion.div
+                  aria-hidden
+                  className="absolute -top-12 -right-10 h-48 w-48 rounded-full bg-white/10 blur-3xl"
+                  animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.2, 1] }}
+                  transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div
+                  aria-hidden
+                  className="absolute bottom-4 left-0 h-56 w-56 rounded-full bg-fuchsia-400/20 blur-3xl"
+                  animate={{ opacity: [0.2, 0.6, 0.2], y: [0, -12, 0] }}
+                  transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+                />
 
-                  {/* Animated grid lines */}
-                  <svg className="absolute inset-0 w-full h-full opacity-10" preserveAspectRatio="none">
-                    <defs>
-                      <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="0.5" className="text-indigo-500" />
-                      </pattern>
-                    </defs>
-                    <rect width="100%" height="100%" fill="url(#grid)" />
-                  </svg>
-                </div>
-
-                {/* Content */}
-                <div className="relative z-10 h-full flex flex-col">
-                  {/* Top section with creatively positioned cards */}
-                  <div className="relative flex-1 mb-4 h-full">
-                    {/* Left card - Données - positioned at top-left, normal size */}
-                    <motion.div
-                      initial={{ opacity: 0, x: -40, rotate: -5 }}
-                      animate={{ opacity: 1, x: 0, rotate: 0 }}
-                      transition={{ duration: 0.7, delay: 0.1 }}
-                      className="absolute top-0 left-0 w-40 rounded-2xl bg-gradient-to-br from-white/90 to-white/70 border border-white/80 p-4 shadow-lg backdrop-blur hover:shadow-xl transition z-20"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-lg">
-                          <svg className="h-6 w-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-                          </svg>
-                        </div>
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                          className="text-xs font-bold text-cyan-500"
-                        >
-                          ⟳
-                        </motion.div>
-                      </div>
-                      <p className="text-sm font-bold text-slate-900">Données consolidées</p>
-                      <p className="text-xs text-slate-500 mt-1">DPI, imagerie, labo</p>
-                      <div className="mt-3 h-1 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: '0%' }}
-                          animate={{ width: '100%' }}
-                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                          className="h-full bg-gradient-to-r from-cyan-300 to-transparent"
-                        />
-                      </div>
-                    </motion.div>
-
-                    {/* Middle card - Paperasse - centered, slightly larger, slight rotation */}
-                    <motion.div
-                      initial={{ opacity: 0, y: -40, rotate: 3 }}
-                      animate={{ opacity: 1, y: 0, rotate: 0 }}
-                      transition={{ duration: 0.7, delay: 0.2 }}
-                      className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-48 rounded-2xl bg-gradient-to-br from-white/90 to-white/70 border border-white/80 p-4 shadow-lg backdrop-blur hover:shadow-xl transition z-30"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-green-500 shadow-lg">
-                          <svg className="h-6 w-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                        <span className="text-xs font-bold text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full">-60%</span>
-                      </div>
-                      <p className="text-sm font-bold text-slate-900">Paperasse réduite</p>
-                      <p className="text-xs text-slate-500 mt-1">Formulaires auto-remplis</p>
-                      <div className="mt-3 grid grid-cols-5 gap-0.5">
-                        {[100, 85, 70, 55, 40].map((val, i) => (
-                          <motion.div
-                            key={i}
-                            initial={{ scaleY: 0 }}
-                            animate={{ scaleY: 1 }}
-                            transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }}
-                            className="h-6 bg-gradient-to-t from-emerald-400 to-green-300 rounded-t-sm origin-bottom"
-                            style={{ opacity: val / 100 }}
-                          />
-                        ))}
-                      </div>
-                    </motion.div>
-
-                    {/* Right card - Décisions - positioned at top-right, smaller */}
-                    <motion.div
-                      initial={{ opacity: 0, x: 40, rotate: -3 }}
-                      animate={{ opacity: 1, x: 0, rotate: 0 }}
-                      transition={{ duration: 0.7, delay: 0.3 }}
-                      className="absolute top-0 right-0 w-40 rounded-2xl bg-gradient-to-br from-white/90 to-white/70 border border-white/80 p-4 shadow-lg backdrop-blur hover:shadow-xl transition z-20"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg">
-                          <svg className="h-6 w-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        </div>
-                        <motion.span
-                          animate={{ opacity: [1, 0.5, 1] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                          className="text-xs font-bold text-amber-600"
-                        >
-                          ★
-                        </motion.span>
-                      </div>
-                      <p className="text-sm font-bold text-slate-900">Meilleures décisions</p>
-                      <p className="text-xs text-slate-500 mt-1">Contexte complet</p>
-                      <div className="mt-3 space-y-1">
-                        {['Patient', 'Analyses'].map((item, i) => (
-                          <motion.div
-                            key={item}
-                            initial={{ width: 0 }}
-                            animate={{ width: '100%' }}
-                            transition={{ duration: 0.5, delay: 0.4 + i * 0.15 }}
-                            className="h-1 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
-                          />
-                        ))}
-                      </div>
-                    </motion.div>
+                <div className="relative z-10 flex h-full flex-col gap-6">
+                  {/* Header */}
+                  <div className="space-y-3">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-white/70">
+                      <Stethoscope className="h-4 w-4" />
+                      Par médecins, pour médecins
+                    </span>
+                    <h2 className="text-2xl font-semibold leading-tight">
+                      Reprenez du contrôle sur vos workflows critiques.
+                    </h2>
+                    <p className="text-sm text-white/80 leading-relaxed">
+                      Une interface conçue par des praticiens pour éliminer les blocages, centraliser l'information et simplifier vos décisions quotidiennes.
+                    </p>
                   </div>
 
-                  {/* Bottom section - Real scenario example */}
+                  {/* Key Benefits Cards */}
+                  <div className="space-y-3">
+                    <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur p-4 hover:bg-white/15 transition">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-sky-500 text-white flex-shrink-0 mt-0.5">
+                          <CheckCircle2 className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-white">Efficace</p>
+                          <p className="text-xs text-white/70">Réduit les temps de recherche information et les appels téléphoniques</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur p-4 hover:bg-white/15 transition">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-fuchsia-400 to-rose-500 text-white flex-shrink-0 mt-0.5">
+                          <ShieldCheck className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-white">Organisé</p>
+                          <p className="text-xs text-white/70">Toutes vos tâches, alertes et patients au même endroit</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur p-4 hover:bg-white/15 transition">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 text-white flex-shrink-0 mt-0.5">
+                          <Brain className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-white">Pilotage en temps réel</p>
+                          <p className="text-xs text-white/70">KPIs live, alertes et trajectoires</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom stat/highlight */}
                   <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.7, delay: 0.4 }}
-                    className="rounded-2xl bg-gradient-to-r from-indigo-900/50 to-purple-900/50 border border-white/30 p-4 backdrop-blur"
+                    initial={{ y: 10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.6, delay: 0.1 }}
+                    className="rounded-2xl border border-white/25 bg-white/15 backdrop-blur p-4 text-center"
                   >
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-xs font-semibold text-slate-200">Exemple: Admission patient</p>
-                      <span className="text-xs font-bold text-emerald-400">12 min vs 2h avant</span>
-                    </div>
-                    <div className="space-y-2">
-                      {[
-                        { label: 'Collecte données', time: '2 min', icon: '📋' },
-                        { label: 'Analyses passées', time: '3 min', icon: '🔍' },
-                        { label: 'Recommandations', time: '4 min', icon: '✓' },
-                        { label: 'Plan de soins', time: '3 min', icon: '📝' }
-                      ].map((item, i) => (
-                        <motion.div
-                          key={item.label}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.4, delay: 0.5 + i * 0.1 }}
-                          className="flex items-center gap-3 rounded-lg bg-white/10 px-3 py-2 text-xs"
-                        >
-                          <span className="text-sm">{item.icon}</span>
-                          <span className="flex-1 text-slate-200 font-medium">{item.label}</span>
-                          <motion.span
-                            animate={{ opacity: [1, 0.5, 1] }}
-                            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
-                            className="text-emerald-300 font-bold"
-                          >
-                            {item.time}
-                          </motion.span>
-                        </motion.div>
-                      ))}
-                    </div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70 mb-2">Déployé dans</p>
+                    <p className="text-2xl font-bold text-white">20+ établissements</p>
+                    <p className="text-xs text-white/70 mt-1">Partout en France, dès les 1ères semaines</p>
                   </motion.div>
                 </div>
               </div>
             </motion.div>
           </div>
         </section>
+
+        <AnimatePresence>
+          {showDemoVideo ? (
+            <motion.div
+              key="demo-video"
+              className="fixed inset-0 z-[200] flex items-center justify-center px-4 py-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <div
+                className="absolute inset-0 bg-slate-950/80 backdrop-blur"
+                onClick={() => setShowDemoVideo(false)}
+              />
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 120, damping: 18 }}
+                className="relative z-10 w-full max-w-5xl rounded-[32px] border border-white/10 bg-slate-900/90 p-6 shadow-2xl"
+              >
+                <button
+                  type="button"
+                  className="absolute right-6 top-6 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-white transition hover:bg-white/20"
+                  onClick={() => setShowDemoVideo(false)}
+                  aria-label="Fermer la vidéo"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+                <div className="space-y-4 pt-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
+                    Aperçu immersif
+                  </p>
+                  <video
+                    className="h-[60vh] w-full rounded-3xl border border-white/10 object-cover"
+                    autoPlay
+                    loop
+                    muted
+                    controls
+                  >
+                    <source
+                      src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+                      type="video/mp4"
+                    />
+                    Votre navigateur ne supporte pas la lecture vidéo.
+                  </video>
+                  <p className="text-sm text-white/80">
+                    Démo fictive : remplacez ce clip par votre walkthrough produit pour montrer les flux en direct.
+                  </p>
+                </div>
+              </motion.div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
 
         {/* À propos / Modules */}
         <section id="features" className="mx-auto max-w-6xl px-6 pb-20">
@@ -396,10 +579,10 @@ export default function LandingPage() {
               À propos
             </span>
             <h2 className="mt-4 text-3xl font-semibold text-[#1d184f]">
-              Une plateforme co-créée avec vos blocs, vos services et vos cadres.
+              Une suite complète conçue par des médecins pour les médecins et résidents.
             </h2>
             <p className="mt-3 text-base text-slate-600">
-              Naviguez dans nos modules comme dans un studio : chaque section révèle ses workflows, ses insights et sa valeur clinique.
+              OpenCare est un studio intégré pour gérer vos tâches, vos patients, vos analyses et vos documents. Explorez chaque module et découvrez comment simplifier votre quotidien clinique.
             </p>
           </motion.div>
 
@@ -480,117 +663,665 @@ export default function LandingPage() {
               custom={0.25}
               variants={containerVariants}
             >
-              <div className="relative overflow-hidden rounded-[32px] border border-indigo-100 bg-white p-8 shadow-2xl shadow-indigo-100">
+              <div className="relative h-full min-h-[500px]">
                 <div className={cn("absolute inset-0 bg-gradient-to-br opacity-60 blur-3xl", activeFeature.accent)} />
-                <div className="relative space-y-6">
-                  <span className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-4 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-indigo-600">
-                    {activeFeature.badge}
-                  </span>
-                  <h3 className="text-2xl font-semibold text-[#1d184f]">Essayez maintenant</h3>
-                  <p className="text-sm text-slate-600">{activeFeature.description}</p>
+                <div className="relative h-full">
+                  {/* Double Display - Planning/Tasks & Activities */}
+                  {activeTab === "planning" && (
+                    <div className="relative h-full min-h-[600px]">
+                      {/* Top Left - Add Task Mockup */}
+                      <div
+                        onClick={() => setTopZComponent("planning")}
+                        className={cn(
+                          "absolute top-0 left-0 w-2/3 h-2/3 rounded-[32px] border border-indigo-100 overflow-hidden shadow-2xl shadow-indigo-100 bg-white flex flex-col cursor-pointer transition-all duration-300",
+                          topZComponent === "planning" ? "z-20" : "z-10"
+                        )}
+                      >
+                        {/* Header */}
+                        <div className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white p-4 flex-shrink-0">
+                          <p className="text-xs font-semibold uppercase tracking-wide">Créer une tâche</p>
+                          <h3 className="text-lg font-bold mt-2">Nouvelle consigne</h3>
+                        </div>
 
-                  {/* Interactive Component Showcase */}
-                  <div className="space-y-4 pt-4">
-                    {activeTab === "planning" && (
-                      <div className="space-y-3">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600 mb-4">Consignes du jour</p>
-                        {showcaseTasks.map((task) => (
-                          <div key={task.id} className="flex items-start gap-3 rounded-xl bg-slate-50/80 p-3 hover:bg-slate-100 transition">
-                            <button
-                              onClick={() => handleToggleTask(task.id)}
-                              className="mt-0.5 flex-shrink-0"
-                            >
-                              {task.done ? (
-                                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                              ) : (
-                                <Circle className="h-5 w-5 text-slate-300" />
-                              )}
-                            </button>
-                            <div className="flex-1 min-w-0">
-                              <p className={cn("text-sm font-medium", task.done && "line-through text-slate-400")}>
-                                {task.title}
-                              </p>
+                        {/* Form */}
+                        <div className="flex-1 p-4 overflow-auto flex flex-col gap-3">
+                          {/* Task Input */}
+                          <div>
+                            <label className="text-xs font-semibold text-slate-600 uppercase mb-1 block">Titre de la tâche</label>
+                            <input
+                              type="text"
+                              placeholder="Ex: Vérifier les vitaux du patient"
+                              className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            />
+                          </div>
+
+                          {/* Type Selection */}
+                          <div>
+                            <label className="text-xs font-semibold text-slate-600 uppercase mb-2 block">Type</label>
+                            <div className="flex gap-2">
+                              <button className="flex-1 px-3 py-2 rounded-lg bg-purple-100 text-purple-700 text-xs font-semibold border-2 border-purple-300 hover:bg-purple-50">
+                                Privée
+                              </button>
+                              <button className="flex-1 px-3 py-2 rounded-lg bg-slate-100 text-slate-600 text-xs font-semibold border-2 border-slate-200 hover:bg-slate-50">
+                                Équipe
+                              </button>
                             </div>
                           </div>
-                        ))}
-                        <p className="text-xs text-slate-500 mt-4">
-                          {showcaseTasks.filter(t => t.done).length} / {showcaseTasks.length} complétées
-                        </p>
+
+                          {/* Patient Input */}
+                          <div>
+                            <label className="text-xs font-semibold text-slate-600 uppercase mb-1 block">Patient (optionnel)</label>
+                            <input
+                              type="text"
+                              placeholder="Ex: PAT-001"
+                              className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            />
+                          </div>
+
+                          {/* Priority */}
+                          <div>
+                            <label className="text-xs font-semibold text-slate-600 uppercase mb-2 block">Priorité</label>
+                            <select className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                              <option>Normale</option>
+                              <option>Haute</option>
+                              <option>Urgente</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Footer - Action Button */}
+                        <div className="border-t border-slate-200 p-4 flex-shrink-0 bg-slate-50">
+                          <button className="w-full px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500 text-white text-sm font-semibold hover:shadow-lg transition">
+                            Créer la tâche
+                          </button>
+                        </div>
                       </div>
-                    )}
 
-                    {activeTab === "patients" && (
-                      <div className="space-y-4">
-                        <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-blue-50 p-4">
-                          <div className="flex items-start justify-between mb-3">
-                            <div>
-                              <p className="font-semibold text-slate-900">{mockPatientData.name}</p>
-                              <p className="text-xs text-slate-600 mt-1">{mockPatientData.service}</p>
-                            </div>
-                            <span className="inline-flex px-2 py-1 rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
-                              {mockPatientData.status}
-                            </span>
-                          </div>
-                          <div className="space-y-2 text-sm">
-                            <p className="text-slate-700"><span className="font-medium">Diagnostic :</span> {mockPatientData.diagnosis}</p>
-                            <p className="text-slate-700"><span className="font-medium">Médecin :</span> {mockPatientData.doctor}</p>
-                            <div className="grid grid-cols-2 gap-2 pt-2">
-                              <div className="rounded-lg bg-white/60 p-2">
-                                <p className="text-xs text-slate-500">Température</p>
-                                <p className="font-semibold text-slate-900">{mockPatientData.lastVitals.temperature}°C</p>
+                      {/* Bottom Right - Component Card */}
+                      <div
+                        onClick={() => setTopZComponent(null)}
+                        className={cn(
+                          "absolute bottom-0 right-0 w-2/3 h-2/3 rounded-[32px] border border-indigo-100 bg-white shadow-2xl shadow-indigo-100 p-6 cursor-pointer transition-all duration-300",
+                          topZComponent !== "planning" ? "z-20" : "z-10"
+                        )}
+                      >
+                        <div className="relative h-full flex flex-col justify-center">
+                          <div className="space-y-3">
+                            {/* Private Task */}
+                            <button
+                              onClick={() => handleToggleTask("task-private")}
+                              className="flex items-start gap-3 rounded-xl bg-slate-50 p-4 hover:bg-slate-100 transition text-left w-full"
+                            >
+                              <div className="mt-0.5 flex-shrink-0">
+                                {mockupTasks["task-private"] ? (
+                                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                                ) : (
+                                  <Circle className="h-5 w-5 text-slate-300" />
+                                )}
                               </div>
-                              <div className="rounded-lg bg-white/60 p-2">
-                                <p className="text-xs text-slate-500">FC</p>
-                                <p className="font-semibold text-slate-900">{mockPatientData.lastVitals.heartRate}/min</p>
+                              <div className="flex-1 min-w-0">
+                                <p className={cn("text-sm font-medium", mockupTasks["task-private"] && "line-through text-slate-400")}>Vérifier l&apos;analgésie</p>
+                                <p className="text-xs text-slate-500 mt-1">Personnel · Vous</p>
                               </div>
-                            </div>
+                              <span className="inline-flex px-2 py-1 rounded-full bg-purple-100 text-xs font-semibold text-purple-700 flex-shrink-0">Privée</span>
+                            </button>
+
+                            {/* Public Task 1 */}
+                            <button
+                              onClick={() => handleToggleTask("task-public-1")}
+                              className="flex items-start gap-3 rounded-xl bg-slate-50 p-4 hover:bg-slate-100 transition text-left w-full"
+                            >
+                              <div className="mt-0.5 flex-shrink-0">
+                                {mockupTasks["task-public-1"] ? (
+                                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                                ) : (
+                                  <Circle className="h-5 w-5 text-slate-300" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className={cn("text-sm font-medium", mockupTasks["task-public-1"] && "line-through text-slate-400")}>Pansement stérile</p>
+                                <p className="text-xs text-slate-500 mt-1">Équipe · Fatou Diop</p>
+                              </div>
+                              <span className="inline-flex px-2 py-1 rounded-full bg-blue-100 text-xs font-semibold text-blue-700 flex-shrink-0">Publique</span>
+                            </button>
+
+                            {/* Public Task 2 */}
+                            <button
+                              onClick={() => handleToggleTask("task-public-2")}
+                              className="flex items-start gap-3 rounded-xl bg-slate-50 p-4 hover:bg-slate-100 transition text-left w-full"
+                            >
+                              <div className="mt-0.5 flex-shrink-0">
+                                {mockupTasks["task-public-2"] ? (
+                                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                                ) : (
+                                  <Circle className="h-5 w-5 text-slate-300" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className={cn("text-sm font-medium", mockupTasks["task-public-2"] && "line-through text-slate-400")}>Mobilisation passive</p>
+                                <p className="text-xs text-slate-500 mt-1">Équipe · Jean Dupont</p>
+                              </div>
+                              <span className="inline-flex px-2 py-1 rounded-full bg-blue-100 text-xs font-semibold text-blue-700 flex-shrink-0">Publique</span>
+                            </button>
                           </div>
                         </div>
                       </div>
-                    )}
+                    </div>
+                  )}
 
-                    {activeTab === "analytics" && (
-                      <div className="space-y-3">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600 mb-4">Analyses récentes</p>
-                        {mockAnalysisData.map((analysis) => (
-                          <div key={analysis.id} className="flex items-start gap-3 rounded-xl bg-slate-50/80 p-3">
-                            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 text-white flex-shrink-0">
-                              <Beaker className="h-5 w-5" />
-                            </span>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-slate-900">{analysis.type}</p>
-                              <p className="text-xs text-slate-600">{analysis.description}</p>
-                              <div className="flex items-center justify-between mt-2">
-                                <p className="text-xs text-slate-500">{analysis.date}</p>
+                  {/* Single Display - Patients */}
+                  {activeTab === "patients" && (
+                    <div className="rounded-[32px] border border-indigo-100 overflow-hidden shadow-2xl shadow-indigo-100 bg-white h-full relative flex">
+                      
+                      {/* Patients List */}
+                      <div className="flex-1 p-6 overflow-auto flex flex-col">
+                        {/* Prompt Text */}
+                        {!selectedPatient && (
+                          <div className="mb-6 pb-6 border-b border-slate-200 flex items-center justify-center gap-2 text-center">
+                            <Stethoscope className="h-4 w-4 text-indigo-400 flex-shrink-0" />
+                            <p className="text-xs text-slate-500">Cliquez sur un patient pour voir les détails</p>
+                          </div>
+                        )}
+                        <div className="space-y-2 flex-1">
+                          {mockupPatients.map((patient) => (
+                            <button
+                              key={patient.id}
+                              onClick={() => setSelectedPatient(patient.id)}
+                              className={cn(
+                                "w-full text-left p-4 rounded-2xl border-2 transition duration-200 hover:shadow-md",
+                                selectedPatient === patient.id
+                                  ? "border-indigo-400 bg-gradient-to-r from-indigo-50 to-blue-50"
+                                  : "border-slate-200 bg-white hover:border-slate-300"
+                              )}
+                            >
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-bold text-slate-900">{patient.id}</p>
+                                  <p className="text-xs text-slate-500 mt-1">{patient.name} · {patient.age}y</p>
+                                </div>
                                 <span className={cn(
-                                  "text-xs font-semibold px-2 py-1 rounded",
-                                  analysis.status === "Reviewed"
-                                    ? "bg-emerald-100 text-emerald-700"
-                                    : "bg-amber-100 text-amber-700"
+                                  "text-xs font-semibold px-3 py-1.5 rounded-full flex-shrink-0 whitespace-nowrap",
+                                  patient.status === "Post-op" ? "bg-emerald-100 text-emerald-700" : patient.status === "Stable" ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"
                                 )}>
-                                  {analysis.status}
+                                  {patient.status}
                                 </span>
                               </div>
+                            </button>
+                          ))}
+                        </div>
+
+                        
+                      </div>
+
+                      {/* Sliding Detail Panel - Only show when selected */}
+                      <AnimatePresence>
+                        {selectedPatient && selectedPatientData && (
+                          <motion.div
+                            initial={{ x: 400, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: 400, opacity: 0 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                            className="absolute inset-y-0 right-0 w-96 bg-gradient-to-b from-white to-slate-50 border-l-2 border-indigo-200 shadow-2xl flex flex-col overflow-hidden"
+                          >
+                            {/* Header */}
+                            <div className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-blue-500 text-white p-6 flex-shrink-0">
+                              <button
+                                onClick={() => setSelectedPatient(null)}
+                                className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition"
+                              >
+                                <X className="h-5 w-5" />
+                              </button>
+                              <div>
+                                <p className="text-xs font-semibold text-indigo-100 uppercase tracking-wide">Patient ID</p>
+                                <h2 className="text-3xl font-bold mt-1">{selectedPatientData.id}</h2>
+                              </div>
+                            </div>
+
+                            {/* Content */}
+                            <div className="flex-1 overflow-auto p-6 space-y-4">
+                              {/* Status & Service Row */}
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className={cn(
+                                  "rounded-xl p-3 border-2",
+                                  selectedPatientData.status === "Post-op" ? "bg-emerald-50 border-emerald-200" : selectedPatientData.status === "Stable" ? "bg-blue-50 border-blue-200" : "bg-amber-50 border-amber-200"
+                                )}>
+                                  <p className="text-xs font-semibold text-slate-600 uppercase mb-1">État</p>
+                                  <p className={cn(
+                                    "text-sm font-bold",
+                                    selectedPatientData.status === "Post-op" ? "text-emerald-700" : selectedPatientData.status === "Stable" ? "text-blue-700" : "text-amber-700"
+                                  )}>
+                                    {selectedPatientData.status}
+                                  </p>
+                                </div>
+                                <div className="bg-indigo-50 border-2 border-indigo-200 rounded-xl p-3">
+                                  <p className="text-xs font-semibold text-slate-600 uppercase mb-1">Service</p>
+                                  <p className="text-sm font-bold text-indigo-700">{selectedPatientData.service}</p>
+                                </div>
+                              </div>
+
+                              {/* Diagnosis */}
+                              <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+                                <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-2">Diagnostic</p>
+                                <p className="text-sm font-semibold text-slate-900">{selectedPatientData.diagnosis}</p>
+                              </div>
+
+                              {/* Doctor & Admission */}
+                              <div className="space-y-3">
+                                <div className="bg-slate-100 rounded-xl p-4 border border-slate-200">
+                                  <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1">Médecin</p>
+                                  <p className="text-sm font-bold text-slate-900">{selectedPatientData.doctor}</p>
+                                </div>
+                                <div className="bg-slate-100 rounded-xl p-4 border border-slate-200">
+                                  <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1">Admission</p>
+                                  <p className="text-sm font-bold text-slate-900">{selectedPatientData.admission}</p>
+                                </div>
+                              </div>
+
+                              {/* Vital Signs */}
+                              <div>
+                                <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Signes vitaux</p>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+                                    <p className="text-xs text-red-600 font-semibold">Temp.</p>
+                                    <p className="text-lg font-bold text-red-700 mt-1">{selectedPatientData.vitals.temp}°C</p>
+                                  </div>
+                                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
+                                    <p className="text-xs text-orange-600 font-semibold">FC</p>
+                                    <p className="text-lg font-bold text-orange-700 mt-1">{selectedPatientData.vitals.hr}/min</p>
+                                  </div>
+                                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-center">
+                                    <p className="text-xs text-purple-600 font-semibold">TA</p>
+                                    <p className="text-lg font-bold text-purple-700 mt-1">{selectedPatientData.vitals.bp}</p>
+                                  </div>
+                                  <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-3 text-center">
+                                    <p className="text-xs text-cyan-600 font-semibold">O₂</p>
+                                    <p className="text-lg font-bold text-cyan-700 mt-1">{selectedPatientData.vitals.o2}%</p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Lab Values */}
+                              <div>
+                                <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Valeurs de laboratoire</p>
+                                <div className="space-y-2">
+                                  {Object.entries(selectedPatientData.labs).map(([key, value]) => (
+                                    <div key={key} className="flex items-center justify-between bg-slate-100 border border-slate-200 rounded-lg p-3">
+                                      <p className="text-xs font-semibold text-slate-600 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
+                                      <p className="text-sm font-bold text-slate-900">{value}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Medications */}
+                              <div>
+                                <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Medications</p>
+                                <div className="space-y-1">
+                                  {selectedPatientData.medications.map((med, idx) => (
+                                    <div key={idx} className="flex items-center gap-2 bg-slate-100 border border-slate-200 rounded-lg p-3">
+                                      <div className="h-2 w-2 rounded-full bg-indigo-500 flex-shrink-0" />
+                                      <p className="text-sm text-slate-900">{med}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Clinical Observations Timeline */}
+                              <div>
+                                <div className="flex items-center justify-between mb-3">
+                                  <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Observations cliniques</p>
+                                  <button className="text-xs font-semibold text-indigo-600 hover:text-indigo-700">+ Ajouter</button>
+                                </div>
+                                <div className="space-y-3">
+                                  {/* Observation 1 */}
+                                  <div className="relative pl-4 pb-4 border-l-2 border-indigo-300">
+                                    <div className="absolute w-3 h-3 bg-indigo-500 rounded-full -left-2 top-1 border-2 border-white" />
+                                    <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
+                                      <p className="text-xs font-semibold text-indigo-700 mb-1">Aujourd'hui - 14:30</p>
+                                      <p className="text-sm text-slate-900">Patient conscient et orienté, douleur contrôlée. Pansements secs.</p>
+                                    </div>
+                                  </div>
+
+                                  {/* Observation 2 */}
+                                  <div className="relative pl-4 pb-4 border-l-2 border-blue-300">
+                                    <div className="absolute w-3 h-3 bg-blue-500 rounded-full -left-2 top-1 border-2 border-white" />
+                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                      <p className="text-xs font-semibold text-blue-700 mb-1">Hier - 09:15</p>
+                                      <p className="text-sm text-slate-900">Mobilisation progressive tolérée. Tension stable.</p>
+                                    </div>
+                                  </div>
+
+                                  {/* Observation 3 */}
+                                  <div className="relative pl-4 border-l-2 border-cyan-300">
+                                    <div className="absolute w-3 h-3 bg-cyan-500 rounded-full -left-2 top-1 border-2 border-white" />
+                                    <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-3">
+                                      <p className="text-xs font-semibold text-cyan-700 mb-1">22 novembre - 16:45</p>
+                                      <p className="text-sm text-slate-900">Post-opératoire immédiat. Patient sous surveillance continue.</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Footer Actions */}
+                            <div className="border-t border-slate-200 p-6 space-y-3 bg-white flex-shrink-0">
+                              <button className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white text-sm font-semibold hover:shadow-lg transition">
+                                Voir le dossier complet
+                              </button>
+                              <button
+                                onClick={() => setSelectedPatient(null)}
+                                className="w-full px-4 py-3 rounded-xl bg-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-300 transition"
+                              >
+                                Fermer
+                              </button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
+
+                  {/* Single Display - Smart Editor */}
+                  {activeTab === "editor" && (
+                    <div className="rounded-[32px] border border-indigo-100 overflow-hidden shadow-2xl shadow-indigo-100 bg-white flex flex-col h-full">
+                      {/* Toolbar */}
+                      <div className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 p-4 flex items-center gap-2 flex-shrink-0">
+                        <p className="text-xs font-semibold text-slate-600 uppercase mr-2">Outils</p>
+                        <button className="p-2 hover:bg-slate-200 rounded-lg transition" title="Bold">
+                          <Bold className="h-4 w-4 text-slate-600" />
+                        </button>
+                        <button className="p-2 hover:bg-slate-200 rounded-lg transition" title="Italic">
+                          <Italic className="h-4 w-4 text-slate-600" />
+                        </button>
+                        <button className="p-2 hover:bg-slate-200 rounded-lg transition" title="List">
+                          <List className="h-4 w-4 text-slate-600" />
+                        </button>
+                        <div className="flex-1" />
+
+                        {/* AI Suggestion Button - Dynamic */}
+                        <motion.button
+                          animate={isAccepting ? { scale: 0.95 } : { scale: 1 }}
+                          className={cn(
+                            "p-2 rounded-lg transition relative",
+                            isAccepting
+                              ? "bg-emerald-100 hover:bg-emerald-200"
+                              : "bg-indigo-100 hover:bg-indigo-200"
+                          )}
+                          title={isAccepting ? "Accept" : "AI Suggestion"}
+                        >
+                          {isAccepting ? (
+                            <Check className="h-4 w-4 text-emerald-600" />
+                          ) : (
+                            <Wand2 className="h-4 w-4 text-indigo-600" />
+                          )}
+                          {showSuggestion && !isAccepting && (
+                            <motion.div
+                              animate={{ scale: [1, 1.5, 1] }}
+                              transition={{ duration: 0.6, repeat: Infinity }}
+                              className="absolute inset-0 rounded-lg border-2 border-indigo-400"
+                            />
+                          )}
+                        </motion.button>
+
+                        <button className="p-2 hover:bg-slate-200 rounded-lg transition" title="Copy">
+                          <Copy className="h-4 w-4 text-slate-600" />
+                        </button>
+                      </div>
+
+                      {/* Editor Area */}
+                      <div className="flex-1 p-6 overflow-auto flex flex-col">
+                        <label className="text-xs font-semibold text-slate-600 uppercase mb-3 block">Observation clinique</label>
+
+                        {/* Textarea Container */}
+                        <div className="relative flex-1 border-2 border-slate-200 rounded-xl overflow-hidden bg-white focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100">
+                          <textarea
+                            value={editorText}
+                            onChange={(e) => setEditorText(e.target.value)}
+                            placeholder="Commencez à écrire... l'IA suggérera automatiquement"
+                            className="w-full h-full p-4 text-sm resize-none focus:outline-none bg-white"
+                          />
+
+                          {/* Ghost Text Suggestion */}
+                          {showSuggestion && (
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 0.5 }}
+                              exit={{ opacity: 0 }}
+                              className="absolute top-4 left-4 right-4 text-sm text-slate-400 pointer-events-none whitespace-pre-wrap"
+                            >
+                              {editorText}{editorText && "\n"}{currentSuggestion}
+                            </motion.div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Footer */}
+                      <div className="border-t border-slate-200 p-6 bg-slate-50 flex-shrink-0">
+                        <button className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white text-sm font-semibold hover:shadow-lg transition">
+                          Valider et sauvegarder
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Single Display - Analyses */}
+                  {/* Double Display - Analyses */}
+                  {activeTab === "analytics" && (
+                    <div className="relative h-full min-h-[600px]">
+                      {/* Top Left - Camera Scan Demo */}
+                      <div
+                        onClick={() => setTopZComponent("analytics")}
+                        className={cn(
+                          "absolute top-0 left-0 w-2/3 h-2/3 rounded-[32px] border border-indigo-100 overflow-hidden shadow-2xl shadow-indigo-100 bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col cursor-pointer transition-all duration-300",
+                          topZComponent === "analytics" ? "z-20" : "z-10"
+                        )}
+                      >
+                        {/* Header */}
+                        <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-4 flex-shrink-0">
+                          <p className="text-xs font-semibold uppercase tracking-wide">Scanner de lab</p>
+                          <h3 className="text-lg font-bold mt-2">Capturez un résultat</h3>
+                        </div>
+
+                        {/* Camera Preview Area */}
+                        <div className="flex-1 flex flex-col items-center justify-center p-6 relative">
+                          {/* Camera Frame Mockup */}
+                          <div className="w-full max-w-xs aspect-square border-4 border-indigo-300 rounded-2xl bg-white relative overflow-hidden">
+                            {/* Grid overlay */}
+                            <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none">
+                              {Array.from({ length: 9 }).map((_, i) => (
+                                <div key={i} className="border border-indigo-200/50" />
+                              ))}
+                            </div>
+
+                            {/* Animated scanning line */}
+                            <motion.div
+                              animate={{ y: ["-100%", "100%"] }}
+                              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                              className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent"
+                            />
+
+                            {/* Placeholder text */}
+                            <div className="absolute inset-0 flex items-center justify-center text-center">
+                              <div className="space-y-3">
+                                <Beaker className="h-12 w-12 text-slate-300 mx-auto" />
+                                <p className="text-sm text-slate-400">Pointez votre caméra</p>
+                              </div>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
 
-                  <div className="pt-4 border-t border-slate-200">
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {activeFeature.insights.map(({ label, value }) => (
-                        <div
-                          key={label}
-                          className="rounded-2xl bg-gradient-to-br from-white/90 to-white/70 px-4 py-4 shadow-inner shadow-indigo-100"
-                        >
-                          <p className="text-xs uppercase tracking-[0.2em] text-indigo-500">{label}</p>
-                          <p className="mt-2 text-xl font-semibold text-[#1d184f]">{value}</p>
+                          {/* Camera button */}
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="mt-6 w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg flex items-center justify-center hover:shadow-xl transition"
+                          >
+                            <Circle className="h-8 w-8" />
+                          </motion.button>
                         </div>
-                      ))}
+                      </div>
+
+                      {/* Bottom Right - Lab Result Card */}
+                      <div
+                        onClick={() => setTopZComponent(null)}
+                        className={cn(
+                          "absolute bottom-0 right-0 w-2/3 h-2/3 rounded-[32px] border border-indigo-100 bg-white shadow-2xl shadow-indigo-100 p-6 overflow-auto cursor-pointer transition-all duration-300",
+                          topZComponent !== "analytics" ? "z-20" : "z-10"
+                        )}
+                      >
+                        <div className="space-y-4">
+                          {/* Header */}
+                          <div className="border-b border-slate-200 pb-4">
+                            <h3 className="text-sm font-bold text-slate-900">Résultat numérisé</h3>
+                            <p className="text-xs text-slate-500 mt-1">CBC - 22 novembre 2025 · Automatiquement rempli</p>
+                          </div>
+
+                          {/* Lab Values Grid */}
+                          <div className="grid grid-cols-2 gap-3">
+                            {[
+                              { label: "Hémoglobine", value: "13.5", unit: "g/dL", status: "Normal" },
+                              { label: "Hématocrite", value: "40.2", unit: "%", status: "Normal" },
+                              { label: "RBC", value: "4.8", unit: "M/µL", status: "Normal" },
+                              { label: "WBC", value: "7.2", unit: "K/µL", status: "Normal" },
+                              { label: "Plaquettes", value: "245", unit: "K/µL", status: "Normal" },
+                              { label: "MCV", value: "88", unit: "fL", status: "Normal" },
+                            ].map((item, idx) => (
+                              <motion.div
+                                key={idx}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                className="bg-emerald-50 border-2 border-emerald-200 rounded-xl p-3"
+                              >
+                                <p className="text-xs font-semibold text-slate-600">{item.label}</p>
+                                <div className="flex items-baseline gap-1 mt-1">
+                                  <p className="text-lg font-bold text-slate-900">{item.value}</p>
+                                  <p className="text-xs text-slate-500">{item.unit}</p>
+                                </div>
+                                <p className="text-xs text-emerald-700 font-semibold mt-1">✓ {item.status}</p>
+                              </motion.div>
+                            ))}
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="space-y-2 pt-4 border-t border-slate-200">
+                            <button className="w-full px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold hover:shadow-lg transition">
+                              Ajouter à la visite
+                            </button>
+                            <button className="w-full px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold hover:bg-slate-200 transition">
+                              Scanner à nouveau
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {/* Single Display - Documents */}
+                  {/* Double Display - Documents */}
+                  {activeTab === "documents" && (
+                    <div className="relative h-full min-h-[600px]">
+                      {/* Top Left - Document Templates */}
+                      <div
+                        onClick={() => setTopZComponent("documents")}
+                        className={cn(
+                          "absolute top-0 left-0 w-2/3 h-2/3 rounded-[32px] border border-indigo-100 overflow-hidden shadow-2xl shadow-indigo-100 bg-white flex flex-col cursor-pointer transition-all duration-300",
+                          topZComponent === "documents" ? "z-20" : "z-10"
+                        )}
+                      >
+                        {/* Header */}
+                        <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-4 flex-shrink-0">
+                          <p className="text-xs font-semibold uppercase tracking-wide">Modèles</p>
+                          <h3 className="text-lg font-bold mt-2">Choisissez un modèle</h3>
+                        </div>
+
+                        {/* Templates List */}
+                        <div className="flex-1 overflow-auto p-6 space-y-3">
+                          {[
+                            { title: "Compte-rendu opératoire", icon: "📋", recent: "2 modèles" },
+                            { title: "Ordonnance de sortie", icon: "💊", recent: "5 modèles" },
+                            { title: "Lettre de référence", icon: "✉️", recent: "3 modèles" },
+                          ].map((doc, idx) => (
+                            <button
+                              key={idx}
+                              className="w-full p-4 border border-slate-200 rounded-xl hover:border-green-300 hover:bg-green-50 transition text-left"
+                            >
+                              <div className="flex items-center gap-3">
+                                <span className="text-2xl">{doc.icon}</span>
+                                <div className="flex-1">
+                                  <p className="text-sm font-semibold text-slate-900">{doc.title}</p>
+                                  <p className="text-xs text-slate-500">{doc.recent}</p>
+                                </div>
+                                <ChevronRight className="h-4 w-4 text-slate-400" />
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Bottom Right - Template Editor with Ghost Text */}
+                      <div
+                        onClick={() => setTopZComponent(null)}
+                        className={cn(
+                          "absolute bottom-0 right-0 w-2/3 h-2/3 rounded-[32px] border border-indigo-100 bg-white shadow-2xl shadow-indigo-100 p-6 overflow-auto cursor-pointer transition-all duration-300 flex flex-col",
+                          topZComponent !== "documents" ? "z-20" : "z-10"
+                        )}
+                      >
+                        <div className="space-y-3">
+                          {/* Header */}
+                          <div className="border-b border-slate-200 pb-3">
+                            <h3 className="text-sm font-bold text-slate-900">Compte-rendu opératoire</h3>
+                            <p className="text-xs text-slate-500 mt-1">Cliquez dans les champs pour ajouter vos détails</p>
+                          </div>
+
+                          {/* Template Text Area */}
+                          <div className="flex-1 relative border-2 border-slate-200 rounded-xl overflow-hidden bg-slate-50 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-100">
+                            <div className="p-4 text-sm space-y-4 whitespace-pre-wrap text-slate-900">
+                              {typingGaps.map((gap, idx) => {
+                                const isCurrentGap = gapOrder[currentGapIndex] === idx;
+                                const typedText = isCurrentGap ? gap.placeholder.substring(0, typedCharCount) : "";
+                                const hasTyped = isCurrentGap && typedCharCount > 0;
+
+                                return (
+                                  <div key={idx}>
+                                    <span className="font-semibold text-slate-700">{gap.section} : </span>
+                                    <span className="text-slate-400">
+                                      {idx === 0 && "Anesthésie régionale"}
+                                      {idx === 1 && "Chirurgicale"}
+                                      {idx === 2 && "Pathologie abdominale"}
+                                      {idx === 3 && "Intervention chirurgicale"}
+                                      {idx === 4 && "Technique standard"}
+                                    </span>
+                                    {hasTyped && (
+                                      <span className="ml-1 text-slate-900 font-semibold">
+                                        {typedText}
+                                        <motion.span
+                                          animate={{ opacity: [1, 0] }}
+                                          transition={{ duration: 0.6, repeat: Infinity }}
+                                          className="text-slate-900"
+                                        >
+                                          |
+                                        </motion.span>
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="space-y-2">
+                            <button className="w-full px-4 py-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white text-sm font-semibold hover:shadow-lg transition">
+                              Sauvegarder le compte-rendu
+                            </button>
+                            <button className="w-full px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold hover:bg-slate-200 transition">
+                              Annuler
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>

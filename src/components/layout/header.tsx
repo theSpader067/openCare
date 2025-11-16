@@ -410,7 +410,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
             >
              
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#c4b5fd] to-[#a5b4fc] text-sm font-semibold text-[#1d184f] shadow-sm shadow-indigo-200/60">
-                DD
+              {(session.user as any).firstName && (session.user as any).lastName ? `${(session.user as any).firstName[0]}${(session.user as any).lastName[0]}` : (session.user as any).username ? (session.user as any).username[0] : "" }
               </div>
               <ChevronDown
                 className={cn(
@@ -424,7 +424,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                 <div className="absolute right-0 top-full z-40 mt-3 w-72 rounded-3xl border border-violet-200/60 bg-gradient-to-br from-white via-[#f8f7ff] to-[#ede9ff] p-4 shadow-2xl shadow-indigo-200/50 backdrop-blur">
                   <div className="flex items-center gap-3 border-b border-violet-100/70 pb-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#a855f7] via-[#6366f1] to-[#4f46e5] text-lg font-semibold text-white shadow-md shadow-indigo-300/40">
-                      DD
+                    {(session.user as any).firstName && (session.user as any).lastName ? `${(session.user as any).firstName[0]}${(session.user as any).lastName[0]}` : (session.user as any).username ? (session.user as any).username[0] : "" }
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-[#2f2961]">

@@ -1,6 +1,6 @@
 "use client";
 
-import { type ComponentType } from "react";
+import { type ComponentType, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Bell, Sparkles } from "lucide-react";
 import {
@@ -14,13 +14,67 @@ import {
   type NotificationType,
   type NotificationItem,
   NOTIFICATION_META,
-  NOTIFICATIONS_SEED,
 } from "@/data/notifications/notifications-metadata";
+
+// Helper function to format relative time
+function formatRelativeTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - new Date(date).getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return "À l'instant";
+  if (diffMins < 60) return `Il y a ${diffMins} minute${diffMins > 1 ? "s" : ""}`;
+  if (diffHours < 24) return `Il y a ${diffHours} heure${diffHours > 1 ? "s" : ""}`;
+  if (diffDays < 7) return `Il y a ${diffDays} jour${diffDays > 1 ? "s" : ""}`;
+
+  return new Date(date).toLocaleDateString("fr-FR");
+}
 
 export default function NotificationsPage() {
   const router = useRouter();
-  const notifications = NOTIFICATIONS_SEED;
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const unreadCount = notifications.length;
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await fetch("/api/notifications");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch notifications");
+        }
+
+        const data = await response.json();
+
+        // Transform database notifications to UI format
+        const transformedNotifications: NotificationItem[] = data.notifications.map(
+          (notif: any) => ({
+            id: notif.id.toString(),
+            type: (notif.category || "task") as NotificationType,
+            title: notif.title,
+            description: notif.description || "",
+            time: formatRelativeTime(new Date(notif.createdAt)),
+            source: notif.source || "Système",
+          })
+        );
+
+        setNotifications(transformedNotifications);
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+        setError(err instanceof Error ? err.message : "Une erreur est survenue");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-[#fafaf9] to-[#f5f3ff] px-4 py-6 pb-24 sm:px-6 md:px-8 md:pb-20 lg:pb-8">
@@ -54,7 +108,54 @@ export default function NotificationsPage() {
 
         {/* Notifications List */}
         <div className="space-y-3 sm:space-y-4">
-          {notifications.length === 0 ? (
+          {isLoading ? (
+            // Loading State
+            <div className="space-y-3 sm:space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="flex items-start gap-3 rounded-2xl border border-violet-100/70 bg-white/90 p-4 shadow-sm shadow-indigo-100/40 sm:gap-4 sm:p-5 animate-pulse"
+                >
+                  <div className="h-12 w-12 flex-shrink-0 rounded-2xl bg-gradient-to-br from-slate-200 to-slate-100 sm:h-14 sm:w-14" />
+                  <div className="flex flex-1 flex-col gap-2">
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                      <div className="h-5 w-48 rounded-lg bg-gradient-to-r from-slate-200 to-slate-100 sm:h-6" />
+                      <div className="h-5 w-12 rounded-full bg-gradient-to-r from-slate-200 to-slate-100" />
+                    </div>
+                    <div className="h-4 w-full rounded-lg bg-gradient-to-r from-slate-200 to-slate-100 sm:h-5" />
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                      <div className="h-3 w-20 rounded-lg bg-gradient-to-r from-slate-200 to-slate-100" />
+                      <div className="h-3 w-24 rounded-lg bg-gradient-to-r from-slate-200 to-slate-100" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : error ? (
+            // Error State
+            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-red-200/70 bg-red-50/50 px-4 py-12 text-center sm:py-16">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-100/80">
+                <Bell className="h-7 w-7 text-red-400" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-red-700">
+                  Erreur lors du chargement
+                </p>
+                <p className="text-xs text-red-600">
+                  {error}
+                </p>
+              </div>
+              <Button
+                onClick={() => window.location.reload()}
+                variant="outline"
+                size="sm"
+                className="mt-2"
+              >
+                Réessayer
+              </Button>
+            </div>
+          ) : notifications.length === 0 ? (
+            // Empty State
             <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-violet-200/70 bg-white/80 px-4 py-12 text-center sm:py-16">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50/80">
                 <Bell className="h-7 w-7 text-slate-400" />
@@ -69,6 +170,7 @@ export default function NotificationsPage() {
               </div>
             </div>
           ) : (
+            // Notifications List
             <ul className="space-y-3 sm:space-y-4">
               {notifications.map((notification) => {
                 const meta = NOTIFICATION_META[notification.type];
@@ -118,7 +220,7 @@ export default function NotificationsPage() {
         </div>
 
         {/* Action Bar */}
-        {notifications.length > 0 && (
+        {!isLoading && !error && notifications.length > 0 && (
           <div className="mt-8 border-t border-violet-200/70 pt-6 sm:mt-10 sm:pt-8">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <div className="text-sm text-[#6a66b1]">

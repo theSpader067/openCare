@@ -272,12 +272,15 @@ export default function ProfilePage() {
           description: team.service ? `Service: ${team.service}` : (team.hospital ? `Hôpital: ${team.hospital}` : "Équipe"),
           teamMembers: team.members?.map((member: any) => ({
             id: member.id.toString(),
-            name: `${member.firstName || ""} ${member.lastName || ""}`.trim(),
+            name: member.username? `${member.username || ""} ` : member.firstName && member.lastName? `${member.firstName || ""} ${member.lastName || ""}`.trim(): 'N/A',
             avatar: `${member.firstName?.[0] || ""}${member.lastName?.[0] || ""}`.toUpperCase(),
             role: team.adminId === member.id ? "Admin" : "Membre",
             specialty: member.specialty || "",
           })),
         }));
+
+        console.log(transformedTeams.map((t : any)=>t.teamMembers.map((m:any)=>m.name)))
+
 
         setUserTeams(transformedTeams);
         // For now, use all teams as available teams (you can add filtering logic later)
@@ -417,9 +420,6 @@ export default function ProfilePage() {
       }
 
       const data = await response.json();
-
-      // Add the new request to the joinRequests list
-      setJoinRequests([...joinRequests, data.request]);
 
       // Mark team as sent request
       setSentRequests(new Set([...sentRequests, teamId]));
@@ -1610,7 +1610,7 @@ export default function ProfilePage() {
                               description: team.service ? `Service: ${team.service}` : (team.hospital ? `Hôpital: ${team.hospital}` : "Équipe"),
                               teamMembers: team.members?.map((member: any) => ({
                                 id: member.id.toString(),
-                                name: `${member.firstName || ""} ${member.lastName || ""}`.trim(),
+                                name: `${member.username || ""}`.trim(),
                                 avatar: `${member.firstName?.[0] || ""}${member.lastName?.[0] || ""}`.toUpperCase(),
                                 role: team.adminId === member.id ? "Admin" : "Membre",
                                 specialty: member.specialty || "",

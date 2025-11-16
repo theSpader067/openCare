@@ -31,7 +31,7 @@ export interface HeroHighlight {
 }
 
 export const heroHighlights: HeroHighlight[] = [
-  { label: "Déploiement moyen", value: "3 jours", icon: CalendarDays },
+  { label: "Déploiement moyen", value: "4 jours", icon: CalendarDays },
   { label: "Conformité & sécurité", value: "100%", icon: ShieldCheck },
   { label: "Gain de temps constaté", value: "+32%", icon: Activity },
 ];
@@ -153,10 +153,10 @@ export interface Stat {
 }
 
 export const stats: Stat[] = [
-  { label: "Centres utilisateurs", value: "120+", icon: ShieldCheck },
-  { label: "Patient·e·s suivis chaque jour", value: "14 500", icon: Stethoscope },
-  { label: "Gain moyen de temps opérateur", value: "32%", icon: Activity },
-  { label: "Satisfaction praticiens", value: "4.8 / 5", icon: Users },
+  { label: "Gain moyen de temps", value: "32%", icon: Activity },
+  { label: "Spécialités supportées", value: "+50", icon: CheckCircle2 },
+  { label: "Support", value: "24/7", icon: Users },
+  { label: "Mise en place", value: "4 jours", icon: CalendarDays },
 ];
 
 export interface FAQ {

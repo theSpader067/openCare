@@ -1283,7 +1283,7 @@ export default function LandingPage() {
 
                                 return (
                                   <div key={idx}>
-                                    <span className="font-semibold text-slate-700">{gap.section} : </span>
+                                    <span className="font-semibold text-slate-400">{gap.section} : </span>
                                     <span className="text-slate-400">
                                       {idx === 0 && "Anesthésie régionale"}
                                       {idx === 1 && "Chirurgicale"}

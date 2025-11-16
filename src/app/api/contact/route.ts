@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
+import { sendContactEmail } from "@/lib/mailer";
 
 const prisma = new PrismaClient();
 
@@ -25,6 +26,24 @@ export async function POST(request: NextRequest) {
         message,
       },
     });
+
+    // Send email notification (non-blocking - don't wait for it)
+    const recipientEmail = process.env.CONTACT_EMAIL_RECIPIENT || process.env.SMTP_USER;
+    if (recipientEmail) {
+      sendContactEmail({
+        data: {
+          fullName,
+          email,
+          specialty,
+          message,
+          submittedAt: contact.createdAt,
+        },
+        recipientEmail,
+      }).catch((error) => {
+        console.error("Failed to send contact notification email:", error);
+        // Don't throw - email failure shouldn't fail the API request
+      });
+    }
 
     return NextResponse.json(
       { success: true, contact },

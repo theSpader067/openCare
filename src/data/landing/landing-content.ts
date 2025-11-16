@@ -190,6 +190,11 @@ export const faqs: FAQ[] = [
     answer:
       "Support 24/7, référent projet dédié et bibliothèque de tutoriels interactifs. Vous pouvez contacter nos experts via chat sécurisé ou hotline dédiée.",
   },
+  {
+    question: "Comment OpenCare s’intègre-t-il avec les outils existants du service ?",
+    answer:
+      "OpenCare fonctionne en complément de vos logiciels hospitaliers. Vous pouvez importer vos patients via fichiers Excel, synchroniser les données de laboratoire via photo/scan, et exporter tous vos documents en PDF pour intégration dans le dossier médical du service. Aucun changement radical de workflow n’est nécessaire : l’outil s’adapte à votre organisation.",
+  }
 ];
 
 // Mockup data for component showcases

@@ -4,6 +4,7 @@ import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import Providers from "./provider";
 import { SessionProvider } from "next-auth/react";
+
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
@@ -17,18 +18,18 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "OpenCare | Plateforme pour praticiens",
+  title: "OpenCare | Healthcare Platform",
   description:
-    "OpenCare centralise les activités des praticiens et aide à suivre patients, analyses et opérations quotidiennes.",
+    "OpenCare streamlines healthcare coordination for practitioners and teams.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${manrope.variable} font-sans antialiased`}>
         <Providers>
           {children}

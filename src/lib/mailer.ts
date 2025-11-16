@@ -3,11 +3,11 @@ import { generateContactEmailHTML, generateContactEmailText, type ContactEmailDa
 
 // Create transporter using environment variables
 function getTransporter() {
-  const host = process.env.SMTP_HOST;
-  const port = parseInt(process.env.SMTP_PORT || "587", 10);
+  const host = process.env.EMAIL_SERVER_HOST;
+  const port = parseInt(process.env.EMAIL_SERVER_PORT || "587", 10);
   const secure = process.env.SMTP_SECURE === "true"; // Use TLS if SMTP_SECURE is true
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASSWORD;
+  const user = process.env.EMAIL_SERVER_USER;
+  const pass = process.env.EMAIL_SERVER_PASS;
 
   console.log("[EMAIL] SMTP Configuration Check:");
   console.log("[EMAIL] Host:", host ? "✓ Set" : "✗ Missing");

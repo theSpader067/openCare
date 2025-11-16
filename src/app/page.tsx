@@ -518,7 +518,7 @@ export default function LandingPage() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="font-semibold text-white">Organisé</p>
-                          <p className="text-xs text-white/70">Toutes vos tâches, alertes et patients au même endroit</p>
+                          <p className="text-xs text-white/70">Toutes vos tâches, documents et patients au même endroit</p>
                         </div>
                       </div>
                     </div>
@@ -543,9 +543,9 @@ export default function LandingPage() {
                     transition={{ duration: 0.6, delay: 0.1 }}
                     className="rounded-2xl border border-white/25 bg-white/15 backdrop-blur p-4 text-center"
                   >
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70 mb-2">Déployé dans</p>
-                    <p className="text-2xl font-bold text-white">20+ établissements</p>
-                    <p className="text-xs text-white/70 mt-1">Partout en France, dès les 1ères semaines</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70 mb-2">Mise en place rapide</p>
+                    <p className="text-2xl font-bold text-white">4 jours</p>
+                    <p className="text-xs text-white/70 mt-1">Prêt à être utilisé immédiatement</p>
                   </motion.div>
                 </div>
               </div>
@@ -575,16 +575,14 @@ export default function LandingPage() {
               >
                 <button
                   type="button"
-                  className="absolute right-6 top-6 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-white transition hover:bg-white/20"
+                  className="absolute right-6 top-6 mb-6 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-white transition hover:bg-white/20"
                   onClick={() => setShowDemoVideo(false)}
                   aria-label="Fermer la vidéo"
                 >
                   <X className="h-5 w-5" />
                 </button>
                 <div className="space-y-4 pt-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
-                    Aperçu immersif
-                  </p>
+                  
                   <video
                     className="h-[60vh] w-full rounded-3xl border border-white/10 object-cover"
                     autoPlay
@@ -598,9 +596,6 @@ export default function LandingPage() {
                     />
                     Votre navigateur ne supporte pas la lecture vidéo.
                   </video>
-                  <p className="text-sm text-white/80">
-                    Démo fictive : remplacez ce clip par votre walkthrough produit pour montrer les flux en direct.
-                  </p>
                 </div>
               </motion.div>
             </motion.div>

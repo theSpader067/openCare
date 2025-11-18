@@ -10,6 +10,7 @@ import {
   Trash2,
   UserRound,
   X,
+  Clock,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -372,6 +373,18 @@ export default function PatientsPage() {
                 </div>
               </div>
               <div className="flex flex-wrap w-full justify-end gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-full border-2 border-emerald-300 bg-emerald-50 text-emerald-700 font-semibold hover:bg-emerald-100 hover:border-emerald-400 shadow-sm hover:shadow-md transition-all"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/timeline?id=${selectedPatient.pid}`);
+                }}
+              >
+                <Clock className="mr-2 h-4 w-4" />
+                Parcours de soins
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"

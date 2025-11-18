@@ -95,7 +95,7 @@ export default function OnboardingPage() {
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div className="space-y-2">
                 <label htmlFor="specialty" className="text-sm font-semibold text-slate-700">
-                  Spécialité médicale
+                  Spécialité
                 </label>
                 <select
                   id="specialty"

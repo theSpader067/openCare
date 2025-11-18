@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Save, UserRound, X, ChevronLeft, Loader2, Sparkles, Dices } from "lucide-react";
+import { ArrowLeft, Save, UserRound, X, ChevronLeft, Loader2, Sparkles, Dices, Clock } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -22,7 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Separator } from "@/components/ui/separator";
 import { Patient, PatientStatus, PatientType, ObservationEntry } from "@/data/patients/patients-data";
-import { WYSIWYGEditor } from "@/components/wysiwyg-editor";
+import { SmartEditor } from "@/components/editor/smart-editor";
 import { createPatient, getPatientByPid, updatePatient, saveObservation } from "@/lib/api/patients";
 
 type PatientFormState = {
@@ -361,6 +361,17 @@ export default function PatientDossierPage() {
           ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {isExistingPatient && (
+            <Button
+              type="button"
+              variant="ghost"
+              className="border-2 border-emerald-300 bg-emerald-50 text-emerald-700 font-semibold hover:bg-emerald-100 hover:border-emerald-400 shadow-sm hover:shadow-md transition-all"
+              onClick={() => router.push(`/timeline?id=${formData.pid}`)}
+            >
+              <Clock className="mr-2 h-4 w-4" />
+              Parcours de soins
+            </Button>
+          )}
           <Button
             type="button"
             variant="outline"
@@ -716,21 +727,29 @@ export default function PatientDossierPage() {
 
           <Separator />
 
-          {/* New Observation Input - WYSIWYG Editor */}
+          {/* New Observation Input - Smart Editor with AI */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-[#221b5b]">
               {isExistingPatient
                 ? "Ajouter une observation"
                 : "Observations initiales"}
             </label>
-            <WYSIWYGEditor
+            <SmartEditor
               value={observationDraft}
               onChange={setObservationDraft}
               placeholder="Saisissez une observation, elle sera horodatée lors de l'enregistrement."
-              className="min-h-64"
+              contextInputIds={[
+                "patient-name",
+                "patient-birth",
+                "patient-diagnosis-code",
+                "patient-diagnosis-label",
+                "patient-medical-history",
+                "patient-surgical-history",
+                "patient-other-history"
+              ]}
             />
             <p className="text-xs text-slate-500">
-              Utilisez les outils de formatage pour structurer votre observation (gras, italique, titres, listes, etc.)
+              Utilisez les outils de formatage pour structurer votre observation. Appuyez sur <kbd className="px-1 py-0.5 bg-slate-100 border border-slate-300 rounded text-xs">Tab</kbd> pour obtenir des suggestions IA basées sur le contexte du patient, puis double-<kbd className="px-1 py-0.5 bg-slate-100 border border-slate-300 rounded text-xs">Tab</kbd> pour valider.
             </p>
 
             {/* Save Observation Button - Only for existing patients */}
@@ -806,27 +825,40 @@ export default function PatientDossierPage() {
         </CardContent>
       </Card>
 
-      <div className="flex flex-wrap items-center justify-end gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.push("/patients")}
-        >
-          Annuler
-        </Button>
-        <Button variant="primary" type="submit" disabled={isSaving}>
-          {isSaving ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Enregistrement...
-            </>
-          ) : (
-            <>
-              <Save className="mr-2 h-4 w-4" />
-              {isExistingPatient? 'Mettre à jour':'Enregistrer'}
-            </>
-          )}
-        </Button>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {isExistingPatient && (
+          <Button
+            type="button"
+            variant="ghost"
+            className="border-2 border-emerald-300 bg-emerald-50 text-emerald-700 font-semibold hover:bg-emerald-100 hover:border-emerald-400 shadow-sm hover:shadow-md transition-all"
+            onClick={() => router.push(`/timeline?id=${formData.pid}`)}
+          >
+            <Clock className="mr-2 h-4 w-4" />
+            Parcours de soins
+          </Button>
+        )}
+        <div className="flex flex-wrap items-center gap-3 ml-auto">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push("/patients")}
+          >
+            Annuler
+          </Button>
+          <Button variant="primary" type="submit" disabled={isSaving}>
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Enregistrement...
+              </>
+            ) : (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                {isExistingPatient? 'Mettre à jour':'Enregistrer'}
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </form>
   );

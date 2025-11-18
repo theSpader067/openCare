@@ -445,7 +445,7 @@ export default function LandingPage() {
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
-                {/* <Button
+                <Button
                   size="lg"
                   variant="outline"
                   className="rounded-full border-indigo-200/80 bg-white/70 px-8 py-3 text-[#1d184f]"
@@ -456,7 +456,7 @@ export default function LandingPage() {
                     Voir la démo guidée
                     <PlayCircle className="h-4 w-4" />
                   </span>
-                </Button> */}
+                </Button>
               </div>
             </motion.div>
 
@@ -583,14 +583,14 @@ export default function LandingPage() {
                 <div className="space-y-4 pt-4">
                   
                   <video
-                    className="h-[60vh] w-full rounded-3xl border border-white/10 object-cover"
+                    className="h-[60vh] w-full rounded-3xl border border-white/10 object-cover mt-10"
                     autoPlay
                     loop
                     muted
                     controls
                   >
                     <source
-                      src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+                      src="/promo.mp4"
                       type="video/mp4"
                     />
                     Votre navigateur ne supporte pas la lecture vidéo.

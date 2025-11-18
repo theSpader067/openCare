@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client"
 import bcrypt from "bcrypt"
 import { NextResponse } from "next/server"
 import crypto from "crypto"
-import { sendVerificationEmail } from "@/lib/mail"
+import { sendVerificationEmail, sendSignupNotificationToAdmin } from "@/lib/mail"
 
 
 const prisma = new PrismaClient()
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     const { fullName, email, password } = await req.json()
     const username = fullName.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join('.')
 
-    if (!email || !password) {
+    if (!email || !password || !fullName) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 })
     }
 
@@ -33,7 +33,13 @@ export async function POST(req: Request) {
       data: { token, userId: user.id, expires },
     })
 
-    await sendVerificationEmail(email, token)
+    // Send verification email to user
+    await sendVerificationEmail(email, token, fullName)
+
+    // Send notification to admin (non-blocking)
+    sendSignupNotificationToAdmin(fullName, email).catch((err) => {
+      console.error("[SIGNUP] Failed to send admin notification:", err)
+    })
 
     return NextResponse.json({
       message: "User created. Check your email to verify your account.",

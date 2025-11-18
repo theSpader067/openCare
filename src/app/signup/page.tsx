@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { ArrowRight, Sparkles, Mail } from "lucide-react";
+import { ArrowRight, Sparkles, Mail, Shield, Zap, Users, HeartPulse, Brain, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 
@@ -82,44 +82,31 @@ export default function SignupPage() {
         </div>
 
         <div className="grid w-full max-w-5xl gap-6 rounded-[36px] border border-white/10 bg-white/10 p-1 shadow-[0_30px_90px_-35px_rgba(59,130,246,0.55)] backdrop-blur-xl md:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-[32px] border border-white/10 bg-white/10 p-8 text-white shadow-inner shadow-indigo-900/30 hidden md:block">
-            <div className="flex items-center gap-3">
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#4f46e5] via-[#6366f1] to-[#8b5cf6] text-xl font-semibold text-white shadow-lg shadow-indigo-900/50">
-                ✨
-              </span>
+          <div className="rounded-[32px] border border-white/10 bg-white/5 p-10 text-white backdrop-blur-sm hidden md:flex md:flex-col md:justify-center">
+            <div className="space-y-8">
               <div>
-                <h2 className="text-xl font-semibold">Pourquoi OpenCare ?</h2>
-                <p className="text-xs text-white/70">
-                  Simplifiez votre quotidien hospitalier et améliorez la coordination patient.
+                <h2 className="text-3xl font-semibold leading-tight">
+                  Bienvenue sur OpenCare
+                </h2>
+                <p className="mt-4 text-base text-white/80 leading-relaxed">
+                  Une plateforme moderne et sécurisée pour simplifier la coordination des soins et améliorer la collaboration médicale.
                 </p>
               </div>
-            </div>
 
-            <ul className="mt-8 space-y-4 text-sm text-white/80">
-              <li className="flex items-start gap-3">
-                <span className="mt-1 h-2 w-2 rounded-full bg-emerald-400" />
-                Accès aux dossiers patients avec parcours opératoire en temps réel.
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="mt-1 h-2 w-2 rounded-full bg-sky-400" />
-                Synchronisation automatique avec le bloc et les laboratoires.
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="mt-1 h-2 w-2 rounded-full bg-rose-400" />
-                Collaboration fluide avec votre équipe via messagerie sécurisée.
-              </li>
-            </ul>
+              <div className="h-px bg-white/10" />
 
-            <div className="mt-10 rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-white/75">
-              <p className="font-semibold uppercase tracking-wide text-xs text-white/60">
-                Déjà membre ?
-              </p>
-              <p className="mt-2">
-                <Link href="/login" className="font-semibold text-white hover:underline">
-                  Connectez-vous
-                </Link>{" "}
-                pour reprendre votre activité là où vous l&apos;avez laissée.
-              </p>
+              <div>
+                <p className="text-sm font-medium text-white/60 uppercase tracking-wider">
+                  Déjà inscrit ?
+                </p>
+                <Link
+                  href="/login"
+                  className="mt-3 inline-flex items-center gap-2 text-base font-medium text-white hover:text-white/90 transition group"
+                >
+                  Se connecter à mon compte
+                  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                </Link>
+              </div>
             </div>
           </div>
 

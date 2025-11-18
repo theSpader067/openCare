@@ -21,7 +21,7 @@ function LoginPageContent() {
   useEffect(() => {
     // Check for verification success
     if (searchParams.get('verified') === '1') {
-      setSuccess('Email verified successfully! Please login to continue.')
+      setSuccess('Email vérifié avec succès! connectez-vous pour continuer.')
     }
     // Check for unverified error
     if (searchParams.get('unverified') === '1') {

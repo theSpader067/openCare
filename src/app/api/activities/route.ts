@@ -56,8 +56,7 @@ export async function GET(request: NextRequest) {
     });
 
     const convertedActivities = activities.map(convertActivityToActivityItem);
-    console.log('ACTIVITES@@@@@@@@@@@@@@@@@@@')
-    console.log(convertedActivities)
+    
     return NextResponse.json({ success: true, data: convertedActivities });
   } catch (error) {
     console.error("Error fetching activities:", error);

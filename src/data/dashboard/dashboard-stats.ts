@@ -23,14 +23,13 @@ export interface Stat {
   theme: StatTheme;
 }
 
-export const statsSummary: Stat[] = [
+// This base array is used for configuration only
+// Actual labels and hints are provided by translation function in the component
+export const statsSummaryConfig = [
   {
-    label: "Consultations planifiées",
-    value: "",
-    variation: "",
-    trend: "neutral",
+    labelKey: "dashboard.stats.scheduledConsultations",
+    hintKey: "dashboard.stats.syncData",
     icon: UsersRound,
-    hint: "Synchronisez vos données...",
     theme: {
       card: "bg-gradient-to-br from-[#e0f2ff] via-[#ecf3ff] to-white",
       icon: "bg-white text-[#0f62fe]",
@@ -39,12 +38,9 @@ export const statsSummary: Stat[] = [
     },
   },
   {
-    label: "Interventions au bloc",
-    value: "",
-    variation: "",
-    trend: "neutral",
+    labelKey: "dashboard.stats.operatingRoomInterventions",
+    hintKey: "dashboard.stats.syncData",
     icon: HeartPulse,
-    hint: "Synchronisez vos données...",
     theme: {
       card: "bg-gradient-to-br from-[#fee2f2] via-[#fff1f7] to-white",
       icon: "bg-white text-[#d61f69]",
@@ -53,12 +49,9 @@ export const statsSummary: Stat[] = [
     },
   },
   {
-    label: "Analyses critiques",
-    value: "",
-    variation: "",
-    trend: "neutral",
+    labelKey: "dashboard.stats.criticalAnalyses",
+    hintKey: "dashboard.stats.syncData",
     icon: ClipboardList,
-    hint: "Synchronisez vos données...",
     theme: {
       card: "bg-gradient-to-br from-[#f7f3ff] via-[#f1f5ff] to-white",
       icon: "bg-white text-[#7c3aed]",
@@ -67,12 +60,9 @@ export const statsSummary: Stat[] = [
     },
   },
   {
-    label: "Patients à suivre",
-    value: "",
-    variation: "",
-    trend: "neutral",
+    labelKey: "dashboard.stats.patientFollowUp",
+    hintKey: "dashboard.stats.syncData",
     icon: Activity,
-    hint: "Synchronisez vos données...",
     theme: {
       card: "bg-gradient-to-br from-[#dcfce7] via-[#f1fff5] to-white",
       icon: "bg-white text-[#059669]",
@@ -81,3 +71,14 @@ export const statsSummary: Stat[] = [
     },
   },
 ];
+
+// Legacy export for backwards compatibility
+export const statsSummary: Stat[] = statsSummaryConfig.map((config: any) => ({
+  label: config.labelKey,
+  value: "",
+  variation: "",
+  trend: "neutral",
+  icon: config.icon,
+  hint: config.hintKey,
+  theme: config.theme,
+}));

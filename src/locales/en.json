@@ -512,7 +512,84 @@
       "postOp": "Post-op",
       "monitoring": "Monitoring",
       "rehabilitation": "Rehabilitation",
-      "patientsWillAppear": "Patients will appear here as soon as they are added."
+      "patientsWillAppear": "Patients will appear here as soon as they are added.",
+      "noDataForPeriod": "No data for this period"
+    },
+    "activities": {
+      "title": "Activities History",
+      "activitiesCount": "activity",
+      "loading": "Loading activities...",
+      "noActivities": "No activities for this day",
+      "noActivitiesDesc": "Add your consultations, operating room visits or rounds to keep a complete history.",
+      "addActivity": "Add an activity",
+      "deleteActivity": "Delete",
+      "participants": "Participants",
+      "addActivityModal": "Add an activity",
+      "addActivityModalDesc": "Record a consultation, operation or meeting.",
+      "editActivityModal": "Edit activity",
+      "editActivityModalDesc": "Update the information.",
+      "deleteActivityModal": "Delete the activity?",
+      "deleteActivityModalDesc": "This action will remove the activity from your list.",
+      "deleteActivityConfirm": "Do you confirm the deletion of the activity \"{{title}}\"?",
+      "cancel": "Cancel",
+      "save": "Save",
+      "formLabels": {
+        "title": "Title",
+        "titleExample": "Ex. Consultation Fatou Diop",
+        "description": "Description",
+        "descriptionExample": "Activity details",
+        "activityDay": "Activity day",
+        "time": "Time",
+        "type": "Type",
+        "location": "Location",
+        "locationExample": "Ex. Block 5, Sector 3",
+        "team": "Team",
+        "teamExample": "Ex. Dr. Benali, Nurse Claire"
+      },
+      "activityTypes": {
+        "consultation": "Consultation",
+        "operatingRoom": "Operating room",
+        "staffMeeting": "Multidisciplinary staff",
+        "tour": "Sector tour"
+      }
+    },
+    "stats": {
+      "scheduledConsultations": "Scheduled consultations",
+      "operatingRoomInterventions": "Operating room interventions",
+      "criticalAnalyses": "Critical analyses",
+      "patientFollowUp": "Patients to follow",
+      "syncData": "Synchronize your data..."
+    },
+    "tasks": {
+      "noTasksRecorded": "No instructions recorded",
+      "addTask": "Add a task",
+      "tasks": "Tasks",
+      "addTaskFavorite": "Add",
+      "favoriteTasks": "Favorite tasks:",
+      "editTask": "Edit the instruction",
+      "deleteTask": "Delete the instruction?",
+      "deleteTaskConfirm": "Do you confirm the deletion of the instruction \"{{title}}\"?",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+    "metadata": {
+      "activityTypes": {
+        "consultation": "Consultation",
+        "operatingRoom": "Operating room",
+        "staffMeeting": "Multidisciplinary staff",
+        "tour": "Sector tour"
+      },
+      "patientStatuses": {
+        "preOp": "Pre-op",
+        "postOp": "Post-op",
+        "monitoring": "Monitoring",
+        "rehabilitation": "Rehabilitation"
+      },
+      "labStatuses": {
+        "pending": "Pending",
+        "completed": "Latest result",
+        "na": "N/A"
+      }
     }
   }
 }

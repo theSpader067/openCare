@@ -19,7 +19,8 @@
       "Bash(tree:*)",
       "Bash(npm install:*)",
       "Bash(npx prisma migrate dev:*)",
-      "Bash(npx prisma generate:*)"
+      "Bash(npx prisma generate:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

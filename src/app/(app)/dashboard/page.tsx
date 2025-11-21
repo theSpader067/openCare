@@ -42,7 +42,7 @@ import { cn } from "@/lib/utils";
 import { TasksSection } from "@/components/tasks/TasksSection";
 import { ActivitySection } from "@/components/activities/ActivitySection";
 import type { TaskItem } from "@/types/tasks";
-import { statsSummary } from "@/data/dashboard/dashboard-stats";
+import { statsSummaryConfig } from "@/data/dashboard/dashboard-stats";
 import type { Stat } from "@/data/dashboard/dashboard-stats";
 import type { SimplePatient } from "@/data/dashboard/dashboard-patients";
 import type { PatientItem } from "@/data/dashboard/dashboard-patients";
@@ -606,7 +606,17 @@ export default function DashboardPage() {
       patientForm.diagnosis.trim() &&
       patientForm.service.trim(),
   );
-  const statsList = statsSummary;
+  const statsList = useMemo(() => {
+    return statsSummaryConfig.map((config: any) => ({
+      label: t(`${config.labelKey}`),
+      value: "",
+      variation: "",
+      trend: "neutral" as const,
+      icon: config.icon,
+      hint: t(`${config.hintKey}`),
+      theme: config.theme,
+    }));
+  }, [t]);
   const hasStats = statsList.length > 0;
   const marqueeStats = useMemo(
     () => (hasStats ? [...statsList, ...statsList, ...statsList, ...statsList, ...statsList, ...statsList] : []),
@@ -697,7 +707,7 @@ export default function DashboardPage() {
       <section className="shrink-0 hidden lg:flex">
         {!hasStats ? (
           <Card className="border-dashed border-slate-200 bg-white/70 p-6 text-center text-sm text-slate-500">
-            {t('dashboard.dashboardPage.noIndicators')}
+            {t('dashboard.dashboardPage.noDataForPeriod')}
           </Card>
         ) : (
           <div className="relative -mx-4 mt-1 pb-4 sm:-mx-6 sm:px-6">

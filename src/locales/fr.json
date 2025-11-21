@@ -512,7 +512,84 @@
       "postOp": "Post-op",
       "monitoring": "Surveillance",
       "rehabilitation": "Rééducation",
-      "patientsWillAppear": "Les patients apparaîtront ici dès qu'ils seront ajoutés."
+      "patientsWillAppear": "Les patients apparaîtront ici dès qu'ils seront ajoutés.",
+      "noDataForPeriod": "Pas de données pour cette période"
+    },
+    "activities": {
+      "title": "Historique des activités",
+      "activitiesCount": "activité",
+      "loading": "Chargement des activités...",
+      "noActivities": "Aucune activité pour cette journée",
+      "noActivitiesDesc": "Ajoutez vos consultations, passages au bloc ou tournées pour garder un historique complet.",
+      "addActivity": "Ajouter une activité",
+      "deleteActivity": "Supprimer",
+      "participants": "Participants",
+      "addActivityModal": "Ajouter une activité",
+      "addActivityModalDesc": "Enregistrez une consultation, une opération ou une réunion.",
+      "editActivityModal": "Modifier l'activité",
+      "editActivityModalDesc": "Mettez à jour les informations.",
+      "deleteActivityModal": "Supprimer l'activité ?",
+      "deleteActivityModalDesc": "Cette action retirera l'activité de votre liste.",
+      "deleteActivityConfirm": "Confirmez-vous la suppression de l'activité « {{title}} » ?",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "formLabels": {
+        "title": "Titre",
+        "titleExample": "Ex. Consultation Fatou Diop",
+        "description": "Description",
+        "descriptionExample": "Détails de l'activité",
+        "activityDay": "Jour de l'activité",
+        "time": "Heure",
+        "type": "Type",
+        "location": "Lieu",
+        "locationExample": "Ex. Bloc 5, Secteur 3",
+        "team": "Équipe",
+        "teamExample": "Ex. Dr. Benali, IDE Claire"
+      },
+      "activityTypes": {
+        "consultation": "Consultation",
+        "operatingRoom": "Bloc opératoire",
+        "staffMeeting": "Staff multidisciplinaire",
+        "tour": "Tournée secteur"
+      }
+    },
+    "stats": {
+      "scheduledConsultations": "Consultations planifiées",
+      "operatingRoomInterventions": "Interventions au bloc",
+      "criticalAnalyses": "Analyses critiques",
+      "patientFollowUp": "Patients à suivre",
+      "syncData": "Synchronisez vos données..."
+    },
+    "tasks": {
+      "noTasksRecorded": "Aucune consigne enregistrée",
+      "addTask": "Ajouter une consigne",
+      "tasks": "Tâches",
+      "addTaskFavorite": "Ajouter",
+      "favoriteTasks": "Tâches favorites:",
+      "editTask": "Modifier la consigne",
+      "deleteTask": "Supprimer la consigne ?",
+      "deleteTaskConfirm": "Confirmez-vous la suppression de la consigne « {{title}} » ?",
+      "cancel": "Annuler",
+      "save": "Enregistrer"
+    },
+    "metadata": {
+      "activityTypes": {
+        "consultation": "Consultation",
+        "operatingRoom": "Bloc opératoire",
+        "staffMeeting": "Staff multidisciplinaire",
+        "tour": "Tournée secteur"
+      },
+      "patientStatuses": {
+        "preOp": "Pré-op",
+        "postOp": "Post-op",
+        "monitoring": "Surveillance",
+        "rehabilitation": "Rééducation"
+      },
+      "labStatuses": {
+        "pending": "En attente",
+        "completed": "Dernier résultat",
+        "na": "N/A"
+      }
     }
   }
 }

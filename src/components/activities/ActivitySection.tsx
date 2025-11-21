@@ -28,6 +28,7 @@ import {
 import type { ActivityItem, ActivityFormState, ActivityType } from "@/types/tasks";
 import { activityTypeMeta } from "@/data/dashboard/dashboard-metadata";
 import { getActivities } from "@/lib/api/activities";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export interface ActivitySectionRef {
   refresh: () => Promise<void>;
@@ -101,6 +102,7 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
     onTouchStart,
     onTouchEnd,
   }: ActivitySectionProps, ref) {
+    const { t } = useLanguage();
     const [activities, setActivities] = useState<ActivityItem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -154,12 +156,13 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
       <Card className="flex min-h-0 flex-1 flex-col border-none bg-white/90">
         <CardHeader className="flex flex-wrap items-center justify-between gap-3 pb-4">
           <div>
-            <CardTitle>Historique des activités</CardTitle>
+            <CardTitle>{t('dashboard.activities.title')}</CardTitle>
             <CardDescription>{selectedDateLabel}</CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="muted" className="bg-indigo-100 text-indigo-800">
-              {activitiesCount} activité(s)
+              {activitiesCount} {t('dashboard.activities.activitiesCount')}
+              {activitiesCount !== 1 && '(s)'}
             </Badge>
             <Button
               variant="primary"
@@ -176,21 +179,21 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
             <div className="flex h-full items-center justify-center">
               <div className="text-center space-y-2">
                 <div className="h-8 w-8 rounded-full border-4 border-indigo-100 border-t-indigo-600 animate-spin mx-auto" />
-                <p className="text-sm text-slate-500">Chargement des activités...</p>
+                <p className="text-sm text-slate-500">{t('dashboard.activities.loading')}</p>
               </div>
             </div>
           ) : activities.length === 0 ? (
             <EmptyState
               icon={ClipboardList}
-              title="Aucune activité pour cette journée"
-              description="Ajoutez vos consultations, passages au bloc ou tournées pour garder un historique complet."
+              title={t('dashboard.activities.noActivities')}
+              description={t('dashboard.activities.noActivitiesDesc')}
               action={
                 <Button
                   variant="primary"
                   onClick={onAddClick}
                 >
                   <Plus className="mr-2 h-4 w-4" />
-                  Ajouter une activité
+                  {t('dashboard.activities.addActivity')}
                 </Button>
               }
             />
@@ -243,7 +246,7 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
                                 type="button"
                               >
                                 <Trash2 className="h-4 w-4" />
-                                Supprimer
+                                {t('dashboard.activities.deleteActivity')}
                               </button>
                             </div>
                           )}
@@ -313,7 +316,7 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
                               <div className="flex flex-wrap items-start gap-3 text-xs text-[#6f66c4] pt-2 border-t border-slate-200">
                                 <span className="flex items-center gap-1 basis-full sm:basis-auto">
                                   <UsersIcon className="h-3.5 w-3.5 flex-shrink-0" />
-                                  <span className="font-medium">Participants ({activity.participants.length}):</span>
+                                  <span className="font-medium">{t('dashboard.activities.participants')} ({activity.participants.length}):</span>
                                 </span>
                                 <div className="flex flex-wrap gap-2 basis-full">
                                   {activity.participants}
@@ -361,8 +364,8 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
       <Modal
         open={isAddActivityModalOpen}
         onClose={() => setIsAddActivityModalOpen(false)}
-        title="Ajouter une activité"
-        description="Enregistrez une consultation, une opération ou une réunion."
+        title={t('dashboard.activities.addActivityModal')}
+        description={t('dashboard.activities.addActivityModalDesc')}
         size="md"
         footer={
           <>
@@ -370,14 +373,14 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
               variant="ghost"
               onClick={() => setIsAddActivityModalOpen(false)}
             >
-              Annuler
+              {t('dashboard.activities.cancel')}
             </Button>
             <Button
               variant="primary"
               onClick={onSaveActivity}
               disabled={!activityForm.title.trim()}
             >
-              Enregistrer
+              {t('dashboard.activities.save')}
             </Button>
           </>
         }
@@ -391,8 +394,8 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
       <Modal
         open={isEditActivityModalOpen}
         onClose={() => setIsEditActivityModalOpen(false)}
-        title="Modifier l'activité"
-        description="Mettez à jour les informations."
+        title={t('dashboard.activities.editActivityModal')}
+        description={t('dashboard.activities.editActivityModalDesc')}
         size="md"
         footer={
           <>
@@ -400,14 +403,14 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
               variant="ghost"
               onClick={() => setIsEditActivityModalOpen(false)}
             >
-              Annuler
+              {t('dashboard.activities.cancel')}
             </Button>
             <Button
               variant="primary"
               onClick={onSaveActivity}
               disabled={!activityForm.title.trim()}
             >
-              Enregistrer
+              {t('dashboard.activities.save')}
             </Button>
           </>
         }
@@ -421,8 +424,8 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
       <Modal
         open={isDeleteActivityModalOpen}
         onClose={() => setIsDeleteActivityModalOpen(false)}
-        title="Supprimer l'activité ?"
-        description="Cette action retirera l'activité de votre liste."
+        title={t('dashboard.activities.deleteActivityModal')}
+        description={t('dashboard.activities.deleteActivityModalDesc')}
         size="sm"
         footer={
           <>
@@ -430,20 +433,20 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
               variant="ghost"
               onClick={() => setIsDeleteActivityModalOpen(false)}
             >
-              Annuler
+              {t('dashboard.activities.cancel')}
             </Button>
             <Button
               className="bg-rose-600 text-white hover:bg-rose-700 focus-visible:ring-rose-300"
               onClick={onConfirmDelete}
             >
-              Supprimer
+              {t('dashboard.activities.deleteActivity')}
             </Button>
           </>
         }
       >
         {activityToDelete ? (
           <p className="text-sm text-[#5f5aa5]">
-            Confirmez-vous la suppression de l'activité « {activityToDelete.title} » ?
+            {t('dashboard.activities.deleteActivityConfirm').replace('{{title}}', activityToDelete.title)}
           </p>
         ) : null}
       </Modal>
@@ -458,24 +461,26 @@ interface ActivityFormContentProps {
 }
 
 function ActivityFormContent({ form, setForm }: ActivityFormContentProps) {
+  const { t } = useLanguage();
+
   return (
     <div className="space-y-4">
       <div className="grid gap-2">
         <label className="text-sm font-semibold text-[#1f184f]">
-          Titre
+          {t('dashboard.activities.formLabels.title')}
         </label>
         <input
           value={form.title}
           onChange={(e) =>
             setForm({ ...form, title: e.target.value })
           }
-          placeholder="Ex. Consultation Fatou Diop"
+          placeholder={t('dashboard.activities.formLabels.titleExample')}
           className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
         />
       </div>
       <div className="grid gap-2">
         <label className="text-sm font-semibold text-[#1f184f]">
-          Description
+          {t('dashboard.activities.formLabels.description')}
         </label>
         <textarea
           rows={2}
@@ -486,14 +491,14 @@ function ActivityFormContent({ form, setForm }: ActivityFormContentProps) {
               description: e.target.value,
             })
           }
-          placeholder="Détails de l'activité"
+          placeholder={t('dashboard.activities.formLabels.descriptionExample')}
           className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
         />
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
         <div className="grid gap-2">
           <label className="text-sm font-semibold text-[#1f184f]">
-            Jour de l'activité
+            {t('dashboard.activities.formLabels.activityDay')}
           </label>
           <input
             type="date"
@@ -509,7 +514,7 @@ function ActivityFormContent({ form, setForm }: ActivityFormContentProps) {
         </div>
         <div className="grid gap-2">
           <label className="text-sm font-semibold text-[#1f184f]">
-            Heure
+            {t('dashboard.activities.formLabels.time')}
           </label>
           <input
             type="time"
@@ -523,7 +528,7 @@ function ActivityFormContent({ form, setForm }: ActivityFormContentProps) {
       </div>
       <div className="grid gap-2">
         <label className="text-sm font-semibold text-[#1f184f]">
-          Type
+          {t('dashboard.activities.formLabels.type')}
         </label>
         <select
           value={form.type}
@@ -535,36 +540,36 @@ function ActivityFormContent({ form, setForm }: ActivityFormContentProps) {
           }
           className="w-full rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
         >
-          <option value="consultation">Consultation</option>
-          <option value="chirurgie">Bloc opératoire</option>
-          <option value="staff">Staff / réunion</option>
-          <option value="tournee">Tournée</option>
+          <option value="consultation">{t('dashboard.activities.activityTypes.consultation')}</option>
+          <option value="chirurgie">{t('dashboard.activities.activityTypes.operatingRoom')}</option>
+          <option value="staff">{t('dashboard.activities.activityTypes.staffMeeting')}</option>
+          <option value="tournee">{t('dashboard.activities.activityTypes.tour')}</option>
         </select>
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
         <div className="grid gap-2">
           <label className="text-sm font-semibold text-[#1f184f]">
-            Lieu
+            {t('dashboard.activities.formLabels.location')}
           </label>
           <input
             value={form.location}
             onChange={(e) =>
               setForm({ ...form, location: e.target.value })
             }
-            placeholder="Ex. Bloc 5, Secteur 3"
+            placeholder={t('dashboard.activities.formLabels.locationExample')}
             className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
           />
         </div>
         <div className="grid gap-2">
           <label className="text-sm font-semibold text-[#1f184f]">
-            Équipe
+            {t('dashboard.activities.formLabels.team')}
           </label>
           <input
             value={form.team}
             onChange={(e) =>
               setForm({ ...form, team: e.target.value })
             }
-            placeholder="Ex. Dr. Benali, IDE Claire"
+            placeholder={t('dashboard.activities.formLabels.teamExample')}
             className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
           />
         </div>

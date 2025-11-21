@@ -28,6 +28,7 @@ import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
 import type { TaskItem, TaskFormState } from "@/types/tasks";
 import { PatientCreate, type PatientCreateRef } from "@/components/document/PatientCreate";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Patient {
   id: string | number;
@@ -86,7 +87,7 @@ const getUserDisplayName = (user: any): string => {
 
 export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
   function TasksSection({
-    title = "Consignes du jour",
+    title,
     dateLabel,
     showDateLabel = false,
     onTaskToggle,
@@ -102,6 +103,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
     headerClassName,
     contentClassName,
   }: TasksSectionProps, ref) {
+    const { t } = useLanguage();
     const [tasks, setTasks] = useState<TaskItem[]>([]);
     const [patientSearch,setPatientSearch] = useState('');
     const [patientMode,setPatientMode] = useState('select');
@@ -443,12 +445,12 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
           ) : tasks?.length === 0 ? (
             <EmptyState
               icon={ClipboardList}
-              title="Aucune consigne enregistrée"
+              title={t("dashboard.tasks.noTasksRecorded")}
               description="Ajoutez vos actions quotidiennes pour garder un suivi partagé avec votre équipe."
               action={
                 <Button variant="outline" onClick={handleOpenAddTaskModal}>
                   <Plus className="mr-2 h-4 w-4" />
-                  Ajouter une consigne
+                  {t("dashboard.tasks.addTask")}
                 </Button>
               }
             />
@@ -615,7 +617,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
       <Modal
         open={isAddTaskModalOpen}
         onClose={() => setIsAddTaskModalOpen(false)}
-        title="Ajouter une consigne"
+        title={t("dashboard.tasks.addTask")}
         description="Définissez une action à partager avec votre équipe."
         size="md"
         footer={
@@ -695,7 +697,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
           <div className="grid gap-2">
             <div className="flex items-center justify-between">
               <label className="text-sm font-semibold text-[#1f184f]">
-                Tâches
+                {t("dashboard.tasks.tasks")}
               </label>
             </div>
 
@@ -738,21 +740,21 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
               type="button"
             >
               <Plus className="h-3.5 w-3.5" />
-              Ajouter une tâche
+              {t("dashboard.tasks.addTask")}
             </button>
 
             {/* Favorite Tasks List */}
             {localFavoriteTasks.length > 0 && (
               <div className="mt-4 space-y-2 pt-3 border-t border-slate-200">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs text-slate-600 font-semibold">Tâches favorites:</p>
+                  <p className="text-xs text-slate-600 font-semibold">{t("dashboard.tasks.favoriteTasks")}</p>
                   <button
                     onClick={() => setIsAddingFavoriteTask(!isAddingFavoriteTask)}
                     className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-700"
                     type="button"
                   >
                     <Plus className="h-3 w-3" />
-                    Ajouter
+                    {t("dashboard.tasks.addTaskFavorite")}
                   </button>
                 </div>
 
@@ -829,7 +831,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
       <Modal
         open={isEditTaskModalOpen}
         onClose={() => setIsEditTaskModalOpen(false)}
-        title="Modifier la consigne"
+        title={t("dashboard.tasks.editTask")}
         description="Mettez à jour les informations."
         size="md"
         footer={
@@ -927,7 +929,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
       <Modal
         open={isDeleteTaskModalOpen}
         onClose={() => setIsDeleteTaskModalOpen(false)}
-        title="Supprimer la consigne ?"
+        title={t("dashboard.tasks.deleteTask")}
         description="Cette action retirera la consigne de votre liste."
         size="sm"
         footer={

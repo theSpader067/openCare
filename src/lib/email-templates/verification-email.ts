@@ -1,16 +1,77 @@
 export interface VerificationEmailData {
   userName: string;
   verificationUrl: string;
+  language?: string;
 }
 
 export function generateVerificationEmailHTML(data: VerificationEmailData): string {
+  const lang = data.language || 'en';
+  const isEnglish = lang === 'en';
+
+  const content = {
+    en: {
+      title: 'Verify your email address - OpenCare',
+      headerTitle: '🎉 Welcome to OpenCare!',
+      headerSubtitle: 'Your medical coordination platform',
+      greeting: `Hello ${escapeHtml(data.userName)},`,
+      thanks: 'Thank you for creating your OpenCare account! We are delighted to welcome you to our community of healthcare professionals.',
+      instruction: 'To finalize your registration and access all platform features, please verify your email address by clicking the button below:',
+      buttonText: '✓ Verify my email address',
+      validFor: '⏱️ Link valid for 24 hours',
+      validForDetails: 'This verification link will expire in 24 hours for security reasons. If the link expires, you can request a new verification link.',
+      nextStepsTitle: 'What happens next?',
+      nextStepsIntro: 'Once your email is verified, you will be able to:',
+      features: [
+        'Manage your patients and their medical records',
+        'Create and track clinical observations',
+        'Coordinate with your medical team',
+        'Access AI assistance tools'
+      ],
+      notYouTitle: '⚠️ You did not create this account?',
+      notYouText: 'If you are not the source of this registration, you can safely ignore this email. No account will be created without verification.',
+      buttonProblem: 'Problem with the button?',
+      buttonProblemText: 'If the button does not work, copy and paste this link into your browser:',
+      footerTitle: 'OpenCare — Medical coordination platform',
+      footerContact: 'Questions? Contact us at',
+      footerCopyright: `© ${new Date().getFullYear()} OpenCare. All rights reserved.`
+    },
+    fr: {
+      title: 'Vérifiez votre adresse email - OpenCare',
+      headerTitle: '🎉 Bienvenue sur OpenCare !',
+      headerSubtitle: 'Votre plateforme de coordination médicale',
+      greeting: `Bonjour ${escapeHtml(data.userName)},`,
+      thanks: 'Merci d\'avoir créé votre compte OpenCare ! Nous sommes ravis de vous accueillir parmi notre communauté de professionnels de santé.',
+      instruction: 'Pour finaliser votre inscription et accéder à toutes les fonctionnalités de la plateforme, veuillez vérifier votre adresse email en cliquant sur le bouton ci-dessous :',
+      buttonText: '✓ Vérifier mon adresse email',
+      validFor: '⏱️ Lien valable pendant 24 heures',
+      validForDetails: 'Ce lien de vérification expirera dans 24 heures pour des raisons de sécurité. Si le lien expire, vous pourrez demander un nouveau lien de vérification.',
+      nextStepsTitle: 'Que se passe-t-il ensuite ?',
+      nextStepsIntro: 'Une fois votre email vérifié, vous pourrez :',
+      features: [
+        'Gérer vos patients et leurs dossiers médicaux',
+        'Créer et suivre des observations cliniques',
+        'Coordonner avec votre équipe médicale',
+        'Accéder aux outils d\'assistance IA'
+      ],
+      notYouTitle: '⚠️ Vous n\'avez pas créé ce compte ?',
+      notYouText: 'Si vous n\'êtes pas à l\'origine de cette inscription, vous pouvez ignorer cet email en toute sécurité. Aucun compte ne sera créé sans vérification.',
+      buttonProblem: 'Problème avec le bouton ?',
+      buttonProblemText: 'Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :',
+      footerTitle: 'OpenCare — Plateforme de coordination médicale',
+      footerContact: 'Questions ? Contactez-nous à',
+      footerCopyright: `© ${new Date().getFullYear()} OpenCare. Tous droits réservés.`
+    }
+  };
+
+  const t = content[lang as 'en' | 'fr'];
+
   return `
     <!DOCTYPE html>
-    <html lang="fr">
+    <html lang="${lang}">
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Vérifiez votre adresse email - OpenCare</title>
+      <title>${t.title}</title>
       <style>
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
@@ -130,72 +191,68 @@ export function generateVerificationEmailHTML(data: VerificationEmailData): stri
     <body>
       <div class="container">
         <div class="header">
-          <h1>🎉 Bienvenue sur OpenCare !</h1>
-          <p>Votre plateforme de coordination médicale</p>
+          <h1>${t.headerTitle}</h1>
+          <p>${t.headerSubtitle}</p>
         </div>
 
         <div class="content">
-          <p class="greeting">Bonjour ${escapeHtml(data.userName)},</p>
+          <p class="greeting">${t.greeting}</p>
 
           <p class="message">
-            Merci d'avoir créé votre compte OpenCare ! Nous sommes ravis de vous accueillir parmi notre communauté de professionnels de santé.
+            ${t.thanks}
           </p>
 
           <p class="message">
-            Pour finaliser votre inscription et accéder à toutes les fonctionnalités de la plateforme, veuillez vérifier votre adresse email en cliquant sur le bouton ci-dessous :
+            ${t.instruction}
           </p>
 
           <div class="button-container">
             <a href="${data.verificationUrl}" class="button">
-              ✓ Vérifier mon adresse email
+              ${t.buttonText}
             </a>
           </div>
 
           <div class="info-box">
-            <p><strong>⏱️ Lien valable pendant 24 heures</strong></p>
+            <p><strong>${t.validFor}</strong></p>
             <p style="margin-top: 8px;">
-              Ce lien de vérification expirera dans 24 heures pour des raisons de sécurité.
-              Si le lien expire, vous pourrez demander un nouveau lien de vérification.
+              ${t.validForDetails}
             </p>
           </div>
 
           <div class="divider"></div>
 
           <p class="message" style="font-size: 14px;">
-            <strong>Que se passe-t-il ensuite ?</strong><br>
-            Une fois votre email vérifié, vous pourrez :
+            <strong>${t.nextStepsTitle}</strong><br>
+            ${t.nextStepsIntro}
           </p>
           <ul style="color: #4b5563; font-size: 14px; line-height: 1.8;">
-            <li>Gérer vos patients et leurs dossiers médicaux</li>
-            <li>Créer et suivre des observations cliniques</li>
-            <li>Coordonner avec votre équipe médicale</li>
-            <li>Accéder aux outils d'assistance IA</li>
+            ${t.features.map(feature => `<li>${feature}</li>`).join('\n            ')}
           </ul>
 
           <div class="warning">
-            <p><strong>⚠️ Vous n'avez pas créé ce compte ?</strong><br>
-            Si vous n'êtes pas à l'origine de cette inscription, vous pouvez ignorer cet email en toute sécurité. Aucun compte ne sera créé sans vérification.
+            <p><strong>${t.notYouTitle}</strong><br>
+            ${t.notYouText}
             </p>
           </div>
 
           <div class="divider"></div>
 
           <p class="message" style="font-size: 13px; color: #6b7280;">
-            <strong>Problème avec le bouton ?</strong><br>
-            Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :<br>
+            <strong>${t.buttonProblem}</strong><br>
+            ${t.buttonProblemText}<br>
             <a href="${data.verificationUrl}" style="color: #667eea; word-break: break-all;">${data.verificationUrl}</a>
           </p>
         </div>
 
         <div class="footer">
           <p class="footer-text" style="font-weight: 600; color: #1f2937; font-size: 14px;">
-            OpenCare — Plateforme de coordination médicale
+            ${t.footerTitle}
           </p>
           <p class="footer-text">
-            Questions ? Contactez-nous à <a href="mailto:support@opencare.fr" class="footer-link">support@opencare.fr</a>
+            ${t.footerContact} <a href="mailto:support@opencare.fr" class="footer-link">support@opencare.fr</a>
           </p>
           <p class="footer-text" style="margin-top: 15px; opacity: 0.8;">
-            © ${new Date().getFullYear()} OpenCare. Tous droits réservés.
+            ${t.footerCopyright}
           </p>
         </div>
       </div>
@@ -216,33 +273,79 @@ function escapeHtml(text: string): string {
 }
 
 export function generateVerificationEmailText(data: VerificationEmailData): string {
+  const lang = data.language || 'en';
+
+  const content = {
+    en: {
+      welcome: 'Welcome to OpenCare!',
+      greeting: `Hello ${data.userName},`,
+      thanks: 'Thank you for creating your OpenCare account! We are delighted to welcome you to our community of healthcare professionals.',
+      instruction: 'To finalize your registration and access all platform features, please verify your email address by clicking this link:',
+      important: '⏱️ IMPORTANT: This link is valid for 24 hours.',
+      nextStepsTitle: 'What happens next?',
+      nextStepsIntro: 'Once your email is verified, you will be able to:',
+      features: [
+        '• Manage your patients and their medical records',
+        '• Create and track clinical observations',
+        '• Coordinate with your medical team',
+        '• Access AI assistance tools'
+      ],
+      notYouTitle: '⚠️ You did not create this account?',
+      notYouText: 'If you are not the source of this registration, you can safely ignore this email. No account will be created without verification.',
+      separator: '---',
+      footerTitle: 'OpenCare — Medical coordination platform',
+      footerContact: 'Questions? Contact us at support@opencare.fr',
+      footerCopyright: `© ${new Date().getFullYear()} OpenCare. All rights reserved.`
+    },
+    fr: {
+      welcome: 'Bienvenue sur OpenCare !',
+      greeting: `Bonjour ${data.userName},`,
+      thanks: 'Merci d\'avoir créé votre compte OpenCare ! Nous sommes ravis de vous accueillir parmi notre communauté de professionnels de santé.',
+      instruction: 'Pour finaliser votre inscription et accéder à toutes les fonctionnalités de la plateforme, veuillez vérifier votre adresse email en cliquant sur ce lien :',
+      important: '⏱️ IMPORTANT : Ce lien est valable pendant 24 heures.',
+      nextStepsTitle: 'Que se passe-t-il ensuite ?',
+      nextStepsIntro: 'Une fois votre email vérifié, vous pourrez :',
+      features: [
+        '• Gérer vos patients et leurs dossiers médicaux',
+        '• Créer et suivre des observations cliniques',
+        '• Coordonner avec votre équipe médicale',
+        '• Accéder aux outils d\'assistance IA'
+      ],
+      notYouTitle: '⚠️ Vous n\'avez pas créé ce compte ?',
+      notYouText: 'Si vous n\'êtes pas à l\'origine de cette inscription, vous pouvez ignorer cet email en toute sécurité. Aucun compte ne sera créé sans vérification.',
+      separator: '---',
+      footerTitle: 'OpenCare — Plateforme de coordination médicale',
+      footerContact: 'Questions ? Contactez-nous à support@opencare.fr',
+      footerCopyright: `© ${new Date().getFullYear()} OpenCare. Tous droits réservés.`
+    }
+  };
+
+  const t = content[lang as 'en' | 'fr'];
+
   return `
-Bienvenue sur OpenCare !
+${t.welcome}
 
-Bonjour ${data.userName},
+${t.greeting}
 
-Merci d'avoir créé votre compte OpenCare ! Nous sommes ravis de vous accueillir parmi notre communauté de professionnels de santé.
+${t.thanks}
 
-Pour finaliser votre inscription et accéder à toutes les fonctionnalités de la plateforme, veuillez vérifier votre adresse email en cliquant sur ce lien :
+${t.instruction}
 
 ${data.verificationUrl}
 
-⏱️ IMPORTANT : Ce lien est valable pendant 24 heures.
+${t.important}
 
-Que se passe-t-il ensuite ?
-Une fois votre email vérifié, vous pourrez :
-• Gérer vos patients et leurs dossiers médicaux
-• Créer et suivre des observations cliniques
-• Coordonner avec votre équipe médicale
-• Accéder aux outils d'assistance IA
+${t.nextStepsTitle}
+${t.nextStepsIntro}
+${t.features.join('\n')}
 
-⚠️ Vous n'avez pas créé ce compte ?
-Si vous n'êtes pas à l'origine de cette inscription, vous pouvez ignorer cet email en toute sécurité. Aucun compte ne sera créé sans vérification.
+${t.notYouTitle}
+${t.notYouText}
 
----
-OpenCare — Plateforme de coordination médicale
-Questions ? Contactez-nous à support@opencare.fr
+${t.separator}
+${t.footerTitle}
+${t.footerContact}
 
-© ${new Date().getFullYear()} OpenCare. Tous droits réservés.
+${t.footerCopyright}
   `.trim();
 }

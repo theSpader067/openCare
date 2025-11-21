@@ -12,23 +12,32 @@ export const transporter = nodemailer.createTransport({
   },
 })
 
-export async function sendVerificationEmail(email: string, token: string, userName: string) {
+export async function sendVerificationEmail(email: string, token: string, userName: string, language: string = 'en') {
   const verifyUrl = `${process.env.NEXTAUTH_URL}/api/auth/verify-email?token=${token}`
 
   const htmlContent = generateVerificationEmailHTML({
     userName,
     verificationUrl: verifyUrl,
+    language,
   })
 
   const textContent = generateVerificationEmailText({
     userName,
     verificationUrl: verifyUrl,
+    language,
   })
+
+  const subjects = {
+    en: "✉️ Verify your email address - OpenCare",
+    fr: "✉️ Vérifiez votre adresse email - OpenCare"
+  }
+
+  const subject = subjects[language as 'en' | 'fr'] || subjects.en
 
   await transporter.sendMail({
     from: `"OpenCare" <${process.env.EMAIL_FROM || process.env.EMAIL_SERVER_USER}>`,
     to: email,
-    subject: "✉️ Vérifiez votre adresse email - OpenCare",
+    subject,
     html: htmlContent,
     text: textContent,
   })

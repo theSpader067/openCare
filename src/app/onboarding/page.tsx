@@ -6,8 +6,10 @@ import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 import { specialties, statuses } from "@/data/onboarding/onboarding-content";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function OnboardingPage() {
+  const { t } = useLanguage();
   const router = useRouter();
   const { data: session, status, update: updateSession } = useSession();
 
@@ -24,7 +26,7 @@ export default function OnboardingPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold">Loading...</h1>
+          <h1 className="text-2xl font-bold">{t('common.loading')}</h1>
         </div>
       </div>
     );
@@ -84,9 +86,9 @@ export default function OnboardingPage() {
             </span>
             <h1 className="text-3xl font-bold">OpenCare</h1>
           </div>
-          <h2 className="text-3xl font-semibold">Complétez votre profil</h2>
+          <h2 className="text-3xl font-semibold">{t('auth.onboarding.title')}</h2>
           <p className="mt-3 text-sm text-white/70">
-            Quelques informations pour personnaliser votre expérience et vous proposer le meilleur contenu.
+            {t('auth.onboarding.subtitle')}
           </p>
         </div>
 
@@ -95,7 +97,7 @@ export default function OnboardingPage() {
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div className="space-y-2">
                 <label htmlFor="specialty" className="text-sm font-semibold text-slate-700">
-                  Spécialité
+                  {t('auth.onboarding.specialtyLabel')}
                 </label>
                 <select
                   id="specialty"
@@ -104,10 +106,10 @@ export default function OnboardingPage() {
                   onChange={handleChange("specialty")}
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 >
-                  <option value="">Sélectionnez votre spécialité</option>
+                  <option value="">{t('auth.onboarding.specialtyPlaceholder')}</option>
                   {specialties.map((specialty) => (
                     <option key={specialty} value={specialty}>
-                      {specialty}
+                      {t(`auth.onboarding.specialties.${specialty}`)}
                     </option>
                   ))}
                 </select>
@@ -115,13 +117,13 @@ export default function OnboardingPage() {
 
               <div className="space-y-2">
                 <label htmlFor="hospital" className="text-sm font-semibold text-slate-700">
-                  Établissement
+                  {t('auth.onboarding.hospitalLabel')}
                 </label>
                 <input
                   id="hospital"
                   type="text"
                   required
-                  placeholder="Entrez votre établissement (ex: CHU de Lyon)"
+                  placeholder={t('auth.onboarding.hospitalPlaceholder')}
                   value={formState.hospital}
                   onChange={handleChange("hospital")}
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
@@ -130,7 +132,7 @@ export default function OnboardingPage() {
 
               <div className="space-y-2">
                 <label htmlFor="year" className="text-sm font-semibold text-slate-700">
-                  Statut
+                  {t('auth.onboarding.statusLabel')}
                 </label>
                 <select
                   id="year"
@@ -139,10 +141,10 @@ export default function OnboardingPage() {
                   onChange={handleChange("year")}
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 >
-                  <option value="">Sélectionnez votre statut</option>
+                  <option value="">{t('auth.onboarding.statusPlaceholder')}</option>
                   {statuses.map((status) => (
                     <option key={status} value={status}>
-                      {status}
+                      {t(`auth.onboarding.statuses.${status}`)}
                     </option>
                   ))}
                 </select>
@@ -156,13 +158,13 @@ export default function OnboardingPage() {
                 className="w-full"
                 disabled={isLoading}
               >
-                {isLoading ? "Sauvegarde en cours…" : "Continuer vers le tableau de bord"}
+                {isLoading ? t('auth.onboarding.saving') : t('auth.onboarding.continueButton')}
                 {!isLoading && <ChevronRight className="ml-2 h-4 w-4" />}
               </Button>
             </form>
 
             <p className="mt-6 text-center text-xs text-slate-500">
-              Vous pourrez modifier ces informations à tout moment dans vos paramètres.
+              {t('auth.onboarding.editLater')}
             </p>
           </div>
         </div>

@@ -3,8 +3,10 @@
 import { Mail, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function VerifyEmailPendingPage() {
+  const { t } = useLanguage();
   const [email, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
@@ -33,67 +35,65 @@ export default function VerifyEmailPendingPage() {
               </div>
 
               <h1 className="text-2xl font-bold text-slate-900">
-                Vérifiez votre adresse e-mail
+                {t('auth.verifyEmailPending.title')}
               </h1>
 
               <p className="mt-3 text-sm text-slate-600">
                 {email ? (
                   <>
-                    Nous avons envoyé un lien de vérification à{" "}
+                    {t('auth.verifyEmailPending.sentTo')}{" "}
                     <span className="font-semibold text-slate-900">{email}</span>
                   </>
                 ) : (
-                  "Nous avons envoyé un lien de vérification à votre adresse e-mail."
+                  t('auth.verifyEmailPending.sentGeneric')
                 )}
               </p>
 
               <div className="mt-8 space-y-4 rounded-xl bg-blue-50 p-4 text-left">
                 <p className="text-sm font-semibold text-blue-900">
-                  Prochaines étapes :
+                  {t('auth.verifyEmailPending.nextSteps')}
                 </p>
                 <ol className="space-y-2 text-sm text-blue-800">
                   <li className="flex items-start gap-3">
                     <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-200 text-xs font-bold">
                       1
                     </span>
-                    <span>Ouvrez votre e-mail et cliquez sur le lien fourni</span>
+                    <span>{t('auth.verifyEmailPending.step1')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-200 text-xs font-bold">
                       2
                     </span>
-                    <span>
-                      Si vous ne trouvez pas le message, vérifiez vos spams
-                    </span>
+                    <span>{t('auth.verifyEmailPending.step2')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-200 text-xs font-bold">
                       3
                     </span>
-                    <span>Vous serez redirigé vers la connexion pour continuer</span>
+                    <span>{t('auth.verifyEmailPending.step3')}</span>
                   </li>
                 </ol>
               </div>
 
               <p className="mt-8 text-sm text-slate-600">
-                Vous avez déjà vérifié votre e-mail ?{" "}
+                {t('auth.verifyEmailPending.alreadyVerified')}{" "}
                 <Link
                   href="/login"
                   className="font-semibold text-indigo-600 hover:underline inline-flex items-center gap-1"
                 >
-                  Se connecter
+                  {t('auth.verifyEmailPending.login')}
                   <ArrowRight className="h-3 w-3" />
                 </Link>
               </p>
 
               <div className="mt-6 pt-6 border-t border-slate-200">
                 <p className="text-xs text-slate-500">
-                  Besoin d'aide ? Contactez notre support à{" "}
+                  {t('auth.verifyEmailPending.needHelp')}{" "}
                   <a
-                    href="mailto:support@opencare.fr"
+                    href={`mailto:${t('auth.verifyEmailPending.supportEmail')}`}
                     className="font-semibold text-indigo-600 hover:underline"
                   >
-                    support@opencare.fr
+                    {t('auth.verifyEmailPending.supportEmail')}
                   </a>
                 </p>
               </div>

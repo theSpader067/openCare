@@ -1,0 +1,518 @@
+{
+  "nav": {
+    "modules": "Modules",
+    "commitments": "Engagements",
+    "faq": "FAQ",
+    "contact": "Contact",
+    "login": "Se connecter",
+    "signup": "Créer un compte",
+    "subtitle": "Orchestrateur clinique"
+  },
+  "hero": {
+    "badge": "Plateforme dédiée aux équipes de soins",
+    "title": "Reliez vos patients, vos actes et vos décisions dans une seule boucle opérationnelle.",
+    "subtitle": "Intelligente & Intuitive",
+    "description": "OpenCare orchestre les soins en temps réel : coordination IA, dossiers augmentés et analytics immédiats. Conçu comme un cockpit clinique pour synchroniser terrain, cellule planification et pilotage patient.",
+    "cta": "Démarrer maintenant",
+    "watchDemo": "Voir la démo guidée",
+    "pillars": {
+      "coordination": {
+        "title": "Coordination IA",
+        "description": "Bloc, lit, imagerie et logistique alignés"
+      },
+      "experience": {
+        "title": "Expérience patient",
+        "description": "Portails intuitifs, messages rassurants"
+      },
+      "realtime": {
+        "title": "Pilotage temps réel",
+        "description": "KPIs live, alertes et trajectoires"
+      }
+    },
+    "bursts": {
+      "flow": {
+        "title": "Flux patient",
+        "detail": "12 parcours synchronisés"
+      },
+      "cell": {
+        "title": "Cellule bloc",
+        "detail": "3 salles libérées"
+      },
+      "alerts": {
+        "title": "Alertes IA",
+        "detail": "5 actions prioritaires"
+      }
+    },
+    "timeline": {
+      "capture": {
+        "label": "Captation terrain",
+        "value": "Flux IoT & DPI"
+      },
+      "translation": {
+        "label": "Traduction IA",
+        "value": "Synthèse contexte"
+      },
+      "activation": {
+        "label": "Activation équipe",
+        "value": "Checklists + SMS"
+      }
+    },
+    "highlights": {
+      "deployment": {
+        "label": "Déploiement moyen",
+        "value": "4 jours"
+      },
+      "compliance": {
+        "label": "Conformité & sécurité",
+        "value": "100%"
+      },
+      "timeSaved": {
+        "label": "Gain de temps constaté",
+        "value": "+32%"
+      }
+    },
+    "rightCard": {
+      "badge": "Par médecins, pour médecins",
+      "title": "Reprenez du contrôle sur vos workflows critiques.",
+      "description": "Une interface conçue par des praticiens pour éliminer les blocages, centraliser l'information et simplifier vos décisions quotidiennes.",
+      "benefits": {
+        "efficient": {
+          "title": "Efficace",
+          "description": "Réduit les temps de recherche information et les appels téléphoniques"
+        },
+        "organized": {
+          "title": "Organisé",
+          "description": "Toutes vos tâches, documents et patients au même endroit"
+        },
+        "realtime": {
+          "title": "Pilotage en temps réel",
+          "description": "KPIs live, alertes et trajectoires"
+        }
+      },
+      "quickSetup": {
+        "label": "Mise en place rapide",
+        "value": "4 jours",
+        "description": "Prêt à être utilisé immédiatement"
+      }
+    },
+    "videoModal": {
+      "close": "Fermer la vidéo",
+      "unsupported": "Votre navigateur ne supporte pas la lecture vidéo."
+    }
+  },
+  "features": {
+    "planning": {
+      "title": "Tâches & Activités",
+      "description": "Créez et gérez vos tâches quotidiennes et consignes du service directement après vos visites. Coordonnez avec vos collègues en temps réel et assurez-vous qu'aucune action clinique n'est oubliée.",
+      "badge": "Gestion collaborative",
+      "highlights": {
+        "create": "Créer et assigner des tâches à votre équipe",
+        "instructions": "Consignes du service pré/post-visite",
+        "coordination": "Coordination en temps réel avec vos collègues"
+      },
+      "insights": {
+        "completed": "Tâches complétées",
+        "timeSaved": "Temps sauvegardé"
+      }
+    },
+    "patients": {
+      "title": "Patients",
+      "description": "Construisez et consultez votre base de données patients avec des aperçus rapides et détaillés. Revisitez les dossiers, modifiez les informations et ajoutez vos observations cliniques en quelques clics.",
+      "badge": "Gestion patient intégrée",
+      "highlights": {
+        "overview": "Aperçus rapides et synthétiques des patients",
+        "detailed": "Vue détaillée complète du dossier",
+        "observations": "Enregistrement des observations cliniques",
+        "editing": "Édition facile des informations patient"
+      },
+      "insights": {
+        "consultation": "Temps de consultation",
+        "complete": "Observation complètes"
+      }
+    },
+    "editor": {
+      "title": "Éditeur Intelligent",
+      "description": "Laissez notre éditeur intelligent vous suggérer ce que vous devez écrire. Il analyse les données patient, les valeurs de laboratoire et les métadonnées pour auto-remplir ordonnances et observations cliniques.",
+      "badge": "IA pour la documentation",
+      "highlights": {
+        "suggestions": "Auto-suggestions basées sur les données patient",
+        "prescriptions": "Remplissage intelligent des ordonnances",
+        "synthesis": "Synthèse automatique des observations",
+        "metadata": "Métadonnées et valeurs de lab analysées"
+      },
+      "insights": {
+        "writing": "Temps d'écriture réduit",
+        "errors": "Erreurs de saisie"
+      }
+    },
+    "analytics": {
+      "title": "Analyses",
+      "description": "Consultez, créez et partagez les analyses biologiques, d'imagerie et d'anatomopathologie de votre équipe. Recherchez par type de bilan, nom du patient ou période, et capturez les résultats de lab directement en photo pour un remplissage automatique.",
+      "badge": "Analyses intégrées",
+      "highlights": {
+        "management": "Gestion des analyses biologiques, imagerie et anapath",
+        "search": "Recherche par type de bilan, patient ou période",
+        "capture": "Capture photo des résultats de lab",
+        "autofill": "Remplissage automatique des valeurs",
+        "sharing": "Partage en équipe et historique complet"
+      },
+      "insights": {
+        "input": "Temps de saisie",
+        "consulted": "Analyses consultées"
+      }
+    },
+    "documents": {
+      "title": "Documents & Modèles",
+      "description": "Arrêtez de rédiger vos documents à partir de zéro. Accédez à une suite complète de modèles pré-remplis pour ordonnances et comptes rendues. Adaptez, finalisez et signez en quelques secondes sans perdre de temps.",
+      "badge": "Gestion documentaire optimisée",
+      "highlights": {
+        "templates": "Modèles pré-remplis pour ordonnances",
+        "reports": "Comptes rendues avec structure et contenu suggérés",
+        "customization": "Personnalisation rapide selon vos besoins",
+        "signature": "Signature numérique intégrée",
+        "archiving": "Archivage automatique et traçabilité"
+      },
+      "insights": {
+        "generated": "Documents générés",
+        "time": "Temps par document"
+      }
+    }
+  },
+  "about": {
+    "badge": "À propos",
+    "title": "Une suite complète conçue par des médecins pour les médecins et résidents.",
+    "description": "OpenCare est un studio intégré pour gérer vos tâches, vos patients, vos analyses et vos documents. Explorez chaque module et découvrez comment simplifier votre quotidien clinique.",
+    "clickToExplore": "Cliquez pour explorer"
+  },
+  "stats": {
+    "badge": "Indicateurs clés",
+    "title": "Des résultats mesurés par les équipes de soins.",
+    "timeSaved": {
+      "label": "Gain moyen de temps",
+      "value": "32%"
+    },
+    "specialties": {
+      "label": "Spécialités supportées",
+      "value": "+50"
+    },
+    "support": {
+      "label": "Support",
+      "value": "24/7"
+    },
+    "setup": {
+      "label": "Mise en place",
+      "value": "4 jours"
+    }
+  },
+  "faq": {
+    "badge": "FAQ",
+    "title": "Questions fréquentes des équipes de soins.",
+    "subtitle": "Besoin de précisions ? Notre équipe projet vous accompagne pour un déploiement serein.",
+    "questions": {
+      "security": {
+        "question": "Mes données patients sont-elles sécurisées ?",
+        "answer": "Oui. OpenCare utilise le chiffrement end-to-end et une infrastructure sécurisée conforme aux standards hospitaliers. Vos données restent sous votre contrôle."
+      },
+      "customization": {
+        "question": "Les praticiens peuvent-ils personnaliser leurs tableaux de bord ?",
+        "answer": "Chaque praticien bénéficie d'un espace personnalisable : filtres patients, tuiles statistiques, préférences de notifications et exports adaptés à sa spécialité."
+      },
+      "mobile": {
+        "question": "Proposez-vous une application mobile ?",
+        "answer": "Une Web App Prgressive est disponible pour consulter vos listes de patients, accéder aux protocoles et répondre rapidement aux notifications critiques. Une application mobile est en cours de développment"
+      },
+      "users": {
+        "question": "Quelles équipes peuvent utiliser OpenCare ?",
+        "answer": "Internes, Résidents, Spécialistes, anesthésistes, IADE, cadres de bloc, coordonnateurs de parcours et services d'imagerie/laboratoire : la plateforme facilite la collaboration inter-disciplinaire."
+      },
+      "assistance": {
+        "question": "Comment fonctionne l'assistance ?",
+        "answer": "Support 24/7, référent projet dédié et bibliothèque de tutoriels interactifs. Vous pouvez contacter nos experts via chat sécurisé ou hotline dédiée."
+      },
+      "integration": {
+        "question": "Comment OpenCare s'intègre-t-il avec les outils existants du service ?",
+        "answer": "OpenCare fonctionne en complément de vos logiciels hospitaliers. Vous pouvez importer vos patients via fichiers Excel, synchroniser les données de laboratoire via photo/scan, et exporter tous vos documents en PDF pour intégration dans le dossier médical du service. Aucun changement radical de workflow n'est nécessaire : l'outil s'adapte à votre organisation."
+      }
+    }
+  },
+  "contact": {
+    "badge": "Contact",
+    "title": "Planifions une démonstration personnalisée pour votre service.",
+    "subtitle": "Laissez-nous quelques informations : un expert OpenCare vous recontactera en 24h pour cadrer vos enjeux et définir un plan de déploiement.",
+    "benefits": {
+      "security": "Infrastructure sécurisée et authentification forte inclus.",
+      "roadmap": "Roadmap IA partagée avec votre équipe pour améliorer les parcours.",
+      "support": "Support dédié praticiens et cellules d'organisation hospitalière."
+    },
+    "form": {
+      "fullName": "Nom & Prénom",
+      "fullNamePlaceholder": "Dr. Elise Fontaine",
+      "email": "E-mail professionnel",
+      "emailPlaceholder": "prenom.nom@hopital.fr",
+      "specialty": "Service / spécialité",
+      "specialtyPlaceholder": "Bloc, chirurgie, coordination...",
+      "message": "Message",
+      "messagePlaceholder": "Parlez-nous de vos enjeux ou besoins spécifiques.",
+      "submit": "Envoyer ma demande",
+      "submitting": "Envoi en cours...",
+      "success": "Votre demande a été envoyée avec succès. Nous vous recontacterons sous 24h.",
+      "privacy": "Nous vous recontactons sous 24h ouvrées. Données sécurisées et utilisées uniquement pour le suivi de votre demande."
+    }
+  },
+  "footer": {
+    "subtitle": "Orchestrateur clinique",
+    "description": "Nous aidons les praticiens et équipes hospitalières à offrir une expérience patient cohérente, fluide et mesurable.",
+    "copyright": "OpenCare",
+    "legal": "Mentions légales",
+    "privacy": "Politique de confidentialité",
+    "sections": {
+      "platform": {
+        "title": "Plateforme",
+        "features": "Fonctionnalités",
+        "indicators": "Indicateurs",
+        "demo": "Démo personnalisée"
+      },
+      "resources": {
+        "title": "Ressources",
+        "faq": "FAQ",
+        "help": "Centre d'aide",
+        "partners": "Programme partenaires"
+      },
+      "newsletter": {
+        "title": "Rester informé",
+        "description": "Abonnez-vous à notre bulletin trimestriel pour découvrir nos innovations.",
+        "placeholder": "votre.email@hopital.fr",
+        "subscribe": "S'abonner"
+      }
+    }
+  },
+  "common": {
+    "close": "Fermer",
+    "viewMore": "Voir plus",
+    "learnMore": "En savoir plus",
+    "loading": "Chargement...",
+    "or": "ou"
+  },
+  "auth": {
+    "brandSubtitle": "Plateforme des praticiens",
+    "login": {
+      "title": "Bienvenue de retour 👋",
+      "subtitle": "Connectez-vous pour retrouver votre agenda, vos dossiers patients et l'activité du bloc opératoire consolidée.",
+      "emailLabel": "Identifiant médical ou e-mail",
+      "emailPlaceholder": "prenom.nom@chu.fr",
+      "passwordLabel": "Mot de passe",
+      "passwordPlaceholder": "••••••••",
+      "rememberMe": "Se souvenir de moi",
+      "forgotPassword": "Mot de passe oublié ?",
+      "loginButton": "Se connecter",
+      "loggingIn": "Connexion en cours...",
+      "googleLogin": "Continuer avec Google",
+      "noAccount": "Pas encore inscrit ?",
+      "createAccount": "Créer un compte",
+      "needAccount": "Besoin d'un compte ?",
+      "requestAccess": "Demandez un accès sécurisé",
+      "support": "Support disponible 24/7 pour les praticiens et équipes de bloc.",
+      "benefits": {
+        "security": "Accès sécurisé conforme aux standards hospitaliers.",
+        "notifications": "Notifications instantanées sur vos suivis critiques."
+      },
+      "errors": {
+        "verified": "Email vérifié avec succès! Connectez-vous pour continuer.",
+        "unverified": "Veuillez vérifier votre e-mail avant de vous connecter.",
+        "invalidToken": "Lien de vérification invalide. Veuillez en demander un nouveau.",
+        "expired": "Le lien de vérification a expiré. Veuillez en demander un nouveau.",
+        "unexpected": "Une erreur inattendue s'est produite. Veuillez réessayer."
+      }
+    },
+    "signup": {
+      "title": "Rejoignez la communauté des praticiens connectés",
+      "subtitle": "Créez votre accès sécurisé pour centraliser votre activité clinique.",
+      "welcomeTitle": "Bienvenue sur OpenCare",
+      "welcomeDescription": "Une plateforme moderne et sécurisée pour simplifier la coordination des soins et améliorer la collaboration médicale.",
+      "alreadyRegistered": "Déjà inscrit ?",
+      "loginToAccount": "Se connecter à mon compte",
+      "fullNameLabel": "Nom et prénom",
+      "fullNamePlaceholder": "Dr. Marie Dupuis",
+      "emailLabel": "Adresse e-mail professionnelle",
+      "emailPlaceholder": "prenom.nom@hopital.fr",
+      "passwordLabel": "Mot de passe",
+      "passwordPlaceholder": "Créez un mot de passe robuste",
+      "createButton": "Créer mon compte",
+      "creating": "Création du compte...",
+      "googleSignup": "S'inscrire avec Google",
+      "haveAccount": "Vous possédez déjà un compte ?",
+      "login": "Se connecter"
+    },
+    "verifyEmail": {
+      "title": "Vérifiez votre email",
+      "sentTo": "Nous avons envoyé un lien de vérification à :",
+      "instruction": "Cliquez sur le lien dans l'email pour confirmer votre adresse et accéder à votre onboarding.",
+      "tipTitle": "💡 Conseil :",
+      "tipMessage": "Vérifiez votre dossier de spam si vous ne voyez pas l'email dans quelques minutes.",
+      "autoRedirect": "Vous serez automatiquement redirigé vers l'onboarding après vérification."
+    },
+    "verifyEmailPending": {
+      "title": "Vérifiez votre adresse e-mail",
+      "sentTo": "Nous avons envoyé un lien de vérification à",
+      "sentGeneric": "Nous avons envoyé un lien de vérification à votre adresse e-mail.",
+      "nextSteps": "Prochaines étapes :",
+      "step1": "Ouvrez votre e-mail et cliquez sur le lien fourni",
+      "step2": "Si vous ne trouvez pas le message, vérifiez vos spams",
+      "step3": "Vous serez redirigé vers la connexion pour continuer",
+      "alreadyVerified": "Vous avez déjà vérifié votre e-mail ?",
+      "login": "Se connecter",
+      "needHelp": "Besoin d'aide ? Contactez notre support à",
+      "supportEmail": "support@opencare.fr"
+    },
+    "onboarding": {
+      "title": "Complétez votre profil",
+      "subtitle": "Quelques informations pour personnaliser votre expérience et vous proposer le meilleur contenu.",
+      "specialtyLabel": "Spécialité",
+      "specialtyPlaceholder": "Sélectionnez votre spécialité",
+      "hospitalLabel": "Établissement",
+      "hospitalPlaceholder": "Entrez votre établissement (ex: CHU de Lyon)",
+      "statusLabel": "Statut",
+      "statusPlaceholder": "Sélectionnez votre statut",
+      "continueButton": "Continuer vers le tableau de bord",
+      "saving": "Sauvegarde en cours…",
+      "editLater": "Vous pourrez modifier ces informations à tout moment dans vos paramètres.",
+      "specialties": {
+        "Anesthésie-Réanimation": "Anesthésie-Réanimation",
+        "Cardiologie": "Cardiologie",
+        "Cardiochirurgie": "Cardiochirurgie",
+        "Chirurgie générale": "Chirurgie générale",
+        "Chirurgie thoracique": "Chirurgie thoracique",
+        "Chirurgie vasculaire": "Chirurgie vasculaire",
+        "Chirurgie viscérale": "Chirurgie viscérale",
+        "Dermatologie": "Dermatologie",
+        "Dentisterie": "Dentisterie",
+        "Endocrinologie": "Endocrinologie",
+        "Gastro-entérologie": "Gastro-entérologie",
+        "Gériatrie": "Gériatrie",
+        "Gynécologie-Obstétrique": "Gynécologie-Obstétrique",
+        "Hématologie": "Hématologie",
+        "Immunologie": "Immunologie",
+        "Infectiologie": "Infectiologie",
+        "Médecin généraliste": "Médecin généraliste",
+        "Médecine d'urgence": "Médecine d'urgence",
+        "Médecine interne": "Médecine interne",
+        "Médecine physique et réadaptation": "Médecine physique et réadaptation",
+        "Neurochirurgie": "Neurochirurgie",
+        "Neurologie": "Neurologie",
+        "Oncologie": "Oncologie",
+        "Ophtalmologie": "Ophtalmologie",
+        "ORL": "ORL",
+        "Orthopédie": "Orthopédie",
+        "Pathologie": "Pathologie",
+        "Pédiatrie": "Pédiatrie",
+        "Pharmacie": "Pharmacie",
+        "Pneumologie": "Pneumologie",
+        "Psychiatrie": "Psychiatrie",
+        "Radiologie": "Radiologie",
+        "Réanimation": "Réanimation",
+        "Rhumatologie": "Rhumatologie",
+        "Sage-femme": "Sage-femme",
+        "Stomatologie": "Stomatologie",
+        "Urologie": "Urologie",
+        "Autre": "Autre"
+      },
+      "statuses": {
+        "Étudiant": "Étudiant",
+        "Interne": "Interne",
+        "Infirmier": "Infirmier",
+        "1ère année": "1ère année",
+        "2ème année": "2ème année",
+        "3ème année": "3ème année",
+        "4ème année": "4ème année",
+        "5ème année": "5ème année",
+        "Spécialiste": "Spécialiste"
+      }
+    }
+  },
+  "dashboard": {
+    "navigation": {
+      "dashboard": "Tableau de bord",
+      "patients": "Patients",
+      "documents": "Mes documents",
+      "analyses": "Analyses",
+      "avis": "Avis",
+      "comptes_rendus": "Comptes rendus",
+      "ordonnances": "Ordonnances",
+      "profile": "Profil",
+      "saas_clinical": "SaaS clinique"
+    },
+    "header": {
+      "greeting": "Bonjour {{name}}",
+      "create": "Créer",
+      "prescription": "Ordonnance",
+      "analyses": "Analyses",
+      "report": "Compte rendu",
+      "opinion": "Avis",
+      "notifications": "Notifications",
+      "realTime": "Temps réel",
+      "noNotifications": "Aucune notification pour le moment.",
+      "markAllAsRead": "Marquer tout comme lu",
+      "viewAll": "Voir tout",
+      "myProfile": "Mon profil",
+      "logout": "Déconnexion",
+      "openNavMenu": "Ouvrir le menu de navigation"
+    },
+    "sidebar": {
+      "dashboard": "Tableau de bord",
+      "patients": "Patients",
+      "myDocuments": "Mes documents",
+      "analyses": "Analyses",
+      "avis": "Avis",
+      "comptes_rendus": "Comptes rendus",
+      "ordonnances": "Ordonnances",
+      "profile": "Profil"
+    },
+    "mobileNav": {
+      "prescription": "Ordonnance",
+      "analyses": "Analyses",
+      "report": "Compte rendu",
+      "opinion": "Avis",
+      "patients": "Patients",
+      "create": "Créer",
+      "tasks": "Tâches"
+    },
+    "mobileSidebar": {
+      "closeMenu": "Fermer le menu"
+    },
+    "dashboardPage": {
+      "dailyInstructions": "Consignes du jour",
+      "servicePatients": "Patients du Service",
+      "addPatient": "Ajouter un patient",
+      "patientFormDescription": "Renseignez les informations principales pour planifier le parcours du patient.",
+      "fullName": "Nom complet",
+      "fullNameExample": "Ex. Fatou Diop",
+      "service": "Service",
+      "serviceExample": "Ex. Chirurgie digestive",
+      "diagnosis": "Diagnostic",
+      "diagnosisExample": "Ex. Colectomie laparoscopique · J+7",
+      "status": "Statut",
+      "labStatus": "Statut laboratoire",
+      "labNote": "Note laboratoire / commentaire",
+      "labNoteExample": "Ex. CRP 12 mg/L - stable",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "noIndicators": "Aucun indicateur disponible pour le moment. Connectez vos flux opérationnels pour activer cette section.",
+      "loadingPatients": "Chargement des patients...",
+      "noPatients": "Aucun patient attribué",
+      "noPatientsDesc": "Les patients apparaîtront ici dès qu'ils seront ajoutés.",
+      "quickTools": "Vos outils rapides",
+      "closePanel": "Fermer le panneau",
+      "noDetails": "Aucun détail supplémentaire pour cette activité.",
+      "toSpecify": "À préciser",
+      "patientTablePatient": "Patient",
+      "patientTableDiagnosis": "Diagnostic",
+      "patientTableStatus": "Statut",
+      "mobileToolkitButton": "Planning & consignes",
+      "preOp": "Pré-op",
+      "postOp": "Post-op",
+      "monitoring": "Surveillance",
+      "rehabilitation": "Rééducation",
+      "patientsWillAppear": "Les patients apparaîtront ici dès qu'ils seront ajoutés."
+    }
+  }
+}

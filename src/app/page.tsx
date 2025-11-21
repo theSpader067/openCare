@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight,
@@ -30,6 +30,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { navLinks, featureTabs, stats, faqs, mockTasksData, mockPatientData, mockAnalysisData, mockCompteRenduData } from "@/data/landing/landing-content";
 import type { TaskItem } from "@/types/tasks";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 const containerVariants = {
   hidden: { opacity: 0, y: 30 },
   visible: (delay = 0) => ({
@@ -58,6 +60,7 @@ const heroCreativeTimeline = [
 ];
 
 export default function LandingPage() {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState(featureTabs[0].id);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
@@ -68,6 +71,7 @@ export default function LandingPage() {
     "task-public-1": false,
     "task-public-2": false,
   });
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [selectedPatient, setSelectedPatient] = useState<string | null>("PAT-002");
   const [topZComponent, setTopZComponent] = useState<"planning" | "analytics" | "documents" | null>(null);
   const [currentGapIndex, setCurrentGapIndex] = useState(0);
@@ -121,6 +125,15 @@ export default function LandingPage() {
   const [isAccepting, setIsAccepting] = useState(false);
   const [currentSuggestion, setCurrentSuggestion] = useState("");
   const activeFeature = featureTabs.find((item) => item.id === activeTab) ?? featureTabs[0];
+
+  // Play video when modal opens
+  useEffect(() => {
+    if (showDemoVideo && videoRef.current) {
+      videoRef.current.play().catch((error) => {
+        console.log("Auto-play prevented:", error);
+      });
+    }
+  }, [showDemoVideo]);
 
   // Documents typing animation loop - char by char
   useEffect(() => {
@@ -332,7 +345,7 @@ export default function LandingPage() {
                   OpenCare
                 </span>
                 <span className="text-sm font-semibold text-slate-800">
-                Orchestrateur clinique
+                {t('nav.subtitle')}
                 </span>
               </div>
             </Link>
@@ -350,13 +363,14 @@ export default function LandingPage() {
               ))}
             </div>
 
-            <div className="hidden items-center gap-2 lg:flex">
+            <div className="hidden items-center gap-3 lg:flex">
+              <LanguageSwitcher />
               <Button variant="ghost" size="sm" className="rounded-full px-4 text-sm">
-                <Link href="/login">Se connecter</Link>
+                <Link href="/login">{t('nav.login')}</Link>
               </Button>
               <Button variant="primary" size="sm" className="rounded-full px-4 text-sm">
                 <Link href="/signup" className="flex items-center gap-2">
-                  Créer un compte
+                  {t('nav.signup')}
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </Button>
@@ -395,13 +409,16 @@ export default function LandingPage() {
                   </a>
                 ))}
               </div>
-              <div className="mt-6 grid gap-3">
+              <div className="mt-6 space-y-3">
+                <div className="flex justify-center">
+                  <LanguageSwitcher />
+                </div>
                 <Button variant="ghost" className="w-full rounded-full" onClick={() => setIsMenuOpen(false)}>
-                  <Link href="/login">Se connecter</Link>
+                  <Link href="/login">{t('nav.login')}</Link>
                 </Button>
                 <Button variant="primary" className="w-full rounded-full" onClick={() => setIsMenuOpen(false)}>
                   <Link href="/signup" className="flex items-center justify-center gap-2">
-                    Créer un compte
+                    {t('nav.signup')}
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                 </Button>
@@ -429,19 +446,18 @@ export default function LandingPage() {
             >
               <span className="inline-flex items-center gap-2 rounded-full bg-indigo-100/70 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-indigo-700 shadow-sm shadow-indigo-200">
                 <Sparkles className="h-3.5 w-3.5" />
-                Plateforme dédiée aux équipes de soins
+                {t('hero.badge')}
               </span>
               <h1 className="text-4xl font-semibold leading-tight text-[#1d184f] sm:text-5xl">
-                Reliez vos <u>patients</u>, vos <u>actes</u> et vos <u>décisions</u> dans une seule boucle opérationnelle.
+                {t('hero.title')}
               </h1>
               <p className="max-w-xl text-lg text-slate-600">
-                OpenCare orchestre les soins en temps réel : coordination IA, dossiers augmentés et analytics immédiats.
-                Conçu comme un cockpit clinique pour synchroniser terrain, cellule planification et pilotage patient.
+                {t('hero.description')}
               </p>
               <div className="flex flex-wrap gap-4">
                 <Button size="lg" variant="primary" className="rounded-full px-8 py-3 bg-gradient-to-r from-fuchsia-500 to-purple-600 hover:from-fuchsia-600 hover:to-purple-700 border-0 shadow-lg shadow-fuchsia-400/50">
                   <Link href="/login" className="flex items-center gap-2">
-                    Démarrer maintenant
+                    {t('hero.cta')}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
@@ -453,7 +469,7 @@ export default function LandingPage() {
                   onClick={() => setShowDemoVideo(true)}
                 >
                   <span className="flex items-center gap-2 font-semibold text-[#1d184f]">
-                    Voir la démo guidée
+                    {t('hero.watchDemo')}
                     <PlayCircle className="h-4 w-4" />
                   </span>
                 </Button>
@@ -486,13 +502,13 @@ export default function LandingPage() {
                   <div className="space-y-3">
                     <span className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">
                       <Stethoscope className="h-4 w-4" />
-                      Par médecins, pour médecins
+                      {t('hero.rightCard.badge')}
                     </span>
                     <h2 className="text-2xl font-semibold leading-tight text-white">
-                      Reprenez du contrôle sur vos workflows critiques.
+                      {t('hero.rightCard.title')}
                     </h2>
                     <p className="text-sm text-white/90 leading-relaxed">
-                      Une interface conçue par des praticiens pour éliminer les blocages, centraliser l'information et simplifier vos décisions quotidiennes.
+                      {t('hero.rightCard.description')}
                     </p>
                   </div>
 
@@ -504,8 +520,8 @@ export default function LandingPage() {
                           <CheckCircle2 className="h-5 w-5" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="font-semibold text-white">Efficace</p>
-                          <p className="text-xs text-white/80">Réduit les temps de recherche information et les appels téléphoniques</p>
+                          <p className="font-semibold text-white">{t('hero.rightCard.benefits.efficient.title')}</p>
+                          <p className="text-xs text-white/80">{t('hero.rightCard.benefits.efficient.description')}</p>
                         </div>
                       </div>
                     </div>
@@ -516,8 +532,8 @@ export default function LandingPage() {
                           <ShieldCheck className="h-5 w-5" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="font-semibold text-white">Organisé</p>
-                          <p className="text-xs text-white/80">Toutes vos tâches, documents et patients au même endroit</p>
+                          <p className="font-semibold text-white">{t('hero.rightCard.benefits.organized.title')}</p>
+                          <p className="text-xs text-white/80">{t('hero.rightCard.benefits.organized.description')}</p>
                         </div>
                       </div>
                     </div>
@@ -528,8 +544,8 @@ export default function LandingPage() {
                           <Brain className="h-5 w-5" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="font-semibold text-white">Pilotage en temps réel</p>
-                          <p className="text-xs text-white/80">KPIs live, alertes et trajectoires</p>
+                          <p className="font-semibold text-white">{t('hero.rightCard.benefits.realtime.title')}</p>
+                          <p className="text-xs text-white/80">{t('hero.rightCard.benefits.realtime.description')}</p>
                         </div>
                       </div>
                     </div>
@@ -542,9 +558,9 @@ export default function LandingPage() {
                     transition={{ duration: 0.6, delay: 0.1 }}
                     className="rounded-2xl border border-white/25 bg-white/15 backdrop-blur p-4 text-center"
                   >
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/80 mb-2">Mise en place rapide</p>
-                    <p className="text-2xl font-bold text-white">4 jours</p>
-                    <p className="text-xs text-white/80 mt-1">Prêt à être utilisé immédiatement</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/80 mb-2">{t('hero.rightCard.quickSetup.label')}</p>
+                    <p className="text-2xl font-bold text-white">{t('hero.rightCard.quickSetup.value')}</p>
+                    <p className="text-xs text-white/80 mt-1">{t('hero.rightCard.quickSetup.description')}</p>
                   </motion.div>
                 </div>
               </div>
@@ -576,24 +592,27 @@ export default function LandingPage() {
                   type="button"
                   className="absolute right-6 top-6 mb-6 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-white transition hover:bg-white/20"
                   onClick={() => setShowDemoVideo(false)}
-                  aria-label="Fermer la vidéo"
+                  aria-label={t('hero.videoModal.close')}
                 >
                   <X className="h-5 w-5" />
                 </button>
                 <div className="space-y-4 pt-4">
-                  
+
                   <video
-                    className="h-[60vh] w-full rounded-3xl border border-white/10 object-cover mt-10"
+                    ref={videoRef}
+                    className="h-[60vh] w-full rounded-3xl border border-white/10 object-contain mt-10"
                     autoPlay
                     loop
                     muted
+                    playsInline
+                    preload="auto"
                     controls
                   >
                     <source
                       src="/promo.mp4"
                       type="video/mp4"
                     />
-                    Votre navigateur ne supporte pas la lecture vidéo.
+                    {t('hero.videoModal.unsupported')}
                   </video>
                 </div>
               </motion.div>
@@ -612,13 +631,13 @@ export default function LandingPage() {
             variants={containerVariants}
           >
             <span className="rounded-full bg-indigo-100 px-4 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-indigo-600">
-              À propos
+              {t('about.badge')}
             </span>
             <h2 className="mt-4 text-3xl font-semibold text-[#1d184f]">
-              Une suite complète conçue par des médecins pour les médecins et résidents.
+              {t('about.title')}
             </h2>
             <p className="mt-3 text-base text-slate-600">
-              OpenCare est un studio intégré pour gérer vos tâches, vos patients, vos analyses et vos documents. Explorez chaque module et découvrez comment simplifier votre quotidien clinique.
+              {t('about.description')}
             </p>
           </motion.div>
 
@@ -652,8 +671,8 @@ export default function LandingPage() {
                           <Icon className="h-5 w-5" />
                         </span>
                         <div>
-                          <p className="text-sm font-semibold text-[#1d184f]">{feature.title}</p>
-                          <p className="text-xs text-slate-500">Cliquez pour explorer</p>
+                          <p className="text-sm font-semibold text-[#1d184f]">{t(`features.${feature.id}.title`)}</p>
+                          <p className="text-xs text-slate-500">{t('about.clickToExplore')}</p>
                         </div>
                       </div>
                       <ChevronRight
@@ -673,12 +692,12 @@ export default function LandingPage() {
                           className="overflow-hidden"
                         >
                           <div className="mt-4 space-y-3 text-sm text-slate-600">
-                            <p>{feature.description}</p>
+                            <p>{t(`features.${feature.id}.description`)}</p>
                             <ul className="space-y-2">
-                              {feature.highlights.map((item) => (
-                                <li key={item} className="flex items-start gap-2 text-sm text-slate-600">
+                              {Object.keys(t(`features.${feature.id}.highlights`, { returnObjects: true }) as unknown as Record<string, string>).map((key) => (
+                                <li key={key} className="flex items-start gap-2 text-sm text-slate-600">
                                   <CircleCheck className="mt-0.5 h-4 w-4 text-indigo-500" />
-                                  <span>{item}</span>
+                                  <span>{t(`features.${feature.id}.highlights.${key}`)}</span>
                                 </li>
                               ))}
                             </ul>
@@ -1426,10 +1445,10 @@ export default function LandingPage() {
             >
               <div className="space-y-2">
                 <p className="text-xs uppercase tracking-[0.35em] text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">
-                  Indicateurs clés
+                  {t('stats.badge')}
                 </p>
                 <h2 className="text-4xl font-bold leading-tight">
-                  Des résultats mesurés<br />par les équipes de soins.
+                  {t('stats.title')}
                 </h2>
               </div>
             </motion.div>
@@ -1442,7 +1461,10 @@ export default function LandingPage() {
               custom={0.2}
               variants={containerVariants}
             >
-              {stats.map(({ label, value, icon: Icon }, idx) => {
+              {stats.map(({ icon: Icon }, idx) => {
+                const statKeys = ['timeSaved', 'specialties', 'support', 'setup'];
+                const statKey = statKeys[idx];
+
                 const gradients = [
                   "from-cyan-500/30 to-blue-500/20",
                   "from-fuchsia-500/30 to-pink-500/20",
@@ -1460,20 +1482,20 @@ export default function LandingPage() {
 
                 return (
                   <div
-                    key={label}
+                    key={statKey}
                     className={`group relative rounded-3xl border ${borderColors[idx]} bg-gradient-to-br ${gradients[idx]} p-6 backdrop-blur transition hover:border-opacity-100 shadow-lg ${shadowColors[idx]}`}
                   >
                     <div className="absolute inset-0 rounded-3xl opacity-0 transition group-hover:opacity-100 bg-gradient-to-br" />
                     <div className="relative space-y-4">
                       <div className="flex items-start justify-between">
-                        <p className="text-sm font-semibold text-slate-200">{label}</p>
+                        <p className="text-sm font-semibold text-slate-200">{t(`stats.${statKey}.label`)}</p>
                         <span className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${accentGradients[idx]} text-white shadow-lg`}>
                           <Icon className="h-6 w-6" />
                         </span>
                       </div>
                       <div>
-                        <p className="text-4xl font-bold text-white">{value}</p>
-                        
+                        <p className="text-4xl font-bold text-white">{t(`stats.${statKey}.value`)}</p>
+
                       </div>
                     </div>
                   </div>
@@ -1494,13 +1516,13 @@ export default function LandingPage() {
             variants={containerVariants}
           >
             <span className="rounded-full bg-indigo-100 px-4 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-indigo-600">
-              FAQ
+              {t('faq.badge')}
             </span>
             <h2 className="mt-4 text-3xl font-semibold text-[#1d184f]">
-              Questions fréquentes des équipes de soins.
+              {t('faq.title')}
             </h2>
             <p className="mt-3 text-base text-slate-600">
-              Besoin de précisions ? Notre équipe projet vous accompagne pour un déploiement serein.
+              {t('faq.subtitle')}
             </p>
           </motion.div>
 
@@ -1513,10 +1535,12 @@ export default function LandingPage() {
             variants={containerVariants}
           >
             {faqs.map((item, index) => {
+              const faqKeys = ['security', 'customization', 'mobile', 'users', 'assistance', 'integration'];
+              const faqKey = faqKeys[index];
               const isOpen = openFaqIndex === index;
               return (
                 <div
-                  key={item.question}
+                  key={faqKey}
                   className={cn(
                     "rounded-3xl border border-slate-200 bg-white px-5 py-5 shadow-sm transition",
                     isOpen && "border-indigo-200 bg-indigo-50/70 shadow-md shadow-indigo-100",
@@ -1527,7 +1551,7 @@ export default function LandingPage() {
                     onClick={() => setOpenFaqIndex(isOpen ? null : index)}
                     className="flex w-full items-center justify-between gap-4 text-left text-sm font-semibold text-slate-700"
                   >
-                    <span>{item.question}</span>
+                    <span>{t(`faq.questions.${faqKey}.question`)}</span>
                     <span
                       className={cn(
                         "flex h-8 w-8 items-center justify-center rounded-full border border-indigo-200 text-indigo-500 transition",
@@ -1540,14 +1564,14 @@ export default function LandingPage() {
                   <AnimatePresence initial={false}>
                     {isOpen ? (
                       <motion.p
-                        key={`${item.question}-answer`}
+                        key={`${faqKey}-answer`}
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.25 }}
                         className="overflow-hidden pt-3 text-sm leading-relaxed text-slate-600"
                       >
-                        {item.answer}
+                        {t(`faq.questions.${faqKey}.answer`)}
                       </motion.p>
                     ) : null}
                   </AnimatePresence>
@@ -1568,25 +1592,25 @@ export default function LandingPage() {
               variants={containerVariants}
               className="rounded-3xl bg-gradient-to-br from-indigo-500 via-purple-500 to-sky-500 p-8 text-white shadow-2xl shadow-indigo-200/40"
             >
-              <p className="text-xs uppercase tracking-[0.35em] text-white/80">Contact</p>
+              <p className="text-xs uppercase tracking-[0.35em] text-white/80">{t('contact.badge')}</p>
               <h2 className="mt-3 text-3xl font-semibold">
-                Planifions une démonstration personnalisée pour votre service.
+                {t('contact.title')}
               </h2>
               <p className="mt-4 text-sm text-white/80">
-                Laissez-nous quelques informations : un expert OpenCare vous recontactera en 24h pour cadrer vos enjeux et définir un plan de déploiement.
+                {t('contact.subtitle')}
               </p>
               <div className="mt-10 space-y-4 text-sm">
                 <p className="flex items-center gap-3 text-white/90">
                   <ShieldCheck className="h-5 w-5" />
-                  Infrastructure sécurisée et authentification forte inclus.
+                  {t('contact.benefits.security')}
                 </p>
                 <p className="flex items-center gap-3 text-white/90">
                   <Brain className="h-5 w-5" />
-                  Roadmap IA partagée avec votre équipe pour améliorer les parcours.
+                  {t('contact.benefits.roadmap')}
                 </p>
                 <p className="flex items-center gap-3 text-white/90">
                   <MessageCircle className="h-5 w-5" />
-                  Support dédié praticiens et cellules d&apos;organisation hospitalière.
+                  {t('contact.benefits.support')}
                 </p>
               </div>
             </motion.div>
@@ -1607,18 +1631,18 @@ export default function LandingPage() {
                   exit={{ opacity: 0, y: -10 }}
                   className="mb-4 rounded-xl bg-green-50 p-4 text-sm text-green-700 border border-green-200"
                 >
-                  ✓ Votre demande a été envoyée avec succès. Nous vous recontacterons sous 24h.
+                  ✓ {t('contact.form.success')}
                 </motion.div>
               )}
               <div className="grid gap-4">
                 <div className="grid gap-2">
                   <label htmlFor="name" className="text-sm font-semibold text-slate-700">
-                    Nom &amp; Prénom
+                    {t('contact.form.fullName')}
                   </label>
                   <input
                     id="name"
                     required
-                    placeholder="Dr. Elise Fontaine"
+                    placeholder={t('contact.form.fullNamePlaceholder')}
                     value={contactFormData.fullName}
                     onChange={(e) => setContactFormData({ ...contactFormData, fullName: e.target.value })}
                     disabled={isSubmittingContact}
@@ -1627,13 +1651,13 @@ export default function LandingPage() {
                 </div>
                 <div className="grid gap-2">
                   <label htmlFor="email" className="text-sm font-semibold text-slate-700">
-                    E-mail professionnel
+                    {t('contact.form.email')}
                   </label>
                   <input
                     id="email"
                     type="email"
                     required
-                    placeholder="prenom.nom@hopital.fr"
+                    placeholder={t('contact.form.emailPlaceholder')}
                     value={contactFormData.email}
                     onChange={(e) => setContactFormData({ ...contactFormData, email: e.target.value })}
                     disabled={isSubmittingContact}
@@ -1642,12 +1666,12 @@ export default function LandingPage() {
                 </div>
                 <div className="grid gap-2">
                   <label htmlFor="service" className="text-sm font-semibold text-slate-700">
-                    Service / spécialité
+                    {t('contact.form.specialty')}
                   </label>
                   <input
                     id="service"
                     required
-                    placeholder="Bloc, chirurgie, coordination..."
+                    placeholder={t('contact.form.specialtyPlaceholder')}
                     value={contactFormData.specialty}
                     onChange={(e) => setContactFormData({ ...contactFormData, specialty: e.target.value })}
                     disabled={isSubmittingContact}
@@ -1656,13 +1680,13 @@ export default function LandingPage() {
                 </div>
                 <div className="grid gap-2">
                   <label htmlFor="message" className="text-sm font-semibold text-slate-700">
-                    Message
+                    {t('contact.form.message')}
                   </label>
                   <textarea
                     id="message"
                     rows={4}
                     required
-                    placeholder="Parlez-nous de vos enjeux ou besoins spécifiques."
+                    placeholder={t('contact.form.messagePlaceholder')}
                     value={contactFormData.message}
                     onChange={(e) => setContactFormData({ ...contactFormData, message: e.target.value })}
                     disabled={isSubmittingContact}
@@ -1676,10 +1700,10 @@ export default function LandingPage() {
                 className="mt-6 w-full rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isSubmittingContact}
               >
-                {isSubmittingContact ? "Envoi en cours..." : "Envoyer ma demande"}
+                {isSubmittingContact ? t('contact.form.submitting') : t('contact.form.submit')}
               </Button>
               <p className="mt-3 text-center text-xs text-slate-500">
-                Nous vous recontactons sous 24h ouvrées. Données sécurisées et utilisées uniquement pour le suivi de votre demande.
+                {t('contact.form.privacy')}
               </p>
             </motion.form>
           </div>
@@ -1700,21 +1724,21 @@ export default function LandingPage() {
                 <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">
                   OpenCare
                 </p>
-                <p className="text-sm font-semibold text-white">Orchestrateur clinique</p>
+                <p className="text-sm font-semibold text-white">{t('footer.subtitle')}</p>
               </div>
             </div>
             <p className="text-sm text-indigo-200">
-              Nous aidons les praticiens et équipes hospitalières à offrir une expérience patient cohérente, fluide et mesurable.
+              {t('footer.description')}
             </p>
             <div className="flex flex-wrap gap-3 text-xs text-indigo-200/80">
-              <span>© {new Date().getFullYear()} OpenCare</span>
+              <span>© {new Date().getFullYear()} {t('footer.copyright')}</span>
               <span>·</span>
               <Link href="#" className="hover:text-white">
-                Mentions légales
+                {t('footer.legal')}
               </Link>
               <span>·</span>
               <Link href="#" className="hover:text-white">
-                Politique de confidentialité
+                {t('footer.privacy')}
               </Link>
             </div>
           </div>
@@ -1722,63 +1746,63 @@ export default function LandingPage() {
           <div className="grid flex-1 gap-6 text-sm text-indigo-200 md:grid-cols-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-indigo-300">
-                Plateforme
+                {t('footer.sections.platform.title')}
               </p>
               <ul className="mt-4 space-y-2">
                 <li>
                   <a href="#features" className="hover:text-white">
-                    Fonctionnalités
+                    {t('footer.sections.platform.features')}
                   </a>
                 </li>
                 <li>
                   <a href="#stats" className="hover:text-white">
-                    Indicateurs
+                    {t('footer.sections.platform.indicators')}
                   </a>
                 </li>
                 <li>
                   <a href="#contact" className="hover:text-white">
-                    Démo personnalisée
+                    {t('footer.sections.platform.demo')}
                   </a>
                 </li>
               </ul>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-indigo-300">
-                Ressources
+                {t('footer.sections.resources.title')}
               </p>
               <ul className="mt-4 space-y-2">
                 <li>
                   <a href="#faq" className="hover:text-white">
-                    FAQ
+                    {t('footer.sections.resources.faq')}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white">
-                    Centre d&apos;aide
+                    {t('footer.sections.resources.help')}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white">
-                    Programme partenaires
+                    {t('footer.sections.resources.partners')}
                   </a>
                 </li>
               </ul>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-indigo-300">
-                Rester informé
+                {t('footer.sections.newsletter.title')}
               </p>
               <p className="mt-4 text-xs text-indigo-200/80">
-                Abonnez-vous à notre bulletin trimestriel pour découvrir nos innovations.
+                {t('footer.sections.newsletter.description')}
               </p>
               <form className="mt-4 space-y-3">
                 <input
                   type="email"
-                  placeholder="votre.email@hopital.fr"
+                  placeholder={t('footer.sections.newsletter.placeholder')}
                   className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-xs text-white placeholder:text-indigo-200 focus:border-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-200/60"
                 />
                 <Button type="submit" variant="primary" size="sm" className="w-full rounded-full">
-                  S&apos;abonner
+                  {t('footer.sections.newsletter.subscribe')}
                 </Button>
               </form>
             </div>

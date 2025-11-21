@@ -30,6 +30,7 @@ model User {
   specialty   String?
   hospital    String?
   year        String?
+  language    String?     @default("en")
   onboardingCompleted Boolean @default(false)
   biographie  String?
   notifyByEmail Boolean @default(false)

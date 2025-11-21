@@ -1,0 +1,518 @@
+{
+  "nav": {
+    "modules": "Modules",
+    "commitments": "Commitments",
+    "faq": "FAQ",
+    "contact": "Contact",
+    "login": "Sign In",
+    "signup": "Create Account",
+    "subtitle": "Clinical Orchestrator"
+  },
+  "hero": {
+    "badge": "Platform dedicated to care teams",
+    "title": "Connect your patients, your procedures, and your decisions in a single operational loop.",
+    "subtitle": "Smart & Intuitive",
+    "description": "OpenCare orchestrates care in real-time: AI coordination, enhanced records, and immediate analytics. Designed as a clinical cockpit to synchronize field, planning cell, and patient management.",
+    "cta": "Start Now",
+    "watchDemo": "Watch Guided Demo",
+    "pillars": {
+      "coordination": {
+        "title": "AI Coordination",
+        "description": "OR, bed, imaging, and logistics aligned"
+      },
+      "experience": {
+        "title": "Patient Experience",
+        "description": "Intuitive portals, reassuring messages"
+      },
+      "realtime": {
+        "title": "Real-time Management",
+        "description": "Live KPIs, alerts, and pathways"
+      }
+    },
+    "bursts": {
+      "flow": {
+        "title": "Patient Flow",
+        "detail": "12 synchronized pathways"
+      },
+      "cell": {
+        "title": "OR Cell",
+        "detail": "3 rooms freed"
+      },
+      "alerts": {
+        "title": "AI Alerts",
+        "detail": "5 priority actions"
+      }
+    },
+    "timeline": {
+      "capture": {
+        "label": "Field Capture",
+        "value": "IoT & EMR Flow"
+      },
+      "translation": {
+        "label": "AI Translation",
+        "value": "Context Synthesis"
+      },
+      "activation": {
+        "label": "Team Activation",
+        "value": "Checklists + SMS"
+      }
+    },
+    "highlights": {
+      "deployment": {
+        "label": "Average Deployment",
+        "value": "4 days"
+      },
+      "compliance": {
+        "label": "Compliance & Security",
+        "value": "100%"
+      },
+      "timeSaved": {
+        "label": "Time Gained",
+        "value": "+32%"
+      }
+    },
+    "rightCard": {
+      "badge": "By physicians, for physicians",
+      "title": "Regain control over your critical workflows.",
+      "description": "An interface designed by practitioners to eliminate bottlenecks, centralize information, and simplify your daily decisions.",
+      "benefits": {
+        "efficient": {
+          "title": "Efficient",
+          "description": "Reduces information search time and phone calls"
+        },
+        "organized": {
+          "title": "Organized",
+          "description": "All your tasks, documents, and patients in one place"
+        },
+        "realtime": {
+          "title": "Real-time Management",
+          "description": "Live KPIs, alerts, and pathways"
+        }
+      },
+      "quickSetup": {
+        "label": "Quick Setup",
+        "value": "4 days",
+        "description": "Ready to use immediately"
+      }
+    },
+    "videoModal": {
+      "close": "Close video",
+      "unsupported": "Your browser does not support video playback."
+    }
+  },
+  "features": {
+    "planning": {
+      "title": "Tasks & Activities",
+      "description": "Create and manage your daily tasks and service instructions directly after your visits. Coordinate with your colleagues in real-time and ensure no clinical action is forgotten.",
+      "badge": "Collaborative Management",
+      "highlights": {
+        "create": "Create and assign tasks to your team",
+        "instructions": "Pre/post-visit service instructions",
+        "coordination": "Real-time coordination with colleagues"
+      },
+      "insights": {
+        "completed": "Tasks Completed",
+        "timeSaved": "Time Saved"
+      }
+    },
+    "patients": {
+      "title": "Patients",
+      "description": "Build and consult your patient database with quick and detailed overviews. Revisit files, edit information, and add your clinical observations in just a few clicks.",
+      "badge": "Integrated Patient Management",
+      "highlights": {
+        "overview": "Quick and synthetic patient overviews",
+        "detailed": "Complete detailed file view",
+        "observations": "Clinical observation recording",
+        "editing": "Easy patient information editing"
+      },
+      "insights": {
+        "consultation": "Consultation Time",
+        "complete": "Complete Observations"
+      }
+    },
+    "editor": {
+      "title": "Intelligent Editor",
+      "description": "Let our intelligent editor suggest what you need to write. It analyzes patient data, lab values, and metadata to auto-fill prescriptions and clinical observations.",
+      "badge": "AI for Documentation",
+      "highlights": {
+        "suggestions": "Auto-suggestions based on patient data",
+        "prescriptions": "Intelligent prescription filling",
+        "synthesis": "Automatic observation synthesis",
+        "metadata": "Analyzed metadata and lab values"
+      },
+      "insights": {
+        "writing": "Writing Time Reduced",
+        "errors": "Input Errors"
+      }
+    },
+    "analytics": {
+      "title": "Analytics",
+      "description": "View, create, and share biological, imaging, and pathology analyses for your team. Search by test type, patient name, or period, and capture lab results directly by photo for automatic filling.",
+      "badge": "Integrated Analytics",
+      "highlights": {
+        "management": "Biological, imaging, and pathology analysis management",
+        "search": "Search by test type, patient, or period",
+        "capture": "Photo capture of lab results",
+        "autofill": "Automatic value filling",
+        "sharing": "Team sharing and complete history"
+      },
+      "insights": {
+        "input": "Input Time",
+        "consulted": "Analyses Consulted"
+      }
+    },
+    "documents": {
+      "title": "Documents & Templates",
+      "description": "Stop writing your documents from scratch. Access a complete suite of pre-filled templates for prescriptions and reports. Adapt, finalize, and sign in seconds without wasting time.",
+      "badge": "Optimized Document Management",
+      "highlights": {
+        "templates": "Pre-filled prescription templates",
+        "reports": "Reports with suggested structure and content",
+        "customization": "Quick customization to your needs",
+        "signature": "Integrated digital signature",
+        "archiving": "Automatic archiving and traceability"
+      },
+      "insights": {
+        "generated": "Documents Generated",
+        "time": "Time per Document"
+      }
+    }
+  },
+  "about": {
+    "badge": "About",
+    "title": "A complete suite designed by physicians for physicians and residents.",
+    "description": "OpenCare is an integrated studio to manage your tasks, patients, analyses, and documents. Explore each module and discover how to simplify your daily clinical routine.",
+    "clickToExplore": "Click to explore"
+  },
+  "stats": {
+    "badge": "Key Indicators",
+    "title": "Results measured by care teams.",
+    "timeSaved": {
+      "label": "Average Time Gained",
+      "value": "32%"
+    },
+    "specialties": {
+      "label": "Supported Specialties",
+      "value": "+50"
+    },
+    "support": {
+      "label": "Support",
+      "value": "24/7"
+    },
+    "setup": {
+      "label": "Setup",
+      "value": "4 days"
+    }
+  },
+  "faq": {
+    "badge": "FAQ",
+    "title": "Frequently asked questions from care teams.",
+    "subtitle": "Need clarification? Our project team supports you for a smooth deployment.",
+    "questions": {
+      "security": {
+        "question": "Is my patient data secure?",
+        "answer": "Yes. OpenCare uses end-to-end encryption and secure infrastructure compliant with hospital standards. Your data remains under your control."
+      },
+      "customization": {
+        "question": "Can practitioners customize their dashboards?",
+        "answer": "Each practitioner benefits from a customizable space: patient filters, statistical tiles, notification preferences, and exports adapted to their specialty."
+      },
+      "mobile": {
+        "question": "Do you offer a mobile application?",
+        "answer": "A Progressive Web App is available to view your patient lists, access protocols, and respond quickly to critical notifications. A mobile application is under development."
+      },
+      "users": {
+        "question": "Which teams can use OpenCare?",
+        "answer": "Interns, Residents, Specialists, anesthesiologists, nurse anesthetists, OR managers, care coordinators, and imaging/laboratory services: the platform facilitates inter-disciplinary collaboration."
+      },
+      "assistance": {
+        "question": "How does assistance work?",
+        "answer": "24/7 support, dedicated project manager, and interactive tutorial library. You can contact our experts via secure chat or dedicated hotline."
+      },
+      "integration": {
+        "question": "How does OpenCare integrate with existing service tools?",
+        "answer": "OpenCare works in complement to your hospital software. You can import your patients via Excel files, synchronize laboratory data via photo/scan, and export all your documents in PDF for integration into the service medical record. No radical workflow change is necessary: the tool adapts to your organization."
+      }
+    }
+  },
+  "contact": {
+    "badge": "Contact",
+    "title": "Let's schedule a personalized demonstration for your service.",
+    "subtitle": "Share some information: an OpenCare expert will contact you within 24h to understand your challenges and define a deployment plan.",
+    "benefits": {
+      "security": "Secure infrastructure and strong authentication included.",
+      "roadmap": "AI roadmap shared with your team to improve pathways.",
+      "support": "Dedicated support for practitioners and hospital organization units."
+    },
+    "form": {
+      "fullName": "Full Name",
+      "fullNamePlaceholder": "Dr. Elise Fontaine",
+      "email": "Professional Email",
+      "emailPlaceholder": "firstname.lastname@hospital.com",
+      "specialty": "Service / specialty",
+      "specialtyPlaceholder": "OR, surgery, coordination...",
+      "message": "Message",
+      "messagePlaceholder": "Tell us about your challenges or specific needs.",
+      "submit": "Send my request",
+      "submitting": "Sending...",
+      "success": "Your request has been sent successfully. We will contact you within 24h.",
+      "privacy": "We will contact you within 24 business hours. Data is secure and used only for tracking your request."
+    }
+  },
+  "footer": {
+    "subtitle": "Clinical Orchestrator",
+    "description": "We help practitioners and hospital teams deliver a consistent, smooth, and measurable patient experience.",
+    "copyright": "OpenCare",
+    "legal": "Legal Notice",
+    "privacy": "Privacy Policy",
+    "sections": {
+      "platform": {
+        "title": "Platform",
+        "features": "Features",
+        "indicators": "Indicators",
+        "demo": "Personalized Demo"
+      },
+      "resources": {
+        "title": "Resources",
+        "faq": "FAQ",
+        "help": "Help Center",
+        "partners": "Partner Program"
+      },
+      "newsletter": {
+        "title": "Stay Informed",
+        "description": "Subscribe to our quarterly newsletter to discover our innovations.",
+        "placeholder": "your.email@hospital.com",
+        "subscribe": "Subscribe"
+      }
+    }
+  },
+  "common": {
+    "close": "Close",
+    "viewMore": "View More",
+    "learnMore": "Learn More",
+    "loading": "Loading...",
+    "or": "or"
+  },
+  "auth": {
+    "brandSubtitle": "Practitioners Platform",
+    "login": {
+      "title": "Welcome back 👋",
+      "subtitle": "Log in to access your schedule, patient files, and consolidated OR activity.",
+      "emailLabel": "Medical ID or Email",
+      "emailPlaceholder": "firstname.lastname@hospital.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password?",
+      "loginButton": "Sign In",
+      "loggingIn": "Signing in...",
+      "googleLogin": "Continue with Google",
+      "noAccount": "Not registered yet?",
+      "createAccount": "Create an account",
+      "needAccount": "Need an account?",
+      "requestAccess": "Request secure access",
+      "support": "24/7 support available for practitioners and OR teams.",
+      "benefits": {
+        "security": "Secure access compliant with hospital standards.",
+        "notifications": "Instant notifications on your critical follow-ups."
+      },
+      "errors": {
+        "verified": "Email verified successfully! Sign in to continue.",
+        "unverified": "Please verify your email before logging in.",
+        "invalidToken": "Invalid verification link. Please request a new one.",
+        "expired": "Verification link has expired. Please request a new one.",
+        "unexpected": "An unexpected error occurred. Please try again."
+      }
+    },
+    "signup": {
+      "title": "Join the connected practitioners community",
+      "subtitle": "Create your secure access to centralize your clinical activity.",
+      "welcomeTitle": "Welcome to OpenCare",
+      "welcomeDescription": "A modern and secure platform to simplify care coordination and improve medical collaboration.",
+      "alreadyRegistered": "Already registered?",
+      "loginToAccount": "Sign in to my account",
+      "fullNameLabel": "Full Name",
+      "fullNamePlaceholder": "Dr. Marie Dupuis",
+      "emailLabel": "Professional Email Address",
+      "emailPlaceholder": "firstname.lastname@hospital.fr",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Create a strong password",
+      "createButton": "Create my account",
+      "creating": "Creating account...",
+      "googleSignup": "Sign up with Google",
+      "haveAccount": "Already have an account?",
+      "login": "Sign in"
+    },
+    "verifyEmail": {
+      "title": "Verify your email",
+      "sentTo": "We sent a verification link to:",
+      "instruction": "Click the link in the email to confirm your address and access your onboarding.",
+      "tipTitle": "💡 Tip:",
+      "tipMessage": "Check your spam folder if you don't see the email in a few minutes.",
+      "autoRedirect": "You will be automatically redirected to onboarding after verification."
+    },
+    "verifyEmailPending": {
+      "title": "Verify your email address",
+      "sentTo": "We sent a verification link to",
+      "sentGeneric": "We sent a verification link to your email address.",
+      "nextSteps": "Next steps:",
+      "step1": "Open your email and click on the provided link",
+      "step2": "If you can't find the message, check your spam",
+      "step3": "You will be redirected to login to continue",
+      "alreadyVerified": "Already verified your email?",
+      "login": "Sign in",
+      "needHelp": "Need help? Contact our support at",
+      "supportEmail": "support@opencare.fr"
+    },
+    "onboarding": {
+      "title": "Complete your profile",
+      "subtitle": "A few details to personalize your experience and offer you the best content.",
+      "specialtyLabel": "Specialty",
+      "specialtyPlaceholder": "Select your specialty",
+      "hospitalLabel": "Institution",
+      "hospitalPlaceholder": "Enter your institution (e.g., Lyon University Hospital)",
+      "statusLabel": "Status",
+      "statusPlaceholder": "Select your status",
+      "continueButton": "Continue to dashboard",
+      "saving": "Saving...",
+      "editLater": "You can modify this information anytime in your settings.",
+      "specialties": {
+        "Anesthésie-Réanimation": "Anesthesiology & Critical Care",
+        "Cardiologie": "Cardiology",
+        "Cardiochirurgie": "Cardiac Surgery",
+        "Chirurgie générale": "General Surgery",
+        "Chirurgie thoracique": "Thoracic Surgery",
+        "Chirurgie vasculaire": "Vascular Surgery",
+        "Chirurgie viscérale": "Visceral Surgery",
+        "Dermatologie": "Dermatology",
+        "Dentisterie": "Dentistry",
+        "Endocrinologie": "Endocrinology",
+        "Gastro-entérologie": "Gastroenterology",
+        "Gériatrie": "Geriatrics",
+        "Gynécologie-Obstétrique": "Obstetrics & Gynecology",
+        "Hématologie": "Hematology",
+        "Immunologie": "Immunology",
+        "Infectiologie": "Infectious Diseases",
+        "Médecin généraliste": "General Practitioner",
+        "Médecine d'urgence": "Emergency Medicine",
+        "Médecine interne": "Internal Medicine",
+        "Médecine physique et réadaptation": "Physical Medicine & Rehabilitation",
+        "Neurochirurgie": "Neurosurgery",
+        "Neurologie": "Neurology",
+        "Oncologie": "Oncology",
+        "Ophtalmologie": "Ophthalmology",
+        "ORL": "ENT (Ear, Nose & Throat)",
+        "Orthopédie": "Orthopedics",
+        "Pathologie": "Pathology",
+        "Pédiatrie": "Pediatrics",
+        "Pharmacie": "Pharmacy",
+        "Pneumologie": "Pulmonology",
+        "Psychiatrie": "Psychiatry",
+        "Radiologie": "Radiology",
+        "Réanimation": "Intensive Care",
+        "Rhumatologie": "Rheumatology",
+        "Sage-femme": "Midwifery",
+        "Stomatologie": "Stomatology",
+        "Urologie": "Urology",
+        "Autre": "Other"
+      },
+      "statuses": {
+        "Étudiant": "Student",
+        "Interne": "Resident",
+        "Infirmier": "Nurse",
+        "1ère année": "1st Year",
+        "2ème année": "2nd Year",
+        "3ème année": "3rd Year",
+        "4ème année": "4th Year",
+        "5ème année": "5th Year",
+        "Spécialiste": "Specialist"
+      }
+    }
+  },
+  "dashboard": {
+    "navigation": {
+      "dashboard": "Dashboard",
+      "patients": "Patients",
+      "documents": "My Documents",
+      "analyses": "Analyses",
+      "avis": "Opinion",
+      "comptes_rendus": "Reports",
+      "ordonnances": "Prescriptions",
+      "profile": "Profile",
+      "saas_clinical": "Clinical SaaS"
+    },
+    "header": {
+      "greeting": "Hello {{name}}",
+      "create": "Create",
+      "prescription": "Prescription",
+      "analyses": "Analyses",
+      "report": "Report",
+      "opinion": "Opinion",
+      "notifications": "Notifications",
+      "realTime": "Real-time",
+      "noNotifications": "No notifications at the moment.",
+      "markAllAsRead": "Mark all as read",
+      "viewAll": "View all",
+      "myProfile": "My profile",
+      "logout": "Logout",
+      "openNavMenu": "Open navigation menu"
+    },
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "patients": "Patients",
+      "myDocuments": "My documents",
+      "analyses": "Analyses",
+      "avis": "Opinion",
+      "comptes_rendus": "Reports",
+      "ordonnances": "Prescriptions",
+      "profile": "Profile"
+    },
+    "mobileNav": {
+      "prescription": "Prescription",
+      "analyses": "Analyses",
+      "report": "Report",
+      "opinion": "Opinion",
+      "patients": "Patients",
+      "create": "Create",
+      "tasks": "Tasks"
+    },
+    "mobileSidebar": {
+      "closeMenu": "Close menu"
+    },
+    "dashboardPage": {
+      "dailyInstructions": "Daily Instructions",
+      "servicePatients": "Service Patients",
+      "addPatient": "Add a patient",
+      "patientFormDescription": "Provide main information to plan the patient's care pathway.",
+      "fullName": "Full name",
+      "fullNameExample": "Ex. Fatou Diop",
+      "service": "Service",
+      "serviceExample": "Ex. Digestive surgery",
+      "diagnosis": "Diagnosis",
+      "diagnosisExample": "Ex. Laparoscopic colectomy · Day 7",
+      "status": "Status",
+      "labStatus": "Lab status",
+      "labNote": "Lab note / comment",
+      "labNoteExample": "Ex. CRP 12 mg/L - stable",
+      "cancel": "Cancel",
+      "save": "Save",
+      "noIndicators": "No indicators available at the moment. Connect your operational flows to enable this section.",
+      "loadingPatients": "Loading patients...",
+      "noPatients": "No patients assigned",
+      "noPatientsDesc": "Patients will appear here as soon as they are added.",
+      "quickTools": "Your quick tools",
+      "closePanel": "Close panel",
+      "noDetails": "No additional details for this activity.",
+      "toSpecify": "To be specified",
+      "patientTablePatient": "Patient",
+      "patientTableDiagnosis": "Diagnosis",
+      "patientTableStatus": "Status",
+      "mobileToolkitButton": "Planning & Instructions",
+      "preOp": "Pre-op",
+      "postOp": "Post-op",
+      "monitoring": "Monitoring",
+      "rehabilitation": "Rehabilitation",
+      "patientsWillAppear": "Patients will appear here as soon as they are added."
+    }
+  }
+}

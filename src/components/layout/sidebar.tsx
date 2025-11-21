@@ -18,51 +18,52 @@ import {
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-export const primaryNav = [
+export const getPrimaryNav = (t: any) => [
   {
     href: "/dashboard",
-    label: "Tableau de bord",
+    label: t('dashboard.sidebar.dashboard'),
     icon: LayoutDashboard,
   },
   {
     href: "/patients",
-    label: "Patients",
+    label: t('dashboard.sidebar.patients'),
     icon: Users2,
   },
   {
     href: "/documents",
-    label: "Mes documents",
+    label: t('dashboard.sidebar.myDocuments'),
     icon: FileText,
     subitems: [
       {
         href: "/analyses",
-        label: "analyses",
+        label: t('dashboard.sidebar.analyses'),
         icon: FlaskConical,
       },
       {
         href: "/avis",
-        label: "Avis",
+        label: t('dashboard.sidebar.avis'),
         icon: Stethoscope,
       },
       {
         href: "/comptes-rendus",
-        label: "Comptes rendus",
+        label: t('dashboard.sidebar.comptes_rendus'),
         icon: FileText,
       },
       {
         href: "/ordonnances",
-        label: "Ordonnances",
+        label: t('dashboard.sidebar.ordonnances'),
         icon: FileText,
       },
     ],
   },
 ];
 
-export const bottomNav = [
+export const getBottomNav = (t: any) => [
   {
     href: "/profile",
-    label: "Profil",
+    label: t('dashboard.sidebar.profile'),
     icon: Users2,
   },
 ];
@@ -72,8 +73,11 @@ interface SidebarContentProps {
 }
 
 export function SidebarContent({ onNavigate }: SidebarContentProps) {
+  const { t } = useLanguage();
   const pathname = usePathname();
   const [expandedItems, setExpandedItems] = useState<string[]>(["/documents"]);
+  const primaryNav = getPrimaryNav(t);
+  const bottomNav = getBottomNav(t);
 
   const toggleExpanded = (href: string) => {
     setExpandedItems((prev) =>
@@ -109,7 +113,7 @@ export function SidebarContent({ onNavigate }: SidebarContentProps) {
           </span>
           <span className="flex items-center gap-1 text-xs text-[#5f5aa5]">
             <Activity className="h-3.5 w-3.5 text-[#4f46e5]" />
-            SaaS clinique
+            {t('dashboard.navigation.saas_clinical')}
           </span>
         </div>
       </div>

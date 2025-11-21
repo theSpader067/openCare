@@ -9,7 +9,7 @@ const prisma = new PrismaClient()
 
 export async function POST(req: Request) {
   try {
-    const { fullName, email, password } = await req.json()
+    const { fullName, email, password, language } = await req.json()
     const username = fullName.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join('.')
 
     if (!email || !password || !fullName) {
@@ -23,7 +23,13 @@ export async function POST(req: Request) {
 
     const hashed = await bcrypt.hash(password, 10)
     const user = await prisma.user.create({
-      data: { username, email, password: hashed ,emailVerified: false},
+      data: {
+        username,
+        email,
+        password: hashed,
+        emailVerified: false,
+        language: language || 'en'
+      },
     })
 
     const token = crypto.randomBytes(32).toString("hex")
@@ -34,7 +40,7 @@ export async function POST(req: Request) {
     })
 
     // Send verification email to user
-    await sendVerificationEmail(email, token, fullName)
+    await sendVerificationEmail(email, token, fullName, language || 'en')
 
     // Send notification to admin (non-blocking)
     sendSignupNotificationToAdmin(fullName, email).catch((err) => {

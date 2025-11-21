@@ -4,11 +4,13 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { ArrowRight, Sparkles, Mail, Shield, Zap, Users, HeartPulse, Brain, Clock } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 
 export default function SignupPage() {
+  const { t, language } = useLanguage();
   const router = useRouter();
   const [formState, setFormState] = useState({
     fullName: "",
@@ -32,12 +34,15 @@ export default function SignupPage() {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formState),
+        body: JSON.stringify({
+          ...formState,
+          language
+        }),
       })
 
       if (!res.ok) {
         const data = await res.json()
-        setError(data.error || 'An unexpected error occurred')
+        setError(data.error || t('auth.login.errors.unexpected'))
         setIsLoading(false)
         return
       }
@@ -49,7 +54,7 @@ export default function SignupPage() {
       router.push('/verify-email-pending')
     } catch (err) {
       console.error('Signup error:', err)
-      setError('An unexpected error occurred. Please try again.')
+      setError(t('auth.login.errors.unexpected'))
       setIsLoading(false)
     }
   }
@@ -63,21 +68,22 @@ export default function SignupPage() {
       </div>
 
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-16">
-        <div className="mb-12 text-center text-white">
+        <div className="mb-8 text-center text-white">
           <div className="flex items-center justify-center gap-3 mb-4">
             <span className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-[#7c3aed] via-[#6366f1] to-[#4f46e5] text-2xl font-bold text-white shadow-lg shadow-indigo-300/60">
               OC
             </span>
             <div className="text-left">
               <h2 className="text-4xl font-bold text-white">OpenCare</h2>
-              <p className="text-xs text-white/60 uppercase tracking-widest">Plateforme des praticiens</p>
+              <p className="text-xs text-white/60 uppercase tracking-widest">{t('auth.brandSubtitle')}</p>
             </div>
           </div>
+
           <h1 className="mt-6 text-3xl font-semibold">
-            Rejoignez la communauté des praticiens connectés
+            {t('auth.signup.title')}
           </h1>
           <p className="mt-2 text-sm text-white/70">
-            Créez votre accès sécurisé pour centraliser votre activité clinique.
+            {t('auth.signup.subtitle')}
           </p>
         </div>
 
@@ -86,10 +92,10 @@ export default function SignupPage() {
             <div className="space-y-8">
               <div>
                 <h2 className="text-3xl font-semibold leading-tight">
-                  Bienvenue sur OpenCare
+                  {t('auth.signup.welcomeTitle')}
                 </h2>
                 <p className="mt-4 text-base text-white/80 leading-relaxed">
-                  Une plateforme moderne et sécurisée pour simplifier la coordination des soins et améliorer la collaboration médicale.
+                  {t('auth.signup.welcomeDescription')}
                 </p>
               </div>
 
@@ -97,13 +103,13 @@ export default function SignupPage() {
 
               <div>
                 <p className="text-sm font-medium text-white/60 uppercase tracking-wider">
-                  Déjà inscrit ?
+                  {t('auth.signup.alreadyRegistered')}
                 </p>
                 <Link
                   href="/login"
                   className="mt-3 inline-flex items-center gap-2 text-base font-medium text-white hover:text-white/90 transition group"
                 >
-                  Se connecter à mon compte
+                  {t('auth.signup.loginToAccount')}
                   <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
                 </Link>
               </div>
@@ -114,21 +120,21 @@ export default function SignupPage() {
             <form className="space-y-5" onSubmit={handleSubmit}>
               <div className="space-y-2">
                 <label htmlFor="fullName" className="text-sm font-semibold text-slate-700">
-                  Nom et prénom
+                  {t('auth.signup.fullNameLabel')}
                 </label>
                 <input
                   id="fullName"
                   required
                   value={formState.fullName}
                   onChange={handleChange("fullName")}
-                  placeholder="Dr. Marie Dupuis"
+                  placeholder={t('auth.signup.fullNamePlaceholder')}
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 />
               </div>
 
               <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-semibold text-slate-700">
-                  Adresse e-mail professionnelle
+                  {t('auth.signup.emailLabel')}
                 </label>
                 <input
                   id="email"
@@ -136,18 +142,14 @@ export default function SignupPage() {
                   required
                   value={formState.email}
                   onChange={handleChange("email")}
-                  placeholder="prenom.nom@hopital.fr"
+                  placeholder={t('auth.signup.emailPlaceholder')}
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 />
               </div>
 
-              
-
-             
-
               <div className="space-y-2">
                 <label htmlFor="password" className="text-sm font-semibold text-slate-700">
-                  Mot de passe
+                  {t('auth.signup.passwordLabel')}
                 </label>
                 <input
                   id="password"
@@ -155,7 +157,7 @@ export default function SignupPage() {
                   required
                   value={formState.password}
                   onChange={handleChange("password")}
-                  placeholder="Créez un mot de passe robuste"
+                  placeholder={t('auth.signup.passwordPlaceholder')}
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 />
               </div>
@@ -169,7 +171,7 @@ export default function SignupPage() {
                 disabled={isLoading}
               >
                 <Sparkles className="mr-2 h-4 w-4" />
-                {isLoading ? "Création du compte..." : "Créer mon compte"}
+                {isLoading ? t('auth.signup.creating') : t('auth.signup.createButton')}
               </Button>
             </form>
 
@@ -177,7 +179,7 @@ export default function SignupPage() {
               <div className="relative">
                 <span className="block border-t border-slate-200" />
                 <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-3 text-xs uppercase tracking-wide text-slate-400">
-                  ou
+                  {t('common.or')}
                 </span>
               </div>
               <Button
@@ -189,14 +191,14 @@ export default function SignupPage() {
                 <span className="mr-3 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white">
                   <span className="text-lg font-bold text-indigo-600">G</span>
                 </span>
-                S'inscrire avec Google
+                {t('auth.signup.googleSignup')}
               </Button>
             </div>
 
             <p className="mt-6 text-center text-xs text-slate-500">
-              Vous possédez déjà un compte ?{" "}
+              {t('auth.signup.haveAccount')}{" "}
               <Link href="/login" className="font-semibold text-indigo-600 hover:underline">
-                Se connecter
+                {t('auth.signup.login')}
               </Link>
             </p>
           </div>

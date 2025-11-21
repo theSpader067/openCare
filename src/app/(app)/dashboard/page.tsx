@@ -73,6 +73,7 @@ import {
 } from "@/lib/api/tasks";
 import { getPatients } from "@/lib/api/patients";
 import { useSession } from "next-auth/react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type ActivityStatus = "done" | "todo";
 
@@ -168,6 +169,7 @@ export default function DashboardPage() {
   const { data: session } = useSession();
   const sessionUser = session?.user as any;
   const userId = sessionUser?.id ? parseInt(sessionUser.id as string) : null;
+  const { t, language } = useLanguage();
 
   const baseDate = useMemo(() => startOfDay(new Date()), []);
   const [calendarMonth, setCalendarMonth] = useState(
@@ -281,14 +283,14 @@ export default function DashboardPage() {
   const selectedDayLabel = useMemo(() =>
     capitalize(
       removeTrailingDot(
-        selectedDateObj.toLocaleDateString("fr-FR", {
+        selectedDateObj.toLocaleDateString(language === 'fr' ? "fr-FR" : "en-US", {
           weekday: "long",
           day: "numeric",
           month: "long",
         }),
       ),
     ),
-  [selectedDateObj]);
+  [selectedDateObj, language]);
 
   const setLoading = (section: SectionKey, value: boolean) => {
     switch (section) {
@@ -582,7 +584,7 @@ export default function DashboardPage() {
       status: patientForm.status,
       labs: {
         status: patientForm.labsStatus,
-        note: patientForm.labsNote.trim() || "À préciser",
+        note: patientForm.labsNote.trim() || t('dashboard.dashboardPage.toSpecify'),
       },
     };
 
@@ -695,7 +697,7 @@ export default function DashboardPage() {
       <section className="shrink-0 hidden lg:flex">
         {!hasStats ? (
           <Card className="border-dashed border-slate-200 bg-white/70 p-6 text-center text-sm text-slate-500">
-            Aucun indicateur disponible pour le moment. Connectez vos flux opérationnels pour activer cette section.
+            {t('dashboard.dashboardPage.noIndicators')}
           </Card>
         ) : (
           <div className="relative -mx-4 mt-1 pb-4 sm:-mx-6 sm:px-6">
@@ -749,7 +751,7 @@ export default function DashboardPage() {
             {renderCalendarCard()}
             <TasksSection
               ref={tasksSectionRef}
-              title="Consignes du jour"
+              title={t('dashboard.dashboardPage.dailyInstructions')}
               showReloadButton={true}
               onTaskToggle={handleToggleTaskDone}
               onTaskAdd={handleTaskAdd}
@@ -824,20 +826,20 @@ export default function DashboardPage() {
           <Card className="flex h-full flex-col border-none bg-white/90 hidden xl:block h-[100%]">
             <CardHeader className="flex flex-wrap items-center justify-between gap-3 pb-4">
               <div>
-                <CardTitle>Patients du Service</CardTitle>
-                
+                <CardTitle>{t('dashboard.dashboardPage.servicePatients')}</CardTitle>
+
               </div>
             </CardHeader>
             <CardContent className="flex-1 min-h-0 overflow-hidden pt-0">
               {isServicePatientsLoading ? (
                 <div className="flex h-full items-center justify-center">
-                  <Spinner label="Chargement des patients..." />
+                  <Spinner label={t('dashboard.dashboardPage.loadingPatients')} />
                 </div>
               ) : servicePatients.length === 0 ? (
                 <EmptyState
                   icon={UsersRound}
-                  title="Aucun patient attribué"
-                  description="Les patients apparaîtront ici dès qu&apos;ils seront ajoutés."
+                  title={t('dashboard.dashboardPage.noPatients')}
+                  description={t('dashboard.dashboardPage.patientsWillAppear')}
                   action={
                     <></>
                   }
@@ -848,13 +850,13 @@ export default function DashboardPage() {
                     <thead className="sticky top-0 z-10 bg-white/90 backdrop-blur">
                       <tr>
                         <th className="px-4 py-3 font-semibold text-slate-500">
-                          Patient
+                          {t('dashboard.dashboardPage.patientTablePatient')}
                         </th>
                         <th className="px-4 py-3 font-semibold text-slate-500">
-                          Diagnostic
+                          {t('dashboard.dashboardPage.patientTableDiagnosis')}
                         </th>
                         <th className="px-4 py-3 font-semibold text-slate-500">
-                          Statut
+                          {t('dashboard.dashboardPage.patientTableStatus')}
                         </th>
                       </tr>
                     </thead>
@@ -900,7 +902,7 @@ export default function DashboardPage() {
           className="fixed bottom-24 right-5 z-40 flex items-center gap-2 rounded-full bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#22d3ee] px-4 py-3 text-sm font-semibold text-white shadow-xl shadow-indigo-200/60 transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-indigo-200/70 xl:hidden"
         >
           <ListChecks className="h-4 w-4" />
-          Planning & consignes
+          {t('dashboard.dashboardPage.mobileToolkitButton')}
         </button>
       ) : null}
       <div
@@ -921,13 +923,13 @@ export default function DashboardPage() {
         <div className="flex flex-shrink-0 items-center justify-between gap-4 border-b border-violet-100/70 px-4 py-3">
           <div className="flex items-center gap-2 text-sm font-semibold text-[#352f72]">
             <ListChecks className="h-4 w-4 text-indigo-500" />
-            Vos outils rapides
+            {t('dashboard.dashboardPage.quickTools')}
           </div>
           <button
             type="button"
             className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
             onClick={() => setIsMobileToolkitOpen(false)}
-            aria-label="Fermer le panneau"
+            aria-label={t('dashboard.dashboardPage.closePanel')}
           >
             <X className="h-4 w-4" />
           </button>
@@ -940,7 +942,7 @@ export default function DashboardPage() {
             )}
             <TasksSection
               ref={tasksSectionRef}
-              title="Consignes du jour"
+              title={t('dashboard.dashboardPage.dailyInstructions')}
               showReloadButton={true}
               onTaskToggle={handleToggleTaskDone}
               onTaskAdd={handleTaskAdd}
@@ -961,27 +963,27 @@ export default function DashboardPage() {
       <Modal
         open={isAddPatientModalOpen}
         onClose={() => setIsAddPatientModalOpen(false)}
-        title="Ajouter un patient"
-        description="Renseignez les informations principales pour planifier le parcours du patient."
+        title={t('dashboard.dashboardPage.addPatient')}
+        description={t('dashboard.dashboardPage.patientFormDescription')}
         size="md"
         footer={
           <>
             <Button variant="ghost" onClick={() => setIsAddPatientModalOpen(false)}>
-              Annuler
+              {t('dashboard.dashboardPage.cancel')}
             </Button>
             <Button
               variant="primary"
               onClick={handleAddPatient}
               disabled={!patientFormIsValid}
             >
-              Enregistrer
+              {t('dashboard.dashboardPage.save')}
             </Button>
           </>
         }
       >
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <label className="text-sm font-semibold text-[#1f184f]">Nom complet</label>
+            <label className="text-sm font-semibold text-[#1f184f]">{t('dashboard.dashboardPage.fullName')}</label>
             <input
               value={patientForm.name}
               onChange={(event) =>
@@ -990,13 +992,13 @@ export default function DashboardPage() {
                   name: event.target.value,
                 }))
               }
-              placeholder="Ex. Fatou Diop"
+              placeholder={t('dashboard.dashboardPage.fullNamePlaceholder')}
               className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
             />
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">Service</label>
+              <label className="text-sm font-semibold text-[#1f184f]">{t('dashboard.dashboardPage.service')}</label>
               <input
                 value={patientForm.service}
                 onChange={(event) =>
@@ -1005,12 +1007,12 @@ export default function DashboardPage() {
                     service: event.target.value,
                   }))
                 }
-                placeholder="Ex. Chirurgie digestive"
+                placeholder={t('dashboard.dashboardPage.servicePlaceholder')}
                 className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
               />
             </div>
             <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">Diagnostic</label>
+              <label className="text-sm font-semibold text-[#1f184f]">{t('dashboard.dashboardPage.diagnosis')}</label>
               <input
                 value={patientForm.diagnosis}
                 onChange={(event) =>
@@ -1019,14 +1021,14 @@ export default function DashboardPage() {
                     diagnosis: event.target.value,
                   }))
                 }
-                placeholder="Ex. Colectomie laparoscopique · J+7"
+                placeholder={t('dashboard.dashboardPage.diagnosisPlaceholder')}
                 className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
               />
             </div>
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">Statut</label>
+              <label className="text-sm font-semibold text-[#1f184f]">{t('dashboard.dashboardPage.status')}</label>
               <select
                 value={patientForm.status}
                 onChange={(event) =>
@@ -1045,7 +1047,7 @@ export default function DashboardPage() {
               </select>
             </div>
             <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">Statut laboratoire</label>
+              <label className="text-sm font-semibold text-[#1f184f]">{t('dashboard.dashboardPage.labStatus')}</label>
               <select
                 value={patientForm.labsStatus}
                 onChange={(event) =>
@@ -1064,7 +1066,7 @@ export default function DashboardPage() {
               </select>
             </div>
             <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">Statut laboratoire</label>
+              <label className="text-sm font-semibold text-[#1f184f]">{t('dashboard.dashboardPage.labStatus')}</label>
               <select
                 value={patientForm.labsStatus}
                 onChange={(event) =>
@@ -1085,7 +1087,7 @@ export default function DashboardPage() {
           </div>
           <div className="grid gap-2">
             <label className="text-sm font-semibold text-[#1f184f]">
-              Note laboratoire / commentaire
+              {t('dashboard.dashboardPage.labNote')}
             </label>
             <input
               value={patientForm.labsNote}
@@ -1095,7 +1097,7 @@ export default function DashboardPage() {
                   labsNote: event.target.value,
                 }))
               }
-              placeholder="Ex. CRP 12 mg/L - stable"
+              placeholder={t('dashboard.dashboardPage.labNotePlaceholder')}
               className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
             />
           </div>

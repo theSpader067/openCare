@@ -7,8 +7,10 @@ import { Mail, ShieldCheck, LogIn, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signIn } from "next-auth/react"
 import { getLoginRedirectUrl } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 function LoginPageContent() {
+  const { t } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
@@ -21,20 +23,20 @@ function LoginPageContent() {
   useEffect(() => {
     // Check for verification success
     if (searchParams.get('verified') === '1') {
-      setSuccess('Email vérifié avec succès! connectez-vous pour continuer.')
+      setSuccess(t('auth.login.errors.verified'))
     }
     // Check for unverified error
     if (searchParams.get('unverified') === '1') {
-      setError('Please verify your email before logging in.')
+      setError(t('auth.login.errors.unverified'))
     }
     // Check for other errors
     const errorParam = searchParams.get('error')
     if (errorParam === 'invalid_token') {
-      setError('Invalid verification link. Please request a new one.')
+      setError(t('auth.login.errors.invalidToken'))
     } else if (errorParam === 'expired') {
-      setError('Verification link has expired. Please request a new one.')
+      setError(t('auth.login.errors.expired'))
     }
-  }, [searchParams])
+  }, [searchParams, t])
 
   useEffect(() => {
     // Detect device type and set appropriate callback URL
@@ -56,7 +58,7 @@ function LoginPageContent() {
 
       if (res?.error) {
         setIsLoading(false)
-        setError(res.error || 'An unexpected error occurred')
+        setError(res.error || t('auth.login.errors.unexpected'))
       } else if (res?.ok) {
         // NextAuth callback will handle the redirect based on user state
         return
@@ -64,7 +66,7 @@ function LoginPageContent() {
     } catch (err) {
       console.error('Login error:', err)
       setIsLoading(false)
-      setError('An unexpected error occurred. Please try again.')
+      setError(t('auth.login.errors.unexpected'))
     }
   }
 
@@ -77,14 +79,14 @@ function LoginPageContent() {
       </div>
 
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-16">
-        <div className="mb-12 flex items-center gap-3 text-white">
+        <div className="mb-8 flex items-center gap-3 text-white">
           <span className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-[#7c3aed] via-[#6366f1] to-[#4f46e5] text-2xl font-bold text-white shadow-lg shadow-indigo-300/60">
             OC
           </span>
           <div>
             <h1 className="text-4xl font-bold">OpenCare</h1>
             <p className="text-xs uppercase tracking-widest text-white/60">
-              Plateforme des praticiens
+              {t('auth.brandSubtitle')}
             </p>
           </div>
         </div>
@@ -93,11 +95,10 @@ function LoginPageContent() {
           <div className="grid gap-6 rounded-[30px] bg-white/10 p-8 md:grid-cols-[1.1fr_0.9fr]">
             <div className="rounded-3xl bg-white/10 p-6 text-white shadow-inner shadow-indigo-900/40 hidden md:block">
               <h2 className="text-2xl font-semibold">
-                Bienvenue de retour 👋
+                {t('auth.login.title')}
               </h2>
               <p className="mt-2 text-sm text-white/70">
-                Connectez-vous pour retrouver votre agenda, vos dossiers patients
-                et l&apos;activité du bloc opératoire consolidée.
+                {t('auth.login.subtitle')}
               </p>
 
               <ul className="mt-6 space-y-4 text-sm text-white/80">
@@ -105,29 +106,29 @@ function LoginPageContent() {
                   <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10">
                     <ShieldCheck className="h-4 w-4" />
                   </span>
-                  Accès sécurisé conforme aux standards hospitaliers.
+                  {t('auth.login.benefits.security')}
                 </li>
                 <li className="flex items-center gap-3">
                   <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10">
                     <Mail className="h-4 w-4" />
                   </span>
-                  Notifications instantanées sur vos suivis critiques.
+                  {t('auth.login.benefits.notifications')}
                 </li>
               </ul>
 
               <div className="mt-10 rounded-2xl border border-white/10 bg-white/10 p-4 text-xs text-white/70">
                 <p>
-                  Besoin d&apos;un compte ?{" "}
+                  {t('auth.login.needAccount')}{" "}
                   <Link
                     href="/signup"
                     className="font-semibold text-white hover:underline"
                   >
-                    Demandez un accès sécurisé
+                    {t('auth.login.requestAccess')}
                   </Link>
                   .
                 </p>
                 <p className="mt-2">
-                  Support disponible 24/7 pour les praticiens et équipes de bloc.
+                  {t('auth.login.support')}
                 </p>
               </div>
             </div>
@@ -139,7 +140,7 @@ function LoginPageContent() {
                     htmlFor="email"
                     className="text-sm font-semibold text-slate-700"
                   >
-                    Identifiant médical ou e-mail
+                    {t('auth.login.emailLabel')}
                   </label>
                   <input
                     id="email"
@@ -148,7 +149,7 @@ function LoginPageContent() {
                     required
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    placeholder="prenom.nom@chu.fr"
+                    placeholder={t('auth.login.emailPlaceholder')}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                   />
                 </div>
@@ -158,7 +159,7 @@ function LoginPageContent() {
                     htmlFor="password"
                     className="text-sm font-semibold text-slate-700"
                   >
-                    Mot de passe
+                    {t('auth.login.passwordLabel')}
                   </label>
                   <input
                     id="password"
@@ -167,7 +168,7 @@ function LoginPageContent() {
                     required
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    placeholder="••••••••"
+                    placeholder={t('auth.login.passwordPlaceholder')}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                   />
                 </div>
@@ -178,10 +179,10 @@ function LoginPageContent() {
                       type="checkbox"
                       className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                     />
-                    Se souvenir de moi
+                    {t('auth.login.rememberMe')}
                   </label>
                   <Link href="#" className="font-semibold text-indigo-600 hover:underline">
-                    Mot de passe oublié ?
+                    {t('auth.login.forgotPassword')}
                   </Link>
                 </div>
 
@@ -207,7 +208,7 @@ function LoginPageContent() {
                   disabled={isLoading}
                 >
                   <LogIn className="mr-2 h-4 w-4" />
-                  {isLoading ? "Connexion en cours..." : "Se connecter"}
+                  {isLoading ? t('auth.login.loggingIn') : t('auth.login.loginButton')}
                 </Button>
               </form>
 
@@ -215,7 +216,7 @@ function LoginPageContent() {
                 <div className="relative">
                   <span className="block border-t border-slate-200" />
                   <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-3 text-xs uppercase tracking-wide text-slate-400">
-                    ou
+                    {t('common.or')}
                   </span>
                 </div>
                 <Button
@@ -227,14 +228,14 @@ function LoginPageContent() {
                   <span className="mr-3 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white">
                     <span className="text-lg font-bold text-indigo-600">G</span>
                   </span>
-                  Continuer avec Google
+                  {t('auth.login.googleLogin')}
                 </Button>
               </div>
 
               <p className="mt-6 text-center text-xs text-slate-500">
-                Pas encore inscrit ?{" "}
+                {t('auth.login.noAccount')}{" "}
                 <Link href="/signup" className="font-semibold text-indigo-600 hover:underline">
-                  Créer un compte
+                  {t('auth.login.createAccount')}
                 </Link>
               </p>
             </div>
@@ -247,7 +248,13 @@ function LoginPageContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold">Loading...</h1></div></div>}>
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#312e81] to-[#6d28d9]">
+        <div className="text-center text-white">
+          <h1 className="text-2xl font-bold">Loading...</h1>
+        </div>
+      </div>
+    }>
       <LoginPageContent />
     </Suspense>
   );

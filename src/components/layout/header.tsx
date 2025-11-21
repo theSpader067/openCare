@@ -23,6 +23,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 
 
 const formatBirthDate = (value: string) => {
@@ -82,7 +84,8 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
-  const today = new Intl.DateTimeFormat("fr-FR", {
+  const { t, language } = useLanguage();
+  const today = new Intl.DateTimeFormat(language === 'fr' ? "fr-FR" : "en-US", {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -172,7 +175,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
               size="sm"
               className="lg:hidden"
               onClick={onToggleSidebar}
-              aria-label="Ouvrir le menu de navigation"
+              aria-label={t('dashboard.header.openNavMenu')}
             >
               <Menu className="h-5 w-5" />
             </Button>
@@ -181,7 +184,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                 {(session.user as any).hospital}
               </span>
               <h1 className="text-sm font-semibold text-slate-900 sm:text-base">
-                Bonjour {(session.user as any).username}
+                {t('dashboard.header.greeting').replace('{{name}}', (session.user as any).username)}
               </h1>
             </div>
           </div>
@@ -204,7 +207,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                   className="flex items-center gap-2"
                 >
                   <Plus className="h-4 w-4" />
-                  Créer
+                  {t('dashboard.header.create')}
                   <ChevronDown
                     className={cn(
                       "h-4 w-4 transition-transform",
@@ -226,7 +229,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                           className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-[#352f72] transition hover:bg-indigo-50/80 hover:text-[#2f2961]"
                         >
                           <FileText className="h-5 w-5 text-indigo-600" />
-                          Ordonnance
+                          {t('dashboard.header.prescription')}
                         </button>
                       </li>
                       <li>
@@ -239,7 +242,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                           className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-[#352f72] transition hover:bg-indigo-50/80 hover:text-[#2f2961]"
                         >
                           <Beaker className="h-5 w-5 text-indigo-600" />
-                          analyses
+                          {t('dashboard.header.analyses')}
                         </button>
                       </li>
                       <li>
@@ -252,7 +255,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                           className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-[#352f72] transition hover:bg-indigo-50/80 hover:text-[#2f2961]"
                         >
                           <FileText className="h-5 w-5 text-indigo-600" />
-                          Compte rendu
+                          {t('dashboard.header.report')}
                         </button>
                       </li>
                       <li>
@@ -265,7 +268,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                           className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-[#352f72] transition hover:bg-indigo-50/80 hover:text-[#2f2961]"
                         >
                           <Stethoscope className="h-5 w-5 text-indigo-600" />
-                          Avis
+                          {t('dashboard.header.opinion')}
                         </button>
                       </li>
                     </ul>
@@ -308,19 +311,19 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-[#8a81d6]">
-                      Notifications
+                      {t('dashboard.header.notifications')}
                     </p>
                   </div>
                   <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-3 py-1 text-[11px] font-semibold text-[#4338ca]">
                     <Sparkles className="h-3.5 w-3.5" />
-                    Temps réel
+                    {t('dashboard.header.realTime')}
                   </span>
                 </div>
                 <div className="mt-3 max-h-72 overflow-y-auto pr-1">
                   {notifications.length === 0 ? (
                     <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-violet-200/70 bg-white/80 px-4 py-10 text-center text-sm text-slate-500">
                       <Bell className="h-5 w-5 text-slate-400" />
-                      Aucun nouveau signal, tout est sous contrôle.
+                      {t('dashboard.header.noNotifications')}
                     </div>
                   ) : (
                     <ul className="space-y-2.5">
@@ -376,7 +379,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                     className="text-xs font-semibold uppercase tracking-wide text-[#5f5aa5] transition hover:text-[#4338ca]"
                     onClick={() => setNotificationsOpen(false)}
                   >
-                    Marquer tout comme lu
+                    {t('dashboard.header.markAllAsRead')}
                   </button>
                   <button
                     type="button"
@@ -386,13 +389,15 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                       router.push("/notifications");
                     }}
                   >
-                    Voir tout
+                    {t('dashboard.header.viewAll')}
                     <ChevronDown className="h-3.5 w-3.5 -rotate-90" />
                   </button>
                 </div>
               </div>
             ) : null}
           </div>
+
+          <LanguageSwitcher />
 
           <div className="relative flex" ref={profileRef}>
             <button
@@ -449,7 +454,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                         <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/20">
                           <User className="h-4 w-4" />
                         </span>
-                        Mon profil
+                        {t('dashboard.header.myProfile')}
                       </span>
                     </button>
                     <button
@@ -464,7 +469,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                         <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/20">
                           <LogOut className="h-4 w-4" />
                         </span>
-                        Déconnexion
+                        {t('dashboard.header.logout')}
                       </span>
                     </button>
                   </div>

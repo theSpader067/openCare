@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarContent } from "@/components/layout/sidebar";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface MobileSidebarProps {
   open: boolean;
@@ -10,6 +11,8 @@ interface MobileSidebarProps {
 }
 
 export function MobileSidebar({ open, onClose }: MobileSidebarProps) {
+  const { t } = useLanguage();
+
   return (
     <div
       className={`fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-sm transition-opacity ${
@@ -27,7 +30,7 @@ export function MobileSidebar({ open, onClose }: MobileSidebarProps) {
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-center justify-end px-4 py-3">
-          <Button variant="ghost" size="sm" onClick={onClose} aria-label="Fermer le menu">
+          <Button variant="ghost" size="sm" onClick={onClose} aria-label={t('dashboard.mobileSidebar.closeMenu')}>
             <X className="h-5 w-5" />
           </Button>
         </div>

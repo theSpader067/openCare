@@ -1,8 +1,10 @@
 "use client"
 
 import { useSession } from "next-auth/react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function VerifyEmailPage() {
+  const { t } = useLanguage();
   const { data: session } = useSession();
 
   return (
@@ -30,26 +32,28 @@ export default function VerifyEmailPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-white">Vérifiez votre email</h2>
+              <h2 className="text-2xl font-bold text-slate-900">
+                {t('auth.verifyEmail.title')}
+              </h2>
               <p className="mt-2 text-sm text-slate-600">
-                Nous avons envoyé un lien de vérification à:
+                {t('auth.verifyEmail.sentTo')}
               </p>
               <p className="mt-1 font-semibold text-slate-800">
                 {session?.user?.email}
               </p>
               <p className="mt-4 text-sm text-slate-600">
-                Cliquez sur le lien dans l'email pour confirmer votre adresse et accéder à votre onboarding.
+                {t('auth.verifyEmail.instruction')}
               </p>
             </div>
 
             <div className="mt-8 rounded-xl bg-blue-50 p-4 border border-blue-200">
               <p className="text-xs text-blue-800">
-                <strong>💡 Conseil:</strong> Vérifiez votre dossier de spam si vous ne voyez pas l'email dans quelques minutes.
+                <strong>{t('auth.verifyEmail.tipTitle')}</strong> {t('auth.verifyEmail.tipMessage')}
               </p>
             </div>
 
             <p className="mt-6 text-center text-xs text-slate-500">
-              Vous serez automatiquement redirigé vers l'onboarding après vérification.
+              {t('auth.verifyEmail.autoRedirect')}
             </p>
           </div>
         </div>

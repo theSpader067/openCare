@@ -75,6 +75,7 @@ import { getPatients } from "@/lib/api/patients";
 import { useSession } from "next-auth/react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useOpenPanel } from '@openpanel/nextjs';
+import { activityAnalytics, userAnalytics } from "@/lib/analytics";
 
 
 type ActivityStatus = "done" | "todo";
@@ -211,6 +212,11 @@ export default function DashboardPage() {
   const timersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
   const statsInteractionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Track page view on component mount
+  useEffect(() => {
+    userAnalytics.trackPageView(op, 'dashboard');
+  }, [op]);
+
   useEffect(() => {
     return () => {
       if (statsInteractionTimeoutRef.current) {
@@ -219,8 +225,6 @@ export default function DashboardPage() {
       }
       timersRef.current.forEach((timer) => clearTimeout(timer));
       timersRef.current = [];
-
-      op.track('my_event', { foo: 'bar' })
     };
   }, []);
 
@@ -493,7 +497,16 @@ export default function DashboardPage() {
         team: activityForm.team.trim() || undefined,
       });
 
-      if (result.success) {
+      if (result.success && result.data) {
+        // Track activity creation
+        activityAnalytics.trackActivityCreated(op, {
+          activityId: result.data.id,
+          title: result.data.title,
+          type: result.data.type,
+          location: result.data.location,
+          team: result.data.team,
+        });
+
         setIsAddActivityModalOpen(false);
         setActivityForm(createEmptyActivityForm());
         await activitySectionRef.current?.refresh();
@@ -538,6 +551,15 @@ export default function DashboardPage() {
         });
 
         if (result.success) {
+          // Track activity update
+          activityAnalytics.trackActivityUpdated(op, {
+            activityId: parseInt(activityToEdit.id),
+            title: activityForm.title.trim(),
+            type: activityForm.type,
+            location: activityForm.location.trim() || undefined,
+            team: activityForm.team.trim() || undefined,
+          });
+
           setIsEditActivityModalOpen(false);
           setActivityToEdit(null);
           setActivityForm(createEmptyActivityForm());
@@ -563,6 +585,9 @@ export default function DashboardPage() {
     try {
       const result = await deleteActivity(parseInt(activityToDelete.id));
       if (result.success) {
+        // Track activity deletion
+        activityAnalytics.trackActivityDeleted(op, parseInt(activityToDelete.id));
+
         setIsDeleteActivityModalOpen(false);
         setActivityToDelete(null);
         await activitySectionRef.current?.refresh();

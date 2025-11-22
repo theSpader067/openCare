@@ -30,6 +30,7 @@ import type { TaskItem, TaskFormState } from "@/types/tasks";
 import { PatientCreate, type PatientCreateRef } from "@/components/document/PatientCreate";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useOpenPanel } from '@openpanel/nextjs';
+import { taskAnalytics } from "@/lib/analytics";
 
 interface Patient {
   id: string | number;
@@ -183,7 +184,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
     setIsAddingFavoriteTask(false);
     setNewFavoriteTask("");
     setIsAddTaskModalOpen(true);
-    op.track('add_task', { foo: 'bar' })
+    taskAnalytics.trackAddTaskModalOpened(op);
   };
 
   const handleOpenEditTaskModal = (task: TaskItem) => {
@@ -239,6 +240,16 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
           patientHistory,
           taskType: taskForm.taskType || "team",
         });
+
+        // Track task update
+        taskAnalytics.trackTaskUpdated(op, {
+          taskId: taskToEdit.id,
+          title: validTitles[0],
+          taskType: taskForm.taskType || "team",
+          patientId: patientId ? parseInt(patientId) : undefined,
+          patientName,
+        });
+
         setIsEditTaskModalOpen(false);
         // Reset form
         setTaskForm({
@@ -284,6 +295,19 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
 
         // If tasks were successfully created, close modal and reset form
         if (createdTasks && createdTasks.length > 0) {
+          // Track task creation event for each task
+          createdTasks.forEach((task) => {
+            taskAnalytics.trackTaskCreated(op, {
+              taskId: task.id,
+              title: task.title,
+              taskType: task.taskType,
+              patientId: task.patientId,
+              patientName: task.patientName,
+              isMultiple: createdTasks.length > 1,
+              taskCount: createdTasks.length,
+            });
+          });
+
           setIsAddTaskModalOpen(false);
           // Reset form
           setTaskForm({
@@ -312,6 +336,9 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
       try {
         // Call the parent's delete handler
         await onTaskDelete(taskToDelete.id);
+
+        // Track task deletion
+        taskAnalytics.trackTaskDeleted(op, taskToDelete.id);
 
         // Remove task from local state
         setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskToDelete.id));
@@ -486,7 +513,10 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
                       >
                         <div className="flex items-start gap-3 sm:flex-1">
                           <button
-                            onClick={() => void onTaskToggle(task.id)}
+                            onClick={() => {
+                              void onTaskToggle(task.id);
+                              taskAnalytics.trackTaskCompleted(op, task.id);
+                            }}
                             className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border transition hover:bg-slate-100"
                             type="button"
                             disabled={isLoading}

@@ -74,6 +74,8 @@ import {
 import { getPatients } from "@/lib/api/patients";
 import { useSession } from "next-auth/react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useOpenPanel } from '@openpanel/nextjs';
+
 
 type ActivityStatus = "done" | "todo";
 
@@ -166,6 +168,8 @@ const labStatusOptions: PatientItem["labs"]["status"][] = ["pending", "completed
 
 
 export default function DashboardPage() {
+
+  const op = useOpenPanel();
   const { data: session } = useSession();
   const sessionUser = session?.user as any;
   const userId = sessionUser?.id ? parseInt(sessionUser.id as string) : null;
@@ -220,6 +224,8 @@ export default function DashboardPage() {
       }
       timersRef.current.forEach((timer) => clearTimeout(timer));
       timersRef.current = [];
+
+      op.track('my_event', { foo: 'bar' })
     };
   }, []);
 

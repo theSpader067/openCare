@@ -151,11 +151,6 @@ const startOfDay = (date: Date) => {
   return next;
 };
 
-const addDays = (date: Date, amount: number) => {
-  const next = new Date(date);
-  next.setDate(next.getDate() + amount);
-  return next;
-};
 
 const patientStatusOptions: PatientItem["status"][] = [
   "Pré-op",

@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 import type { TaskItem, TaskFormState } from "@/types/tasks";
 import { PatientCreate, type PatientCreateRef } from "@/components/document/PatientCreate";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useOpenPanel } from '@openpanel/nextjs';
 
 interface Patient {
   id: string | number;
@@ -78,12 +79,6 @@ interface TasksSectionProps {
   contentClassName?: string;
 }
 
-const getUserDisplayName = (user: any): string => {
-  if (user.firstName && user.lastName) {
-    return `${user.firstName} ${user.lastName}`;
-  }
-  return user.email || "Unknown";
-};
 
 export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
   function TasksSection({
@@ -168,6 +163,9 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
   const completedTasks = tasks?.filter((task) => task.done).length;
   const tasksCount = tasks?.length;
 
+
+  const op = useOpenPanel();
+
   // Task handlers
   const handleOpenAddTaskModal = () => {
     setTaskForm({
@@ -185,6 +183,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
     setIsAddingFavoriteTask(false);
     setNewFavoriteTask("");
     setIsAddTaskModalOpen(true);
+    op.track('add_task', { foo: 'bar' })
   };
 
   const handleOpenEditTaskModal = (task: TaskItem) => {

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import type { ActivityItem } from "@/types/tasks";
 import { filter } from "framer-motion/client";
+import { activityServerAnalytics } from "@/lib/server-analytics";
 
 // Helper function to convert Prisma Activity to ActivityItem
 function convertActivityToActivityItem(activity: any): ActivityItem {
@@ -121,6 +122,16 @@ export async function POST(request: NextRequest) {
           },
         },
       },
+    });
+
+    // Track activity creation event
+    await activityServerAnalytics.trackActivityCreated({
+      id: activity.id,
+      title: activity.title,
+      category: activity.category || '',
+      creatorId: activity.creatorId,
+      place: activity.place || '',
+      équipe: activity.équipe || '',
     });
 
     return NextResponse.json({

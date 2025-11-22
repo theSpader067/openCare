@@ -1,139 +1,110 @@
-# OpenPanel Event Tracking - Quick Start Guide
+# OpenPanel Event Tracking - Backend Setup Guide
 
-## What's Been Set Up
+## What's Been Implemented
 
-Your application now has comprehensive event tracking for:
+Your application now has **backend-only** event tracking for:
 
 ✅ **Task Management**
-- Task creation (single and multiple)
+- Task creation
 - Task updates
 - Task completion (toggle done status)
 - Task deletion
-- Add task modal opened
 
 ✅ **Activity Management**
-- Activity creation (consultation, chirurgie, staff, tournee)
+- Activity creation
 - Activity updates
-- Activity completion
 - Activity deletion
-- Add activity modal opened
 
-✅ **Page Views**
-- Dashboard page tracking
+All events are tracked server-side in the API routes when data is actually saved to the database.
 
-✅ **Error Tracking**
-- Application error tracking
-
-## Files Modified/Created
+## Files Created/Modified
 
 ### New Files
-- `src/lib/analytics.ts` - Central analytics utilities module
+- `src/lib/server-analytics.ts` - Backend analytics utilities
 
 ### Modified Files
-- `src/components/tasks/TasksSection.tsx` - Added task tracking
-- `src/app/(app)/dashboard/page.tsx` - Added activity and page view tracking
+- `src/app/api/tasks/route.ts` - Added task creation tracking
+- `src/app/api/tasks/[taskId]/route.ts` - Added task update and deletion tracking
+- `src/app/api/tasks/[taskId]/toggle/route.ts` - Added task completion tracking
+- `src/app/api/activities/route.ts` - Added activity creation tracking
+- `src/app/api/activities/[activityId]/route.ts` - Added activity update and deletion tracking
 
-## How to Use in Your Code
+## How It Works
 
-### Import the Analytics Module
+When a user creates, updates, or deletes a task/activity:
 
-```typescript
-import { taskAnalytics, activityAnalytics, userAnalytics } from '@/lib/analytics';
-import { useOpenPanel } from '@openpanel/nextjs';
+1. The frontend sends a request to the API route
+2. The API validates the request and modifies the database
+3. **If the database operation succeeds**, the tracking event is sent to OpenPanel
+4. The response is sent back to the client
+
+Example flow for task creation:
+
+```
+Client (create task) → API Route (/api/tasks POST)
+                          ↓
+                    Validate request
+                          ↓
+                    Save to database (Prisma)
+                          ↓
+                    Track event → OpenPanel (async)
+                          ↓
+                    Return success response
 ```
 
-### Track Task Events
+## Using Backend Analytics
+
+### Import the utilities
 
 ```typescript
-const op = useOpenPanel();
-
-// When user opens add task modal
-taskAnalytics.trackAddTaskModalOpened(op);
-
-// When task is created
-taskAnalytics.trackTaskCreated(op, {
-  taskId: '123',
-  title: 'Complete review',
-  taskType: 'team',
-  patientId: '456',
-  patientName: 'John Doe',
-  taskCount: 1,
-});
-
-// When task is toggled complete
-taskAnalytics.trackTaskCompleted(op, '123');
-
-// When task is deleted
-taskAnalytics.trackTaskDeleted(op, '123');
-
-// When task is updated
-taskAnalytics.trackTaskUpdated(op, {
-  taskId: '123',
-  title: 'Updated title',
-  taskType: 'team',
-});
+import { taskServerAnalytics } from '@/lib/server-analytics';
+import { activityServerAnalytics } from '@/lib/server-analytics';
 ```
 
-### Track Activity Events
+### Track task events
 
 ```typescript
-const op = useOpenPanel();
+// In API route after creating a task
+const task = await prisma.task.create({ ... });
 
-// When user opens add activity modal
-activityAnalytics.trackAddActivityModalOpened(op);
-
-// When activity is created
-activityAnalytics.trackActivityCreated(op, {
-  activityId: '789',
-  title: 'Consultation with patient',
-  type: 'consultation',
-  location: 'Room 101',
-  team: 'Dr. Smith, Nurse Jane',
-});
-
-// When activity is toggled complete
-activityAnalytics.trackActivityCompleted(op, '789');
-
-// When activity is deleted
-activityAnalytics.trackActivityDeleted(op, '789');
-
-// When activity is updated
-activityAnalytics.trackActivityUpdated(op, {
-  activityId: '789',
-  title: 'Updated title',
-  type: 'consultation',
+await taskServerAnalytics.trackTaskCreated({
+  id: task.id,
+  title: task.title,
+  isPrivate: task.isPrivate,
+  creatorId: task.creatorId,
+  patientId: task.patientId,
+  patientName: task.patientName,
 });
 ```
 
-### Track Page Views
+### Track activity events
 
 ```typescript
-const op = useOpenPanel();
+// In API route after creating an activity
+const activity = await prisma.activity.create({ ... });
 
-// On component mount, track page view
-useEffect(() => {
-  userAnalytics.trackPageView(op, 'dashboard');
-}, [op]);
-```
-
-### Track Custom Actions
-
-```typescript
-const op = useOpenPanel();
-
-// Track any custom action
-userAnalytics.trackAction(op, 'user_exported_patients', {
-  export_format: 'pdf',
-  patient_count: 10,
+await activityServerAnalytics.trackActivityCreated({
+  id: activity.id,
+  title: activity.title,
+  category: activity.category,
+  creatorId: activity.creatorId,
+  place: activity.place,
+  équipe: activity.équipe,
 });
-
-// Track errors
-try {
-  // Some operation
-} catch (error) {
-  userAnalytics.trackError(op, 'patient_export_failed', error);
-}
 ```
+
+## Events Being Tracked
+
+### Task Events
+- `task_created` - New task created
+- `task_updated` - Task modified
+- `task_completed` - Task marked as done
+- `task_deleted` - Task deleted
+
+### Activity Events
+- `activity_created` - New activity created
+- `activity_updated` - Activity modified
+- `activity_deleted` - Activity deleted
 
 ## Viewing Your Events
 
@@ -141,131 +112,142 @@ try {
 2. Log in to your account
 3. Select your project
 4. Go to **Events** section
-5. You should see events like:
-   - `task_created`
-   - `activity_created`
-   - `task_completed`
-   - `activity_deleted`
-   - `page_viewed`
-   - etc.
+5. Create a new task or activity
+6. Look for your event in the list (may take 1-2 seconds to appear)
 
-## Where to Add More Tracking
+## Where Tracking Happens
 
-### Add Tracking to Patients Page
+### Task API Routes
+
+| Route | Method | Event |
+|-------|--------|-------|
+| `/api/tasks` | POST | `task_created` |
+| `/api/tasks/[id]` | PUT | `task_updated` |
+| `/api/tasks/[id]` | DELETE | `task_deleted` |
+| `/api/tasks/[id]/toggle` | POST | `task_completed` |
+
+### Activity API Routes
+
+| Route | Method | Event |
+|-------|--------|-------|
+| `/api/activities` | POST | `activity_created` |
+| `/api/activities/[id]` | PUT | `activity_updated` |
+| `/api/activities/[id]` | DELETE | `activity_deleted` |
+
+## Adding Tracking to New Features
+
+### Step 1: Import the analytics utility
 
 ```typescript
-// src/app/(app)/patients/page.tsx
-import { userAnalytics } from '@/lib/analytics';
-
-export default function PatientsPage() {
-  const op = useOpenPanel();
-
-  useEffect(() => {
-    userAnalytics.trackPageView(op, 'patients');
-  }, [op]);
-
-  // ... rest of component
-}
+// In your API route file
+import { taskServerAnalytics } from '@/lib/server-analytics';
 ```
 
-### Add Tracking to Task Completion in API
-
-You could also add tracking in the API route handlers for server-side events:
+### Step 2: Track after successful database operation
 
 ```typescript
-// src/app/api/tasks/[taskId]/toggle/route.ts
-// After successful toggle, consider logging to a server-side analytics service
-```
-
-### Add Tracking to User Authentication
-
-```typescript
-// src/app/login/page.tsx
-const handleLogin = async (credentials) => {
+export async function POST(request: NextRequest) {
   try {
-    const result = await signIn('credentials', credentials);
-    if (result?.ok) {
-      userAnalytics.trackAction(op, 'user_logged_in', {
-        login_method: 'email',
-      });
-    }
+    // ... validation and setup ...
+
+    // Create in database
+    const item = await prisma.yourModel.create({
+      data: { /* ... */ }
+    });
+
+    // Track the event
+    await taskServerAnalytics.trackTaskCreated({
+      id: item.id,
+      title: item.title,
+      isPrivate: false,
+      creatorId: userId,
+    });
+
+    // Return success
+    return NextResponse.json({ success: true, data: item });
   } catch (error) {
-    userAnalytics.trackError(op, 'login_failed', error);
+    // Handle error
   }
-};
-```
-
-## Event Properties You Can Track
-
-Any custom properties can be added. Common ones:
-
-```typescript
-// Task properties
-{
-  taskId: string | number,
-  title: string,
-  taskType: 'team' | 'private',
-  patientId: string | number,
-  patientName: string,
-  taskCount: number,
-  isMultiple: boolean,
-  status: string,
-}
-
-// Activity properties
-{
-  activityId: string | number,
-  title: string,
-  type: 'consultation' | 'chirurgie' | 'staff' | 'tournee',
-  location: string,
-  team: string,
-  status: string,
-}
-
-// Custom properties
-{
-  any_property: string | number | boolean,
-  nested_properties: 'supported',
-  timestamps: 'added_automatically',
 }
 ```
 
-## Testing Your Tracking
+### Step 3: Verify in OpenPanel
 
-1. Open your browser DevTools (F12)
-2. Go to **Network** tab
-3. Perform an action (create task, activity, etc.)
-4. Look for requests to `api.openpanel.dev`
-5. Check the payload to see what's being sent
+1. Trigger the action in your app
+2. Check OpenPanel dashboard within 2 seconds
+3. Look for the event in the Events list
 
-## Disable Events (If Needed)
+## Example Event Properties
 
-To temporarily disable event tracking:
+When you create a task, OpenPanel receives:
 
-```typescript
-// Set an environment variable
-NEXT_PUBLIC_DISABLE_ANALYTICS=true
-
-// Then check in your code
-if (process.env.NEXT_PUBLIC_DISABLE_ANALYTICS !== 'true') {
-  op.track('event_name', properties);
+```json
+{
+  "event": "task_created",
+  "properties": {
+    "task_id": 42,
+    "title": "Complete review",
+    "task_type": "team",
+    "patient_id": 10,
+    "patient_name": "John Doe",
+    "user_id": 5,
+    "timestamp": "2025-11-22T10:30:45.123Z"
+  }
 }
 ```
+
+## Environment Setup
+
+Make sure `OPENPANEL_CLIENT_ID` is set in your `.env` file:
+
+```bash
+OPENPANEL_CLIENT_ID=913189e0-98b8-4974-9884-b285e289373c
+```
+
+If not set:
+- Tracking will be disabled
+- A warning will be logged to console
+- The application will work normally (tracking is non-blocking)
+
+## Why Backend Tracking?
+
+✅ **More Reliable**: Events only sent when database operations actually succeed
+✅ **Simpler Code**: No tracking logic in frontend components
+✅ **Better Data**: Single source of truth - what's in the database
+✅ **Non-Blocking**: If OpenPanel is down, your app still works
+✅ **Secure**: API credentials are server-side only
+
+## Troubleshooting
+
+### Events not appearing in OpenPanel
+
+1. Check that `OPENPANEL_CLIENT_ID` is set in `.env`
+2. Create a task/activity in your app
+3. Wait 1-2 seconds (slight network delay)
+4. Check OpenPanel Events page
+5. Look for your event (newest ones are at top)
+
+### Events appearing with incomplete data
+
+1. Check the tracking call includes all necessary properties
+2. Verify property names use snake_case
+3. Make sure data types are correct (numbers, strings, etc.)
 
 ## Next Steps
 
-1. ✅ Events are now tracking automatically
-2. View events in OpenPanel dashboard
-3. Create custom dashboards and reports
-4. Set up alerts for important events
-5. Add tracking to additional pages as needed
+✅ Events are now being tracked on the backend
+✅ Check OpenPanel dashboard to see them
+✅ Use the events to understand user behavior
+✅ Create custom dashboards and alerts
 
-## Support
+See `OPENPANEL_TRACKING.md` for detailed documentation.
 
-- See `OPENPANEL_TRACKING.md` for detailed documentation
-- Check [OpenPanel Docs](https://docs.openpanel.dev) for API reference
-- Review implementation examples in the tracking file
+## Additional Resources
+
+- [OpenPanel Dashboard](https://openpanel.dev)
+- [OpenPanel Docs](https://docs.openpanel.dev)
+- Detailed guide: `OPENPANEL_TRACKING.md`
 
 ---
 
-**Ready to track!** Your events are now flowing to OpenPanel. 🚀
+**Backend Tracking Active!** Your events are flowing to OpenPanel. 🚀

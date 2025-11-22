@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import type { TaskItem } from "@/types/tasks";
+import { taskServerAnalytics } from "@/lib/server-analytics";
 
 // Helper function to convert Prisma Task to TaskItem
 function convertTaskToTaskItem(task: any): TaskItem {
@@ -138,6 +139,16 @@ export async function POST(request: NextRequest) {
 
     const task = await prisma.task.create({
       data: taskData,
+    });
+
+    // Track task creation event
+    await taskServerAnalytics.trackTaskCreated({
+      id: task.id,
+      title: task.title,
+      isPrivate: task.isPrivate,
+      creatorId: task.creatorId,
+      patientId: task.patientId || undefined,
+      patientName: task.patientName || undefined,
     });
 
     return NextResponse.json({

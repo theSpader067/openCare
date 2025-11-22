@@ -2,11 +2,13 @@
 
 ## Overview
 
-This document describes how OpenPanel analytics has been integrated into the OpenCare application to track user events, task management, and activity creation.
+This document describes how OpenPanel analytics has been integrated into the OpenCare application to track user events, task management, and activity creation **on the backend**.
+
+All event tracking happens server-side in the API routes when data is actually created, updated, or deleted in the database. This ensures accurate tracking and reduces client-side complexity.
 
 ## Setup
 
-OpenPanel is already configured in your application:
+OpenPanel is configured in your application:
 
 - **Location**: `src/app/layout.tsx`
 - **Configuration**:
@@ -22,49 +24,47 @@ OpenPanel is already configured in your application:
 
 ## Event Tracking Architecture
 
-### Analytics Utilities (`src/lib/analytics.ts`)
+### Backend Analytics Utilities (`src/lib/server-analytics.ts`)
 
-The event tracking is centralized in `src/lib/analytics.ts` which provides three main analytics modules:
+The event tracking is centralized in `src/lib/server-analytics.ts` which provides server-side analytics functions that send events directly to OpenPanel via HTTP requests.
 
-#### 1. Task Analytics (`taskAnalytics`)
+**Key Benefits of Backend Tracking**:
+- ✅ Guaranteed to track actual database operations
+- ✅ No client-side dependencies or complexity
+- ✅ More reliable and accurate data
+- ✅ Events sent even if client network fails
+- ✅ Cleaner frontend code
+
+#### 1. Task Analytics (`taskServerAnalytics`)
 
 Track task-related events:
 
 ```typescript
-import { taskAnalytics } from '@/lib/analytics';
-import { useOpenPanel } from '@openpanel/nextjs';
+import { taskServerAnalytics } from '@/lib/server-analytics';
 
-const MyComponent = () => {
-  const op = useOpenPanel();
+// Track task creation (in POST /api/tasks)
+await taskServerAnalytics.trackTaskCreated({
+  id: task.id,
+  title: task.title,
+  isPrivate: task.isPrivate,
+  creatorId: task.creatorId,
+  patientId: task.patientId,
+  patientName: task.patientName,
+});
 
-  // Track when user opens add task modal
-  taskAnalytics.trackAddTaskModalOpened(op);
+// Track task update (in PUT /api/tasks/[taskId])
+await taskServerAnalytics.trackTaskUpdated({
+  id: task.id,
+  title: task.title,
+  isPrivate: task.isPrivate,
+  updatedAt: task.updatedAt,
+});
 
-  // Track task creation
-  taskAnalytics.trackTaskCreated(op, {
-    taskId: task.id,
-    title: task.title,
-    taskType: 'team', // or 'private'
-    patientId: patient?.id,
-    patientName: patient?.name,
-    isMultiple: false,
-    taskCount: 1,
-  });
+// Track task completion (in POST /api/tasks/[taskId]/toggle)
+await taskServerAnalytics.trackTaskCompleted(taskId);
 
-  // Track task update
-  taskAnalytics.trackTaskUpdated(op, {
-    taskId: task.id,
-    title: task.title,
-    taskType: 'team',
-    status: 'updated',
-  });
-
-  // Track task completion (toggle)
-  taskAnalytics.trackTaskCompleted(op, taskId);
-
-  // Track task deletion
-  taskAnalytics.trackTaskDeleted(op, taskId);
-};
+// Track task deletion (in DELETE /api/tasks/[taskId])
+await taskServerAnalytics.trackTaskDeleted(taskId);
 ```
 
 **Events Tracked**:
@@ -72,202 +72,91 @@ const MyComponent = () => {
 - `task_updated` - When a task is edited
 - `task_completed` - When a task is marked as done
 - `task_deleted` - When a task is deleted
-- `add_task_modal_opened` - When the add task dialog is opened
 
-#### 2. Activity Analytics (`activityAnalytics`)
+#### 2. Activity Analytics (`activityServerAnalytics`)
 
 Track activity-related events:
 
 ```typescript
-import { activityAnalytics } from '@/lib/analytics';
-import { useOpenPanel } from '@openpanel/nextjs';
+import { activityServerAnalytics } from '@/lib/server-analytics';
 
-const MyComponent = () => {
-  const op = useOpenPanel();
+// Track activity creation (in POST /api/activities)
+await activityServerAnalytics.trackActivityCreated({
+  id: activity.id,
+  title: activity.title,
+  category: activity.category,
+  creatorId: activity.creatorId,
+  place: activity.place,
+  équipe: activity.équipe,
+});
 
-  // Track when user opens add activity modal
-  activityAnalytics.trackAddActivityModalOpened(op);
+// Track activity update (in PUT /api/activities/[activityId])
+await activityServerAnalytics.trackActivityUpdated({
+  id: activity.id,
+  title: activity.title,
+  category: activity.category,
+});
 
-  // Track activity creation
-  activityAnalytics.trackActivityCreated(op, {
-    activityId: activity.id,
-    title: activity.title,
-    type: 'consultation', // or 'chirurgie', 'staff', 'tournee'
-    location: activity.location,
-    team: activity.team,
-  });
-
-  // Track activity update
-  activityAnalytics.trackActivityUpdated(op, {
-    activityId: activity.id,
-    title: activity.title,
-    type: 'consultation',
-    status: 'updated',
-  });
-
-  // Track activity completion
-  activityAnalytics.trackActivityCompleted(op, activityId);
-
-  // Track activity deletion
-  activityAnalytics.trackActivityDeleted(op, activityId);
-};
+// Track activity deletion (in DELETE /api/activities/[activityId])
+await activityServerAnalytics.trackActivityDeleted(activityId);
 ```
 
 **Events Tracked**:
 - `activity_created` - When a new activity is created
 - `activity_updated` - When an activity is edited
-- `activity_completed` - When an activity is marked as done
 - `activity_deleted` - When an activity is deleted
-- `add_activity_modal_opened` - When the add activity dialog is opened
 
-#### 3. User Analytics (`userAnalytics`)
+#### 3. User Analytics (`userServerAnalytics`)
 
-Track general user actions and page views:
+Track general user actions on the backend:
 
 ```typescript
-import { userAnalytics } from '@/lib/analytics';
-import { useOpenPanel } from '@openpanel/nextjs';
+import { userServerAnalytics } from '@/lib/server-analytics';
 
-const MyComponent = () => {
-  const op = useOpenPanel();
+// Track custom action
+await userServerAnalytics.trackAction('user_exported_patients', {
+  export_format: 'pdf',
+  patient_count: 10,
+});
 
-  // Track page view
-  userAnalytics.trackPageView(op, 'dashboard');
-  userAnalytics.trackPageView(op, 'patients');
-  userAnalytics.trackPageView(op, 'tasks');
-
-  // Track custom action
-  userAnalytics.trackAction(op, 'user_exported_data', {
-    export_format: 'pdf',
-    data_type: 'patients',
-  });
-
-  // Track error
-  const error = new Error('Failed to create task');
-  userAnalytics.trackError(op, 'task_creation_failed', error);
-};
+// Track error
+await userServerAnalytics.trackError('patient_export_failed', error, {
+  retry_count: 2,
+});
 ```
 
-**Events Tracked**:
-- `page_viewed` - When user navigates to a page
-- `[custom_action]` - Custom user actions (e.g., 'user_exported_data')
-- `error_occurred` - When an error happens in the app
+## Implementation Details
 
-## Implementation Examples
+### How Events Are Sent
 
-### Example 1: Task Creation Tracking (TasksSection.tsx)
+Events are sent via HTTP POST requests to OpenPanel's API endpoint:
 
 ```typescript
-import { taskAnalytics } from '@/lib/analytics';
-import { useOpenPanel } from '@openpanel/nextjs';
-
-export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
-  function TasksSection({ onTaskAdd, ...props }, ref) {
-    const op = useOpenPanel();
-
-    const handleSaveTask = async () => {
-      const createdTasks = await onTaskAdd(taskData);
-
-      if (createdTasks && createdTasks.length > 0) {
-        // Track each created task
-        createdTasks.forEach((task) => {
-          taskAnalytics.trackTaskCreated(op, {
-            taskId: task.id,
-            title: task.title,
-            taskType: task.taskType,
-            patientId: task.patientId,
-            patientName: task.patientName,
-            isMultiple: createdTasks.length > 1,
-            taskCount: createdTasks.length,
-          });
-        });
-
-        setIsAddTaskModalOpen(false);
-        await loadTasks();
-      }
-    };
-
-    const handleOpenAddTaskModal = () => {
-      setIsAddTaskModalOpen(true);
-      taskAnalytics.trackAddTaskModalOpened(op);
-    };
-
-    const handleConfirmDeleteTask = async () => {
-      if (taskToDelete) {
-        await onTaskDelete(taskToDelete.id);
-        taskAnalytics.trackTaskDeleted(op, taskToDelete.id);
-        // ... rest of delete logic
-      }
-    };
-
-    // ... rest of component
+// Happens automatically in sendEventToOpenPanel()
+POST https://api.openpanel.dev/events
+Headers: {
+  'Content-Type': 'application/json',
+  'Authorization': 'Bearer {OPENPANEL_CLIENT_ID}'
+}
+Body: {
+  event: 'event_name',
+  properties: {
+    // custom properties
+    timestamp: '2025-11-22T...'
   }
-);
-```
-
-### Example 2: Activity Creation Tracking (Dashboard)
-
-```typescript
-import { activityAnalytics } from '@/lib/analytics';
-
-export default function DashboardPage() {
-  const op = useOpenPanel();
-
-  const handleAddActivity = async () => {
-    const result = await createActivity({
-      title: activityForm.title,
-      type: activityForm.type,
-      // ... other properties
-    });
-
-    if (result.success && result.data) {
-      activityAnalytics.trackActivityCreated(op, {
-        activityId: result.data.id,
-        title: result.data.title,
-        type: result.data.type,
-        location: result.data.location,
-        team: result.data.team,
-      });
-
-      setIsAddActivityModalOpen(false);
-      await activitySectionRef.current?.refresh();
-    }
-  };
-
-  const handleConfirmDelete = async () => {
-    if (activityToDelete) {
-      const result = await deleteActivity(parseInt(activityToDelete.id));
-      if (result.success) {
-        activityAnalytics.trackActivityDeleted(op, parseInt(activityToDelete.id));
-        // ... rest of delete logic
-      }
-    }
-  };
-
-  return (
-    // ... JSX
-  );
 }
 ```
 
-### Example 3: Page View Tracking
+### Where Tracking Is Implemented
 
-```typescript
-import { userAnalytics } from '@/lib/analytics';
+**Task API Routes**:
+- `src/app/api/tasks/route.ts` - Creates tasks (POST)
+- `src/app/api/tasks/[taskId]/route.ts` - Updates and deletes tasks (PUT, DELETE)
+- `src/app/api/tasks/[taskId]/toggle/route.ts` - Toggles task completion (POST)
 
-export default function DashboardPage() {
-  const op = useOpenPanel();
-
-  // Track page view on mount
-  useEffect(() => {
-    userAnalytics.trackPageView(op, 'dashboard');
-  }, [op]);
-
-  return (
-    // ... JSX
-  );
-}
-```
+**Activity API Routes**:
+- `src/app/api/activities/route.ts` - Creates activities (POST)
+- `src/app/api/activities/[activityId]/route.ts` - Updates and deletes activities (PUT, DELETE)
 
 ## Event Properties Reference
 
@@ -275,34 +164,44 @@ export default function DashboardPage() {
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `taskId` | string \| number | Task ID |
+| `task_id` | number | Task ID |
 | `title` | string | Task title |
-| `taskType` | 'team' \| 'private' | Task type |
-| `patientId` | string \| number | Associated patient ID (optional) |
-| `patientName` | string | Associated patient name (optional) |
-| `isMultiple` | boolean | Whether multiple tasks were created |
-| `taskCount` | number | Number of tasks created |
-| `status` | string | Task status |
+| `task_type` | 'team' \| 'private' | Task type |
+| `patient_id` | number | Associated patient ID (optional) |
+| `patient_name` | string | Associated patient name (optional) |
+| `user_id` | number | Creator user ID |
 
 ### Activity Events
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `activityId` | string \| number | Activity ID |
+| `activity_id` | number | Activity ID |
 | `title` | string | Activity title |
 | `type` | string | Activity type (consultation, chirurgie, staff, tournee) |
 | `location` | string | Activity location (optional) |
 | `team` | string | Team/participants (optional) |
-| `status` | string | Activity status |
+| `user_id` | number | Creator user ID |
 
-### User Action Events
+### All Events
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `page_name` | string | Page name (for page views) |
-| `error_action` | string | Action that caused error (for errors) |
-| `error_message` | string | Error message (for errors) |
-| Custom properties | any | Any custom properties |
+- `timestamp` - Added automatically (ISO 8601 format)
+
+## Error Handling
+
+If tracking fails (network error, API issue, etc.), the application continues normally. Tracking is non-blocking:
+
+```typescript
+try {
+  const task = await prisma.task.create(/* ... */);
+
+  // This won't crash the app if it fails
+  await taskServerAnalytics.trackTaskCreated({...});
+
+  return NextResponse.json({ success: true, data: task });
+} catch (error) {
+  // Application error handling
+}
+```
 
 ## OpenPanel Dashboard
 
@@ -314,62 +213,113 @@ To view your tracked events:
 4. Navigate to "Events" to see all tracked events
 5. Create dashboards and filters based on event data
 
-## Event Data Available in OpenPanel
+## What You Can Do With Events
 
-Once events are sent to OpenPanel, you can:
+Once events are flowing to OpenPanel, you can:
 
 - View real-time event streams
-- Create custom dashboards
-- Filter events by properties
-- Track user journeys
+- Create custom dashboards and visualizations
+- Filter events by properties (task type, user, etc.)
+- Track user journeys and workflows
 - Analyze task/activity creation patterns
-- Monitor error rates
+- Monitor system health and error rates
 - Create alerts for specific events
 
-## Pages with Tracking Implemented
+## Testing Event Tracking
 
-✅ **Dashboard** (`src/app/(app)/dashboard/page.tsx`)
-- Page view tracking
-- Task creation/update/delete/complete tracking
-- Activity creation/update/delete/complete tracking
+### In Development
 
-✅ **TasksSection Component** (`src/components/tasks/TasksSection.tsx`)
-- Add task modal opened
-- Task created
-- Task updated
-- Task completed
-- Task deleted
+1. Check browser DevTools Network tab for requests to `api.openpanel.dev`
+2. Create a task or activity
+3. Look for POST request with event data
 
-✅ **ActivitySection Component** (via Dashboard)
-- Add activity modal opened
-- Activity created
-- Activity updated
-- Activity completed
-- Activity deleted
+### In OpenPanel Dashboard
+
+1. After creating a task/activity, wait 1-2 seconds
+2. Go to OpenPanel Events page
+3. Look for your event in the list
+
+### Example Event Log
+
+When you create a task, you should see an event like:
+
+```json
+{
+  "event": "task_created",
+  "properties": {
+    "task_id": 42,
+    "title": "Complete review",
+    "task_type": "team",
+    "patient_id": 10,
+    "patient_name": "John Doe",
+    "user_id": 5,
+    "timestamp": "2025-11-22T10:30:45.123Z"
+  }
+}
+```
 
 ## Best Practices
 
-1. **Track at the Right Time**: Track events after confirmation of success, not before
-2. **Include Relevant Context**: Always include properties that help identify what happened
-3. **Use Consistent Naming**: Use snake_case for event names and properties
-4. **Avoid Sensitive Data**: Never track passwords, tokens, or personal information
-5. **Test Your Tracking**: Check OpenPanel dashboard to verify events are being sent
-6. **Use Timestamps**: All events are automatically timestamped by the SDK
+1. **Async Tracking**: Tracking is async and non-blocking, but placed after database operations to ensure data consistency
+2. **Include Context**: Always include relevant IDs and metadata to identify what happened
+3. **Consistent Naming**: Event names use snake_case, properties use snake_case
+4. **No Sensitive Data**: Never track passwords, tokens, or personal information beyond names
+5. **Graceful Failures**: Tracking failures don't break the application
+
+## Adding Tracking to New Features
+
+To add tracking to a new feature:
+
+1. Import the appropriate analytics utility:
+   ```typescript
+   import { taskServerAnalytics } from '@/lib/server-analytics';
+   ```
+
+2. Call the tracking function after a successful database operation:
+   ```typescript
+   const createdItem = await prisma.yourModel.create({...});
+
+   await taskServerAnalytics.trackTaskCreated({
+     id: createdItem.id,
+     title: createdItem.title,
+     // ... other properties
+   });
+   ```
+
+3. Verify the event appears in OpenPanel dashboard within 2 seconds
+
+## Environment Variables
+
+Ensure these are set in your `.env` file:
+
+```
+OPENPANEL_CLIENT_ID=your_client_id_here
+```
+
+If not set, tracking silently fails and logs a warning to console without affecting application functionality.
 
 ## Troubleshooting
 
 ### Events Not Appearing in OpenPanel
 
-1. Check that `OPENPANEL_CLIENT_ID` environment variable is set
-2. Verify OpenPanel component is initialized in `src/app/layout.tsx`
-3. Open browser DevTools to see if network requests are being made
-4. Check OpenPanel dashboard for any errors in project settings
+1. ✅ Check `OPENPANEL_CLIENT_ID` is set in `.env`
+2. ✅ Verify you can see the client ID in OpenPanel project settings
+3. ✅ Check browser DevTools for network errors
+4. ✅ Wait 2-3 seconds before checking OpenPanel (slight delay is normal)
 
 ### Events Appearing with Wrong Data
 
-1. Verify property names match expected format (snake_case)
-2. Check that data is being correctly passed to tracking functions
-3. Ensure timestamps are being sent with events
+1. ✅ Verify property names use snake_case
+2. ✅ Check that correct data is passed to tracking function
+3. ✅ Ensure IDs are numbers (not strings) when expected
+
+### Function Not Found Error
+
+Make sure you imported from the correct module:
+```typescript
+import { taskServerAnalytics } from '@/lib/server-analytics'; // ✅ Correct
+import { taskAnalytics } from '@/lib/analytics'; // ❌ Wrong (frontend only)
+```
 
 ## Future Enhancements
 
@@ -386,11 +336,12 @@ Potential areas for expanded tracking:
 ## Additional Resources
 
 - [OpenPanel Documentation](https://docs.openpanel.dev)
-- [Next.js SDK Documentation](https://docs.openpanel.dev/sdks/nextjs)
-- [Event Best Practices](https://docs.openpanel.dev/best-practices)
+- [OpenPanel Events API](https://docs.openpanel.dev/api/events)
+- [Best Practices for Event Tracking](https://docs.openpanel.dev/best-practices)
 
 ---
 
 **Last Updated**: 2025-11-22
 **OpenPanel Version**: 1.0.17
 **Next.js Version**: 15.5.4
+**Tracking Type**: Backend (Server-side only)

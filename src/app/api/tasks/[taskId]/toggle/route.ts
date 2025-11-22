@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import type { TaskItem } from "@/types/tasks";
+import { taskServerAnalytics } from "@/lib/server-analytics";
 
 // Helper function to convert Prisma Task to TaskItem
 function convertTaskToTaskItem(task: any): TaskItem {
@@ -53,6 +54,11 @@ export async function POST(
       where: { id: taskId },
       data: { isComplete: !task.isComplete },
     });
+
+    // Track task completion if toggled to done
+    if (updatedTask.isComplete && !task.isComplete) {
+      await taskServerAnalytics.trackTaskCompleted(taskId);
+    }
 
     return NextResponse.json({
       success: true,

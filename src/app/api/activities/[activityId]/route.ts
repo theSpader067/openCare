@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import type { ActivityItem } from "@/types/tasks";
+import { activityServerAnalytics } from "@/lib/server-analytics";
 
 // Helper function to convert Prisma Activity to ActivityItem
 function convertActivityToActivityItem(activity: any): ActivityItem {
@@ -148,6 +149,13 @@ export async function PUT(
       },
     });
 
+    // Track activity update event
+    await activityServerAnalytics.trackActivityUpdated({
+      id: updatedActivity.id,
+      title: updatedActivity.title,
+      category: updatedActivity.category || '',
+    });
+
     return NextResponse.json({
       success: true,
       data: convertActivityToActivityItem(updatedActivity)
@@ -201,6 +209,9 @@ export async function DELETE(
     await prisma.activity.delete({
       where: { id: activityId },
     });
+
+    // Track activity deletion event
+    await activityServerAnalytics.trackActivityDeleted(activityId);
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import type { TaskItem } from "@/types/tasks";
+import { taskServerAnalytics } from "@/lib/server-analytics";
 
 // Helper function to convert Prisma Task to TaskItem
 function convertTaskToTaskItem(task: any): TaskItem {
@@ -168,6 +169,14 @@ export async function PUT(
       data: updateData,
     });
 
+    // Track task update event
+    await taskServerAnalytics.trackTaskUpdated({
+      id: updatedTask.id,
+      title: updatedTask.title,
+      isPrivate: updatedTask.isPrivate,
+      updatedAt: updatedTask.updatedAt,
+    });
+
     return NextResponse.json({
       success: true,
       data: convertTaskToTaskItem(updatedTask)
@@ -221,6 +230,9 @@ export async function DELETE(
     await prisma.task.delete({
       where: { id: taskId },
     });
+
+    // Track task deletion event
+    await taskServerAnalytics.trackTaskDeleted(taskId);
 
     return NextResponse.json({ success: true });
   } catch (error) {

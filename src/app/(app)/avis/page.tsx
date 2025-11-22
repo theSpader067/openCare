@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ArrowDown, ArrowUp, Calendar, MailPlus, MessageSquare, Plus, Send, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataListLayout } from "@/components/document/DataListLayout";
@@ -35,6 +36,7 @@ function formatDate(dateString: string) {
 }
 
 export default function AvisPage() {
+  const { t } = useTranslation();
   const [avis, setAvis] = useState<Avis[]>([]);
   const [activeAvisId, setActiveAvisId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -349,7 +351,7 @@ export default function AvisPage() {
       {/* Service - Moved to top */}
       <div className="space-y-2">
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Service
+          {t("avis.forms.service")}
         </label>
         <input
           type="text"
@@ -360,7 +362,7 @@ export default function AvisPage() {
               specialty: e.target.value,
             }))
           }
-          placeholder="Ex: Cardiologie"
+          placeholder={t("avis.forms.servicePlaceholder")}
           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
         />
       </div>
@@ -368,7 +370,7 @@ export default function AvisPage() {
       {/* Date */}
       <div className="space-y-2">
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Date
+          {t("avis.forms.date")}
         </label>
         <input
           type="date"
@@ -383,7 +385,7 @@ export default function AvisPage() {
       {/* Patient Selection */}
       <div className="space-y-2">
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Patient
+          {t("avis.forms.patient")}
         </label>
 
         {!createForm.patientSource ? (
@@ -395,7 +397,7 @@ export default function AvisPage() {
             className="w-full justify-center"
           >
             <User className="mr-2 h-4 w-4" />
-            Sélectionner un patient
+            {t("avis.buttons.selectPatient")}
           </Button>
         ) : createForm.patientSource === "db" ? (
           // Show selected patient from DB
@@ -422,7 +424,7 @@ export default function AvisPage() {
               }
               className="w-full text-sm"
             >
-              Changer de patient
+              {t("avis.buttons.changePatient")}
             </Button>
           </div>
         ) : (
@@ -430,7 +432,7 @@ export default function AvisPage() {
           <div className="space-y-3">
             <div>
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Nom du patient
+                {t("avis.forms.patientName")}
               </label>
               <input
                 type="text"
@@ -438,14 +440,14 @@ export default function AvisPage() {
                 onChange={(e) =>
                   setCreateForm((prev) => ({ ...prev, patientName: e.target.value }))
                 }
-                placeholder="Ex: Jean Dupont"
+                placeholder={t("avis.forms.patientNamePlaceholder")}
                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 mt-1"
               />
             </div>
 
             <div>
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Âge du patient
+                {t("avis.forms.patientAge")}
               </label>
               <input
                 type="number"
@@ -455,21 +457,21 @@ export default function AvisPage() {
                 onChange={(e) =>
                   setCreateForm((prev) => ({ ...prev, patientAge: e.target.value }))
                 }
-                placeholder="Ex: 65"
+                placeholder={t("avis.forms.patientAgePlaceholder")}
                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 mt-1"
               />
             </div>
 
             <div>
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Antécédents du patient
+                {t("avis.forms.patientHistory")}
               </label>
               <textarea
                 value={createForm.patientHistory}
                 onChange={(e) =>
                   setCreateForm((prev) => ({ ...prev, patientHistory: e.target.value }))
                 }
-                placeholder="Historique médical, allergies, traitements actuels..."
+                placeholder={t("avis.forms.patientHistoryPlaceholder")}
                 rows={2}
                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 mt-1"
               />
@@ -489,7 +491,7 @@ export default function AvisPage() {
               }
               className="w-full text-sm"
             >
-              Sélectionner un autre patient
+              {t("avis.buttons.selectAnotherPatient")}
             </Button>
           </div>
         )}
@@ -498,7 +500,7 @@ export default function AvisPage() {
       {/* Opinion */}
       <div className="space-y-2">
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Avis/Observation
+          {t("avis.forms.opinion")}
         </label>
         <textarea
           value={createForm.opinion}
@@ -508,7 +510,7 @@ export default function AvisPage() {
               opinion: e.target.value,
             }))
           }
-          placeholder="Observations cliniques et diagnostic..."
+          placeholder={t("avis.forms.opinionPlaceholder")}
           rows={6}
           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
         />
@@ -522,17 +524,17 @@ export default function AvisPage() {
       <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
           <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
-            {activeAvi.direction === "incoming" ? "Spécialité de l'émetteur" : "Spécialité destinataire"}
+            {activeAvi.direction === "incoming" ? t("avis.sections.senderSpecialty") : t("avis.sections.destinationSpecialty")}
           </p>
           <p className="text-sm font-bold text-slate-900 mt-1">
             {activeAvi.direction === "incoming"
-              ? activeAvi.creatorSpecialty || "Non spécifiée"
-              : activeAvi.destination_specialty || "Non spécifiée"}
+              ? activeAvi.creatorSpecialty || t("avis.sections.notSpecified")
+              : activeAvi.destination_specialty || t("avis.sections.notSpecified")}
           </p>
         </div>
         <div className="text-right">
           <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
-            Date
+            {t("avis.forms.date")}
           </p>
           <p className="text-sm font-bold text-slate-900 mt-1">
             {formatDate(activeAvi.answer_date)}
@@ -545,17 +547,17 @@ export default function AvisPage() {
         <section className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50 p-4 shadow-sm">
           <header className="mb-4 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-indigo-600">
             <User className="h-4 w-4" />
-            Informations du patient
+            {t("avis.sections.patientInfo")}
           </header>
 
           <div className="space-y-3">
             {/* Patient Name */}
             <div>
               <p className="text-xs uppercase tracking-wide text-indigo-500 font-semibold mb-1">
-                Nom
+                {t("avis.sections.name")}
               </p>
               <p className="text-sm font-semibold text-slate-900">
-                {activeAvi.patient?.fullName || (activeAvi as any).patientName || "Non spécifié"}
+                {activeAvi.patient?.fullName || (activeAvi as any).patientName || t("avis.sections.notSpecified")}
               </p>
             </div>
 
@@ -563,10 +565,10 @@ export default function AvisPage() {
             {(activeAvi.patient || (activeAvi as any).patientAge) && (
               <div>
                 <p className="text-xs uppercase tracking-wide text-indigo-500 font-semibold mb-1">
-                  Âge
+                  {t("avis.sections.age")}
                 </p>
                 <p className="text-sm text-slate-700">
-                  {(activeAvi as any).patientAge || "Non spécifié"}
+                  {(activeAvi as any).patientAge || t("avis.sections.notSpecified")}
                 </p>
               </div>
             )}
@@ -575,10 +577,10 @@ export default function AvisPage() {
             {((activeAvi.patient && (activeAvi.patient as any).histoire) || (activeAvi as any).patientHistory) && (
               <div>
                 <p className="text-xs uppercase tracking-wide text-indigo-500 font-semibold mb-1">
-                  Antécédents médicaux
+                  {t("avis.sections.medicalHistory")}
                 </p>
                 <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
-                  {(activeAvi.patient as any)?.histoire || (activeAvi as any).patientHistory || "Aucun antécédent noté"}
+                  {(activeAvi.patient as any)?.histoire || (activeAvi as any).patientHistory || t("avis.sections.noHistory")}
                 </p>
               </div>
             )}
@@ -589,7 +591,7 @@ export default function AvisPage() {
       {/* Opinion */}
       <section className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
         <header className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Observation
+          {t("avis.sections.observation")}
         </header>
         <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
           {activeAvi.opinion}
@@ -602,7 +604,7 @@ export default function AvisPage() {
           {activeAvi.response && (
             <section className="rounded-2xl border border-green-200 bg-green-50 p-4 shadow-sm">
               <header className="mb-3 text-xs font-semibold uppercase tracking-wide text-green-700">
-                Votre réponse
+                {t("avis.sections.yourResponse")}
               </header>
               <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
                 {activeAvi.response}
@@ -612,13 +614,13 @@ export default function AvisPage() {
           {!activeAvi.response && (
             <section className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
               <header className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Envoyer une réponse
+                {t("avis.sections.sendResponse")}
               </header>
               <div className="space-y-3">
                 <textarea
                   value={responseText}
                   onChange={(e) => setResponseText(e.target.value)}
-                  placeholder="Écrivez votre réponse à cet avis..."
+                  placeholder={t("avis.forms.responsePlaceholder")}
                   rows={4}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 />
@@ -628,7 +630,7 @@ export default function AvisPage() {
                   className="w-full flex items-center justify-center gap-2 rounded-xl bg-green-600 hover:bg-green-700 disabled:bg-slate-300 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-white transition"
                 >
                   <Send className="h-4 w-4" />
-                  {isSendingResponse ? "Envoi en cours..." : "Envoyer la réponse"}
+                  {isSendingResponse ? t("avis.buttons.sending") : t("avis.buttons.sendResponse")}
                 </button>
               </div>
             </section>
@@ -679,7 +681,7 @@ export default function AvisPage() {
       </p>
       {avi.direction === "incoming" && avi.response && (
         <div className="mt-3 rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-xs">
-          <p className="font-semibold text-green-700">Réponse envoyée</p>
+          <p className="font-semibold text-green-700">{t("avis.sections.responseSent")}</p>
         </div>
       )}
     </>
@@ -688,9 +690,9 @@ export default function AvisPage() {
     <>
     <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between my-2">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Avis interservices</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">{t("avis.title")}</h1>
           <p className="text-sm text-slate-500">
-            Consultez les demandes d&apos;avis des autres services et partagez vos recommandations en retour.
+            {t("avis.subtitle")}
           </p>
         </div>
         <Button
@@ -699,7 +701,7 @@ export default function AvisPage() {
           onClick={handleOpenCreate}
         >
           <MailPlus className="mr-2 h-4 w-4" />
-          Demander un avis
+          {t("avis.buttons.request")}
         </Button>
       </section>
 
@@ -713,7 +715,7 @@ export default function AvisPage() {
               : "text-slate-600 hover:text-slate-900"
           }`}
         >
-          Tous ({avis.length})
+          {t("avis.tabs.all")} ({avis.length})
         </button>
         <button
           onClick={() => setDirectionFilter("incoming")}
@@ -724,7 +726,7 @@ export default function AvisPage() {
           }`}
         >
           <ArrowDown className="h-4 w-4" />
-          Entrants ({avis.filter((a) => a.direction === "incoming").length})
+          {t("avis.tabs.incoming")} ({avis.filter((a) => a.direction === "incoming").length})
         </button>
         <button
           onClick={() => setDirectionFilter("outgoing")}
@@ -735,7 +737,7 @@ export default function AvisPage() {
           }`}
         >
           <ArrowUp className="h-4 w-4" />
-          Sortants ({avis.filter((a) => a.direction === "outgoing").length})
+          {t("avis.tabs.outgoing")} ({avis.filter((a) => a.direction === "outgoing").length})
         </button>
       </div>
 
@@ -752,18 +754,18 @@ export default function AvisPage() {
         onOpenCreate={handleOpenCreate}
         onCancelCreate={handleCancelCreate}
         onCloseMobilePanel={closeMobilePanel}
-        title="Avis médicaux"
+        title={t("avis.title")}
         renderListItemContent={renderListItemContent}
         renderDetailViewContent={detailViewContent ? () => detailViewContent : () => null}
         createFormContent={createFormContent}
         emptyIcon={MessageSquare}
-        emptyTitle="Aucun avis"
-        emptyDescription="Créez votre premier avis médical"
-        searchPlaceholder="Rechercher un avis..."
+        emptyTitle={t("avis.empty.title")}
+        emptyDescription={t("avis.empty.description")}
+        searchPlaceholder={t("avis.searchPlaceholder")}
         isSubmitting={isSubmitting}
-        createTitle="Nouvel avis"
-        createDescription="Enregistrez un nouvel avis médical"
-        saveButtonText="Enregistrer"
+        createTitle={t("avis.modals.createTitle")}
+        createDescription={t("avis.modals.createDescription")}
+        saveButtonText={t("avis.buttons.save")}
         isFormValid={isFormValid as unknown as boolean}
         onSave={handleCreateAvi}
       />

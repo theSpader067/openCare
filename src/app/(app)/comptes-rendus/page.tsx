@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Calendar, FilePlus, Stethoscope, User, X, Plus, MoreVertical, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -49,6 +50,7 @@ function formatDate(dateString: string) {
 }
 
 export default function ComptesRendusPage() {
+  const { t } = useTranslation();
   const [operations, setOperations] = useState<Operation[]>([]);
   const [activeOperationId, setActiveOperationId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -427,7 +429,7 @@ export default function ComptesRendusPage() {
       {/* Title */}
       <div className="space-y-2">
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Titre de l'intervention
+          {t("reports.forms.title")}
         </label>
         <input
           type="text"
@@ -435,7 +437,7 @@ export default function ComptesRendusPage() {
           onChange={(e) =>
             setCreateForm((prev) => ({ ...prev, title: e.target.value }))
           }
-          placeholder="Ex: Cholécystectomie laparoscopique"
+          placeholder={t("reports.forms.titlePlaceholder")}
           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
         />
       </div>
@@ -443,7 +445,7 @@ export default function ComptesRendusPage() {
       {/* Type */}
       <div className="space-y-2">
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Type d'intervention
+          {t("reports.forms.type")}
         </label>
         <select
           value={createForm.type}
@@ -452,7 +454,7 @@ export default function ComptesRendusPage() {
           }
           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
         >
-          <option value="">Sélectionner un type…</option>
+          <option value="">{t("reports.forms.selectType")}</option>
           {operationTypes.map((type) => (
             <option key={type} value={type}>
               {type}
@@ -464,7 +466,7 @@ export default function ComptesRendusPage() {
       {/* Date */}
       <div className="space-y-2">
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Date
+          {t("reports.forms.date")}
         </label>
         <input
           type="date"
@@ -479,7 +481,7 @@ export default function ComptesRendusPage() {
       {/* Duration */}
       <div className="space-y-2">
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Durée (min)
+          {t("reports.forms.duration")}
         </label>
         <input
           type="number"
@@ -498,7 +500,7 @@ export default function ComptesRendusPage() {
       {/* Patient Selection */}
       <div className="space-y-2">
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Patient
+          {t("reports.forms.patient")}
         </label>
 
         {!createForm.patientSource ? (
@@ -510,7 +512,7 @@ export default function ComptesRendusPage() {
             className="w-full justify-center"
           >
             <User className="mr-2 h-4 w-4" />
-            Sélectionner un patient
+            {t("reports.buttons.selectPatient")}
           </Button>
         ) : createForm.patientSource === "db" ? (
           // Show selected patient from DB
@@ -537,7 +539,7 @@ export default function ComptesRendusPage() {
               }
               className="w-full text-sm"
             >
-              Changer de patient
+              {t("reports.buttons.changePatient")}
             </Button>
           </div>
         ) : (
@@ -545,7 +547,7 @@ export default function ComptesRendusPage() {
           <div className="space-y-3">
             <div>
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Nom du patient
+                {t("reports.forms.patientName")}
               </label>
               <input
                 type="text"
@@ -553,14 +555,14 @@ export default function ComptesRendusPage() {
                 onChange={(e) =>
                   setCreateForm((prev) => ({ ...prev, patientName: e.target.value }))
                 }
-                placeholder="Ex: Jean Dupont"
+                placeholder={t("reports.forms.patientNamePlaceholder")}
                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 mt-1"
               />
             </div>
 
             <div>
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Âge du patient
+                {t("reports.forms.patientAge")}
               </label>
               <input
                 type="number"
@@ -570,21 +572,21 @@ export default function ComptesRendusPage() {
                 onChange={(e) =>
                   setCreateForm((prev) => ({ ...prev, patientAge: e.target.value }))
                 }
-                placeholder="Ex: 65"
+                placeholder={t("reports.forms.patientAgePlaceholder")}
                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 mt-1"
               />
             </div>
 
             <div>
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Antécédents du patient
+                {t("reports.forms.patientHistory")}
               </label>
               <textarea
                 value={createForm.patientHistory}
                 onChange={(e) =>
                   setCreateForm((prev) => ({ ...prev, patientHistory: e.target.value }))
                 }
-                placeholder="Historique médical, allergies, traitements actuels..."
+                placeholder={t("reports.forms.patientHistoryPlaceholder")}
                 rows={2}
                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 mt-1"
               />
@@ -604,7 +606,7 @@ export default function ComptesRendusPage() {
               }
               className="w-full text-sm"
             >
-              Sélectionner un autre patient
+              {t("reports.buttons.selectAnotherPatient")}
             </Button>
           </div>
         )}
@@ -614,7 +616,7 @@ export default function ComptesRendusPage() {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-            Équipe opératoire
+            {t("reports.forms.surgicalTeam")}
           </label>
           <Button
             size="sm"
@@ -623,7 +625,7 @@ export default function ComptesRendusPage() {
             className="h-6 px-2 text-xs"
           >
             <Plus className="h-3 w-3 mr-1" />
-            Ajouter
+            {t("reports.buttons.add")}
           </Button>
         </div>
 
@@ -631,7 +633,7 @@ export default function ComptesRendusPage() {
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2 max-h-40 overflow-y-auto">
             {availableOperators.length === 0 ? (
               <p className="text-xs text-slate-500 py-2">
-                Tous les opérateurs ont été ajoutés
+                {t("reports.forms.allOperatorsAdded")}
               </p>
             ) : (
               availableOperators.map((member) => (
@@ -670,7 +672,7 @@ export default function ComptesRendusPage() {
       {/* Details */}
       <div className="space-y-2">
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Détails de l'intervention
+          {t("reports.forms.details")}
         </label>
         <textarea
           value={createForm.details}
@@ -679,14 +681,14 @@ export default function ComptesRendusPage() {
           }
           rows={4}
           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-          placeholder="Déroulement de l'intervention, observations, incidents…"
+          placeholder={t("reports.forms.detailsPlaceholder")}
         />
       </div>
 
       {/* Post Notes */}
       <div className="space-y-2">
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Recommandations post-opératoires
+          {t("reports.forms.postOpRecommendations")}
         </label>
         <textarea
           value={createForm.postNotes}
@@ -698,7 +700,7 @@ export default function ComptesRendusPage() {
           }
           rows={6}
           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-          placeholder="1. Recommandation 1\n2. Recommandation 2…"
+          placeholder={t("reports.forms.postOpPlaceholder")}
         />
       </div>
     </div>
@@ -958,9 +960,9 @@ export default function ComptesRendusPage() {
     <>
     <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between my-2">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Comptes rendus opératoires</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">{t("reports.title")}</h1>
           <p className="text-sm text-slate-500">
-            Documentez vos interventions chirurgicales et consultez les détails de chaque opération.
+            {t("reports.subtitle")}
           </p>
         </div>
         <Button
@@ -969,7 +971,7 @@ export default function ComptesRendusPage() {
           onClick={handleOpenCreate}
         >
           <FilePlus className="mr-2 h-4 w-4" />
-          Nouveau compte rendu
+          {t("reports.buttons.new")}
         </Button>
       </section>
       <DataListLayout
@@ -985,18 +987,18 @@ export default function ComptesRendusPage() {
         onOpenCreate={handleOpenCreate}
         onCancelCreate={handleCancelCreate}
         onCloseMobilePanel={closeMobilePanel}
-        title="Comptes rendus opératoires"
+        title={t("reports.title")}
         renderListItemContent={renderListItemContent}
         renderDetailViewContent={activeOperation ? () => detailViewContent : () => null}
         createFormContent={createFormContent}
         emptyIcon={Stethoscope}
-        emptyTitle="Aucun compte rendu"
-        emptyDescription="Créez votre premier compte rendu pour commencer à documenter vos interventions."
-        searchPlaceholder="Rechercher une intervention…"
+        emptyTitle={t("reports.empty.title")}
+        emptyDescription={t("reports.empty.description")}
+        searchPlaceholder={t("reports.searchPlaceholder")}
         isSubmitting={isSubmitting}
-        createTitle="Nouveau compte rendu opératoire"
-        createDescription="Enregistrez une nouvelle intervention chirurgicale"
-        saveButtonText="Enregistrer"
+        createTitle={t("reports.modals.createTitle")}
+        createDescription={t("reports.modals.createDescription")}
+        saveButtonText={t("reports.buttons.save")}
         isFormValid={isFormValid as boolean}
         isLoading={isLoading}
         onSave={handleCreateOperation}

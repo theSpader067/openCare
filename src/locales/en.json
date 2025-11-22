@@ -286,13 +286,6 @@
       }
     }
   },
-  "common": {
-    "close": "Close",
-    "viewMore": "View More",
-    "learnMore": "Learn More",
-    "loading": "Loading...",
-    "or": "or"
-  },
   "auth": {
     "brandSubtitle": "Practitioners Platform",
     "login": {
@@ -429,13 +422,545 @@
       }
     }
   },
+  "patients": {
+    "page": {
+      "title": "Patients",
+      "subtitle": "Manage patient files, care pathways, and post-operative follow-ups."
+    },
+    "sidebar": {
+      "patientFile": "Patient File"
+    },
+    "aria": {
+      "closePreview": "Close patient preview"
+    },
+    "empty": {
+      "noProfiles": "No profiles available",
+      "noProfilesDesc": "Import or create a patient file to display detailed information.",
+      "selectPatient": "Select a patient",
+      "selectPatientDesc": "Choose a file from the list to display its summary.",
+      "noObservations": "No observations recorded for this patient.",
+      "noPatients": "No patients assigned",
+      "noPatientsDesc": "Once patients are assigned to your service, they will appear here.",
+      "noHistory": "No history declared"
+    },
+    "buttons": {
+      "exportReport": "Export a report",
+      "newPatient": "New patient",
+      "createPatient": "Create a patient",
+      "carePathway": "Care Pathway",
+      "visitFile": "Visit file",
+      "previous": "Previous",
+      "next": "Next",
+      "showMore": "Show more",
+      "importFromEMR": "Import from EMR"
+    },
+    "section": {
+      "mainDiagnosis": "Main Diagnosis",
+      "medicalHistory": "Medical History",
+      "surgicalHistory": "Surgical History",
+      "otherInfo": "Other information",
+      "observations": "Observations"
+    },
+    "labels": {
+      "patientId": "Patient ID",
+      "nextFollowUp": "Planned follow-up",
+      "entries": "entries",
+      "analyzingFile": "Analyzing patient file..."
+    },
+    "table": {
+      "headers": {
+        "patient": "Patient",
+        "patientId": "Patient ID",
+        "status": "Status",
+        "type": "Type",
+        "cim": "CIM",
+        "actions": "Actions"
+      }
+    },
+    "pagination": {
+      "noFiles": "No files to display",
+      "showing": "Showing {{from}}–{{to}} of {{total}} files",
+      "pageOf": "Page {{current}} / {{total}}"
+    },
+    "modal": {
+      "editPatient": "Edit {{name}}'s file",
+      "editDesc": "Adjust the patient's main information to keep the view up to date.",
+      "deleteConfirm": "Delete {{name}}?",
+      "deleteConfirmFallback": "Confirm deletion",
+      "deleteDesc": "This action will remove the file from the list. You can find it in the history if necessary.",
+      "deleteMessage": "Are you sure you want to delete the patient file {{name}} ({{id}})?",
+      "deleteWarning": "This action cannot be undone immediately and requires manual recovery."
+    },
+    "form": {
+      "serviceAssignment": "Service Assignment"
+    },
+    "types": {
+      "private": "Private",
+      "team": "Team"
+    },
+    "dossier": {
+      "title": "Patient File",
+      "createTitle": "Create a patient",
+      "updateDesc": "View and update the patient's complete medical file selected.",
+      "createDesc": "Fill in all the necessary information to create a new patient file.",
+      "saved": "Changes saved locally.",
+      "backToList": "Back to list",
+      "patientInfo": "Patient Information",
+      "patientInfoDesc": "Identity, assignment, and main contact details of the file.",
+      "fileId": "File ID",
+      "generateId": "Generate random identifier",
+      "idExample": "Ex. P-2024-013",
+      "nameExample": "Ex. Fatou Diop",
+      "serviceExample": "Ex. Digestive Surgery",
+      "nextContact": "Next contact",
+      "nextContactExample": "Ex. 2 PM round",
+      "lastUpdated": "Last updated: {{time}}",
+      "mainDiagnosis": "Main Diagnosis",
+      "diagnosisDesc": "Enter the CIM code and associated diagnosis.",
+      "cimCode": "CIM Code",
+      "cimExample": "Ex. K57.3",
+      "diagnosis": "Diagnosis",
+      "diagnosisSummary": "Summary of main diagnosis",
+      "historyTitle": "History & Additional Elements",
+      "historyDesc": "List medical history, surgical history, and other relevant information.",
+      "medicalHistory": "Medical History",
+      "surgicalHistory": "Surgical History",
+      "otherInfo": "Other information (allergies, treatments, etc.)",
+      "allergyExample": "Ex. Allergies: Penicillin",
+      "separateByLine": "Separate items by line break",
+      "observations": "Observations",
+      "observationsDesc": "Record clinical observations.",
+      "observationHistory": "Observation History ({{count}})",
+      "selectDate": "Select a date to see details",
+      "observationDetail": "Observation Detail",
+      "addObservation": "Add an observation",
+      "initialObservations": "Initial observations",
+      "observationPlaceholder": "Enter an observation, it will be timestamped when saved.",
+      "editorHelp": "Use formatting tools...",
+      "saveObservation": "Save observation",
+      "observationSaved": "Observation recorded",
+      "notFound": "File not found",
+      "notFoundDesc": "The requested patient does not exist or has been archived.",
+      "backToPatientList": "Back to patient list",
+      "noInfoAvailable": "No information available for the requested file."
+    },
+    "filters": {
+      "title": "Filters & Search",
+      "toggleAria": "Toggle search and filters",
+      "patientOrId": "Patient / ID",
+      "searchPlaceholder": "Search for a patient or ID",
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "type": "Type",
+      "allTypes": "All types",
+      "from": "From",
+      "to": "To",
+      "reset": "Reset"
+    },
+    "tabs": {
+      "existing": "Existing",
+      "new": "New"
+    },
+    "create": {
+      "searchPlaceholder": "Search for a patient...",
+      "noResults": "No patient found",
+      "enterField": "Enter {{field}}..."
+    },
+    "validation": {
+      "nameRequired": "Patient name is required",
+      "createError": "Error creating patient"
+    },
+    "messages": {
+      "created": "Patient created successfully!"
+    }
+  },
+  "common": {
+    "close": "Close",
+    "viewMore": "View More",
+    "learnMore": "Learn More",
+    "loading": "Loading...",
+    "or": "or",
+    "buttons": {
+      "cancel": "Cancel",
+      "save": "Save",
+      "delete": "Delete",
+      "update": "Update",
+      "close": "Close",
+      "saving": "Saving..."
+    },
+    "labels": {
+      "fullName": "Full name",
+      "dateOfBirth": "Date of birth",
+      "optional": "optional"
+    },
+    "loading": {
+      "creating": "Creating..."
+    },
+    "time": {
+      "fewMinutesAgo": "a few minutes ago"
+    }
+  },
+  "profile": {
+    "tabs": {
+      "personal": "Personal",
+      "teams": "Teams",
+      "statistics": "Statistics"
+    },
+    "sections": {
+      "personalInfo": "Personal Information",
+      "personalInfoDesc": "Manage your profile information and preferences",
+      "preferences": "Preferences",
+      "myTeams": "My Teams ({{count}})",
+      "searchTeams": "Search Teams",
+      "searchTeamsDesc": "Find and join other teams (type to search)",
+      "teamDetails": "Team Details",
+      "members": "Members",
+      "monthlyGoals": "Monthly Goals"
+    },
+    "labels": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "phone": "Phone",
+      "specialty": "Specialty",
+      "hospital": "Hospital",
+      "yearStatus": "Year / Status",
+      "address": "Address",
+      "bio": "Biography",
+      "emailNotifications": "Email Notifications",
+      "emailNotificationsDesc": "Receive important updates",
+      "pushNotifications": "Push Notifications",
+      "pushNotificationsDesc": "Real-time alerts in the app",
+      "profileVisibility": "Profile Visibility",
+      "profileVisibilityDesc": "Make your profile visible to colleagues",
+      "teamName": "Team name",
+      "service": "Service",
+      "admin": "⭐ Admin",
+      "member": "👤 Member",
+      "members": "Members",
+      "toDelete": "To delete",
+      "pendingRequests": "{{count}} pending request(s)",
+      "consultations": "Consultations",
+      "interventions": "Interventions",
+      "documentation": "Documentation",
+      "training": "Training",
+      "sent": "Sent"
+    },
+    "buttons": {
+      "edit": "Edit",
+      "save": "Save",
+      "saving": "Saving...",
+      "delete": "Delete",
+      "accept": "Accept",
+      "decline": "Decline",
+      "editTeam": "Edit",
+      "deleteTeam": "Delete",
+      "createTeam": "Create team",
+      "saveChanges": "Save changes",
+      "quickCreate": "Create a team quickly",
+      "retry": "Retry",
+      "join": "Join",
+      "search": "Search",
+      "sending": "Sending...",
+      "deleting": "Deleting...",
+      "modifying": "Modifying..."
+    },
+    "placeholders": {
+      "selectStatus": "Select a status",
+      "selectService": "Select a service",
+      "searchTeams": "Search teams by name, hospital, or service...",
+      "teamNameExample": "Ex. Surgery B",
+      "hospital": "hospital",
+      "hospitalName": "Hospital name",
+      "serviceName": "Service name"
+    },
+    "modals": {
+      "createTeamTitle": "Create a new team",
+      "editTeamTitle": "Edit team",
+      "deleteTeamTitle": "Delete team"
+    },
+    "messages": {
+      "updateSuccess": "Profile updated successfully!",
+      "profileUpdatedSuccess": "Profile updated successfully!",
+      "creating": "Creating...",
+      "creatingTeam": "Creating team...",
+      "teamCreatedSuccess": "Team created successfully!",
+      "noMembers": "No members",
+      "noTeams": "You are not a member of any team",
+      "noTeamsFound": "No teams found",
+      "noTeamsFoundDesc": "Try another search or create a new team",
+      "searchTeams": "Search for a team",
+      "searchTeamsDesc": "Enter a name, hospital, or service to get started",
+      "memberWarning": "💡 Tip: Unselected members will be removed from the team.",
+      "deleteWarning": "Warning: This action is irreversible. The team and all its data will be permanently deleted.",
+      "deleteConfirm": "Are you sure you want to delete"
+    },
+    "errors": {
+      "fetchProfile": "Failed to fetch profile",
+      "loadProfile": "Failed to load profile. Please try again.",
+      "fetchTeams": "Failed to fetch teams",
+      "loadTeams": "Failed to load teams.",
+      "loadTeamsState": "Failed to load teams.",
+      "loadRequests": "Failed to load requests",
+      "fetchRequests": "Failed to fetch requests",
+      "saveProfile": "Failed to save profile",
+      "saveProfileRetry": "Failed to save profile. Please try again.",
+      "createTeam": "Failed to create team",
+      "updateTeam": "Failed to update team",
+      "updateTeamError": "Failed to update team. Please try again.",
+      "deleteTeam": "Failed to delete team",
+      "deleteTeamError": "Failed to delete team. Please try again.",
+      "acceptRequest": "Failed to accept request",
+      "declineRequest": "Failed to decline request",
+      "searchTeams": "Search failed",
+      "searchTitle": "Search error"
+    },
+    "charts": {
+      "consultationBreakdown": "Consultation Breakdown",
+      "operationBreakdown": "Breakdown by Operation Type",
+      "monthlyInterventions": "Interventions per Month (Last 6 Months)",
+      "interventionsCount": "Number of Interventions",
+      "successRate": "Success Rate by Type",
+      "successRatePercent": "Success Rate (%)",
+      "labels": {
+        "consultations": "Consultations",
+        "followups": "Follow-ups",
+        "emergencies": "Emergencies",
+        "others": "Other"
+      },
+      "operationTypes": {
+        "digestive": "Digestive",
+        "vascular": "Vascular",
+        "urology": "Urology",
+        "other": "Other"
+      },
+      "months": {
+        "jul": "Jul",
+        "aug": "Aug",
+        "sep": "Sep",
+        "oct": "Oct",
+        "nov": "Nov",
+        "dec": "Dec"
+      },
+      "operationAbbr": {
+        "digest": "Digest",
+        "vasc": "Vasc",
+        "urol": "Urol",
+        "trauma": "Trauma"
+      }
+    }
+  },
+  "avis": {
+    "title": "Inter-service Opinions",
+    "subtitle": "Consult opinion requests from other services and share your recommendations in return.",
+    "tabs": {
+      "all": "All",
+      "incoming": "Incoming",
+      "outgoing": "Outgoing"
+    },
+    "buttons": {
+      "request": "Request an opinion",
+      "requestOpinion": "Request an opinion",
+      "selectPatient": "Select a patient",
+      "changePatient": "Change patient",
+      "selectOtherPatient": "Select another patient",
+      "sendResponse": "Send response",
+      "save": "Save"
+    },
+    "searchPlaceholder": "Search opinions...",
+    "empty": {
+      "noOpinions": "No opinions",
+      "createFirst": "Create your first medical opinion",
+      "title": "No opinions",
+      "description": "Create your first medical opinion"
+    },
+    "forms": {
+      "service": "Service",
+      "date": "Date",
+      "patient": "Patient",
+      "patientName": "Patient name",
+      "patientAge": "Patient age",
+      "patientHistory": "Patient history",
+      "opinion": "Opinion/Observation",
+      "response": "Response",
+      "serviceExample": "Ex: Cardiology",
+      "patientNameExample": "Ex: John Doe",
+      "patientAgeExample": "Ex: 65",
+      "servicePlaceholder": "Ex: Cardiology",
+      "patientNamePlaceholder": "Ex: John Doe",
+      "patientAgePlaceholder": "Ex: 65",
+      "patientHistoryPlaceholder": "Medical history, allergies, current treatments...",
+      "observationPlaceholder": "Clinical observations and diagnosis...",
+      "opinionPlaceholder": "Clinical observations and diagnosis...",
+      "responsePlaceholder": "Write your response to this opinion..."
+    },
+    "sections": {
+      "senderSpecialty": "Sender specialty",
+      "recipientSpecialty": "Recipient specialty",
+      "patientInfo": "Patient information",
+      "observation": "Observation",
+      "yourResponse": "Your response",
+      "sendResponse": "Send a response",
+      "notSpecified": "Not specified",
+      "noHistoryNoted": "No history noted",
+      "responseSent": "Response sent"
+    },
+    "modals": {
+      "title": "Medical Opinions",
+      "createTitle": "New Opinion",
+      "createDescription": "Record a new medical opinion"
+    },
+    "fields": {
+      "name": "Name",
+      "age": "Age",
+      "medicalHistory": "Medical history"
+    }
+  },
+  "reports": {
+    "title": "Surgical Reports",
+    "subtitle": "Document your surgical interventions and consult the details of each operation.",
+    "buttons": {
+      "new": "New report",
+      "newReport": "New report",
+      "selectPatient": "Select a patient",
+      "changePatient": "Change patient",
+      "selectOtherPatient": "Select another patient",
+      "add": "Add",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+    "searchPlaceholder": "Search reports...",
+    "empty": {
+      "title": "No reports",
+      "description": "Create your first report to start documenting your interventions."
+    },
+    "forms": {
+      "title": "Intervention title",
+      "type": "Type of intervention",
+      "date": "Date",
+      "duration": "Duration (min)",
+      "patient": "Patient",
+      "surgicalTeam": "Surgical team",
+      "interventionDetails": "Intervention details",
+      "postOpRecommendations": "Post-operative recommendations",
+      "patientName": "Patient name",
+      "patientAge": "Patient age",
+      "patientHistory": "Patient history",
+      "titleExample": "Ex: Laparoscopic cholecystectomy",
+      "selectType": "Select a type…",
+      "durationExample": "120",
+      "patientNameExample": "Ex: John Doe",
+      "patientAgeExample": "Ex: 65",
+      "titlePlaceholder": "Ex: Laparoscopic cholecystectomy",
+      "patientNamePlaceholder": "Ex: John Doe",
+      "patientAgePlaceholder": "Ex: 65",
+      "patientHistoryPlaceholder": "Medical history, allergies, current treatments...",
+      "interventionPlaceholder": "Course of intervention, observations, incidents…",
+      "detailsPlaceholder": "Course of intervention, observations, incidents…",
+      "postOpPlaceholder": "1. Recommendation 1\n2. Recommendation 2…",
+      "recommendationsPlaceholder": "1. Recommendation 1\n2. Recommendation 2…"
+    },
+    "sections": {
+      "mainSurgeon": "Main surgeon",
+      "operativeInfo": "Operative information",
+      "duration": "Duration",
+      "team": "Team",
+      "surgicalTeam": "Surgical team",
+      "interventionDetails": "Intervention details",
+      "postOpRecommendations": "Post-operative recommendations",
+      "patient": "Patient",
+      "history": "History",
+      "createdBy": "Created by"
+    },
+    "units": {
+      "minutes": "minutes",
+      "people": "people",
+      "operators": "operators"
+    },
+    "modals": {
+      "title": "Surgical Reports",
+      "createTitle": "New Surgical Report",
+      "createDescription": "Record a new surgical intervention",
+      "deleteTitle": "Delete report",
+      "deleteMessage": "Are you sure you want to delete this report? This action is irreversible."
+    },
+    "empty": {
+      "noReports": "No reports",
+      "createFirst": "Create your first report to start documenting your interventions.",
+      "title": "No reports",
+      "description": "Create your first report to start documenting your interventions."
+    },
+    "fields": {
+      "allOperatorsAdded": "All operators have been added"
+    }
+  },
+  "prescriptions": {
+    "title": "Prescriptions",
+    "subtitle": "Manage your medical prescriptions and view the history of prescriptions.",
+    "buttons": {
+      "newPrescription": "New prescription",
+      "selectPatient": "Select a patient",
+      "changePatient": "Change patient",
+      "selectOtherPatient": "Select another patient",
+      "save": "Save"
+    },
+    "searchPlaceholder": "Search prescriptions...",
+    "empty": {
+      "noPrescriptions": "No prescriptions",
+      "createFirst": "Create your first prescription"
+    },
+    "forms": {
+      "title": "Prescription title",
+      "date": "Date",
+      "shareType": "Share type",
+      "patient": "Patient",
+      "clinicalInfo": "Clinical information",
+      "prescriptionDetails": "Prescription details",
+      "patientName": "Patient name",
+      "patientAge": "Patient age",
+      "patientHistory": "Patient history",
+      "private": "Private",
+      "team": "Team",
+      "titleExample": "Ex: Post-operative treatment",
+      "patientNameExample": "Ex: John Doe",
+      "patientAgeExample": "Ex: 65",
+      "patientHistoryPlaceholder": "Medical history, allergies, current treatments...",
+      "clinicalInfoPlaceholder": "Clinical context and relevant history...",
+      "prescriptionPlaceholder": "1. Medication A - dosage × frequency..."
+    },
+    "sections": {
+      "patientId": "Patient ID",
+      "prescription": "Prescription",
+      "patient": "Patient",
+      "clinicalInfo": "Clinical information",
+      "prescriptionDetails": "Prescription details",
+      "createdBy": "Created by"
+    },
+    "privacy": {
+      "private": "Private",
+      "team": "Team"
+    },
+    "modals": {
+      "title": "Prescriptions",
+      "createTitle": "New prescription",
+      "createDescription": "Record a new prescription"
+    },
+    "empty": {
+      "noPrescriptions": "No prescriptions",
+      "createFirst": "Create your first prescription"
+    },
+    "fields": {
+      "na": "N/A"
+    }
+  },
   "dashboard": {
     "navigation": {
       "dashboard": "Dashboard",
       "patients": "Patients",
       "documents": "My Documents",
       "analyses": "Analyses",
-      "avis": "Opinion",
+      "avis": "Messages",
       "comptes_rendus": "Reports",
       "ordonnances": "Prescriptions",
       "profile": "Profile",
@@ -447,7 +972,7 @@
       "prescription": "Prescription",
       "analyses": "Analyses",
       "report": "Report",
-      "opinion": "Opinion",
+      "opinion": "Messages",
       "notifications": "Notifications",
       "realTime": "Real-time",
       "noNotifications": "No notifications at the moment.",
@@ -462,7 +987,7 @@
       "patients": "Patients",
       "myDocuments": "My documents",
       "analyses": "Analyses",
-      "avis": "Opinion",
+      "avis": "Messages",
       "comptes_rendus": "Reports",
       "ordonnances": "Prescriptions",
       "profile": "Profile"
@@ -591,5 +1116,229 @@
         "na": "N/A"
       }
     }
+  },
+  "analyses": {
+    "page": {
+      "title": "Analyses",
+      "subtitle": "Monitor biological results and coordinate with the laboratory."
+    },
+    "buttons": {
+      "exportResults": "Export results",
+      "newRequest": "New request",
+      "newOrder": "New order",
+      "viewDetails": "View details",
+      "save": "Save",
+      "cancel": "Cancel",
+      "close": "Close",
+      "changePatient": "Change patient",
+      "reset": "Reset",
+      "previous": "Previous",
+      "next": "Next",
+      "saveResults": "Save results"
+    },
+    "sections": {
+      "historyTitle": "Analysis History",
+      "historyDescription": "Validated and archived results with chronological tracking.",
+      "pendingTitle": "Pending Orders",
+      "pendingDescription": "Prioritization of unprocessed analyses."
+    },
+    "emptyStates": {
+      "noBilans": "No analyses available",
+      "noBilansDesc": "Once analyses are validated by the laboratory, they will automatically appear in this list.",
+      "noResults": "No results match these criteria.",
+      "clearFilters": "Clear filters",
+      "noPending": "No pending requests",
+      "noPendingDesc": "Create a new request to launch an analysis order.",
+      "noAnalysesToDisplay": "No analyses to display"
+    },
+    "table": {
+      "headers": {
+        "analysisId": "Analysis #",
+        "patient": "Patient",
+        "title": "Analysis Title",
+        "type": "Type",
+        "date": "Date"
+      }
+    },
+    "pagination": {
+      "showing": "Showing {{startItem}}–{{endItem}} of {{total}} analyses",
+      "pageOf": "Page {{current}} / {{total}}"
+    },
+    "filters": {
+      "title": "Filters & Search",
+      "toggleAria": "Toggle search and filters",
+      "patientOrId": "Patient / identifier",
+      "searchPlaceholder": "Search for a patient or number",
+      "analysisType": "Analysis Type",
+      "allTypes": "All types",
+      "from": "From",
+      "to": "To",
+      "categories": {
+        "bilans": "Analyses",
+        "imagerie": "Imaging",
+        "anapath": "Pathology",
+        "autres": "Other"
+      }
+    },
+    "modals": {
+      "newAnalysisTitle": "New Analysis Request",
+      "newAnalysisDesc": "Enter the necessary information to send the sample to the laboratory.",
+      "detailsTitle": "Analysis {{id}}",
+      "detailsDesc": "{{type}} · {{patient}}"
+    },
+    "modal": {
+      "title": "Analysis Details"
+    },
+    "labels": {
+      "patient": "Patient",
+      "title": "Title",
+      "requestDate": "Request date",
+      "orderNumber": "Order number",
+      "type": "Type"
+    },
+    "categories": {
+      "bilan": "Lab work",
+      "imagerie": "Imaging",
+      "anapath": "Pathology",
+      "autres": "Other"
+    },
+    "form": {
+      "analysisType": "Analysis Type",
+      "selectCategory": "Select a category",
+      "categories": {
+        "bilan": "Analyses",
+        "imagerie": "Imaging",
+        "anapath": "Pathology",
+        "autres": "Other"
+      },
+      "bilanSection": "Analyses",
+      "customAnalyses": "Other analyses",
+      "customAnalysesPlaceholder": "Enter other analyses separated by commas...",
+      "analysisName": "Analysis Name",
+      "analysisNamePlaceholder": "Ex. Arterial blood gas",
+      "selectedPatient": "Selected Patient",
+      "comment": "Comment / Instructions",
+      "commentPlaceholder": "Indicate clinically relevant elements..."
+    },
+    "patientFields": {
+      "name": "Name",
+      "age": "Age",
+      "history": "History",
+      "unspecified": "Not specified"
+    },
+    "results": {
+      "sectionTitle": "Results Entry",
+      "enterValue": "Enter value",
+      "scanCamera": "Scan with camera",
+      "describeResults": "Describe results and observations...",
+      "noTestsPending": "No pending tests"
+    },
+    "details": {
+      "requestDate": "Request:",
+      "interpretation": "Interpretation",
+      "historicalResults": "Historical Results",
+      "reportLabel": "Analysis Report",
+      "noReportAvailable": "No report available at this time.",
+      "noDetailedResults": "Detailed results are not available for this analysis."
+    },
+    "loading": {
+      "fetchingHistory": "Fetching history...",
+      "connectingLab": "Connecting to laboratory...",
+      "saving": "Saving...",
+      "registering": "Registering...",
+      "creating": "Creating..."
+    },
+    "aria": {
+      "openPendingOrders": "Open pending orders",
+      "closePanel": "Close panel",
+      "closeModal": "Close modal"
+    },
+    "mobilePanelHeader": {
+      "title": "Pending Orders",
+      "subtitle": "Unprocessed Analyses"
+    }
+  },
+  "tasks": {
+    "page": {
+      "title": "Tasks & Activities",
+      "subtitle": "Organize your day with your instructions and planned activities."
+    },
+    "tabs": {
+      "tasks": "Tasks",
+      "activities": "Activities"
+    },
+    "close": "Close",
+    "activityTypes": {
+      "consultation": "Consultation",
+      "operatingRoom": "Operating room",
+      "staffMeeting": "Staff / Meeting",
+      "tour": "Tour"
+    },
+    "form": {
+      "addTaskModal": "Add a task",
+      "addTaskDesc": "Define an action to share with your team.",
+      "editTaskModal": "Edit task",
+      "editTaskDesc": "Update the information.",
+      "deleteTaskModal": "Delete task?",
+      "deleteTaskDesc": "This action will remove the task from your list.",
+      "deleteTaskConfirm": "Are you sure you want to delete the task \"{{title}}\"?",
+      "teamType": "Team",
+      "privateType": "Private",
+      "patient": "Patient (optional)",
+      "taskTitle": "Task",
+      "taskPlaceholder": "Ex. Check analgesia sector 5",
+      "taskLabel": "Title",
+      "description": "Description",
+      "descriptionExample": "Ex. Check pain relief status of patients in sector 5",
+      "activityDay": "Activity day",
+      "time": "Time",
+      "type": "Type",
+      "location": "Location",
+      "locationExample": "Ex. Sector 5 - Conference room",
+      "team": "Team",
+      "teamExample": "Ex. Dr. Benali, Nurse Claire",
+      "cancel": "Cancel",
+      "save": "Save",
+      "delete": "Delete",
+      "addMore": "Add another task",
+      "favoriteTasks": "Favorite tasks:",
+      "addFavorite": "Add"
+    },
+    "labels": {
+      "completed": "Completed: {{completed}}/{{total}}",
+      "noTasks": "No tasks recorded",
+      "noTasksDesc": "Add your daily actions to keep a shared follow-up with your team.",
+      "newFavorite": "New favorite..."
+    },
+    "loading": {
+      "loadingTasks": "Loading tasks...",
+      "loadingActivities": "Loading activities..."
+    }
+  },
+  "notifications": {
+    "page": {
+      "title": "Notifications",
+      "subtitle": "Live team feed"
+    },
+    "badge": "Real-time",
+    "buttons": {
+      "back": "Back",
+      "markAllAsRead": "Mark all as read",
+      "close": "Close",
+      "retry": "Retry"
+    },
+    "emptyStates": {
+      "noNotifications": "No notifications",
+      "noNotificationsDesc": "Everything is under control for now.",
+      "error": "Error loading",
+      "errorRetry": "Try again"
+    },
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "{{count}} minute{{count > 1 ? \"s\" : \"\" }} ago",
+      "hoursAgo": "{{count}} hour{{count > 1 ? \"s\" : \"\" }} ago",
+      "daysAgo": "{{count}} day{{count > 1 ? \"s\" : \"\" }} ago"
+    },
+    "counter": "{{count}} notification{{count > 1 ? \"s\" : \"\"}}"
   }
 }

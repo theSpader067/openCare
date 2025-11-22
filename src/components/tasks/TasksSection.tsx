@@ -446,7 +446,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
             <EmptyState
               icon={ClipboardList}
               title={t("dashboard.tasks.noTasksRecorded")}
-              description="Ajoutez vos actions quotidiennes pour garder un suivi partagé avec votre équipe."
+              description={t("tasks.labels.noTasksDesc")}
               action={
                 <Button variant="outline" onClick={handleOpenAddTaskModal}>
                   <Plus className="mr-2 h-4 w-4" />
@@ -536,12 +536,12 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
                                   {task.taskType === "team" ? (
                                     <>
                                       <Users className="h-3 w-3" />
-                                      Équipe
+                                      {t("tasks.form.teamType")}
                                     </>
                                   ) : (
                                     <>
                                       <Lock className="h-3 w-3" />
-                                      Privée
+                                      {t("tasks.form.privateType")}
                                     </>
                                   )}
                                 </span>
@@ -618,7 +618,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
         open={isAddTaskModalOpen}
         onClose={() => setIsAddTaskModalOpen(false)}
         title={t("dashboard.tasks.addTask")}
-        description="Définissez une action à partager avec votre équipe."
+        description={t("tasks.form.addTaskDesc")}
         size="md"
         footer={
           <>
@@ -627,7 +627,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
               onClick={() => setIsAddTaskModalOpen(false)}
               disabled={isSaving}
             >
-              Annuler
+              {t("tasks.form.cancel")}
             </Button>
             <Button
               variant="primary"
@@ -636,7 +636,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
               className={isSaving ? "opacity-70" : ""}
             >
               {isSaving ? <Spinner className="h-4 w-4 mr-2" /> : null}
-              Enregistrer
+              {t("tasks.form.save")}
             </Button>
           </>
         }
@@ -656,7 +656,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
               )}
             >
               <Users className="h-4 w-4" />
-              Équipe
+              {t("tasks.form.teamType")}
             </button>
             <button
               onClick={() =>
@@ -670,14 +670,14 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
               )}
             >
               <Lock className="h-4 w-4" />
-              Privée
+              {t("tasks.form.privateType")}
             </button>
           </div>
 
           {/* Patient Selection */}
           <div className="grid gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
             <label className="text-sm font-semibold text-[#1f184f]">
-              Patient <span className="text-xs font-normal text-slate-500">(optional)</span>
+              {t("tasks.form.patient")}
             </label>
             <PatientCreate
               ref={patientCreateAddRef}
@@ -712,7 +712,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
                       newTitles[index] = e.target.value;
                       setTaskForm({ ...taskForm, titles: newTitles });
                     }}
-                    placeholder="Ex. Vérifier l'analgésie secteur 5"
+                    placeholder={t("tasks.form.taskPlaceholder")}
                     className="flex-1 rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
                   />
                   {index > 0 && (
@@ -765,7 +765,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
                       autoFocus
                       value={newFavoriteTask}
                       onChange={(e) => setNewFavoriteTask(e.target.value)}
-                      placeholder="Nouveau favori..."
+                      placeholder={t("tasks.labels.newFavorite")}
                       className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-[#1f184f] focus:border-indigo-300 focus:outline-none"
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && newFavoriteTask.trim()) {
@@ -832,7 +832,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
         open={isEditTaskModalOpen}
         onClose={() => setIsEditTaskModalOpen(false)}
         title={t("dashboard.tasks.editTask")}
-        description="Mettez à jour les informations."
+        description={t("tasks.form.editTaskDesc")}
         size="md"
         footer={
           <>
@@ -841,7 +841,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
               onClick={() => setIsEditTaskModalOpen(false)}
               disabled={isSaving}
             >
-              Annuler
+              {t("tasks.form.cancel")}
             </Button>
             <Button
               variant="primary"
@@ -850,7 +850,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
               className={isSaving ? "opacity-70" : ""}
             >
               {isSaving ? <Spinner className="h-4 w-4 mr-2" /> : null}
-              Enregistrer
+              {t("tasks.form.save")}
             </Button>
           </>
         }
@@ -870,7 +870,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
               )}
             >
               <Users className="h-4 w-4" />
-              Équipe
+              {t("tasks.form.teamType")}
             </button>
             <button
               onClick={() =>
@@ -884,14 +884,14 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
               )}
             >
               <Lock className="h-4 w-4" />
-              Privée
+              {t("tasks.form.privateType")}
             </button>
           </div>
 
           {/* Patient Selection */}
           <div className="grid gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
             <label className="text-sm font-semibold text-[#1f184f]">
-              Patient <span className="text-xs font-normal text-slate-500">(optional)</span>
+              {t("tasks.form.patient")}
             </label>
             <PatientCreate
               ref={patientCreateEditRef}
@@ -910,7 +910,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
           {/* Intitulé */}
           <div className="grid gap-2">
             <label className="text-sm font-semibold text-[#1f184f]">
-              Intitulé
+              {t("tasks.form.taskLabel")}
             </label>
             <input
               value={taskForm.titles[0] || ""}
@@ -919,7 +919,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
                 newTitles[0] = e.target.value;
                 setTaskForm({ ...taskForm, titles: newTitles });
               }}
-              placeholder="Ex. Vérifier l'analgésie secteur 5"
+              placeholder={t("tasks.form.taskPlaceholder")}
               className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
             />
           </div>
@@ -930,7 +930,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
         open={isDeleteTaskModalOpen}
         onClose={() => setIsDeleteTaskModalOpen(false)}
         title={t("dashboard.tasks.deleteTask")}
-        description="Cette action retirera la consigne de votre liste."
+        description={t("tasks.form.deleteTaskDesc")}
         size="sm"
         footer={
           <>
@@ -939,7 +939,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
               onClick={() => setIsDeleteTaskModalOpen(false)}
               disabled={isDeleting}
             >
-              Annuler
+              {t("tasks.form.cancel")}
             </Button>
             <Button
               className="bg-rose-600 text-white hover:bg-rose-700 focus-visible:ring-rose-300 disabled:opacity-70"
@@ -947,15 +947,14 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
               disabled={isDeleting}
             >
               {isDeleting ? <Spinner className="h-4 w-4 mr-2" /> : null}
-              Supprimer
+              {t("tasks.form.delete")}
             </Button>
           </>
         }
       >
         {taskToDelete ? (
           <p className="text-sm text-[#5f5aa5]">
-            Confirmez-vous la suppression de la consigne « {taskToDelete.title}{" "}
-            » ?
+            {t("tasks.form.deleteTaskConfirm", { title: taskToDelete.title })}
           </p>
         ) : null}
       </Modal>

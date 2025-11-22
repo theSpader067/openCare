@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Calendar, FilePlus, Pill, User, Lock, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataListLayout } from "@/components/document/DataListLayout";
@@ -41,6 +42,7 @@ function formatDate(dateString: string | null | undefined) {
 }
 
 export default function OrdonnancesPage() {
+  const { t } = useTranslation();
   const [ordonnances, setOrdonnances] = useState<Ordonnance[]>([]);
   const [activeOrdonnanceId, setActiveOrdonnanceId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -689,9 +691,9 @@ export default function OrdonnancesPage() {
     <>
     <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between my-2">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Ordonnances</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">{t("prescriptions.title")}</h1>
           <p className="text-sm text-slate-500">
-            Gérez vos prescriptions médicales et consultez l'historique des ordonnances.
+            {t("prescriptions.subtitle")}
           </p>
         </div>
         <Button
@@ -700,7 +702,7 @@ export default function OrdonnancesPage() {
           onClick={handleOpenCreate}
         >
           <FilePlus className="mr-2 h-4 w-4" />
-          Nouvelle ordonnance
+          {t("prescriptions.buttons.newPrescription")}
         </Button>
       </section>
       <DataListLayout
@@ -716,18 +718,18 @@ export default function OrdonnancesPage() {
         onOpenCreate={handleOpenCreate}
         onCancelCreate={handleCancelCreate}
         onCloseMobilePanel={closeMobilePanel}
-        title="Ordonnances"
+        title={t("prescriptions.title")}
         renderListItemContent={renderListItemContent}
         renderDetailViewContent={detailViewContent ? () => detailViewContent : () => null}
         createFormContent={createFormContent}
         emptyIcon={Pill}
-        emptyTitle="Aucune ordonnance"
-        emptyDescription="Créez votre première ordonnance"
-        searchPlaceholder="Rechercher une ordonnance..."
+        emptyTitle={t("prescriptions.empty.noPrescriptions")}
+        emptyDescription={t("prescriptions.empty.createFirst")}
+        searchPlaceholder={t("prescriptions.searchPlaceholder")}
         isSubmitting={isSubmitting}
-        createTitle="Nouvelle ordonnance"
-        createDescription="Enregistrez une nouvelle prescription"
-        saveButtonText="Enregistrer"
+        createTitle={t("prescriptions.modals.createTitle")}
+        createDescription={t("prescriptions.modals.createDescription")}
+        saveButtonText={t("prescriptions.buttons.save")}
         isFormValid={isFormValid as unknown as boolean}
         isLoading={isLoading}
         onSave={handleCreateOrdonnance}

@@ -1,5 +1,6 @@
 import { ObservationEntry } from "@/data/patients/patients-data";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 function formatObservationTimestamp(timestamp: string) {
   return new Intl.DateTimeFormat("fr-FR", {
@@ -20,8 +21,10 @@ interface ObservationTimelineProps {
 export function ObservationTimeline({
   entries,
   className,
-  emptyMessage = "Aucune observation enregistrée.",
+  emptyMessage,
 }: ObservationTimelineProps) {
+  const { t } = useTranslation();
+  const displayEmptyMessage = emptyMessage ?? t("patients.empty.noObservations");
   if (!entries.length) {
     return (
       <div
@@ -30,7 +33,7 @@ export function ObservationTimeline({
           className,
         )}
       >
-        {emptyMessage}
+        {displayEmptyMessage}
       </div>
     );
   }

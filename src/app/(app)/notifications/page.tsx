@@ -2,6 +2,7 @@
 
 import { type ComponentType, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, Bell, Sparkles } from "lucide-react";
 import {
   Beaker,
@@ -17,22 +18,23 @@ import {
 } from "@/data/notifications/notifications-metadata";
 
 // Helper function to format relative time
-function formatRelativeTime(date: Date): string {
+function formatRelativeTime(date: Date, t: (key: string, options?: any) => string): string {
   const now = new Date();
   const diffMs = now.getTime() - new Date(date).getTime();
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return "À l'instant";
-  if (diffMins < 60) return `Il y a ${diffMins} minute${diffMins > 1 ? "s" : ""}`;
-  if (diffHours < 24) return `Il y a ${diffHours} heure${diffHours > 1 ? "s" : ""}`;
-  if (diffDays < 7) return `Il y a ${diffDays} jour${diffDays > 1 ? "s" : ""}`;
+  if (diffMins < 1) return t("notifications.time.justNow");
+  if (diffMins < 60) return t("notifications.time.minutesAgo", { count: diffMins });
+  if (diffHours < 24) return t("notifications.time.hoursAgo", { count: diffHours });
+  if (diffDays < 7) return t("notifications.time.daysAgo", { count: diffDays });
 
   return new Date(date).toLocaleDateString("fr-FR");
 }
 
 export default function NotificationsPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -59,7 +61,7 @@ export default function NotificationsPage() {
             type: (notif.category || "task") as NotificationType,
             title: notif.title,
             description: notif.description || "",
-            time: formatRelativeTime(new Date(notif.createdAt)),
+            time: formatRelativeTime(new Date(notif.createdAt), t),
             source: notif.source || "Système",
           })
         );
@@ -87,22 +89,22 @@ export default function NotificationsPage() {
               size="sm"
               onClick={() => router.back()}
               className="text-[#5f5aa5] hover:bg-indigo-50/80"
-              aria-label="Retour"
+              aria-label={t("notifications.buttons.back")}
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-[#1f184f] sm:text-3xl">
-                Notifications
+                {t("notifications.page.title")}
               </h1>
               <p className="text-sm text-[#6a66b1]">
-                Flux d&apos;équipe en direct
+                {t("notifications.page.subtitle")}
               </p>
             </div>
           </div>
           <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-[#4338ca]">
             <Sparkles className="h-4 w-4" />
-            Temps réel
+            {t("notifications.badge")}
           </span>
         </div>
 
@@ -139,7 +141,7 @@ export default function NotificationsPage() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-red-700">
-                  Erreur lors du chargement
+                  {t("notifications.emptyStates.error")}
                 </p>
                 <p className="text-xs text-red-600">
                   {error}
@@ -151,7 +153,7 @@ export default function NotificationsPage() {
                 size="sm"
                 className="mt-2"
               >
-                Réessayer
+                {t("notifications.buttons.retry")}
               </Button>
             </div>
           ) : notifications.length === 0 ? (
@@ -162,10 +164,10 @@ export default function NotificationsPage() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-[#1f184f]">
-                  Aucune notification
+                  {t("notifications.emptyStates.noNotifications")}
                 </p>
                 <p className="text-xs text-slate-500">
-                  Tout est sous contrôle pour le moment.
+                  {t("notifications.emptyStates.noNotificationsDesc")}
                 </p>
               </div>
             </div>
@@ -224,7 +226,7 @@ export default function NotificationsPage() {
           <div className="mt-8 border-t border-violet-200/70 pt-6 sm:mt-10 sm:pt-8">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <div className="text-sm text-[#6a66b1]">
-                {unreadCount} notification{unreadCount > 1 ? "s" : ""}
+                {t("notifications.counter", { count: unreadCount })}
               </div>
               <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
                 <Button
@@ -234,14 +236,14 @@ export default function NotificationsPage() {
                   }}
                   className="w-full sm:w-auto"
                 >
-                  Marquer tout comme lu
+                  {t("notifications.buttons.markAllAsRead")}
                 </Button>
                 <Button
                   variant="ghost"
                   onClick={() => router.back()}
                   className="w-full sm:w-auto"
                 >
-                  Fermer
+                  {t("notifications.buttons.close")}
                 </Button>
               </div>
             </div>

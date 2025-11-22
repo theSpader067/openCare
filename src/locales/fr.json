@@ -286,12 +286,537 @@
       }
     }
   },
+  "patients": {
+    "page": {
+      "title": "Patients",
+      "subtitle": "Gestion des dossiers, parcours de soins et suivis post-opératoires."
+    },
+    "sidebar": {
+      "patientFile": "Dossier patient"
+    },
+    "aria": {
+      "closePreview": "Fermer l'aperçu patient"
+    },
+    "empty": {
+      "noProfiles": "Aucun profil disponible",
+      "noProfilesDesc": "Importez ou créez un dossier patient pour afficher les informations détaillées.",
+      "selectPatient": "Sélectionnez un patient",
+      "selectPatientDesc": "Choisissez un dossier dans la liste pour afficher sa synthèse.",
+      "noObservations": "Aucune observation enregistrée pour ce patient.",
+      "noPatients": "Aucun patient attribué",
+      "noPatientsDesc": "Une fois les patients assignés à votre service, ils apparaîtront ici.",
+      "noHistory": "Aucun antécédent déclaré"
+    },
+    "buttons": {
+      "exportReport": "Exporter un rapport",
+      "newPatient": "Nouveau patient",
+      "createPatient": "Créer un patient",
+      "carePathway": "Parcours de soins",
+      "visitFile": "Visiter dossier",
+      "previous": "Précédent",
+      "next": "Suivant",
+      "showMore": "Afficher plus",
+      "importFromEMR": "Importer depuis le DPI"
+    },
+    "section": {
+      "mainDiagnosis": "Diagnostic principal",
+      "medicalHistory": "ATCDs médicaux",
+      "surgicalHistory": "ATCDs chirurgicaux",
+      "otherInfo": "Autres éléments",
+      "observations": "Observations"
+    },
+    "labels": {
+      "patientId": "Identifiant patient",
+      "nextFollowUp": "Suivi prévu",
+      "entries": "entrées",
+      "analyzingFile": "Analyse du dossier patient..."
+    },
+    "table": {
+      "headers": {
+        "patient": "Patient",
+        "patientId": "ID patient",
+        "status": "Statut",
+        "type": "Type",
+        "cim": "CIM",
+        "actions": "Actions"
+      }
+    },
+    "pagination": {
+      "noFiles": "Aucun dossier à afficher",
+      "showing": "Affichage {{from}}–{{to}} sur {{total}} dossiers",
+      "pageOf": "Page {{current}} / {{total}}"
+    },
+    "modal": {
+      "editPatient": "Modifier le dossier de {{name}}",
+      "editDesc": "Ajustez les informations principales du patient pour garder la vue à jour.",
+      "deleteConfirm": "Supprimer {{name}} ?",
+      "deleteConfirmFallback": "Confirmer la suppression",
+      "deleteDesc": "Cette action retirera le dossier de la liste. Vous pourrez le retrouver dans l'historique si nécessaire.",
+      "deleteMessage": "Êtes-vous sûr de vouloir supprimer le dossier patient {{name}} ({{id}}) ?",
+      "deleteWarning": "Cette action ne peut pas être annulée immédiatement et nécessite une restauration manuelle."
+    },
+    "form": {
+      "serviceAssignment": "Service d'affectation"
+    },
+    "types": {
+      "private": "Privé",
+      "team": "Équipe"
+    },
+    "dossier": {
+      "title": "Dossier patient",
+      "createTitle": "Créer un patient",
+      "updateDesc": "Visualisez et mettez à jour le dossier médical complet du patient sélectionné.",
+      "createDesc": "Renseignez l'ensemble des informations nécessaires pour créer un nouveau dossier patient.",
+      "saved": "Modifications enregistrées localement.",
+      "backToList": "Retour à la liste",
+      "patientInfo": "Informations patient",
+      "patientInfoDesc": "Identité, affectation et coordonnées principales du dossier.",
+      "fileId": "Identifiant dossier",
+      "generateId": "Générer un identifiant aléatoire",
+      "idExample": "Ex. P-2024-013",
+      "nameExample": "Ex. Fatou Diop",
+      "serviceExample": "Ex. Chirurgie digestive",
+      "nextContact": "Prochain contact",
+      "nextContactExample": "Ex. Tournée 14h",
+      "lastUpdated": "Dernière mise à jour : {{time}}",
+      "mainDiagnosis": "Diagnostic principal",
+      "diagnosisDesc": "Renseignez le code CIM ainsi que le diagnostic associé.",
+      "cimCode": "Code CIM",
+      "cimExample": "Ex. K57.3",
+      "diagnosis": "Diagnostic",
+      "diagnosisSummary": "Résumé du diagnostic principal",
+      "historyTitle": "Antécédents & éléments complémentaires",
+      "historyDesc": "Listez les antécédents médicaux, chirurgicaux et autres informations pertinentes.",
+      "medicalHistory": "ATCDs médicaux",
+      "surgicalHistory": "ATCDs chirurgicaux",
+      "otherInfo": "Autres informations (allergies, traitements, etc.)",
+      "allergyExample": "Ex. Allergies: Pénicilline",
+      "separateByLine": "Séparez les éléments par un saut de ligne",
+      "observations": "Observations",
+      "observationsDesc": "Notez les observations cliniques.",
+      "observationHistory": "Historique des observations ({{count}})",
+      "selectDate": "Sélectionnez une date pour voir les détails",
+      "observationDetail": "Détail de l'observation",
+      "addObservation": "Ajouter une observation",
+      "initialObservations": "Observations initiales",
+      "observationPlaceholder": "Saisissez une observation, elle sera horodatée lors de l'enregistrement.",
+      "editorHelp": "Utilisez les outils de formatage...",
+      "saveObservation": "Enregistrer l'observation",
+      "observationSaved": "Observation enregistrée",
+      "notFound": "Dossier introuvable",
+      "notFoundDesc": "Le patient recherché n'existe pas ou a été archivé.",
+      "backToPatientList": "Retour à la liste des patients",
+      "noInfoAvailable": "Aucune information disponible pour le dossier demandé."
+    },
+    "filters": {
+      "title": "Filtres & recherche",
+      "toggleAria": "Toggler recherche et filtres",
+      "patientOrId": "Patient / identifiant",
+      "searchPlaceholder": "Rechercher un patient ou un ID",
+      "status": "Statut",
+      "allStatuses": "Tous les statuts",
+      "type": "Type",
+      "allTypes": "Tous les types",
+      "from": "Du",
+      "to": "Au",
+      "reset": "Réinitialiser"
+    },
+    "tabs": {
+      "existing": "Existants",
+      "new": "Nouveau"
+    },
+    "create": {
+      "searchPlaceholder": "Rechercher un patient...",
+      "noResults": "Aucun patient trouvé",
+      "enterField": "Entrez {{field}}..."
+    },
+    "validation": {
+      "nameRequired": "Le nom du patient est requis",
+      "createError": "Erreur lors de la création du patient"
+    },
+    "messages": {
+      "created": "Patient créé avec succès!"
+    }
+  },
   "common": {
     "close": "Fermer",
     "viewMore": "Voir plus",
     "learnMore": "En savoir plus",
     "loading": "Chargement...",
-    "or": "ou"
+    "or": "ou",
+    "buttons": {
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "delete": "Supprimer",
+      "update": "Mettre à jour",
+      "close": "Fermer",
+      "saving": "Enregistrement..."
+    },
+    "labels": {
+      "fullName": "Nom complet",
+      "dateOfBirth": "Date de naissance",
+      "optional": "optionnel"
+    },
+    "loading": {
+      "creating": "Création..."
+    },
+    "time": {
+      "fewMinutesAgo": "il y a quelques minutes"
+    }
+  },
+  "profile": {
+    "tabs": {
+      "personal": "Personnel",
+      "teams": "Équipes",
+      "statistics": "Statistiques"
+    },
+    "sections": {
+      "personalInfo": "Informations personnelles",
+      "personalInfoDesc": "Gérez vos informations de profil et vos préférences",
+      "preferences": "Préférences",
+      "myTeams": "Mes Équipes ({{count}})",
+      "searchTeams": "Rechercher des équipes",
+      "searchTeamsDesc": "Trouvez et rejoignez d'autres équipes (tapez pour rechercher)",
+      "teamDetails": "Détails de l'équipe",
+      "members": "Membres",
+      "monthlyGoals": "Objectifs mensuels"
+    },
+    "labels": {
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "email": "Email",
+      "phone": "Téléphone",
+      "specialty": "Spécialité",
+      "hospital": "Hôpital",
+      "yearStatus": "Année / Statut",
+      "address": "Adresse",
+      "bio": "Biographie",
+      "emailNotifications": "Notifications par email",
+      "emailNotificationsDesc": "Recevoir les mises à jour importantes",
+      "pushNotifications": "Notifications push",
+      "pushNotificationsDesc": "Alertes temps réel sur l'application",
+      "profileVisibility": "Visibilité du profil",
+      "profileVisibilityDesc": "Rendre votre profil visible aux collègues",
+      "teamName": "Nom de l'équipe",
+      "service": "Service",
+      "admin": "⭐ Admin",
+      "member": "👤 Membre",
+      "members": "Membres",
+      "toDelete": "À supprimer",
+      "pendingRequests": "{{count}} demande(s) en attente",
+      "consultations": "Consultations",
+      "interventions": "Interventions",
+      "documentation": "Documentation",
+      "training": "Formations",
+      "sent": "Envoyé"
+    },
+    "buttons": {
+      "edit": "Modifier",
+      "save": "Enregistrer",
+      "saving": "Enregistrement...",
+      "delete": "Supprimer",
+      "accept": "Accepter",
+      "decline": "Refuser",
+      "editTeam": "Modifier",
+      "deleteTeam": "Supprimer",
+      "createTeam": "Créer l'équipe",
+      "saveChanges": "Enregistrer les modifications",
+      "quickCreate": "Créer une équipe rapidement",
+      "retry": "Réessayer",
+      "join": "Rejoindre",
+      "search": "Rechercher",
+      "sending": "Envoi en cours...",
+      "deleting": "Suppression...",
+      "modifying": "Modification..."
+    },
+    "placeholders": {
+      "selectStatus": "Sélectionner un statut",
+      "selectService": "Sélectionner un service",
+      "searchTeams": "Rechercher une équipe par nom, hôpital ou service...",
+      "teamNameExample": "Ex. Chirurgie B",
+      "hospital": "hôpital",
+      "hospitalName": "Nom de l'hôpital",
+      "serviceName": "Nom du service"
+    },
+    "modals": {
+      "createTeamTitle": "Créer une nouvelle équipe",
+      "editTeamTitle": "Modifier l'équipe",
+      "deleteTeamTitle": "Supprimer l'équipe"
+    },
+    "messages": {
+      "updateSuccess": "Profil mis à jour avec succès!",
+      "profileUpdatedSuccess": "Profil mis à jour avec succès!",
+      "creating": "Création...",
+      "creatingTeam": "Création de l'équipe...",
+      "teamCreatedSuccess": "Équipe créée avec succès!",
+      "noMembers": "Aucun membre",
+      "noTeams": "Vous n'êtes membre d'aucune équipe",
+      "noTeamsFound": "Aucune équipe trouvée",
+      "noTeamsFoundDesc": "Essayez une autre recherche ou créez une nouvelle équipe",
+      "searchTeams": "Cherchez une équipe",
+      "searchTeamsDesc": "Entrez un nom, un hôpital ou un service pour commencer",
+      "memberWarning": "💡 Astuce: Les membres non sélectionnés seront supprimés de l'équipe.",
+      "deleteWarning": "Attention: Cette action est irreversible. L'équipe et toutes ses données seront supprimées définitivement.",
+      "deleteConfirm": "Êtes-vous sûr de vouloir supprimer"
+    },
+    "errors": {
+      "fetchProfile": "Échec de la récupération du profil",
+      "loadProfile": "Échec du chargement du profil. Veuillez réessayer.",
+      "fetchTeams": "Échec de la récupération des équipes",
+      "loadTeams": "Échec du chargement des équipes.",
+      "loadTeamsState": "Échec du chargement des équipes.",
+      "loadRequests": "Échec du chargement des demandes",
+      "fetchRequests": "Échec de la récupération des demandes",
+      "saveProfile": "Échec de la sauvegarde du profil",
+      "saveProfileRetry": "Échec de la sauvegarde du profil. Veuillez réessayer.",
+      "createTeam": "Échec de la création de l'équipe",
+      "updateTeam": "Échec de la mise à jour de l'équipe",
+      "updateTeamError": "Échec de la mise à jour de l'équipe. Veuillez réessayer.",
+      "deleteTeam": "Échec de la suppression de l'équipe",
+      "deleteTeamError": "Échec de la suppression de l'équipe. Veuillez réessayer.",
+      "acceptRequest": "Échec de l'acceptation de la demande",
+      "declineRequest": "Échec du refus de la demande",
+      "searchTeams": "La recherche a échoué",
+      "searchTitle": "Erreur de recherche"
+    },
+    "charts": {
+      "consultationBreakdown": "Répartition des consultations",
+      "operationBreakdown": "Répartition par type d'opération",
+      "monthlyInterventions": "Interventions par mois (6 derniers mois)",
+      "interventionsCount": "Nombre d'interventions",
+      "successRate": "Taux de succès par type",
+      "successRatePercent": "Taux de succès (%)",
+      "labels": {
+        "consultations": "Consultations",
+        "followups": "Suivis",
+        "emergencies": "Urgences",
+        "others": "Autres"
+      },
+      "operationTypes": {
+        "digestive": "Digestive",
+        "vascular": "Vasculaire",
+        "urology": "Urologie",
+        "other": "Autre"
+      },
+      "months": {
+        "jul": "Juil",
+        "aug": "Août",
+        "sep": "Sept",
+        "oct": "Oct",
+        "nov": "Nov",
+        "dec": "Déc"
+      },
+      "operationAbbr": {
+        "digest": "Digest",
+        "vasc": "Vasc",
+        "urol": "Urol",
+        "trauma": "Trauma"
+      }
+    }
+  },
+  "avis": {
+    "title": "Avis interservices",
+    "subtitle": "Consultez les demandes d'avis des autres services et partagez vos recommandations en retour.",
+    "tabs": {
+      "all": "Tous",
+      "incoming": "Entrants",
+      "outgoing": "Sortants"
+    },
+    "buttons": {
+      "request": "Demander un avis",
+      "requestOpinion": "Demander un avis",
+      "selectPatient": "Sélectionner un patient",
+      "changePatient": "Changer de patient",
+      "selectOtherPatient": "Sélectionner un autre patient",
+      "sendResponse": "Envoyer la réponse",
+      "save": "Enregistrer"
+    },
+    "searchPlaceholder": "Rechercher des avis...",
+    "forms": {
+      "service": "Service",
+      "date": "Date",
+      "patient": "Patient",
+      "patientName": "Nom du patient",
+      "patientAge": "Âge du patient",
+      "patientHistory": "Antécédents du patient",
+      "opinion": "Avis/Observation",
+      "response": "Réponse",
+      "serviceExample": "Ex: Cardiologie",
+      "patientNameExample": "Ex: Jean Dupont",
+      "patientAgeExample": "Ex: 65",
+      "servicePlaceholder": "Ex: Cardiologie",
+      "patientNamePlaceholder": "Ex: Jean Dupont",
+      "patientAgePlaceholder": "Ex: 65",
+      "patientHistoryPlaceholder": "Historique médical, allergies, traitements actuels...",
+      "observationPlaceholder": "Observations cliniques et diagnostic...",
+      "opinionPlaceholder": "Observations cliniques et diagnostic...",
+      "responsePlaceholder": "Écrivez votre réponse à cet avis..."
+    },
+    "sections": {
+      "senderSpecialty": "Spécialité de l'émetteur",
+      "recipientSpecialty": "Spécialité destinataire",
+      "patientInfo": "Informations du patient",
+      "observation": "Observation",
+      "yourResponse": "Votre réponse",
+      "sendResponse": "Envoyer une réponse",
+      "notSpecified": "Non spécifiée",
+      "noHistoryNoted": "Aucun antécédent noté",
+      "responseSent": "Réponse envoyée"
+    },
+    "modals": {
+      "title": "Avis médicaux",
+      "createTitle": "Nouvel avis",
+      "createDescription": "Enregistrez un nouvel avis médical"
+    },
+    "empty": {
+      "noOpinions": "Aucun avis",
+      "createFirst": "Créez votre premier avis médical",
+      "title": "Aucun avis",
+      "description": "Créez votre premier avis médical"
+    },
+    "fields": {
+      "name": "Nom",
+      "age": "Âge",
+      "medicalHistory": "Antécédents médicaux"
+    }
+  },
+  "reports": {
+    "title": "Comptes rendus opératoires",
+    "subtitle": "Documentez vos interventions chirurgicales et consultez les détails de chaque opération.",
+    "buttons": {
+      "new": "Nouveau compte rendu",
+      "newReport": "Nouveau compte rendu",
+      "selectPatient": "Sélectionner un patient",
+      "changePatient": "Changer de patient",
+      "selectOtherPatient": "Sélectionner un autre patient",
+      "add": "Ajouter",
+      "delete": "Supprimer",
+      "cancel": "Annuler",
+      "save": "Enregistrer"
+    },
+    "searchPlaceholder": "Rechercher des rapports...",
+    "empty": {
+      "title": "Aucun compte rendu",
+      "description": "Créez votre premier compte rendu pour commencer à documenter vos interventions."
+    },
+    "forms": {
+      "title": "Titre de l'intervention",
+      "type": "Type d'intervention",
+      "date": "Date",
+      "duration": "Durée (min)",
+      "patient": "Patient",
+      "surgicalTeam": "Équipe opératoire",
+      "interventionDetails": "Détails de l'intervention",
+      "postOpRecommendations": "Recommandations post-opératoires",
+      "patientName": "Nom du patient",
+      "patientAge": "Âge du patient",
+      "patientHistory": "Antécédents du patient",
+      "titleExample": "Ex: Cholécystectomie laparoscopique",
+      "selectType": "Sélectionner un type…",
+      "durationExample": "120",
+      "patientNameExample": "Ex: Jean Dupont",
+      "patientAgeExample": "Ex: 65",
+      "titlePlaceholder": "Ex: Cholécystectomie laparoscopique",
+      "patientNamePlaceholder": "Ex: Jean Dupont",
+      "patientAgePlaceholder": "Ex: 65",
+      "patientHistoryPlaceholder": "Historique médical, allergies, traitements actuels...",
+      "interventionPlaceholder": "Déroulement de l'intervention, observations, incidents…",
+      "detailsPlaceholder": "Déroulement de l'intervention, observations, incidents…",
+      "postOpPlaceholder": "1. Recommandation 1\n2. Recommandation 2…",
+      "recommendationsPlaceholder": "1. Recommandation 1\n2. Recommandation 2…"
+    },
+    "sections": {
+      "mainSurgeon": "Chirurgien principal",
+      "operativeInfo": "Informations opératoires",
+      "duration": "Durée",
+      "team": "Équipe",
+      "surgicalTeam": "Équipe opératoire",
+      "interventionDetails": "Détails de l'intervention",
+      "postOpRecommendations": "Recommandations post-opératoires",
+      "patient": "Patient",
+      "history": "Antécédents",
+      "createdBy": "Créé par"
+    },
+    "units": {
+      "minutes": "minutes",
+      "people": "personnes",
+      "operators": "opérateurs"
+    },
+    "modals": {
+      "title": "Comptes rendus opératoires",
+      "createTitle": "Nouveau compte rendu opératoire",
+      "createDescription": "Enregistrez une nouvelle intervention chirurgicale",
+      "deleteTitle": "Supprimer le compte rendu",
+      "deleteMessage": "Êtes-vous sûr de vouloir supprimer ce compte rendu? Cette action est irréversible."
+    },
+    "empty": {
+      "noReports": "Aucun compte rendu",
+      "createFirst": "Créez votre premier compte rendu pour commencer à documenter vos interventions.",
+      "title": "Aucun compte rendu",
+      "description": "Créez votre premier compte rendu pour commencer à documenter vos interventions."
+    },
+    "fields": {
+      "allOperatorsAdded": "Tous les opérateurs ont été ajoutés"
+    }
+  },
+  "prescriptions": {
+    "title": "Ordonnances",
+    "subtitle": "Gérez vos prescriptions médicales et consultez l'historique des ordonnances.",
+    "buttons": {
+      "newPrescription": "Nouvelle ordonnance",
+      "selectPatient": "Sélectionner un patient",
+      "changePatient": "Changer de patient",
+      "selectOtherPatient": "Sélectionner un autre patient",
+      "save": "Enregistrer"
+    },
+    "searchPlaceholder": "Rechercher une ordonnance...",
+    "empty": {
+      "noPrescriptions": "Aucune ordonnance",
+      "createFirst": "Créez votre première ordonnance"
+    },
+    "forms": {
+      "title": "Titre de l'ordonnance",
+      "date": "Date",
+      "shareType": "Type de partage",
+      "patient": "Patient",
+      "clinicalInfo": "Renseignement clinique",
+      "prescriptionDetails": "Détails de la prescription",
+      "patientName": "Nom du patient",
+      "patientAge": "Âge du patient",
+      "patientHistory": "Antécédents du patient",
+      "private": "Privée",
+      "team": "Équipe",
+      "titleExample": "Ex: Traitement post-opératoire",
+      "patientNameExample": "Ex: Jean Dupont",
+      "patientAgeExample": "Ex: 65",
+      "patientHistoryPlaceholder": "Historique médical, allergies, traitements actuels...",
+      "clinicalInfoPlaceholder": "Contexte clinique et antécédents pertinents...",
+      "prescriptionPlaceholder": "1. Médicament A - dosage × fréquence..."
+    },
+    "sections": {
+      "patientId": "ID Patient",
+      "prescription": "Ordonnance",
+      "patient": "Patient",
+      "clinicalInfo": "Renseignement clinique",
+      "prescriptionDetails": "Détails de la prescription",
+      "createdBy": "Créé par"
+    },
+    "privacy": {
+      "private": "Privée",
+      "team": "Équipe"
+    },
+    "modals": {
+      "title": "Ordonnances",
+      "createTitle": "Nouvelle ordonnance",
+      "createDescription": "Enregistrez une nouvelle prescription"
+    },
+    "empty": {
+      "noPrescriptions": "Aucune ordonnance",
+      "createFirst": "Créez votre première ordonnance"
+    },
+    "fields": {
+      "na": "N/A"
+    }
   },
   "auth": {
     "brandSubtitle": "Plateforme des praticiens",
@@ -447,7 +972,7 @@
       "prescription": "Ordonnance",
       "analyses": "Analyses",
       "report": "Compte rendu",
-      "opinion": "Avis",
+      "Messages": "Avis",
       "notifications": "Notifications",
       "realTime": "Temps réel",
       "noNotifications": "Aucune notification pour le moment.",
@@ -471,7 +996,7 @@
       "prescription": "Ordonnance",
       "analyses": "Analyses",
       "report": "Compte rendu",
-      "opinion": "Avis",
+      "Messages": "Avis",
       "patients": "Patients",
       "create": "Créer",
       "tasks": "Tâches"
@@ -591,5 +1116,229 @@
         "na": "N/A"
       }
     }
+  },
+  "analyses": {
+    "page": {
+      "title": "Analyses",
+      "subtitle": "Suivi des résultats biologiques et coordination avec le laboratoire."
+    },
+    "buttons": {
+      "exportResults": "Exporter les résultats",
+      "newRequest": "Nouvelle demande",
+      "newOrder": "Nouvel ordre",
+      "viewDetails": "Voir détails",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "close": "Fermer",
+      "changePatient": "Changer de patient",
+      "reset": "Réinitialiser",
+      "previous": "Précédent",
+      "next": "Suivant",
+      "saveResults": "Sauvegarder les résultats"
+    },
+    "sections": {
+      "historyTitle": "Historique des Bilans",
+      "historyDescription": "Résultats validés et archivés avec suivi chronologique.",
+      "pendingTitle": "Ordres en attente",
+      "pendingDescription": "Priorisation des analyses non traitées."
+    },
+    "emptyStates": {
+      "noBilans": "Aucun bilan disponible",
+      "noBilansDesc": "Une fois les analyses validées par le laboratoire, elles apparaîtront automatiquement dans cette liste.",
+      "noResults": "Aucun résultat ne correspond à ces critères.",
+      "clearFilters": "Effacer les filtres",
+      "noPending": "Aucune demande en attente",
+      "noPendingDesc": "Créez une nouvelle demande pour lancer un ordre d'analyse.",
+      "noAnalysesToDisplay": "Aucune analyse à afficher"
+    },
+    "table": {
+      "headers": {
+        "analysisId": "N° analyse",
+        "patient": "Patient",
+        "title": "Titre du bilan",
+        "type": "Type",
+        "date": "Date"
+      }
+    },
+    "pagination": {
+      "showing": "Affichage {{startItem}}–{{endItem}} sur {{total}} analyses",
+      "pageOf": "Page {{current}} / {{total}}"
+    },
+    "filters": {
+      "title": "Filtres & recherche",
+      "toggleAria": "Toggler recherche et filtres",
+      "patientOrId": "Patient / identifiant",
+      "searchPlaceholder": "Rechercher un patient ou un numéro",
+      "analysisType": "Type de bilan",
+      "allTypes": "Tous les types",
+      "from": "Du",
+      "to": "Au",
+      "categories": {
+        "bilans": "Bilans",
+        "imagerie": "Imagerie",
+        "anapath": "Anapath",
+        "autres": "Autres"
+      }
+    },
+    "modals": {
+      "newAnalysisTitle": "Nouvelle demande d'analyse",
+      "newAnalysisDesc": "Renseignez les informations nécessaires pour envoyer l'échantillon au laboratoire.",
+      "detailsTitle": "Bilan {{id}}",
+      "detailsDesc": "{{type}} · {{patient}}"
+    },
+    "modal": {
+      "title": "Détails de l'analyse"
+    },
+    "labels": {
+      "patient": "Patient",
+      "title": "Titre",
+      "requestDate": "Date de demande",
+      "orderNumber": "Numéro d'ordre",
+      "type": "Type"
+    },
+    "categories": {
+      "bilan": "Bilan",
+      "imagerie": "Imagerie",
+      "anapath": "Anapath",
+      "autres": "Autres"
+    },
+    "form": {
+      "analysisType": "Type d'analyse",
+      "selectCategory": "Sélectionner une catégorie",
+      "categories": {
+        "bilan": "Bilan",
+        "imagerie": "Imagerie",
+        "anapath": "Anapath",
+        "autres": "Autres"
+      },
+      "bilanSection": "Bilan",
+      "customAnalyses": "Autres analyses",
+      "customAnalysesPlaceholder": "Entrez d'autres bilans séparés par des virgules...",
+      "analysisName": "Nom de l'analyse",
+      "analysisNamePlaceholder": "Ex. Gaz du sang artériel",
+      "selectedPatient": "Patient sélectionné",
+      "comment": "Commentaire / instruction",
+      "commentPlaceholder": "Indiquez les éléments cliniques utiles..."
+    },
+    "patientFields": {
+      "name": "Nom",
+      "age": "Âge",
+      "history": "Antécédents",
+      "unspecified": "Non spécifié"
+    },
+    "results": {
+      "sectionTitle": "Saisie des résultats",
+      "enterValue": "Entrez la valeur",
+      "scanCamera": "Scanner avec caméra",
+      "describeResults": "Décrivez les résultats et observations...",
+      "noTestsPending": "Aucun test en attente"
+    },
+    "details": {
+      "requestDate": "Demande :",
+      "interpretation": "Interprétation",
+      "historicalResults": "Anciens résultats",
+      "reportLabel": "Rapport d'analyse",
+      "noReportAvailable": "Aucun rapport disponible pour le moment.",
+      "noDetailedResults": "Les résultats détaillés ne sont pas disponibles pour ce bilan."
+    },
+    "loading": {
+      "fetchingHistory": "Récupération de l'historique...",
+      "connectingLab": "Connexion au laboratoire...",
+      "saving": "Sauvegarde...",
+      "registering": "Enregistrement...",
+      "creating": "Création..."
+    },
+    "aria": {
+      "openPendingOrders": "Ouvrir les ordres en attente",
+      "closePanel": "Fermer le panneau",
+      "closeModal": "Fermer"
+    },
+    "mobilePanelHeader": {
+      "title": "Ordres en attente",
+      "subtitle": "Analyses non traitées"
+    }
+  },
+  "tasks": {
+    "page": {
+      "title": "Tâches et Activités",
+      "subtitle": "Organisez votre journée avec vos consignes et activités planifiées."
+    },
+    "tabs": {
+      "tasks": "Tâches",
+      "activities": "Activités"
+    },
+    "close": "Fermer",
+    "activityTypes": {
+      "consultation": "Consultation",
+      "operatingRoom": "Bloc opératoire",
+      "staffMeeting": "Staff / réunion",
+      "tour": "Tournée"
+    },
+    "form": {
+      "addTaskModal": "Ajouter une consigne",
+      "addTaskDesc": "Définissez une action à partager avec votre équipe.",
+      "editTaskModal": "Modifier la consigne",
+      "editTaskDesc": "Mettez à jour les informations.",
+      "deleteTaskModal": "Supprimer la consigne?",
+      "deleteTaskDesc": "Cette action retirera la consigne de votre liste.",
+      "deleteTaskConfirm": "Confirmez-vous la suppression de la consigne « {{title}} » ?",
+      "teamType": "Équipe",
+      "privateType": "Privée",
+      "patient": "Patient (optionnel)",
+      "taskTitle": "Consigne",
+      "taskPlaceholder": "Ex. Vérifier l'analgésie secteur 5",
+      "taskLabel": "Intitulé",
+      "description": "Description",
+      "descriptionExample": "Ex. Vérifier l'état de l'analgésie des patients du secteur 5",
+      "activityDay": "Jour de l'activité",
+      "time": "Heure",
+      "type": "Type",
+      "location": "Lieu",
+      "locationExample": "Ex. Bloc 5, Secteur 3",
+      "team": "Équipe",
+      "teamExample": "Ex. Dr. Benali, IDE Claire",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "delete": "Supprimer",
+      "addMore": "Ajouter une autre consigne",
+      "favoriteTasks": "Tâches favorites:",
+      "addFavorite": "Ajouter"
+    },
+    "labels": {
+      "completed": "Terminé : {{completed}}/{{total}}",
+      "noTasks": "Aucune consigne enregistrée",
+      "noTasksDesc": "Ajoutez vos actions quotidiennes pour garder un suivi partagé avec votre équipe.",
+      "newFavorite": "Nouveau favori..."
+    },
+    "loading": {
+      "loadingTasks": "Chargement des consignes...",
+      "loadingActivities": "Chargement des activités..."
+    }
+  },
+  "notifications": {
+    "page": {
+      "title": "Notifications",
+      "subtitle": "Flux d'équipe en direct"
+    },
+    "badge": "Temps réel",
+    "buttons": {
+      "back": "Retour",
+      "markAllAsRead": "Marquer tout comme lu",
+      "close": "Fermer",
+      "retry": "Réessayer"
+    },
+    "emptyStates": {
+      "noNotifications": "Aucune notification",
+      "noNotificationsDesc": "Tout est sous contrôle pour le moment.",
+      "error": "Erreur lors du chargement",
+      "errorRetry": "Réessayer"
+    },
+    "time": {
+      "justNow": "À l'instant",
+      "minutesAgo": "Il y a {{count}} minute{{count > 1 ? \"s\" : \"\" }}",
+      "hoursAgo": "Il y a {{count}} heure{{count > 1 ? \"s\" : \"\" }}",
+      "daysAgo": "Il y a {{count}} jour{{count > 1 ? \"s\" : \"\" }}"
+    },
+    "counter": "{{count}} notification{{count > 1 ? \"s\" : \"\"}}"
   }
 }

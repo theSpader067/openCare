@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { useSession } from "next-auth/react";
+import { useTranslation } from "react-i18next";
 import { Activity, Beaker, Download, FlaskConical, List, Search, ClipboardList, X, Plus, Loader } from "lucide-react";
 import {
   Card,
@@ -113,6 +114,7 @@ function formatAnalyseDateTime(date: string) {
 }
 
 export default function AnalysesPage() {
+  const { t } = useTranslation();
   const { data: session } = useSession();
   const [pendingAnalyses, setPendingAnalyses] = useState<Analyse[]>([]);
   const [historyAnalyses, setHistoryAnalyses] = useState<Analyse[]>([]);
@@ -635,19 +637,19 @@ export default function AnalysesPage() {
     <div className="space-y-6 pb-20 lg:pb-0">
       <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Analyses</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">{t("analyses.page.title")}</h1>
           <p className="text-sm text-slate-500">
-            Suivi des résultats biologiques et coordination avec le laboratoire.
+            {t("analyses.page.subtitle")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline">
             <Download className="mr-2 h-4 w-4" />
-            Exporter les résultats
+            {t("analyses.buttons.exportResults")}
           </Button>
           <Button variant="primary" onClick={() => setCreateModalOpen(true)}>
             <Beaker className="mr-2 h-4 w-4" />
-            Nouvelle demande
+            {t("analyses.buttons.newRequest")}
           </Button>
         </div>
       </section>
@@ -657,9 +659,9 @@ export default function AnalysesPage() {
         <Card className="flex h-fit flex-col overflow-hidden">
           <CardHeader className="flex flex-col gap-2 border-b border-slate-200 bg-white px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <CardTitle>Historique des Bilans</CardTitle>
+              <CardTitle>{t("analyses.sections.historyTitle")}</CardTitle>
               <CardDescription>
-                Résultats validés et archivés avec suivi chronologique.
+                {t("analyses.sections.historyDescription")}
               </CardDescription>
             </div>
           </CardHeader>
@@ -673,27 +675,27 @@ export default function AnalysesPage() {
             />
             {historyLoading ? (
               <div className="flex h-64 items-center justify-center">
-                <Spinner label="Récupération de l'historique..." />
+                <Spinner label={t("analyses.loading.fetchingHistory")} />
               </div>
             ) : filteredHistoryAnalyses.length === 0 ? (
               historyAnalyses.length === 0 ? (
                 <EmptyState
                   icon={Activity}
-                  title="Aucun bilan disponible"
-                  description="Une fois les analyses validées par le laboratoire, elles apparaîtront automatiquement dans cette liste."
-                  
+                  title={t("analyses.emptyStates.noBilans")}
+                  description={t("analyses.emptyStates.noBilansDesc")}
+
                 />
               ) : (
                 <div className="flex h-48 items-center justify-center px-6 py-10 text-sm text-slate-500">
                   <div className="text-center">
-                    <p>Aucun résultat ne correspond à ces critères.</p>
+                    <p>{t("analyses.emptyStates.noResults")}</p>
                     <Button
                       variant="ghost"
                       size="sm"
                       className="mt-3"
                       onClick={resetHistoryFilters}
                     >
-                      Effacer les filtres
+                      {t("analyses.emptyStates.clearFilters")}
                     </Button>
                   </div>
                 </div>
@@ -705,19 +707,19 @@ export default function AnalysesPage() {
                     <thead className="bg-slate-50">
                       <tr>
                         <th className="px-4 py-3 font-medium text-slate-500">
-                          N° analyse
+                          {t("analyses.table.headers.analysisId")}
                         </th>
                         <th className="px-4 py-3 font-medium text-slate-500">
-                          Patient
+                          {t("analyses.table.headers.patient")}
                         </th>
                         <th className="px-4 py-3 font-medium text-slate-500">
-                          Titre du bilan
+                          {t("analyses.table.headers.title")}
                         </th>
                         <th className="px-4 py-3 font-medium text-slate-500">
-                          Type
+                          {t("analyses.table.headers.type")}
                         </th>
                         <th className="px-4 py-3 font-medium text-slate-500">
-                          Date
+                          {t("analyses.table.headers.date")}
                         </th>
                       </tr>
                     </thead>
@@ -756,8 +758,8 @@ export default function AnalysesPage() {
                 <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-4 py-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
                   <span>
                     {startItem === 0
-                      ? "Aucune analyse à afficher"
-                      : `Affichage ${startItem}–${endItem} sur ${filteredHistoryAnalyses.length} analyses`}
+                      ? t("analyses.emptyStates.noAnalysesToDisplay")
+                      : t("analyses.pagination.showing", { startItem, endItem, total: filteredHistoryAnalyses.length })}
                   </span>
                   <div className="flex items-center gap-3">
                     <Button
@@ -769,11 +771,10 @@ export default function AnalysesPage() {
                         setCurrentPage((page) => Math.max(1, page - 1))
                       }
                     >
-                      Précédent
+                      {t("analyses.buttons.previous")}
                     </Button>
                     <span className="text-xs text-slate-500">
-                      Page {filteredHistoryAnalyses.length === 0 ? 0 : currentPage} /{" "}
-                      {filteredHistoryAnalyses.length === 0 ? 0 : totalPages}
+                      {t("analyses.pagination.pageOf", { current: filteredHistoryAnalyses.length === 0 ? 0 : currentPage, total: filteredHistoryAnalyses.length === 0 ? 0 : totalPages })}
                     </span>
                     <Button
                       variant="outline"
@@ -786,7 +787,7 @@ export default function AnalysesPage() {
                         )
                       }
                     >
-                      Suivant
+                      {t("analyses.buttons.next")}
                     </Button>
                   </div>
                 </div>
@@ -797,24 +798,24 @@ export default function AnalysesPage() {
 
         <Card className="hidden h-full flex-col xl:flex overflow-hidden">
           <CardHeader className="pb-3">
-            <CardTitle>Ordres en attente</CardTitle>
+            <CardTitle>{t("analyses.sections.pendingTitle")}</CardTitle>
             <CardDescription>
-              Priorisation des analyses non traitées.
+              {t("analyses.sections.pendingDescription")}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-1 overflow-y-auto pt-0">
             {pendingLoading ? (
               <div className="flex h-full items-center justify-center">
-                <Spinner label="Connexion au laboratoire..." />
+                <Spinner label={t("analyses.loading.connectingLab")} />
               </div>
             ) : pendingAnalyses.length === 0 ? (
               <EmptyState
                 icon={FlaskConical}
-                title="Aucune demande en attente"
-                description="Créez une nouvelle demande pour lancer un ordre d'analyse."
+                title={t("analyses.emptyStates.noPending")}
+                description={t("analyses.emptyStates.noPendingDesc")}
                 action={
                   <Button variant="primary" onClick={() => setCreateModalOpen(true)}>
-                    Nouvel ordre
+                    {t("analyses.buttons.newOrder")}
                   </Button>
                 }
               />
@@ -839,7 +840,7 @@ export default function AnalysesPage() {
       <button
         onClick={() => setIsPendingPanelOpen(true)}
         className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg transition-all hover:bg-indigo-700 hover:shadow-xl xl:hidden"
-        aria-label="Ouvrir les ordres en attente"
+        aria-label={t("analyses.aria.openPendingOrders")}
       >
         <ClipboardList className="h-6 w-6" />
       </button>
@@ -864,16 +865,16 @@ export default function AnalysesPage() {
       >
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Ordres en attente</h2>
+            <h2 className="text-lg font-semibold text-slate-900">{t("analyses.mobilePanelHeader.title")}</h2>
             <p className="text-sm text-slate-500">
-              Analyses non traitées
+              {t("analyses.mobilePanelHeader.subtitle")}
             </p>
           </div>
           <button
             type="button"
             className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
             onClick={() => setIsPendingPanelOpen(false)}
-            aria-label="Fermer le panneau"
+            aria-label={t("analyses.aria.closePanel")}
           >
             <X className="h-4 w-4" />
           </button>
@@ -881,19 +882,19 @@ export default function AnalysesPage() {
         <div className="flex-1 overflow-y-auto px-6 py-4 pb-24">
           {pendingLoading ? (
             <div className="flex h-64 items-center justify-center">
-              <Spinner label="Connexion au laboratoire..." />
+              <Spinner label={t("analyses.loading.connectingLab")} />
             </div>
           ) : pendingAnalyses.length === 0 ? (
             <EmptyState
               icon={FlaskConical}
-              title="Aucune demande en attente"
-              description="Créez une nouvelle demande pour lancer un ordre d'analyse."
+              title={t("analyses.emptyStates.noPending")}
+              description={t("analyses.emptyStates.noPendingDesc")}
               action={
                 <Button variant="primary" onClick={() => {
                   setCreateModalOpen(true);
                   setIsPendingPanelOpen(false);
                 }}>
-                  Nouvel ordre
+                  {t("analyses.buttons.newOrder")}
                 </Button>
               }
             />
@@ -1099,8 +1100,8 @@ export default function AnalysesPage() {
           });
         }}
         
-        title="Nouvelle demande d'analyse"
-        description="Renseignez les informations nécessaires pour envoyer l'échantillon au laboratoire."
+        title={t("analyses.modals.newAnalysisTitle")}
+        description={t("analyses.modals.newAnalysisDesc")}
         footer={
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => {
@@ -1118,7 +1119,7 @@ export default function AnalysesPage() {
                 customBilans: "",
               });
             }}>
-              Annuler
+              {t("analyses.buttons.cancel")}
             </Button>
             <Button
               variant="primary"
@@ -1137,10 +1138,10 @@ export default function AnalysesPage() {
               {isSavingAnalyse ? (
                 <>
                   <Loader className="h-4 w-4 animate-spin" />
-                  Enregistrement...
+                  {t("analyses.loading.registering")}
                 </>
               ) : (
-                "Enregistrer la demande"
+                t("analyses.buttons.save")
               )}
             </Button>
           </div>
@@ -1153,7 +1154,7 @@ export default function AnalysesPage() {
               htmlFor="new-request-category"
               className="text-sm font-semibold text-[#221b5b]"
             >
-              Type d&apos;analyse
+              {t("analyses.form.analysisType")}
             </label>
             <select
               id="new-request-category"
@@ -1166,11 +1167,11 @@ export default function AnalysesPage() {
                 }))
               }
             >
-              <option value="">Sélectionner une catégorie</option>
-              <option value="bilan">Bilan</option>
-              <option value="imagerie">Imagerie</option>
-              <option value="anapath">Anapath</option>
-              <option value="autres">Autres</option>
+              <option value="">{t("analyses.form.selectCategory")}</option>
+              <option value="bilan">{t("analyses.form.categories.bilan")}</option>
+              <option value="imagerie">{t("analyses.form.categories.imagerie")}</option>
+              <option value="anapath">{t("analyses.form.categories.anapath")}</option>
+              <option value="autres">{t("analyses.form.categories.autres")}</option>
             </select>
           </div>
 
@@ -1178,7 +1179,7 @@ export default function AnalysesPage() {
           {newRequestForm.category === "bilan" ? (
             <div className="space-y-3">
               <label className="text-sm font-semibold text-[#221b5b]">
-                Bilan
+                {t("analyses.form.bilanSection")}
               </label>
 
               {/* Bilan Categories as Badges */}
@@ -1262,7 +1263,7 @@ export default function AnalysesPage() {
                   htmlFor="custom-bilans"
                   className="text-sm font-semibold text-[#221b5b]"
                 >
-                  Autres analyses
+                  {t("analyses.form.customAnalyses")}
                 </label>
                 <input
                   id="custom-bilans"
@@ -1275,7 +1276,7 @@ export default function AnalysesPage() {
                       customBilans: e.target.value,
                     }))
                   }
-                  placeholder="Entrez d'autres bilans séparés par des virgules..."
+                  placeholder={t("analyses.form.customAnalysesPlaceholder")}
                 />
               </div>
             </div>
@@ -1285,7 +1286,7 @@ export default function AnalysesPage() {
                 htmlFor="new-request-name"
                 className="text-sm font-semibold text-[#221b5b]"
               >
-                Nom de l&apos;analyse
+                {t("analyses.form.analysisName")}
               </label>
               <input
                 id="new-request-name"
@@ -1297,7 +1298,7 @@ export default function AnalysesPage() {
                     name: event.target.value,
                   }))
                 }
-                placeholder="Ex. Gaz du sang artériel"
+                placeholder={t("analyses.form.analysisNamePlaceholder")}
               />
             </div>
           )}
@@ -1318,7 +1319,7 @@ export default function AnalysesPage() {
               // Show selected patient info with change button
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-[#221b5b]">
-                  Patient sélectionné
+                  {t("analyses.form.selectedPatient")}
                 </label>
 
                 {/* Patient Info Fields Display */}
@@ -1326,7 +1327,7 @@ export default function AnalysesPage() {
                   {/* Patient Name */}
                   <div className="rounded-xl border border-violet-200 bg-violet-50/50 p-3">
                     <p className="text-xs uppercase tracking-wide text-violet-600 font-semibold mb-1">
-                      Nom
+                      {t("analyses.patientFields.name")}
                     </p>
                     <p className="text-sm font-medium text-slate-900">
                       {selectedPatient?.fullName || newPatientForm.fullName}
@@ -1337,11 +1338,11 @@ export default function AnalysesPage() {
                   {selectedPatient || newPatientForm.histoire ? (
                     <div className="rounded-xl border border-violet-200 bg-violet-50/50 p-3">
                       <p className="text-xs uppercase tracking-wide text-violet-600 font-semibold mb-1">
-                        Âge
+                        {t("analyses.patientFields.age")}
                       </p>
                       <p className="text-sm text-slate-700">
                         {(selectedPatient as any)?.age || newPatientForm.histoire
-                          ? "Non spécifié"
+                          ? t("analyses.patientFields.unspecified")
                           : ""}
                       </p>
                     </div>
@@ -1351,7 +1352,7 @@ export default function AnalysesPage() {
                   {(selectedPatient as any)?.histoire || newPatientForm.histoire ? (
                     <div className="rounded-xl border border-violet-200 bg-violet-50/50 p-3">
                       <p className="text-xs uppercase tracking-wide text-violet-600 font-semibold mb-1">
-                        Antécédents
+                        {t("analyses.patientFields.history")}
                       </p>
                       <p className="text-sm text-slate-700 whitespace-pre-wrap">
                         {(selectedPatient as any)?.histoire || newPatientForm.histoire}
@@ -1385,7 +1386,7 @@ export default function AnalysesPage() {
               htmlFor="new-request-comment"
               className="text-sm font-semibold text-[#221b5b]"
             >
-              Commentaire / instruction
+              {t("analyses.form.comment")}
             </label>
             <textarea
               id="new-request-comment"
@@ -1398,7 +1399,7 @@ export default function AnalysesPage() {
                   comment: event.target.value,
                 }))
               }
-              placeholder="Indiquez les éléments cliniques utiles..."
+              placeholder={t("analyses.form.commentPlaceholder")}
             />
           </div>
         </div>

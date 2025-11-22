@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, Save, UserRound, X, ChevronLeft, Loader2, Sparkles, Dices, Clock } from "lucide-react";
 import {
   Card,
@@ -87,6 +88,7 @@ function toFormState(patient?: Patient | null): PatientFormState {
 export default function PatientDossierPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
   const patientId = searchParams.get("id");
   const mode = searchParams.get("mode");
 
@@ -202,13 +204,13 @@ export default function PatientDossierPage() {
     setIsSaving(false)
   }, [patientId]);
 
-  
+
   const pageTitle = isExistingPatient
-    ? `Dossier patient · ${patient?.name ?? ""}`
-    : "Créer un patient";
+    ? `${t("patients.dossier.title")} · ${patient?.name ?? ""}`
+    : t("patients.dossier.createTitle");
   const pageDescription = isExistingPatient
-    ? "Visualisez et mettez à jour le dossier médical complet du patient sélectionné."
-    : "Renseignez l'ensemble des informations nécessaires pour créer un nouveau dossier patient.";
+    ? t("patients.dossier.updateDesc")
+    : t("patients.dossier.createDesc");
 
 
 
@@ -223,6 +225,10 @@ export default function PatientDossierPage() {
       hour: "2-digit",
       minute: "2-digit",
     }).format(new Date(timestamp));
+  };
+
+  const formatRelativeTimeFromNow = () => {
+    return t("patients.dossier.lastUpdated", { time: t("common.time.fewMinutesAgo") });
   };
 
   const handleInputChange =
@@ -328,19 +334,19 @@ export default function PatientDossierPage() {
       <div className="space-y-6">
         <section className="flex flex-col gap-2">
           <h1 className="text-2xl font-semibold text-slate-900">
-            Dossier patient
+            {t("patients.dossier.title")}
           </h1>
           <p className="text-sm text-slate-500">
-            Aucune information disponible pour le dossier demandé.
+            {t("patients.dossier.noInfoAvailable")}
           </p>
         </section>
         <EmptyState
           icon={UserRound}
-          title="Dossier introuvable"
-          description="Le patient recherché n'existe pas ou a été archivé."
+          title={t("patients.dossier.notFound")}
+          description={t("patients.dossier.notFoundDesc")}
           action={
             <Button variant="primary" onClick={() => router.push("/patients")}>
-              Retour à la liste des patients
+              {t("patients.dossier.backToPatientList")}
             </Button>
           }
         />
@@ -356,7 +362,7 @@ export default function PatientDossierPage() {
           <p className="text-sm text-slate-500">{pageDescription}</p>
           {isSaved ? (
             <p className="mt-2 text-sm font-medium text-emerald-600">
-              Modifications enregistrées localement.
+              {t("patients.dossier.saved")}
             </p>
           ) : null}
         </div>
@@ -369,7 +375,7 @@ export default function PatientDossierPage() {
               onClick={() => router.push(`/timeline?id=${formData.pid}`)}
             >
               <Clock className="mr-2 h-4 w-4" />
-              Parcours de soins
+              {t("patients.buttons.carePathway")}
             </Button>
           )}
           <Button
@@ -378,30 +384,30 @@ export default function PatientDossierPage() {
             onClick={() => router.push("/patients")}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Retour à la liste
+            {t("patients.dossier.backToList")}
           </Button>
         </div>
       </section>
 
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle>Informations patient</CardTitle>
+          <CardTitle>{t("patients.dossier.patientInfo")}</CardTitle>
           <CardDescription>
-            Identité, affectation et coordonnées principales du dossier.
+            {t("patients.dossier.patientInfoDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
             <InputField
-              label="Nom complet"
+              label={t("common.labels.fullName")}
               id="patient-name"
               value={formData.name}
               onChange={handleInputChange("name")}
-              placeholder="Ex. Fatou Diop"
+              placeholder={t("patients.dossier.nameExample")}
               required
             />
             <InputField
-              label="Date de naissance"
+              label={t("common.labels.dateOfBirth")}
               id="patient-birth"
               type="date"
               value={formData.birthDate}
@@ -411,17 +417,17 @@ export default function PatientDossierPage() {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <label htmlFor="patient-id" className="text-sm font-medium text-[#221b5b]">
-                  Identifiant dossier
+                  {t("patients.dossier.fileId")}
                 </label>
-                
+
               </div>
               <div className="flex items-center justify-between">
               <button
                   type="button"
                   onClick={generateRandomPatientId}
                   className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 hover:text-indigo-700 transition-colors"
-                  title="Générer un identifiant aléatoire"
-                  aria-label="Générer un identifiant aléatoire"
+                  title={t("patients.dossier.generateId")}
+                  aria-label={t("patients.dossier.generateId")}
                 >
                   <Dices className="h-4 w-4" />
                 </button>
@@ -430,18 +436,18 @@ export default function PatientDossierPage() {
                 type="text"
                 value={formData.pid}
                 onChange={handleInputChange("pid")}
-                placeholder="Ex. P-2024-013"
+                placeholder={t("patients.dossier.idExample")}
                 required
                 className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm transition focus:border-[#7c3aed] focus:outline-none focus:ring-2 focus:ring-[#dcd0ff]"
               />
               </div>
             </div>
             <InputField
-              label="Service d'affectation"
+              label={t("patients.form.serviceAssignment")}
               id="patient-service"
               value={formData.service}
               onChange={handleInputChange("service")}
-              placeholder="Ex. Chirurgie digestive"
+              placeholder={t("patients.dossier.serviceExample")}
               required
             />
           </div>
@@ -468,18 +474,18 @@ export default function PatientDossierPage() {
               ]}
             />
             <InputField
-              label="Prochain contact"
+              label={t("patients.dossier.nextContact")}
               id="patient-next-visit"
               value={formData.nextVisit}
               onChange={handleInputChange("nextVisit")}
-              placeholder="Ex. Tournée 14h"
+              placeholder={t("patients.dossier.nextContactExample")}
             />
           </div>
           {isExistingPatient ? (
             <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
               <Badge variant="muted">{formData.identifier}</Badge>
               <span className="text-xs uppercase tracking-wide text-slate-500">
-                Dernière mise à jour : il y a quelques minutes
+                {formatRelativeTimeFromNow()}
               </span>
             </div>
           ) : null}
@@ -488,26 +494,26 @@ export default function PatientDossierPage() {
 
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle>Diagnostic principal</CardTitle>
+          <CardTitle>{t("patients.dossier.mainDiagnosis")}</CardTitle>
           <CardDescription>
-            Renseignez le code CIM ainsi que le diagnostic associé.
+            {t("patients.dossier.diagnosisDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-[1fr_2fr]">
             <InputField
-              label="Code CIM"
+              label={t("patients.dossier.cimCode")}
               id="patient-diagnosis-code"
               value={formData.diagnosisCode}
               onChange={handleInputChange("diagnosisCode")}
-              placeholder="Ex. K57.3"
+              placeholder={t("patients.dossier.cimExample")}
             />
             <TextareaField
-              label="Diagnostic"
+              label={t("patients.dossier.diagnosis")}
               id="patient-diagnosis-label"
               value={formData.diagnosisLabel}
               onChange={handleInputChange("diagnosisLabel")}
-              placeholder="Résumé du diagnostic principal"
+              placeholder={t("patients.dossier.diagnosisSummary")}
               rows={3}
             />
           </div>
@@ -516,33 +522,32 @@ export default function PatientDossierPage() {
 
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle>Antécédents & éléments complémentaires</CardTitle>
+          <CardTitle>{t("patients.dossier.historyTitle")}</CardTitle>
           <CardDescription>
-            Listez les antécédents médicaux, chirurgicaux et autres informations
-            pertinentes.
+            {t("patients.dossier.historyDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <TextareaField
-            label="ATCDs médicaux"
+            label={t("patients.dossier.medicalHistory")}
             id="patient-medical-history"
             value={formData.medicalHistory}
             onChange={handleInputChange("medicalHistory")}
-            placeholder="Séparez les éléments par un saut de ligne"
+            placeholder={t("patients.dossier.separateByLine")}
           />
           <TextareaField
-            label="ATCDs chirurgicaux"
+            label={t("patients.dossier.surgicalHistory")}
             id="patient-surgical-history"
             value={formData.surgicalHistory}
             onChange={handleInputChange("surgicalHistory")}
-            placeholder="Séparez les éléments par un saut de ligne"
+            placeholder={t("patients.dossier.separateByLine")}
           />
           <TextareaField
-            label="Autres informations (allergies, traitements, etc.)"
+            label={t("patients.dossier.otherInfo")}
             id="patient-other-history"
             value={formData.otherHistory}
             onChange={handleInputChange("otherHistory")}
-            placeholder="Ex. Allergies: Pénicilline"
+            placeholder={t("patients.dossier.allergyExample")}
             rows={4}
           />
         </CardContent>
@@ -550,9 +555,9 @@ export default function PatientDossierPage() {
 
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle>Observations</CardTitle>
+          <CardTitle>{t("patients.dossier.observations")}</CardTitle>
           <CardDescription>
-            Notez les observations cliniques.
+            {t("patients.dossier.observationsDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -560,7 +565,7 @@ export default function PatientDossierPage() {
           {observations.length > 0 && (
             <div>
               <h3 className="text-sm font-semibold text-slate-800 mb-4">
-                Historique des observations ({observations.length})
+                {t("patients.dossier.observationHistory", { count: observations.length })}
               </h3>
 
               {/* XL Screen: Two-column layout */}
@@ -627,7 +632,7 @@ export default function PatientDossierPage() {
                     </div>
                   ) : (
                     <div className="flex items-center justify-center h-full text-slate-500">
-                      <p className="text-sm">Sélectionnez une date pour voir les détails</p>
+                      <p className="text-sm">{t("patients.dossier.selectDate")}</p>
                     </div>
                   )}
                 </div>
@@ -682,12 +687,12 @@ export default function PatientDossierPage() {
                 >
                   {/* Panel Header */}
                   <div className="flex items-center justify-between border-b border-indigo-100/70 px-5 py-4">
-                    <p className="text-sm font-semibold text-slate-800">Détail de l&apos;observation</p>
+                    <p className="text-sm font-semibold text-slate-800">{t("patients.dossier.observationDetail")}</p>
                     <button
                       type="button"
                       className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
                       onClick={() => setIsObservationPanelOpen(false)}
-                      aria-label="Fermer"
+                      aria-label={t("common.buttons.close")}
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -731,13 +736,13 @@ export default function PatientDossierPage() {
           <div className="space-y-2">
             <label className="text-sm font-medium text-[#221b5b]">
               {isExistingPatient
-                ? "Ajouter une observation"
-                : "Observations initiales"}
+                ? t("patients.dossier.addObservation")
+                : t("patients.dossier.initialObservations")}
             </label>
             <SmartEditor
               value={observationDraft}
               onChange={setObservationDraft}
-              placeholder="Saisissez une observation, elle sera horodatée lors de l'enregistrement."
+              placeholder={t("patients.dossier.observationPlaceholder")}
               contextInputIds={[
                 "patient-name",
                 "patient-birth",
@@ -749,7 +754,7 @@ export default function PatientDossierPage() {
               ]}
             />
             <p className="text-xs text-slate-500">
-              Utilisez les outils de formatage pour structurer votre observation. Appuyez sur <kbd className="px-1 py-0.5 bg-slate-100 border border-slate-300 rounded text-xs">Tab</kbd> pour obtenir des suggestions IA basées sur le contexte du patient, puis double-<kbd className="px-1 py-0.5 bg-slate-100 border border-slate-300 rounded text-xs">Tab</kbd> pour valider.
+              {t("patients.dossier.editorHelp")}
             </p>
 
             {/* Save Observation Button - Only for existing patients */}
@@ -802,18 +807,18 @@ export default function PatientDossierPage() {
                   {isSavingObservation ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Enregistrement...
+                      {t("common.buttons.saving")}
                     </>
                   ) : (
                     <>
                       <Save className="mr-2 h-4 w-4" />
-                      Enregistrer l'observation
+                      {t("patients.dossier.saveObservation")}
                     </>
                   )}
                 </Button>
                 {observationSaved && (
                   <p className="text-xs text-emerald-600 font-medium">
-                    ✓ Observation enregistrée
+                    {t("patients.dossier.observationSaved")}
                   </p>
                 )}
               </div>
@@ -834,7 +839,7 @@ export default function PatientDossierPage() {
             onClick={() => router.push(`/timeline?id=${formData.pid}`)}
           >
             <Clock className="mr-2 h-4 w-4" />
-            Parcours de soins
+            {t("patients.buttons.carePathway")}
           </Button>
         )}
         <div className="flex flex-wrap items-center gap-3 ml-auto">
@@ -843,18 +848,18 @@ export default function PatientDossierPage() {
             variant="outline"
             onClick={() => router.push("/patients")}
           >
-            Annuler
+            {t("common.buttons.cancel")}
           </Button>
           <Button variant="primary" type="submit" disabled={isSaving}>
             {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Enregistrement...
+                {t("common.buttons.saving")}
               </>
             ) : (
               <>
                 <Save className="mr-2 h-4 w-4" />
-                {isExistingPatient? 'Mettre à jour':'Enregistrer'}
+                {isExistingPatient ? t("common.buttons.update") : t("common.buttons.save")}
               </>
             )}
           </Button>

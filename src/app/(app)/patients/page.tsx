@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 import {
   CalendarDays,
   FileText,
@@ -101,6 +102,7 @@ function formatRelativeTimeFromNow(timestamp: string) {
 
 export default function PatientsPage() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const [patientsData, setPatientsData] = useState<Patient[]>([]);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(
@@ -133,7 +135,7 @@ export default function PatientsPage() {
         }
       } catch (error) {
         console.error("Error fetching patients:", error);
-        
+
       }
     };
 
@@ -313,7 +315,7 @@ export default function PatientsPage() {
     if (patientsLoading) {
       return (
         <div className="flex h-64 items-center justify-center">
-          <Spinner label="Analyse du dossier patient..." />
+          <Spinner label={t("patients.labels.analyzingFile")} />
         </div>
       );
     }
@@ -322,15 +324,15 @@ export default function PatientsPage() {
       return (
         <EmptyState
           icon={UserRound}
-          title="Aucun profil disponible"
-          description="Importez ou créez un dossier patient pour afficher les informations détaillées."
+          title={t("patients.empty.noProfiles")}
+          description={t("patients.empty.noProfilesDesc")}
           action={
             variant === "desktop" ? (
               <Button
                 variant="primary"
                 onClick={() => router.push("/patients/dossier?mode=create")}
               >
-                Créer un patient
+                {t("patients.buttons.createPatient")}
               </Button>
             ) : null
           }
@@ -342,8 +344,8 @@ export default function PatientsPage() {
       return (
         <EmptyState
           icon={UserRound}
-          title="Sélectionnez un patient"
-          description="Choisissez un dossier dans la liste pour afficher sa synthèse."
+          title={t("patients.empty.selectPatient")}
+          description={t("patients.empty.selectPatientDesc")}
         />
       );
     }
@@ -358,7 +360,7 @@ export default function PatientsPage() {
               <div className="flex w-full gap-2">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#22d3ee] text-white shadow-lg shadow-indigo-200/60">
                 <UserRound className="h-8 w-8" />
-              
+
               </div>
               <div className="flex flex-col gap-2">
               <h2 className="text-xl font-semibold text-slate-900">
@@ -383,7 +385,7 @@ export default function PatientsPage() {
                 }}
               >
                 <Clock className="mr-2 h-4 w-4" />
-                Parcours de soins
+                {t("patients.buttons.carePathway")}
               </Button>
               <Button
                 variant="ghost"
@@ -393,10 +395,10 @@ export default function PatientsPage() {
                   router.push(`/patients/dossier?id=${selectedPatient.id}`)
                 }
               >
-                Visiter dossier
+                {t("patients.buttons.visitFile")}
               </Button>
             </div>
-            
+
             </div>
             <div className="flex flex-col gap-2">
 
@@ -426,9 +428,9 @@ export default function PatientsPage() {
                         : "bg-blue-100 text-blue-700",
                     )}
                   >
-                    {selectedPatient.type === "privé" ? "Privé" : "Équipe"}
+                    {selectedPatient.type === "privé" ? t("patients.types.private") : t("patients.types.team")}
                   </span>
-                    
+
                 </div>
               </div>
           </div>
@@ -438,7 +440,7 @@ export default function PatientsPage() {
           <div className="flex flex-col gap-5">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-indigo-500">
-                Diagnostic principal
+                {t("patients.section.mainDiagnosis")}
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <span className="px-3 py-1 text-xs font-semibold bg-sky-100 text-sky-700 border border-sky-200">
@@ -452,7 +454,7 @@ export default function PatientsPage() {
             <div className="space-y-4 text-sm text-slate-700">
               <div>
                 <p className="text-xs uppercase tracking-wide text-slate-500">
-                  Identifiant patient
+                  {t("patients.labels.patientId")}
                 </p>
                 <p className="mt-1 text-sm font-semibold text-slate-800">
                   {selectedPatient.pid}
@@ -460,7 +462,7 @@ export default function PatientsPage() {
               </div>
               <div>
                 <p className="text-xs uppercase tracking-wide text-slate-500">
-                  Suivi prévu
+                  {t("patients.labels.nextFollowUp")}
                 </p>
                 <p className="mt-1 text-sm font-semibold text-slate-800">
                   {selectedPatient.nextVisit}
@@ -472,16 +474,18 @@ export default function PatientsPage() {
 
         <div className="space-y-6">
           <HistorySection
-            title="ATCDs médicaux"
+            title={t("patients.section.medicalHistory")}
             tags={selectedPatient.histories.medical}
+            emptyLabel={t("patients.empty.noHistory")}
           />
           <HistorySection
-            title="ATCDs chirurgicaux"
+            title={t("patients.section.surgicalHistory")}
             tags={selectedPatient.histories.surgical}
+            emptyLabel={t("patients.empty.noHistory")}
           />
           <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <h3 className="text-sm font-semibold text-slate-800">
-              Autres éléments
+              {t("patients.section.otherInfo")}
             </h3>
             <div className="mt-4 space-y-4">
               {selectedPatient.histories.other}
@@ -494,10 +498,10 @@ export default function PatientsPage() {
             <header className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-200">
               <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
                 <CalendarDays className="h-4 w-4 text-indigo-500" />
-                Observations
+                {t("patients.section.observations")}
               </div>
               <span className="text-xs font-medium text-slate-500 bg-slate-50 px-2.5 py-1 rounded-full">
-                {sortedObservations.length} entrée{sortedObservations.length !== 1 ? 's' : ''}
+                {sortedObservations.length} {t("patients.labels.entries")}
               </span>
             </header>
 
@@ -538,7 +542,7 @@ export default function PatientsPage() {
                                   {observation.note.substring(0,150)}
                                 </p>
                               )}}...`
-                              : 
+                              :
                                 observation.note.includes("<") ? (
                                   <div
                                     className="text-sm text-slate-700 leading-relaxed [&_p]:m-0 [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-lg [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_strong]:font-semibold [&_em]:italic [&_u]:underline"
@@ -549,10 +553,10 @@ export default function PatientsPage() {
                                     {observation.note}
                                   </p>
                                 )}
-                              
+
                           {observation.note.length > 150 && (
                             <p className="text-xs text-indigo-600 font-medium mt-2">
-                              Afficher plus
+                              {t("patients.buttons.showMore")}
                             </p>
                           )}
                         </div>
@@ -563,7 +567,7 @@ export default function PatientsPage() {
               </div>
             ) : (
               <p className="mt-4 text-sm text-slate-500">
-                Aucune observation enregistrée pour ce patient.
+                {t("patients.empty.noObservations")}
               </p>
             )}
           </section>
@@ -582,20 +586,20 @@ export default function PatientsPage() {
             Patients
           </h1>
           <p className="text-sm text-slate-500">
-            Gestion des dossiers, parcours de soins et suivis post-opératoires.
+            {t('patients.page.subtitle')}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline">
             <FileText className="mr-2 h-4 w-4" />
-            Exporter un rapport
+           {t('patients.buttons.exportReport')}
           </Button>
           <Button
             variant="primary"
             onClick={() => router.push("/patients/dossier?mode=create")}
           >
             <Plus className="mr-2 h-4 w-4" />
-            Nouveau patient
+            {t('patients.buttons.newPatient')}
           </Button>
         </div>
       </section>
@@ -616,12 +620,12 @@ export default function PatientsPage() {
         )}
       >
         <div className="flex items-center justify-between border-b border-violet-100/70 px-5 py-4">
-          <p className="text-sm font-semibold text-[#352f72]">Dossier patient</p>
+          <p className="text-sm font-semibold text-[#352f72]">{t("patients.sidebar.patientFile")}</p>
           <button
             type="button"
             className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
             onClick={() => setIsMobilePreviewOpen(false)}
-            aria-label="Fermer l&apos;aperçu patient"
+            aria-label={t("patients.aria.closePreview")}
           >
             <X className="h-4 w-4" />
           </button>
@@ -635,20 +639,20 @@ export default function PatientsPage() {
         <div className="flex flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-md">
           {patientsLoading ? (
             <div className="flex h-64 items-center justify-center">
-              <Spinner label="Chargement des dossiers patients..." />
+              <Spinner label={t("patients.labels.loadingFiles")} />
             </div>
           ) : patientsData.length === 0 ? (
             <div className="flex h-full items-center justify-center p-6">
               <EmptyState
                 icon={UserRound}
-                title="Aucun patient attribué"
-                description="Une fois les patients assignés à votre service, ils apparaîtront ici."
+                title={t("patients.empty.noPatients")}
+                description={t("patients.empty.noPatientsDesc")}
                 action={
                   <Button
                     variant="primary"
                     onClick={() => router.push("/patients/dossier?mode=create")}
                   >
-                    Importer depuis le DPI
+                    {t("patients.buttons.importFromEMR")}
                   </Button>
                 }
               />
@@ -667,22 +671,22 @@ export default function PatientsPage() {
                   <thead className="bg-slate-50">
                     <tr>
                       <th className="px-4 py-3 font-medium text-slate-500">
-                        Patient
+                        {t("patients.table.headers.patient")}
                       </th>
                       <th className="px-4 py-3 font-medium text-slate-500">
-                        ID patient
+                        {t("patients.table.headers.patientId")}
                       </th>
                       <th className="px-4 py-3 font-medium text-slate-500">
-                        Statut
+                        {t("patients.table.headers.status")}
                       </th>
                       <th className="px-4 py-3 font-medium text-slate-500">
-                        Type
+                        {t("patients.table.headers.type")}
                       </th>
                       <th className="px-4 py-3 font-medium text-slate-500">
-                        CIM
+                        {t("patients.table.headers.cim")}
                       </th>
                       <th className="px-4 py-3 text-right font-medium text-slate-500">
-                        Actions
+                        {t("patients.table.headers.actions")}
                       </th>
                     </tr>
                   </thead>
@@ -737,7 +741,7 @@ export default function PatientsPage() {
                                 : "bg-blue-100 text-blue-700",
                             )}
                           >
-                            {patient.type === "privé" ? "Privé" : "Équipe"}
+                            {patient.type === "privé" ? t("patients.types.private") : t("patients.types.team")}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-sm text-slate-600">
@@ -752,7 +756,7 @@ export default function PatientsPage() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-end gap-2">
-                            
+
                             <Button
                               variant="ghost"
                               size="sm"
@@ -775,8 +779,8 @@ export default function PatientsPage() {
               <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-4 py-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
                 <span>
                   {startItem === 0
-                    ? "Aucun dossier à afficher"
-                    : `Affichage ${startItem}–${endItem} sur ${filteredPatients.length} dossiers`}
+                    ? t("patients.pagination.noFiles")
+                    : t("patients.pagination.showing", { from: startItem, to: endItem, total: filteredPatients.length })}
                 </span>
                 <div className="flex items-center gap-3">
                   <Button
@@ -788,11 +792,10 @@ export default function PatientsPage() {
                       setCurrentPage((page) => Math.max(1, page - 1))
                     }
                   >
-                    Précédent
+                    {t("patients.buttons.previous")}
                   </Button>
                   <span className="text-xs text-slate-500">
-                    Page {filteredPatients.length === 0 ? 0 : currentPage} /{" "}
-                    {filteredPatients.length === 0 ? 0 : totalPages}
+                    {t("patients.pagination.pageOf", { current: filteredPatients.length === 0 ? 0 : currentPage, total: filteredPatients.length === 0 ? 0 : totalPages })}
                   </span>
                   <Button
                     variant="outline"
@@ -805,7 +808,7 @@ export default function PatientsPage() {
                       )
                     }
                   >
-                    Suivant
+                    {t("patients.buttons.next")}
                   </Button>
                 </div>
               </div>
@@ -827,9 +830,9 @@ export default function PatientsPage() {
           setEditForm(null);
         }}
         title={
-          editPatient ? `Modifier le dossier de ${editPatient.name}` : undefined
+          editPatient ? t("patients.modal.editPatient", { name: editPatient.name }) : undefined
         }
-        description="Ajustez les informations principales du patient pour garder la vue à jour."
+        description={t("patients.modal.editDesc")}
         footer={
           <>
             <Button
@@ -839,14 +842,14 @@ export default function PatientsPage() {
                 setEditForm(null);
               }}
             >
-              Annuler
+              {t("common.buttons.cancel")}
             </Button>
             <Button
               variant="primary"
               onClick={handleEditSave}
               disabled={!editForm}
             >
-              Enregistrer
+              {t("common.buttons.save")}
             </Button>
           </>
         }
@@ -858,7 +861,7 @@ export default function PatientsPage() {
                 htmlFor="edit-service"
                 className="text-sm font-medium text-[#221b5b]"
               >
-                Service d&apos;affectation
+                {t("patients.form.serviceAssignment")}
               </label>
               <input
                 id="edit-service"
@@ -879,7 +882,7 @@ export default function PatientsPage() {
                   htmlFor="edit-status"
                   className="text-sm font-medium text-[#221b5b]"
                 >
-                  Statut
+                  {t("patients.table.headers.status")}
                 </label>
                 <select
                   id="edit-status"
@@ -906,7 +909,7 @@ export default function PatientsPage() {
                   htmlFor="edit-type"
                   className="text-sm font-medium text-[#221b5b]"
                 >
-                  Type
+                  {t("patients.table.headers.type")}
                 </label>
                 <select
                   id="edit-type"
@@ -923,8 +926,8 @@ export default function PatientsPage() {
                     )
                   }
                 >
-                  <option value="privé">Privé</option>
-                  <option value="équipe">Équipe</option>
+                  <option value="privé">{t("patients.types.private")}</option>
+                  <option value="équipe">{t("patients.types.team")}</option>
                 </select>
               </div>
             </div>
@@ -989,20 +992,20 @@ export default function PatientsPage() {
         onClose={() => setToDeletePatient(null)}
         title={
           toDeletePatient
-            ? `Supprimer ${toDeletePatient.name} ?`
-            : "Confirmer la suppression"
+            ? t("patients.modal.deleteConfirm", { name: toDeletePatient.name })
+            : t("patients.modal.deleteConfirmFallback")
         }
-        description="Cette action retirera le dossier de la liste. Vous pourrez le retrouver dans l’historique si nécessaire."
+        description={t("patients.modal.deleteDesc")}
         footer={
           <>
             <Button variant="outline" onClick={() => setToDeletePatient(null)}>
-              Annuler
+              {t("common.buttons.cancel")}
             </Button>
             <Button
               className="bg-rose-600 text-white hover:bg-rose-700 focus-visible:ring-rose-300"
               onClick={handleDeleteConfirm}
             >
-              Supprimer
+              {t("common.buttons.delete")}
             </Button>
           </>
         }
@@ -1010,15 +1013,10 @@ export default function PatientsPage() {
         {toDeletePatient ? (
           <div className="space-y-3 text-sm text-slate-600">
             <p>
-              Êtes-vous sûr de vouloir supprimer le dossier patient{" "}
-              <span className="font-semibold text-rose-600">
-                {toDeletePatient.name}
-              </span>{" "}
-              ({toDeletePatient.id}) ?
+              {t("patients.modal.deleteMessage", { name: toDeletePatient.name, id: toDeletePatient.id })}
             </p>
             <p>
-              Cette action ne peut pas être annulée immédiatement et nécessite
-              une restauration manuelle.
+              {t("patients.modal.deleteWarning")}
             </p>
           </div>
         ) : null}
@@ -1030,16 +1028,18 @@ export default function PatientsPage() {
 function HistorySection({
   title,
   tags,
+  emptyLabel,
 }: {
   title: string;
   tags: string[];
+  emptyLabel: string;
 }) {
   return (
     <section className="rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-sm">
       <h3 className="text-sm font-semibold text-slate-800">
         {title}
       </h3>
-      <TagGroup tags={tags} emptyLabel="Aucun antécédent déclaré" />
+      <TagGroup tags={tags} emptyLabel={emptyLabel} />
     </section>
   );
 }
@@ -1066,5 +1066,5 @@ function TagGroup({
         </span>
       ))}
     </div>
-  );  
+  );
 }

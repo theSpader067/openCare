@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,7 @@ export function PatientFilters({
   isFilterActive,
   resetFilters
 }: PatientFiltersProps) {
+  const { t } = useTranslation();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
@@ -39,12 +41,12 @@ export function PatientFilters({
       {/* Mobile Search Toggle Button */}
       <div className="flex sm:hidden items-center justify-between mb-4 pt-3 px-3">
         <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Filtres & recherche
+          {t("patients.filters.title")}
         </span>
         <button
           onClick={() => setIsSearchOpen(!isSearchOpen)}
           className="inline-flex items-center justify-center h-9 w-9 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition"
-          aria-label="Toggler recherche et filtres"
+          aria-label={t("patients.filters.toggleAria")}
         >
           {isSearchOpen ? (
             <X className="h-4 w-4" />
@@ -63,7 +65,7 @@ export function PatientFilters({
           {/* Search Bar */}
           <div className="flex w-full flex-col gap-2">
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Patient / identifiant
+              {t("patients.filters.patientOrId")}
             </label>
             <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm">
               <Search className="h-4 w-4 flex-shrink-0 text-slate-400" />
@@ -73,7 +75,7 @@ export function PatientFilters({
                 onChange={(event) =>
                   onFilterChange("query", event.target.value)
                 }
-                placeholder="Rechercher un patient ou un ID"
+                placeholder={t("patients.filters.searchPlaceholder")}
                 className="w-full bg-transparent text-slate-700 placeholder:text-slate-400 focus:outline-none"
               />
             </div>
@@ -84,7 +86,7 @@ export function PatientFilters({
             {/* Status Filter */}
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Statut
+                {t("patients.filters.status")}
               </label>
               <select
                 value={filters.status}
@@ -93,7 +95,7 @@ export function PatientFilters({
                 }
                 className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
               >
-                <option value="all">Tous les statuts</option>
+                <option value="all">{t("patients.filters.allStatuses")}</option>
                 {uniqueStatuses.map((status) => (
                   <option key={status} value={status}>
                     {status}
@@ -105,7 +107,7 @@ export function PatientFilters({
             {/* Type Filter */}
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Type
+                {t("patients.filters.type")}
               </label>
               <select
                 value={filters.type}
@@ -114,16 +116,16 @@ export function PatientFilters({
                 }
                 className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
               >
-                <option value="all">Tous les types</option>
-                <option value="privé">Privé</option>
-                <option value="équipe">Équipe</option>
+                <option value="all">{t("patients.filters.allTypes")}</option>
+                <option value="privé">{t("patients.types.private")}</option>
+                <option value="équipe">{t("patients.types.team")}</option>
               </select>
             </div>
 
             {/* Date Range - From */}
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Du
+                {t("patients.filters.from")}
               </label>
               <input
                 type="date"
@@ -138,7 +140,7 @@ export function PatientFilters({
             {/* Date Range - To */}
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Au
+                {t("patients.filters.to")}
               </label>
               <input
                 type="date"
@@ -158,7 +160,7 @@ export function PatientFilters({
               onClick={resetFilters}
               className="h-11 rounded-2xl border border-transparent text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50/60"
             >
-              Réinitialiser
+              {t("patients.filters.reset")}
             </Button>
           </div>
         </div>
@@ -170,7 +172,7 @@ export function PatientFilters({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:gap-4 lg:pb-4 lg:border-b lg:border-slate-200">
           <div className="flex-1">
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Patient / identifiant
+              {t("patients.filters.patientOrId")}
             </label>
             <div className="mt-2 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm">
               <Search className="h-4 w-4 flex-shrink-0 text-slate-400" />
@@ -180,7 +182,7 @@ export function PatientFilters({
                 onChange={(event) =>
                   onFilterChange("query", event.target.value)
                 }
-                placeholder="Rechercher un patient ou un ID"
+                placeholder={t("patients.filters.searchPlaceholder")}
                 className="w-full bg-transparent text-slate-700 placeholder:text-slate-400 focus:outline-none"
               />
             </div>
@@ -193,7 +195,7 @@ export function PatientFilters({
               onClick={resetFilters}
               className="h-11 rounded-2xl border border-transparent text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50/60"
             >
-              Réinitialiser
+              {t("patients.filters.reset")}
             </Button>
           </div>
         </div>
@@ -202,7 +204,7 @@ export function PatientFilters({
         <div className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           <div className="flex flex-col gap-2">
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Statut
+              {t("patients.filters.status")}
             </label>
             <select
               value={filters.status}
@@ -211,7 +213,7 @@ export function PatientFilters({
               }
               className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
             >
-              <option value="all">Tous les statuts</option>
+              <option value="all">{t("patients.filters.allStatuses")}</option>
               {uniqueStatuses.map((status) => (
                 <option key={status} value={status}>
                   {status}
@@ -222,7 +224,7 @@ export function PatientFilters({
 
           <div className="flex flex-col gap-2">
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Type
+              {t("patients.filters.type")}
             </label>
             <select
               value={filters.type}
@@ -231,15 +233,15 @@ export function PatientFilters({
               }
               className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
             >
-              <option value="all">Tous les types</option>
-              <option value="privé">Privé</option>
-              <option value="équipe">Équipe</option>
+              <option value="all">{t("patients.filters.allTypes")}</option>
+              <option value="privé">{t("patients.types.private")}</option>
+              <option value="équipe">{t("patients.types.team")}</option>
             </select>
           </div>
 
           <div className="flex flex-col gap-2">
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Du
+              {t("patients.filters.from")}
             </label>
             <input
               type="date"
@@ -253,7 +255,7 @@ export function PatientFilters({
 
           <div className="flex flex-col gap-2">
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Au
+              {t("patients.filters.to")}
             </label>
             <input
               type="date"
@@ -275,7 +277,7 @@ export function PatientFilters({
             onClick={resetFilters}
             className="h-11 w-full rounded-2xl border border-transparent text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50/60 sm:w-auto"
           >
-            Réinitialiser
+            {t("patients.filters.reset")}
           </Button>
         </div>
       </div>

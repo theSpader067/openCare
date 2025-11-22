@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Plus, Search, CheckCircle, AlertCircle, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -32,11 +33,14 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
     onCreatePatient,
     newPatientFields = ["nom", "age","histoire"],
     newPatientDefaults,
-    searchPlaceholder = "Rechercher un patient...",
-    noResultsText = "Aucun patient trouvé",
+    searchPlaceholder,
+    noResultsText,
     showTabs = true,
     skipSuccessDisplay = false,
   }: PatientCreateProps, ref) {
+  const { t } = useTranslation();
+  const defaultSearchPlaceholder = searchPlaceholder ?? t("patients.create.searchPlaceholder");
+  const defaultNoResultsText = noResultsText ?? t("patients.create.noResults");
   const [patientMode, setPatientMode] = useState<"select" | "new">("select");
   const [patientSearch, setPatientSearch] = useState("");
   const [newPatientForm, setNewPatientForm] = useState<NewPatientFormFields>(
@@ -72,7 +76,7 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
 
   const handleCreateNewPatient = async () => {
     if (!newPatientForm.fullName?.trim()) {
-      setCreateError("Le nom du patient est requis");
+      setCreateError(t("patients.validation.nameRequired"));
       setCreateStatus("error");
       return;
     }
@@ -104,7 +108,7 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
       }, 1500);
     } catch (error) {
       setCreateStatus("error");
-      setCreateError(error instanceof Error ? error.message : "Erreur lors de la création du patient");
+      setCreateError(error instanceof Error ? error.message : t("patients.validation.createError"));
     } finally {
       setIsCreating(false);
     }
@@ -132,7 +136,7 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
                 : "border-transparent text-slate-600"
             )}
           >
-            Existants
+            {t("patients.tabs.existing")}
           </button>
           <button
             onClick={() => setPatientMode("new")}
@@ -143,7 +147,7 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
                 : "border-transparent text-slate-600"
             )}
           >
-            Nouveau
+            {t("patients.tabs.new")}
           </button>
         </div>
       )}
@@ -155,7 +159,7 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
             <Search className="h-4 w-4 text-slate-400" />
             <input
               type="text"
-              placeholder={searchPlaceholder}
+              placeholder={defaultSearchPlaceholder}
               value={patientSearch}
               onChange={(e) => setPatientSearch(e.target.value)}
               className="flex-1 bg-transparent text-sm text-slate-600 outline-none placeholder:text-slate-400"
@@ -184,7 +188,7 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
               ))
             ) : (
               <p className="text-center text-sm text-slate-500 py-4">
-                {noResultsText}
+                {defaultNoResultsText}
               </p>
             )}
           </div>
@@ -201,7 +205,7 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
             return isTextarea ? (
               <div key={field} className="space-y-2">
                 <label className="text-xs font-semibold uppercase text-slate-600">
-                  {label} (optional)
+                  {label} ({t("common.labels.optional")})
                 </label>
                 <textarea
                   value={newPatientForm[field]}
@@ -211,7 +215,7 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
                       [field]: e.target.value,
                     }))
                   }
-                  placeholder={`Entrez ${label.toLowerCase()}...`}
+                  placeholder={t("patients.create.enterField", { field: label.toLowerCase() })}
                   rows={3}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 />
@@ -219,7 +223,7 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
             ) : (
               <div key={field} className="space-y-2">
                 <label className="text-xs font-semibold uppercase text-slate-600">
-                  {label} {field==="Nom"? "":"(optional)"}
+                  {label} {field==="Nom"? "": `(${t("common.labels.optional")})`}
                 </label>
                 <input
                   type={"text"}
@@ -230,7 +234,7 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
                       [field]: e.target.value,
                     }))
                   }
-                  placeholder={`Entrez ${label.toLowerCase()}...`}
+                  placeholder={t("patients.create.enterField", { field: label.toLowerCase() })}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 />
               </div>
@@ -248,7 +252,7 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
           {createStatus === "success" && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
               <CheckCircle className="h-5 w-5 text-emerald-600 flex-shrink-0" />
-              <p className="text-sm text-emerald-700">Patient créé avec succès!</p>
+              <p className="text-sm text-emerald-700">{t("patients.messages.created")}</p>
             </div>
           )}
 
@@ -260,7 +264,7 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
               className="flex-1 px-4 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
               type="button"
             >
-              Annuler
+              {t("common.buttons.cancel")}
             </button>
             <button
               onClick={handleCreateNewPatient}
@@ -271,10 +275,10 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
               {isCreating ? (
                 <>
                   <Loader className="h-4 w-4 animate-spin" />
-                  Création...
+                  {t("common.loading.creating")}
                 </>
               ) : (
-                "Enregistrer"
+                t("common.buttons.save")
               )}
             </button>
           </div>

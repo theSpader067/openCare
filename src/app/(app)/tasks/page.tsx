@@ -7,6 +7,7 @@ import {
   useState,
   type ComponentType,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { useSession } from "next-auth/react";
 import {
   Activity,
@@ -61,6 +62,7 @@ function SimpleDatePicker({
   date: Date;
   onDateChange: (date: Date) => void;
 }) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date(date));
   const dateLabel = date.toLocaleDateString("fr-FR", {
@@ -96,7 +98,7 @@ function SimpleDatePicker({
             onClick={() => setIsOpen(false)}
             className="w-full mt-2 text-xs font-medium text-slate-500 hover:text-slate-700 py-1"
           >
-            Fermer
+            {t("tasks.close")}
           </button>
         </div>
       )}
@@ -128,28 +130,28 @@ interface ActivityTypeMeta {
   badgeClass: string;
 }
 
-const activityTypeMeta: Record<ActivityType, ActivityTypeMeta> = {
+const getActivityTypeMeta = (t: (key: string) => string): Record<ActivityType, ActivityTypeMeta> => ({
   consultation: {
-    label: "Consultation",
+    label: t("tasks.activityTypes.consultation"),
     icon: Activity,
     badgeClass: "bg-blue-100 text-blue-700",
   },
   chirurgie: {
-    label: "Bloc opératoire",
+    label: t("tasks.activityTypes.chirurgie"),
     icon: Activity,
     badgeClass: "bg-rose-100 text-rose-700",
   },
   staff: {
-    label: "Staff / réunion",
+    label: t("tasks.activityTypes.staff"),
     icon: ListChecks,
     badgeClass: "bg-amber-100 text-amber-700",
   },
   tournee: {
-    label: "Tournée",
+    label: t("tasks.activityTypes.tournee"),
     icon: Users,
     badgeClass: "bg-emerald-100 text-emerald-700",
   },
-};
+});
 
 const generateTasksForDate = (date: Date): TaskItem[] => {
   const dateKey = date.toISOString().split("T")[0];
@@ -385,6 +387,7 @@ export const mockFavoriteTasks = [
 ];
 
 export default function TasksPage() {
+  const { t } = useTranslation();
   const { data: session } = useSession();
   const sessionUser = session?.user as any;
   const userId = sessionUser?.id ? parseInt(sessionUser.id as string) : null;
@@ -628,10 +631,10 @@ export default function TasksPage() {
       <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">
-            Tâches et Activités
+            {t("tasks.page.title")}
           </h1>
           <p className="text-sm text-slate-500">
-            Organisez votre journée avec vos consignes et activités planifiées.
+            {t("tasks.page.subtitle")}
           </p>
         </div>
         <SimpleDatePicker date={selectedDate} onDateChange={handleDateChange} />
@@ -649,7 +652,7 @@ export default function TasksPage() {
                 : "border-transparent text-slate-600 hover:text-slate-800"
             )}
           >
-            Tâches
+            {t("tasks.tabs.tasks")}
           </button>
           <button
             onClick={() => setSelectedTab("activites")}
@@ -660,7 +663,7 @@ export default function TasksPage() {
                 : "border-transparent text-slate-600 hover:text-slate-800"
             )}
           >
-            Activités ({activitiesCount})
+            {t("tasks.tabs.activities")} ({activitiesCount})
           </button>
         </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,7 @@ type HistoryFiltersProps = {
 };
 
 export function HistoryFilters({ filters, onFilterChange, uniqueHistoryTypes, isHistoryFilterActive, resetHistoryFilters }: HistoryFiltersProps) {
+  const { t } = useTranslation();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
@@ -46,12 +48,12 @@ export function HistoryFilters({ filters, onFilterChange, uniqueHistoryTypes, is
       {/* Mobile Search Toggle Button */}
       <div className="flex sm:hidden items-center justify-between mb-4 pt-2">
         <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Filtres & recherche
+          {t("analyses.filters.title")}
         </span>
         <button
           onClick={() => setIsSearchOpen(!isSearchOpen)}
           className="inline-flex items-center justify-center h-9 w-9 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition"
-          aria-label="Toggler recherche et filtres"
+          aria-label={t("analyses.filters.toggleAria")}
         >
           {isSearchOpen ? (
             <X className="h-4 w-4" />
@@ -70,7 +72,7 @@ export function HistoryFilters({ filters, onFilterChange, uniqueHistoryTypes, is
           {/* Search Bar */}
           <div className="flex w-full flex-col gap-2">
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Patient / identifiant
+              {t("analyses.filters.patientOrId")}
             </label>
             <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm">
               <Search className="h-4 w-4 flex-shrink-0 text-slate-400" />
@@ -80,7 +82,7 @@ export function HistoryFilters({ filters, onFilterChange, uniqueHistoryTypes, is
                 onChange={(event) =>
                   onFilterChange("query", event.target.value)
                 }
-                placeholder="Rechercher un patient ou un numéro"
+                placeholder={t("analyses.filters.searchPlaceholder")}
                 className="w-full bg-transparent text-slate-700 placeholder:text-slate-400 focus:outline-none"
               />
             </div>
@@ -91,7 +93,7 @@ export function HistoryFilters({ filters, onFilterChange, uniqueHistoryTypes, is
             {/* Type Filter */}
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Type de bilan
+                {t("analyses.filters.analysisType")}
               </label>
               <select
                 value={filters.type}
@@ -100,22 +102,22 @@ export function HistoryFilters({ filters, onFilterChange, uniqueHistoryTypes, is
                 }
                 className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
               >
-                <option value="all">Tous les types</option>
-                <optgroup label="Bilans">
+                <option value="all">{t("analyses.filters.allTypes")}</option>
+                <optgroup label={t("analyses.filters.categories.bilans")}>
                   {bilanTypes.bilan.items.map((item) => (
                     <option key={item} value={item}>
                       {item}
                     </option>
                   ))}
                 </optgroup>
-                <optgroup label="Imagerie">
+                <optgroup label={t("analyses.filters.categories.imagerie")}>
                   {bilanTypes.imagerie.items.map((item) => (
                     <option key={item} value={item}>
                       {item}
                     </option>
                   ))}
                 </optgroup>
-                <optgroup label="Anapath">
+                <optgroup label={t("analyses.filters.categories.anapath")}>
                   {bilanTypes.anapath.items.map((item) => (
                     <option key={item} value={item}>
                       {item}
@@ -128,7 +130,7 @@ export function HistoryFilters({ filters, onFilterChange, uniqueHistoryTypes, is
             {/* Date Range - From */}
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Du
+                {t("analyses.filters.from")}
               </label>
               <input
                 type="date"
@@ -143,7 +145,7 @@ export function HistoryFilters({ filters, onFilterChange, uniqueHistoryTypes, is
             {/* Date Range - To */}
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Au
+                {t("analyses.filters.to")}
               </label>
               <input
                 type="date"
@@ -163,7 +165,7 @@ export function HistoryFilters({ filters, onFilterChange, uniqueHistoryTypes, is
               onClick={resetHistoryFilters}
               className="h-11 rounded-2xl border border-transparent text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50/60"
             >
-              Réinitialiser
+              {t("analyses.buttons.reset")}
             </Button>
           </div>
         </div>
@@ -175,7 +177,7 @@ export function HistoryFilters({ filters, onFilterChange, uniqueHistoryTypes, is
           {/* Search Bar - Full Width */}
           <div className="flex w-full flex-col gap-2">
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Patient / identifiant
+              {t("analyses.filters.patientOrId")}
             </label>
             <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm">
               <Search className="h-4 w-4 flex-shrink-0 text-slate-400" />
@@ -185,7 +187,7 @@ export function HistoryFilters({ filters, onFilterChange, uniqueHistoryTypes, is
                 onChange={(event) =>
                   onFilterChange("query", event.target.value)
                 }
-                placeholder="Rechercher un patient ou un numéro"
+                placeholder={t("analyses.filters.searchPlaceholder")}
                 className="w-full bg-transparent text-slate-700 placeholder:text-slate-400 focus:outline-none"
               />
             </div>
@@ -196,7 +198,7 @@ export function HistoryFilters({ filters, onFilterChange, uniqueHistoryTypes, is
             {/* Type Filter */}
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Type de bilan
+                {t("analyses.filters.analysisType")}
               </label>
               <select
                 value={filters.type}
@@ -205,22 +207,22 @@ export function HistoryFilters({ filters, onFilterChange, uniqueHistoryTypes, is
                 }
                 className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
               >
-                <option value="all">Tous les types</option>
-                <optgroup label="Bilans">
+                <option value="all">{t("analyses.filters.allTypes")}</option>
+                <optgroup label={t("analyses.filters.categories.bilans")}>
                   {bilanTypes.bilan.items.map((item) => (
                     <option key={item} value={item}>
                       {item}
                     </option>
                   ))}
                 </optgroup>
-                <optgroup label="Imagerie">
+                <optgroup label={t("analyses.filters.categories.imagerie")}>
                   {bilanTypes.imagerie.items.map((item) => (
                     <option key={item} value={item}>
                       {item}
                     </option>
                   ))}
                 </optgroup>
-                <optgroup label="Anapath">
+                <optgroup label={t("analyses.filters.categories.anapath")}>
                   {bilanTypes.anapath.items.map((item) => (
                     <option key={item} value={item}>
                       {item}
@@ -233,7 +235,7 @@ export function HistoryFilters({ filters, onFilterChange, uniqueHistoryTypes, is
             {/* Date Range - From */}
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Du
+                {t("analyses.filters.from")}
               </label>
               <input
                 type="date"
@@ -248,7 +250,7 @@ export function HistoryFilters({ filters, onFilterChange, uniqueHistoryTypes, is
             {/* Date Range - To */}
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Au
+                {t("analyses.filters.to")}
               </label>
               <input
                 type="date"
@@ -272,7 +274,7 @@ export function HistoryFilters({ filters, onFilterChange, uniqueHistoryTypes, is
                 onClick={resetHistoryFilters}
                 className="h-11 rounded-2xl border border-transparent text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50/60"
               >
-                Réinitialiser
+                {t("analyses.buttons.reset")}
               </Button>
             </div>
           </div>

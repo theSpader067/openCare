@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { AnalysisScannerModal } from "@/components/analysis-scanner-modal";
 import { Analyse } from "./page";
+import { useTranslation } from "react-i18next";
 
 
 const statusConfig: Record<
@@ -45,6 +46,7 @@ export function PendingAnalyseCard({
   analyse: Analyse;
   onCompleted?: (analyse: Analyse, testValues: Record<string, string>) => void;
 }) {
+  const { t } = useTranslation();
   const config = statusConfig[analyse.status];
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -147,10 +149,10 @@ export function PendingAnalyseCard({
   };
 
   const categoryBadgeMap: Record<"bilan" | "imagerie" | "anapath" | "autres", { label: string; color: string }> = {
-    bilan: { label: "Bilan", color: "bg-violet-500/15 text-violet-700" },
-    imagerie: { label: "Imagerie", color: "bg-blue-500/15 text-blue-700" },
-    anapath: { label: "Anapath", color: "bg-pink-500/15 text-pink-700" },
-    autres: { label: "Autres", color: "bg-slate-500/15 text-slate-700" },
+    bilan: { label: t("analyses.categories.bilan"), color: "bg-violet-500/15 text-violet-700" },
+    imagerie: { label: t("analyses.categories.imagerie"), color: "bg-blue-500/15 text-blue-700" },
+    anapath: { label: t("analyses.categories.anapath"), color: "bg-pink-500/15 text-pink-700" },
+    autres: { label: t("analyses.categories.autres"), color: "bg-slate-500/15 text-slate-700" },
   };
 
   return (
@@ -203,7 +205,7 @@ export function PendingAnalyseCard({
               className="h-8 rounded-full text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 text-xs"
               onClick={() => setIsModalOpen(true)}
             >
-              Voir détails
+              {t("analyses.buttons.viewDetails")}
             </Button>
           </div>
         </div>
@@ -225,7 +227,7 @@ export function PendingAnalyseCard({
               <div className="flex items-start justify-between border-b border-slate-200 px-3 py-2 sm:px-6 sm:py-4">
                 <div>
                   <h2 className="text-base sm:text-lg font-semibold text-slate-900">
-                    Détails de l'analyse
+                    {t("analyses.modal.title")}
                   </h2>
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2">
@@ -234,7 +236,7 @@ export function PendingAnalyseCard({
                     type="button"
                     className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition"
                     onClick={() => setIsModalOpen(false)}
-                    aria-label="Fermer"
+                    aria-label={t("analyses.buttons.close")}
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -248,7 +250,7 @@ export function PendingAnalyseCard({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 sm:gap-4">
                     <div>
                       <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
-                        Patient
+                        {t("analyses.labels.patient")}
                       </p>
                       <p className="text-xs sm:text-sm font-semibold text-slate-900 mt-1">
                         {analyse.patient}
@@ -256,7 +258,7 @@ export function PendingAnalyseCard({
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
-                        Titre
+                        {t("analyses.labels.title")}
                       </p>
                       <p className="text-xs sm:text-sm font-semibold text-slate-900 mt-1">
                         {analyse.type}
@@ -264,7 +266,7 @@ export function PendingAnalyseCard({
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
-                        Date de demande
+                        {t("analyses.labels.requestDate")}
                       </p>
                       <p className="text-xs sm:text-sm font-semibold text-slate-900 mt-1">
                         {formatAnalyseDateTime(analyse.requestedDate)}
@@ -272,7 +274,7 @@ export function PendingAnalyseCard({
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
-                        Numéro d'ordre
+                        {t("analyses.labels.orderNumber")}
                       </p>
                       <p className="text-xs sm:text-sm font-semibold text-slate-900 mt-1">
                         {analyse.id}
@@ -280,7 +282,7 @@ export function PendingAnalyseCard({
                     </div>
                     <div className="col-span-2">
                       <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
-                        Type
+                        {t("analyses.labels.type")}
                       </p>
                       <div className="mt-1">
                         <span className={cn(
@@ -298,12 +300,12 @@ export function PendingAnalyseCard({
                 <div>
                   <div className="flex justify-between items-center w-full gap-2">
                     <h3 className="text-xs sm:text-sm font-semibold text-slate-900">
-                      Saisie des résultats
+                      {t("analyses.results.sectionTitle")}
                     </h3>
                     <button
                       onClick={() => setIsScannerOpen(true)}
                       className="inline-flex align-end h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition flex-shrink-0"
-                      title="Scanner avec caméra"
+                      title={t("analyses.results.scanCamera")}
                     >
                       <Camera className="h-4 w-4" />
                     </button>
@@ -333,14 +335,14 @@ export function PendingAnalyseCard({
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-slate-600">Aucun test en attente</p>
+                      <p className="text-sm text-slate-600">{t("analyses.results.noTestsPending")}</p>
                     )
                   ) : (
                     // Imagerie or Anapath: Textarea
                     <textarea
                       value={textareaResults}
                       onChange={(e) => setTextareaResults(e.target.value)}
-                      placeholder="Décrivez les résultats et observations..."
+                      placeholder={t("analyses.results.describeResults")}
                       rows={4}
                       className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs sm:text-sm text-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition"
                     />
@@ -356,7 +358,7 @@ export function PendingAnalyseCard({
                   onClick={() => setIsModalOpen(false)}
                   disabled={isSaving}
                 >
-                  Annuler
+                  {t("analyses.buttons.cancel")}
                 </Button>
                 <Button
                   variant="primary"
@@ -374,10 +376,10 @@ export function PendingAnalyseCard({
                   {isSaving ? (
                     <>
                       <Loader className="mr-2 h-4 w-4 animate-spin" />
-                      Enregistrement...
+                      {t("analyses.loading.registering")}
                     </>
                   ) : (
-                    "Enregistrer"
+                    t("analyses.buttons.save")
                   )}
                 </Button>
               </div>

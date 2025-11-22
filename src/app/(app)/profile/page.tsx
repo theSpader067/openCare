@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -153,6 +154,7 @@ interface PersonalInfo {
 }
 
 export default function ProfilePage() {
+  const { t } = useTranslation();
   const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState<"personal" | "equipes" | "statistiques">("personal");
   const [isEditing, setIsEditing] = useState(false);
@@ -226,7 +228,7 @@ export default function ProfilePage() {
         const response = await fetch("/api/profile");
 
         if (!response.ok) {
-          throw new Error("Failed to fetch profile");
+          throw new Error(t("profile.errors.fetchProfile"));
         }
 
         const data = await response.json();
@@ -234,7 +236,7 @@ export default function ProfilePage() {
         setOriginalPersonalInfo(data);
       } catch (error) {
         console.error("Error fetching profile:", error);
-        setProfileError("Failed to load profile. Please try again.");
+        setProfileError(t("profile.errors.loadProfile"));
       } finally {
         setIsLoadingProfile(false);
       }
@@ -243,7 +245,7 @@ export default function ProfilePage() {
     if (status === "authenticated") {
       fetchProfile();
     }
-  }, [status]);
+  }, [status, t]);
 
   // Fetch user's teams
   useEffect(() => {
@@ -255,7 +257,7 @@ export default function ProfilePage() {
         const response = await fetch("/api/teams");
 
         if (!response.ok) {
-          throw new Error("Failed to fetch teams");
+          throw new Error(t("profile.errors.fetchTeams"));
         }
 
         const data = await response.json();
@@ -287,7 +289,7 @@ export default function ProfilePage() {
         setTeams(availableTeams);
       } catch (error) {
         console.error("Error fetching teams:", error);
-        setTeamsError("Failed to load teams.");
+        setTeamsError(t("profile.errors.loadTeams"));
       } finally {
         setIsLoadingTeams(false);
       }
@@ -297,7 +299,7 @@ export default function ProfilePage() {
       fetchTeams();
       fetchTeamRequests();
     }
-  }, [status]);
+  }, [status, t]);
 
   // Fetch pending team requests
   const fetchTeamRequests = async () => {
@@ -308,14 +310,14 @@ export default function ProfilePage() {
       const response = await fetch("/api/team-requests/pending");
 
       if (!response.ok) {
-        throw new Error("Failed to fetch team requests");
+        throw new Error(t("profile.errors.fetchRequests"));
       }
 
       const data = await response.json();
       setJoinRequests(data.requests || []);
     } catch (error) {
       console.error("Error fetching team requests:", error);
-      setRequestsError("Failed to load requests");
+      setRequestsError(t("profile.errors.loadRequests"));
       setJoinRequests([]);
     } finally {
       setIsLoadingRequests(false);
@@ -378,7 +380,7 @@ export default function ProfilePage() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to save profile");
+        throw new Error(t("profile.errors.saveProfile"));
       }
 
       // Update original data to match current data
@@ -394,7 +396,7 @@ export default function ProfilePage() {
       }, 2000);
     } catch (error) {
       console.error("Error saving profile:", error);
-      setProfileError("Failed to save profile. Please try again.");
+      setProfileError(t("profile.errors.saveProfileRetry"));
     } finally {
       setIsSavingProfile(false);
     }
@@ -444,7 +446,7 @@ export default function ProfilePage() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Failed to accept request");
+        throw new Error(error.error || t("profile.errors.acceptRequest"));
       }
 
       // Remove the request from the list
@@ -477,7 +479,7 @@ export default function ProfilePage() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Failed to decline request");
+        throw new Error(error.error || t("profile.errors.declineRequest"));
       }
 
       // Remove the request from the list
@@ -511,7 +513,7 @@ export default function ProfilePage() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Failed to create team");
+        throw new Error(error.error || t("profile.errors.createTeam"));
       }
 
       const data = await response.json();
@@ -548,7 +550,7 @@ export default function ProfilePage() {
     } catch (error) {
       console.error("Error creating team:", error);
       setTeamCreationError(
-        error instanceof Error ? error.message : "Failed to create team"
+        error instanceof Error ? error.message : t("profile.errors.createTeam")
       );
       setIsCreatingTeam(false);
     }
@@ -580,7 +582,7 @@ export default function ProfilePage() {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to search teams");
+        throw new Error(t("profile.errors.searchTeams"));
       }
 
       const data = await response.json();
@@ -588,7 +590,7 @@ export default function ProfilePage() {
     } catch (error) {
       console.error("Error searching teams:", error);
       setSearchError(
-        error instanceof Error ? error.message : "Failed to search teams"
+        error instanceof Error ? error.message : t("profile.errors.searchTeams")
       );
       setSearchResults([]);
     } finally {
@@ -618,14 +620,14 @@ export default function ProfilePage() {
             <div className="flex items-center gap-3 text-red-700">
               <AlertCircle className="h-5 w-5 flex-shrink-0" />
               <div>
-                <p className="font-semibold">{profileError || "Failed to load profile"}</p>
+                <p className="font-semibold">{profileError || t("profile.errors.loadProfile")}</p>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="mt-2"
                   onClick={() => window.location.reload()}
                 >
-                  Retry
+                  {t("profile.buttons.retry")}
                 </Button>
               </div>
             </div>
@@ -686,7 +688,7 @@ export default function ProfilePage() {
               : "border-transparent text-slate-600 hover:text-slate-800"
           )}
         >
-          Personnel
+          {t("profile.tabs.personal")}
         </button>
         <button
           onClick={() => setActiveTab("equipes")}
@@ -697,7 +699,7 @@ export default function ProfilePage() {
               : "border-transparent text-slate-600 hover:text-slate-800"
           )}
         >
-          Équipes
+          {t("profile.tabs.teams")}
         </button>
         <button
           onClick={() => setActiveTab("statistiques")}
@@ -708,7 +710,7 @@ export default function ProfilePage() {
               : "border-transparent text-slate-600 hover:text-slate-800"
           )}
         >
-          Statistiques
+          {t("profile.tabs.statistics")}
         </button>
       </div>
 
@@ -724,15 +726,15 @@ export default function ProfilePage() {
           {saveSuccess && (
             <div className="flex items-center gap-3 p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 animate-in fade-in">
               <Check className="h-5 w-5 flex-shrink-0" />
-              <p className="text-sm font-medium">Profil mis à jour avec succès!</p>
+              <p className="text-sm font-medium">{t("profile.messages.profileUpdatedSuccess")}</p>
             </div>
           )}
           <Card className="border-none bg-white/90">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Informations personnelles</CardTitle>
+                <CardTitle>{t("profile.sections.personalInfo")}</CardTitle>
                 <CardDescription>
-                  Gérez vos informations de profil et vos préférences
+                  {t("profile.sections.personalInfoDesc")}
                 </CardDescription>
               </div>
               <Button
@@ -743,22 +745,22 @@ export default function ProfilePage() {
                 {isSavingProfile ? (
                   <>
                     <Loader className="mr-2 h-4 w-4 animate-spin" />
-                    Enregistrement...
+                    {t("profile.buttons.saving")}
                   </>
                 ) : isEditing ? (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    Enregistrer
+                    {t("profile.buttons.save")}
                   </>
                 ) : (
-                  "Modifier"
+                  t("profile.buttons.edit")
                 )}
               </Button>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="grid gap-2">
-                  <label className="text-sm font-semibold text-slate-700">Prénom</label>
+                  <label className="text-sm font-semibold text-slate-700">{t("profile.labels.firstName")}</label>
                   <input
                     disabled={!isEditing}
                     value={personalInfo.firstName}
@@ -769,7 +771,7 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <label className="text-sm font-semibold text-slate-700">Nom</label>
+                  <label className="text-sm font-semibold text-slate-700">{t("profile.labels.lastName")}</label>
                   <input
                     disabled={!isEditing}
                     value={personalInfo.lastName}
@@ -783,7 +785,7 @@ export default function ProfilePage() {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="grid gap-2">
-                  <label className="text-sm font-semibold text-slate-700">Email</label>
+                  <label className="text-sm font-semibold text-slate-700">{t("profile.labels.email")}</label>
                   <input
                     disabled={!isEditing}
                     type="email"
@@ -795,7 +797,7 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <label className="text-sm font-semibold text-slate-700">Téléphone</label>
+                  <label className="text-sm font-semibold text-slate-700">{t("profile.labels.phone")}</label>
                   <input
                     disabled={!isEditing}
                     type="tel"
@@ -810,7 +812,7 @@ export default function ProfilePage() {
 
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="grid gap-2">
-                  <label className="text-sm font-semibold text-slate-700">Spécialité</label>
+                  <label className="text-sm font-semibold text-slate-700">{t("profile.labels.specialty")}</label>
                   <input
                     disabled={!isEditing}
                     value={personalInfo.specialty}
@@ -821,7 +823,7 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <label className="text-sm font-semibold text-slate-700">Hôpital</label>
+                  <label className="text-sm font-semibold text-slate-700">{t("profile.labels.hospital")}</label>
                   <input
                     disabled={!isEditing}
                     value={personalInfo.hospital}
@@ -832,7 +834,7 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <label className="text-sm font-semibold text-slate-700">Année / Statut</label>
+                  <label className="text-sm font-semibold text-slate-700">{t("profile.labels.yearStatus")}</label>
                   <select
                     disabled={!isEditing}
                     value={personalInfo.year}
@@ -841,7 +843,7 @@ export default function ProfilePage() {
                     }
                     className="px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 disabled:bg-slate-50 disabled:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                   >
-                    <option value="">Sélectionner un statut</option>
+                    <option value="">{t("profile.placeholders.selectStatus")}</option>
                     {statuses.map((status) => (
                       <option key={status} value={status}>
                         {status}
@@ -853,7 +855,7 @@ export default function ProfilePage() {
 
               <div className="grid gap-4 md:grid-cols-1">
                 <div className="grid gap-2">
-                  <label className="text-sm font-semibold text-slate-700">Adresse</label>
+                  <label className="text-sm font-semibold text-slate-700">{t("profile.labels.address")}</label>
                   <input
                     disabled={!isEditing}
                     value={personalInfo.address}
@@ -866,7 +868,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="grid gap-2">
-                <label className="text-sm font-semibold text-slate-700">Biographie</label>
+                <label className="text-sm font-semibold text-slate-700">{t("profile.labels.bio")}</label>
                 <textarea
                   disabled={!isEditing}
                   value={personalInfo.bio}
@@ -883,13 +885,13 @@ export default function ProfilePage() {
           {/* Settings Section */}
           <Card className="border-none bg-white/90">
             <CardHeader>
-              <CardTitle>Préférences</CardTitle>
+              <CardTitle>{t("profile.sections.preferences")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200">
                 <div>
-                  <p className="font-medium text-slate-900">Notifications par email</p>
-                  <p className="text-sm text-slate-600">Recevoir les mises à jour importantes</p>
+                  <p className="font-medium text-slate-900">{t("profile.labels.emailNotifications")}</p>
+                  <p className="text-sm text-slate-600">{t("profile.labels.emailNotificationsDesc")}</p>
                 </div>
                 <input
                   type="checkbox"
@@ -906,8 +908,8 @@ export default function ProfilePage() {
               </div>
               <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200">
                 <div>
-                  <p className="font-medium text-slate-900">Notifications push</p>
-                  <p className="text-sm text-slate-600">Alertes temps réel sur l'application</p>
+                  <p className="font-medium text-slate-900">{t("profile.labels.pushNotifications")}</p>
+                  <p className="text-sm text-slate-600">{t("profile.labels.pushNotificationsDesc")}</p>
                 </div>
                 <input
                   type="checkbox"
@@ -924,8 +926,8 @@ export default function ProfilePage() {
               </div>
               <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200">
                 <div>
-                  <p className="font-medium text-slate-900">Visibilité du profil</p>
-                  <p className="text-sm text-slate-600">Rendre votre profil visible aux collègues</p>
+                  <p className="font-medium text-slate-900">{t("profile.labels.profileVisibility")}</p>
+                  <p className="text-sm text-slate-600">{t("profile.labels.profileVisibilityDesc")}</p>
                 </div>
                 <input
                   type="checkbox"
@@ -956,7 +958,7 @@ export default function ProfilePage() {
                 <div className="space-y-4">
                   {/* Header */}
                   <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-bold text-slate-900">Mes Équipes ({userTeams.length})</h2>
+                    <h2 className="text-xl font-bold text-slate-900">{t("profile.sections.myTeams", { count: userTeams.length })}</h2>
                   </div>
 
                   {/* Teams List */}
@@ -1021,7 +1023,7 @@ export default function ProfilePage() {
                                       className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition"
                                     >
                                       <Edit2 className="h-4 w-4" />
-                                      Modifier
+                                      {t("profile.buttons.editTeam")}
                                     </button>
                                     <button
                                       onClick={() => {
@@ -1033,7 +1035,7 @@ export default function ProfilePage() {
                                       className="w-full text-left px-4 py-2.5 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2 transition border-t border-slate-200"
                                     >
                                       <Trash2 className="h-4 w-4" />
-                                      Supprimer
+                                      {t("profile.buttons.deleteTeam")}
                                     </button>
                                   </div>
                                 )}
@@ -1062,7 +1064,7 @@ export default function ProfilePage() {
                                   </div>
                                 ))
                               ) : (
-                                <p className="text-xs text-slate-500 text-center py-2">Aucun membre</p>
+                                <p className="text-xs text-slate-500 text-center py-2">{t("profile.messages.noMembers")}</p>
                               )}
                             </div>
                           </div>
@@ -1073,7 +1075,7 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div className="text-center py-12 text-slate-500">
-                  <p className="text-sm">Vous n'êtes membre d'aucune équipe</p>
+                  <p className="text-sm">{t("profile.messages.noTeams")}</p>
                 </div>
               )}
             </div>
@@ -1083,8 +1085,8 @@ export default function ProfilePage() {
               <Card className="border-none bg-white/90 sticky top-20">
                 <CardHeader className="flex items-start justify-between">
                   <div className="flex-1">
-                    <CardTitle>Rechercher des équipes</CardTitle>
-                    <CardDescription>Trouvez et rejoignez d'autres équipes (tapez pour rechercher)</CardDescription>
+                    <CardTitle>{t("profile.sections.searchTeams")}</CardTitle>
+                    <CardDescription>{t("profile.sections.searchTeamsDesc")}</CardDescription>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                   {/* Pending Requests Button */}
@@ -1093,7 +1095,7 @@ export default function ProfilePage() {
                       <button
                         onClick={() => setIsPendingRequestsOpen(!isPendingRequestsOpen)}
                         className="relative p-2 rounded-lg border border-slate-200 hover:bg-amber-50 text-amber-600 transition"
-                        title={`${joinRequests.length} demande(s) en attente`}
+                        title={t("profile.labels.pendingRequests", { count: joinRequests.length })}
                       >
                         <Clock className="h-5 w-5" />
                         {joinRequests.length > 0 && (
@@ -1106,7 +1108,7 @@ export default function ProfilePage() {
                       {/* Pending Requests Dropdown */}
                       {isPendingRequestsOpen && (
                         <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden">
-                        
+
                           {/* Requests List */}
                           <div className="max-h-96 overflow-y-auto">
                             {joinRequests.map((request) => (
@@ -1128,27 +1130,27 @@ export default function ProfilePage() {
                                     onClick={() => handleAcceptRequest(request.id)}
                                     disabled={processingRequestId === request.id}
                                     className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                    title="Accepter"
+                                    title={t("profile.buttons.accept")}
                                   >
                                     {processingRequestId === request.id ? (
                                       <div className="h-4 w-4 rounded-full border-2 border-emerald-300 border-t-emerald-700 animate-spin" />
                                     ) : (
                                       <Check className="h-4 w-4" />
                                     )}
-                                    {processingRequestId === request.id ? "..." : "Accepter"}
+                                    {processingRequestId === request.id ? "..." : t("profile.buttons.accept")}
                                   </button>
                                   <button
                                     onClick={() => handleDeclineRequest(request.id)}
                                     disabled={processingRequestId === request.id}
                                     className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                    title="Refuser"
+                                    title={t("profile.buttons.decline")}
                                   >
                                     {processingRequestId === request.id ? (
                                       <div className="h-4 w-4 rounded-full border-2 border-red-300 border-t-red-700 animate-spin" />
                                     ) : (
                                       <X className="h-4 w-4" />
                                     )}
-                                    {processingRequestId === request.id ? "..." : "Refuser"}
+                                    {processingRequestId === request.id ? "..." : t("profile.buttons.decline")}
                                   </button>
                                 </div>
                               </div>
@@ -1166,7 +1168,7 @@ export default function ProfilePage() {
                       setTeamCreationError(null);
                     }}
                     className="p-2 rounded-lg border border-slate-200 hover:bg-indigo-50 text-indigo-600 transition"
-                    title="Créer une équipe rapidement"
+                    title={t("profile.buttons.quickCreate")}
                   >
                     <Plus className="h-5 w-5" />
                   </button>
@@ -1179,7 +1181,7 @@ export default function ProfilePage() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <input
                       type="text"
-                      placeholder="Rechercher une équipe par nom, hôpital ou service..."
+                      placeholder={t("profile.placeholders.searchTeams")}
                       value={searchTeams}
                       onChange={(e) => setSearchTeams(e.target.value)}
                       onKeyDown={(e) => {
@@ -1194,7 +1196,7 @@ export default function ProfilePage() {
                     onClick={handleSearchTeams}
                     disabled={isSearching || !searchTeams.trim()}
                     className="flex-shrink-0 p-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition"
-                    title="Rechercher"
+                    title={t("profile.buttons.search")}
                   >
                     {isSearching ? (
                       <Loader className="h-5 w-5 animate-spin" />
@@ -1209,7 +1211,7 @@ export default function ProfilePage() {
                   <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
                     <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-medium text-red-900">Erreur de recherche</p>
+                      <p className="font-medium text-red-900">{t("profile.errors.searchTitle")}</p>
                       <p className="text-sm text-red-700">{searchError}</p>
                     </div>
                   </div>
@@ -1249,12 +1251,12 @@ export default function ProfilePage() {
                             <div>
                               <p className="font-medium text-slate-900">{team.name}</p>
                               <p className="text-sm text-slate-600">{team.description}</p>
-                              <p className="text-xs text-slate-500 mt-2">{team.members} membres</p>
+                              <p className="text-xs text-slate-500 mt-2">{team.members} {t("profile.labels.members")}</p>
                             </div>
                             {sentRequests.has(team.id) ? (
                               <Badge className="bg-amber-100 text-amber-700 border-amber-200 h-fit flex-shrink-0">
                                 <Check className="h-3 w-3 mr-1" />
-                                Envoyé
+                                {t("profile.labels.sent")}
                               </Badge>
                             ) : (
                               <Button
@@ -1267,12 +1269,12 @@ export default function ProfilePage() {
                                 {joiningTeamId === team.id ? (
                                   <>
                                     <Loader className="h-3 w-3 mr-1 animate-spin" />
-                                    Envoi...
+                                    {t("profile.buttons.sending")}
                                   </>
                                 ) : (
                                   <>
                                     <Plus className="h-3 w-3 mr-1" />
-                                    Rejoindre
+                                    {t("profile.buttons.join")}
                                   </>
                                 )}
                               </Button>
@@ -1283,8 +1285,8 @@ export default function ProfilePage() {
                     ) : (
                       <div className="text-center py-12 text-slate-500">
                         <Search className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                        <p className="font-medium text-slate-900 mb-1">Aucune équipe trouvée</p>
-                        <p className="text-sm">Essayez une autre recherche ou créez une nouvelle équipe</p>
+                        <p className="font-medium text-slate-900 mb-1">{t("profile.messages.noTeamsFound")}</p>
+                        <p className="text-sm">{t("profile.messages.noTeamsFoundDesc")}</p>
                       </div>
                     )}
                   </div>
@@ -1294,8 +1296,8 @@ export default function ProfilePage() {
                 {!hasSearched && (
                   <div className="text-center py-12 text-slate-500">
                     <Search className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                    <p className="font-medium text-slate-900 mb-1">Cherchez une équipe</p>
-                    <p className="text-sm">Entrez un nom, un hôpital ou un service pour commencer</p>
+                    <p className="font-medium text-slate-900 mb-1">{t("profile.messages.searchTeams")}</p>
+                    <p className="text-sm">{t("profile.messages.searchTeamsDesc")}</p>
                   </div>
                 )}
               </CardContent>
@@ -1308,7 +1310,7 @@ export default function ProfilePage() {
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
               <Card className="w-full max-w-md border-none shadow-xl">
                 <CardHeader className="relative">
-                  <CardTitle>Créer une nouvelle équipe</CardTitle>
+                  <CardTitle>{t("profile.modals.createTeamTitle")}</CardTitle>
                   <button
                     onClick={() => {
                       setIsCreateTeamOpen(false);
@@ -1336,7 +1338,7 @@ export default function ProfilePage() {
                   {isCreatingTeam && (
                     <div className="flex flex-col items-center justify-center py-8 gap-3">
                       <Loader className="h-8 w-8 text-indigo-600 animate-spin" />
-                      <p className="text-sm text-slate-600 font-medium">Création de l'équipe...</p>
+                      <p className="text-sm text-slate-600 font-medium">{t("profile.messages.creatingTeam")}</p>
                     </div>
                   )}
 
@@ -1346,7 +1348,7 @@ export default function ProfilePage() {
                       <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center">
                         <Check className="h-6 w-6 text-emerald-600" />
                       </div>
-                      <p className="text-sm text-slate-600 font-medium">Équipe créée avec succès!</p>
+                      <p className="text-sm text-slate-600 font-medium">{t("profile.messages.teamCreatedSuccess")}</p>
                     </div>
                   )}
 
@@ -1354,35 +1356,35 @@ export default function ProfilePage() {
                   {!isCreatingTeam && !teamCreated && (
                     <>
                       <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">Nom de l'équipe</label>
+                        <label className="text-sm font-semibold text-slate-700">{t("profile.labels.teamName")}</label>
                         <input
                           type="text"
                           value={selectedTeamName}
                           onChange={(e) => setSelectedTeamName(e.target.value)}
-                          placeholder="Ex. Chirurgie B"
+                          placeholder={t("profile.placeholders.teamNameExample")}
                           className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">Hôpital</label>
+                        <label className="text-sm font-semibold text-slate-700">{t("profile.labels.hospital")}</label>
                         <input
                           value={selectedHospital}
-                          placeholder="hôpital"
+                          placeholder={t("profile.placeholders.hospital")}
                           onChange={(e) => setSelectedHospital(e.target.value)}
                           className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                       
+
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">Service</label>
+                        <label className="text-sm font-semibold text-slate-700">{t("profile.labels.service")}</label>
                         <select
                           value={selectedService}
                           onChange={(e) => setSelectedService(e.target.value)}
                           className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                         >
-                          <option value="">Sélectionner un service</option>
+                          <option value="">{t("profile.placeholders.selectService")}</option>
                           {services.map((service) => (
                             <option key={service.id} value={service.name}>
                               {service.name}
@@ -1402,7 +1404,7 @@ export default function ProfilePage() {
                           }}
                           className="flex-1"
                         >
-                          Annuler
+                          {t("common.buttons.cancel")}
                         </Button>
                         <Button
                           variant="primary"
@@ -1413,10 +1415,10 @@ export default function ProfilePage() {
                           {isCreatingTeam ? (
                             <>
                               <Loader className="mr-2 h-4 w-4 animate-spin" />
-                              Création...
+                              {t("profile.messages.creating")}
                             </>
                           ) : (
-                            "Créer l'équipe"
+                            t("profile.buttons.createTeam")
                           )}
                         </Button>
                       </div>
@@ -1432,7 +1434,7 @@ export default function ProfilePage() {
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
               <Card className="w-full max-w-2xl border-none shadow-xl max-h-[90vh] overflow-y-auto">
                 <CardHeader className="relative">
-                  <CardTitle>Modifier l'équipe</CardTitle>
+                  <CardTitle>{t("profile.modals.editTeamTitle")}</CardTitle>
                   <button
                     onClick={() => {
                       setIsEditTeamOpen(false);
@@ -1459,35 +1461,35 @@ export default function ProfilePage() {
 
                   {/* Team Details Section */}
                   <div className="space-y-4">
-                    <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">Détails de l'équipe</h3>
+                    <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">{t("profile.sections.teamDetails")}</h3>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700">Nom de l'équipe</label>
+                      <label className="text-sm font-semibold text-slate-700">{t("profile.labels.teamName")}</label>
                       <input
                         type="text"
                         value={editTeamName}
                         onChange={(e) => setEditTeamName(e.target.value)}
-                        placeholder="Ex. Chirurgie B"
+                        placeholder={t("profile.placeholders.teamNameExample")}
                         className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">Hôpital</label>
+                        <label className="text-sm font-semibold text-slate-700">{t("profile.labels.hospital")}</label>
                         <input
                           value={editTeamHospital}
-                          placeholder="Nom de l'hôpital"
+                          placeholder={t("profile.placeholders.hospitalName")}
                           onChange={(e) => setEditTeamHospital(e.target.value)}
                           className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">Service</label>
+                        <label className="text-sm font-semibold text-slate-700">{t("profile.labels.service")}</label>
                         <input
                           value={editTeamService}
-                          placeholder="Nom du service"
+                          placeholder={t("profile.placeholders.serviceName")}
                           onChange={(e) => setEditTeamService(e.target.value)}
                           className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                         />
@@ -1499,11 +1501,11 @@ export default function ProfilePage() {
                   <div className="space-y-4">
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                       <p className="text-xs text-blue-800">
-                        <span className="font-semibold">💡 Astuce:</span> Les membres non sélectionnés seront supprimés de l'équipe.
+                        {t("profile.messages.memberWarning")}
                       </p>
                     </div>
 
-                    <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">Membres</h3>
+                    <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">{t("profile.sections.members")}</h3>
 
                     <div className="space-y-2 max-h-64 overflow-y-auto">
                       {userTeams.find(t => t.id === editingTeamId)?.teamMembers?.map((member: any) => (
@@ -1539,7 +1541,7 @@ export default function ProfilePage() {
                                   ? "bg-amber-100 text-amber-800"
                                   : "bg-blue-100 text-blue-800"
                               }`}>
-                                {member.role === "Admin" ? "⭐ Admin" : "👤 Membre"}
+                                {member.role === "Admin" ? t("profile.labels.admin") : t("profile.labels.member")}
                               </span>
                             </div>
                           </div>
@@ -1547,7 +1549,7 @@ export default function ProfilePage() {
                           {/* Will be deleted indicator */}
                           {!selectedMembers.has(member.id) && (
                             <div className="flex-shrink-0 px-2 py-1 rounded bg-red-50 border border-red-200">
-                              <p className="text-xs text-red-700 font-semibold">À supprimer</p>
+                              <p className="text-xs text-red-700 font-semibold">{t("profile.labels.toDelete")}</p>
                             </div>
                           )}
                         </div>
@@ -1569,7 +1571,7 @@ export default function ProfilePage() {
                       }}
                       className="flex-1"
                     >
-                      Annuler
+                      {t("common.buttons.cancel")}
                     </Button>
                     <Button
                       variant="primary"
@@ -1592,7 +1594,7 @@ export default function ProfilePage() {
                           });
 
                           if (!response.ok) {
-                            throw new Error("Failed to update team");
+                            throw new Error(t("profile.errors.updateTeam"));
                           }
 
                           // Refresh teams list
@@ -1623,7 +1625,7 @@ export default function ProfilePage() {
                           setEditingTeamId(null);
                         } catch (error) {
                           console.error("Error updating team:", error);
-                          setTeamUpdateError("Erreur lors de la modification de l'équipe");
+                          setTeamUpdateError(t("profile.errors.updateTeamError"));
                         } finally {
                           setIsUpdatingTeam(false);
                         }
@@ -1634,10 +1636,10 @@ export default function ProfilePage() {
                       {isUpdatingTeam ? (
                         <>
                           <Loader className="mr-2 h-4 w-4 animate-spin" />
-                          Modification...
+                          {t("profile.buttons.modifying")}
                         </>
                       ) : (
-                        "Enregistrer les modifications"
+                        t("profile.buttons.saveChanges")
                       )}
                     </Button>
                   </div>
@@ -1651,14 +1653,14 @@ export default function ProfilePage() {
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
               <Card className="w-full max-w-md border-none shadow-xl">
                 <CardHeader>
-                  <CardTitle>Supprimer l'équipe</CardTitle>
+                  <CardTitle>{t("profile.modals.deleteTeamTitle")}</CardTitle>
                 </CardHeader>
 
                 <CardContent className="space-y-4">
                   <div className="flex items-start gap-3 p-3 rounded-lg bg-red-50 border border-red-200">
                     <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
                     <p className="text-sm text-red-800">
-                      <span className="font-semibold">Attention:</span> Cette action est irreversible. L'équipe et toutes ses données seront supprimées définitivement.
+                      {t("profile.messages.deleteWarning")}
                     </p>
                   </div>
 
@@ -1670,7 +1672,7 @@ export default function ProfilePage() {
                   )}
 
                   <p className="text-sm text-slate-700">
-                    Êtes-vous sûr de vouloir supprimer <span className="font-semibold">"{userTeams.find(t => t.id === deletingTeamId)?.name}"</span>?
+                    {t("profile.messages.deleteConfirm")} <span className="font-semibold">"{userTeams.find(t => t.id === deletingTeamId)?.name}"</span>?
                   </p>
                 </CardContent>
 
@@ -1685,7 +1687,7 @@ export default function ProfilePage() {
                     disabled={isDeletingTeam}
                     className="flex-1"
                   >
-                    Annuler
+                    {t("common.buttons.cancel")}
                   </Button>
                   <Button
                     variant="primary"
@@ -1701,7 +1703,7 @@ export default function ProfilePage() {
                         });
 
                         if (!response.ok) {
-                          throw new Error("Failed to delete team");
+                          throw new Error(t("profile.errors.deleteTeam"));
                         }
 
                         // Remove team from list
@@ -1710,7 +1712,7 @@ export default function ProfilePage() {
                         setDeletingTeamId(null);
                       } catch (error) {
                         console.error("Error deleting team:", error);
-                        setTeamDeleteError("Erreur lors de la suppression de l'équipe");
+                        setTeamDeleteError(t("profile.errors.deleteTeamError"));
                       } finally {
                         setIsDeletingTeam(false);
                       }
@@ -1721,10 +1723,10 @@ export default function ProfilePage() {
                     {isDeletingTeam ? (
                       <>
                         <Loader className="mr-2 h-4 w-4 animate-spin" />
-                        Suppression...
+                        {t("profile.buttons.deleting")}
                       </>
                     ) : (
-                      "Supprimer"
+                      t("profile.buttons.delete")
                     )}
                   </Button>
                 </div>
@@ -1742,12 +1744,12 @@ export default function ProfilePage() {
             <Card className="border-none bg-white/90">
               <CardContent className="pt-6">
                 <PieChart
-                  title="Répartition des consultations"
+                  title={t("profile.charts.consultationBreakdown")}
                   data={[
-                    { label: "Consultations", value: 45, color: "#4f46e5" },
-                    { label: "Suivis", value: 30, color: "#06b6d4" },
-                    { label: "Urgences", value: 15, color: "#f59e0b" },
-                    { label: "Autres", value: 10, color: "#8b5cf6" },
+                    { label: t("profile.charts.labels.consultations"), value: 45, color: "#4f46e5" },
+                    { label: t("profile.charts.labels.followups"), value: 30, color: "#06b6d4" },
+                    { label: t("profile.charts.labels.emergencies"), value: 15, color: "#f59e0b" },
+                    { label: t("profile.charts.labels.others"), value: 10, color: "#8b5cf6" },
                   ]}
                 />
               </CardContent>
@@ -1756,12 +1758,12 @@ export default function ProfilePage() {
             <Card className="border-none bg-white/90">
               <CardContent className="pt-6">
                 <PieChart
-                  title="Répartition par type d'opération"
+                  title={t("profile.charts.operationBreakdown")}
                   data={[
-                    { label: "Digestive", value: 40, color: "#ef4444" },
-                    { label: "Vasculaire", value: 25, color: "#0ea5e9" },
-                    { label: "Urologie", value: 20, color: "#8b5cf6" },
-                    { label: "Autre", value: 15, color: "#f59e0b" },
+                    { label: t("profile.charts.operationTypes.digestive"), value: 40, color: "#ef4444" },
+                    { label: t("profile.charts.operationTypes.vascular"), value: 25, color: "#0ea5e9" },
+                    { label: t("profile.charts.operationTypes.urology"), value: 20, color: "#8b5cf6" },
+                    { label: t("profile.charts.operationTypes.other"), value: 15, color: "#f59e0b" },
                   ]}
                 />
               </CardContent>
@@ -1773,15 +1775,15 @@ export default function ProfilePage() {
             <Card className="border-none bg-white/90">
               <CardContent className="pt-6">
                 <BarChart
-                  title="Interventions par mois (6 derniers mois)"
-                  yLabel="Nombre d'interventions"
+                  title={t("profile.charts.monthlyInterventions")}
+                  yLabel={t("profile.charts.interventionsCount")}
                   data={[
-                    { label: "Juil", value: 12 },
-                    { label: "Août", value: 15 },
-                    { label: "Sept", value: 18 },
-                    { label: "Oct", value: 14 },
-                    { label: "Nov", value: 16 },
-                    { label: "Déc", value: 20 },
+                    { label: t("profile.charts.months.jul"), value: 12 },
+                    { label: t("profile.charts.months.aug"), value: 15 },
+                    { label: t("profile.charts.months.sep"), value: 18 },
+                    { label: t("profile.charts.months.oct"), value: 14 },
+                    { label: t("profile.charts.months.nov"), value: 16 },
+                    { label: t("profile.charts.months.dec"), value: 20 },
                   ]}
                 />
               </CardContent>
@@ -1790,13 +1792,13 @@ export default function ProfilePage() {
             <Card className="border-none bg-white/90">
               <CardContent className="pt-6">
                 <BarChart
-                  title="Taux de succès par type"
-                  yLabel="Taux de succès (%)"
+                  title={t("profile.charts.successRate")}
+                  yLabel={t("profile.charts.successRatePercent")}
                   data={[
-                    { label: "Digest", value: 98 },
-                    { label: "Vasc", value: 96 },
-                    { label: "Urol", value: 97 },
-                    { label: "Trauma", value: 95 },
+                    { label: t("profile.charts.operationAbbr.digest"), value: 98 },
+                    { label: t("profile.charts.operationAbbr.vasc"), value: 96 },
+                    { label: t("profile.charts.operationAbbr.urol"), value: 97 },
+                    { label: t("profile.charts.operationAbbr.trauma"), value: 95 },
                   ]}
                 />
               </CardContent>
@@ -1806,12 +1808,12 @@ export default function ProfilePage() {
           {/* Progress Bars */}
           <Card className="border-none bg-white/90">
             <CardHeader>
-              <CardTitle>Objectifs mensuels</CardTitle>
+              <CardTitle>{t("profile.sections.monthlyGoals")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-slate-700">Consultations</span>
+                  <span className="text-sm font-medium text-slate-700">{t("profile.labels.consultations")}</span>
                   <span className="text-sm text-slate-600">45/50</span>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-2">
@@ -1824,7 +1826,7 @@ export default function ProfilePage() {
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-slate-700">Interventions</span>
+                  <span className="text-sm font-medium text-slate-700">{t("profile.labels.interventions")}</span>
                   <span className="text-sm text-slate-600">28/30</span>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-2">
@@ -1837,7 +1839,7 @@ export default function ProfilePage() {
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-slate-700">Documentation</span>
+                  <span className="text-sm font-medium text-slate-700">{t("profile.labels.documentation")}</span>
                   <span className="text-sm text-slate-600">82/100</span>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-2">
@@ -1850,7 +1852,7 @@ export default function ProfilePage() {
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-slate-700">Formations</span>
+                  <span className="text-sm font-medium text-slate-700">{t("profile.labels.training")}</span>
                   <span className="text-sm text-slate-600">15/20</span>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-2">

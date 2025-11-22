@@ -42,9 +42,38 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Get user's teams and their information
+    const userTeams = await prisma.team.findMany({
+      where: {
+        OR: [
+          { adminId: parseInt(userId) },
+          { members: { some: { id: parseInt(userId) } } },
+        ],
+      },
+      include: { members: true },
+    });
+
+    // Collect all teammate IDs and team names
+    const userIds = new Set<number>();
+    const teamNames = new Set<string>();
+    userIds.add(parseInt(userId));
+    userTeams.forEach((team) => {
+      teamNames.add(team.name);
+      team.members.forEach((member) => {
+        userIds.add(member.id);
+      });
+    });
+
     const avis = await prisma.avis.findMany({
       where: {
-        creatorId: parseInt(userId),
+        OR: [
+          // Avis created by the user
+          { creatorId: parseInt(userId) },
+          // Avis created by teammates
+          { creatorId: { in: Array.from(userIds) } },
+          // Avis destined for user's teams
+          { destination_specialty: { in: Array.from(teamNames) } },
+        ],
       },
       include: {
         patient: true,
@@ -185,11 +214,7 @@ export async function POST(request: NextRequest) {
 
     // If patientId exists, connect to existing patient
     if (avisData.patientId) {
-      createData.patient = {
-        connect: {
-          id: avisData.patientId,
-        },
-      };
+      createData.patientId = avisData.patientId;
     }
     else{
       createData.patientName = avisData.patientName;

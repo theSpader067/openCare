@@ -18,9 +18,13 @@ export type CompteRendu = {
   date: string;
   duration: number;
   operators: Operator[];
+  participants?: Operator[];
   details: string;
   postNotes: string;
   patient?: Patient;
+  patientName?: string;
+  patientAge?: string;
+  patientHistory?: string;
   createdAt: string;
   updatedAt: string;
   createdBy: string;
@@ -42,6 +46,7 @@ export async function createCompteRendu({
   details,
   postNotes,
   operatorIds = [],
+  participantIds = [],
 }: {
   title: string;
   type: string;
@@ -54,6 +59,7 @@ export async function createCompteRendu({
   details: string;
   postNotes: string;
   operatorIds?: (number | string)[];
+  participantIds?: (number | string)[];
 }): Promise<{ success: boolean; data?: CompteRendu; error?: string }> {
   try {
     const response = await fetch("/api/comptes-rendus", {
@@ -73,6 +79,7 @@ export async function createCompteRendu({
         details,
         postNotes,
         operatorIds,
+        participantIds,
       }),
     });
 

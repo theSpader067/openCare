@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ArrowDown, ArrowUp, Calendar, MailPlus, MessageSquare, Plus, Send, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataListLayout } from "@/components/document/DataListLayout";
 import { PatientModal } from "@/components/document/PatientModal";
 import type { DocumentItem, Patient } from "@/types/document";
-import { mockPatients, mockAvis } from "@/data/avis/avis-data";
+import { mockAvis } from "@/data/avis/avis-data";
 import { useSession } from "next-auth/react";
 import { createAvis, fetchAvis, updateAvisAnswer, type AvisResponse } from "@/lib/api/avis";
+import "quill/dist/quill.snow.css";
 
 type Avis = {
   id: string;
@@ -35,6 +36,133 @@ function formatDate(dateString: string) {
   }).format(new Date(dateString));
 }
 
+// Helper function to check if Quill editor has actual content (not just HTML tags)
+function hasQuillContent(html: string): boolean {
+  if (!html) return false;
+  const temp = document.createElement("div");
+  temp.innerHTML = html;
+  const text = temp.innerText || temp.textContent || "";
+  return text.trim().length > 0;
+}
+
+// Quill editor component for opinion field
+function QuillOpinionEditor({ value, onChange, placeholder }: { value: string; onChange: (val: string) => void; placeholder?: string }) {
+  const editorRef = useRef<HTMLDivElement>(null);
+  const quillRef = useRef<any>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || !editorRef.current) return;
+
+    import("quill").then((Quill) => {
+      if (!editorRef.current || quillRef.current) return;
+
+      const quill = new Quill.default(editorRef.current, {
+        theme: "snow",
+        placeholder: placeholder || "Observations cliniques et diagnostic…",
+        modules: {
+          toolbar: [
+            ["bold", "italic", "underline"],
+            ["list", { "list": "ordered" }],
+          ],
+        },
+        formats: ["bold", "italic", "underline", "list"],
+      });
+
+      quillRef.current = quill;
+
+      if (value) {
+        quill.root.innerHTML = value;
+      }
+
+      quill.on("text-change", () => {
+        onChange(quill.root.innerHTML);
+      });
+
+      return () => {
+        quillRef.current = null;
+      };
+    });
+  }, [mounted]);
+
+  useEffect(() => {
+    if (quillRef.current && value !== undefined && quillRef.current.root.innerHTML !== value) {
+      quillRef.current.root.innerHTML = value;
+    }
+  }, [value]);
+
+  if (!mounted) {
+    return (
+      <div className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500">
+        Chargement de l'éditeur…
+      </div>
+    );
+  }
+
+  return (
+    <div className="quill-opinion-editor">
+      <div ref={editorRef} />
+      <style jsx global>{`
+        .quill-opinion-editor .ql-container {
+          border: none !important;
+          font-family: inherit;
+        }
+
+        .quill-opinion-editor .ql-editor {
+          min-height: 150px;
+          padding: 0.75rem;
+          font-size: 0.875rem;
+          line-height: 1.5;
+          color: rgb(15 23 42);
+          border: 1px solid rgb(226 232 240);
+          border-radius: 0.75rem;
+        }
+
+        .quill-opinion-editor .ql-editor.ql-blank::before {
+          color: rgb(148 163 184);
+          font-style: normal;
+          left: 0.75rem;
+        }
+
+        .quill-opinion-editor .ql-toolbar {
+          border: 1px solid rgb(226 232 240);
+          border-bottom: none;
+          border-radius: 0.75rem 0.75rem 0 0;
+          background-color: rgb(248 250 252);
+        }
+
+        .quill-opinion-editor .ql-toolbar button {
+          color: rgb(100 116 139);
+        }
+
+        .quill-opinion-editor .ql-toolbar button:hover,
+        .quill-opinion-editor .ql-toolbar button.ql-active {
+          color: rgb(79 70 229);
+        }
+
+        .quill-opinion-editor {
+          border-radius: 0.75rem;
+          overflow: hidden;
+          border: 1px solid rgb(226 232 240);
+        }
+
+        .quill-opinion-editor:focus-within {
+          outline: none;
+          box-shadow: 0 0 0 2px rgb(199 210 254);
+        }
+
+        .quill-opinion-editor .ql-editor {
+          border-radius: 0 0 0.75rem 0.75rem;
+        }
+      `}</style>
+    </div>
+  );
+}
+
 export default function AvisPage() {
   const { t } = useTranslation();
   const [avis, setAvis] = useState<Avis[]>([]);
@@ -50,7 +178,9 @@ export default function AvisPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [responseText, setResponseText] = useState("");
   const [isSendingResponse, setIsSendingResponse] = useState(false);
-  
+  const [accessiblePatients, setAccessiblePatients] = useState<Patient[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [createForm, setCreateForm] = useState({
     date: new Date().toISOString().split("T")[0],
     patient: null as Patient | null,
@@ -88,6 +218,7 @@ export default function AvisPage() {
   // Fetch avis from backend on component mount
   useEffect(() => {
     const loadAvis = async () => {
+      setIsLoading(true);
       try {
         const response = await fetchAvis();
         const avisList = response.map((av: any) => ({
@@ -116,6 +247,8 @@ export default function AvisPage() {
         console.error("Error loading avis:", error);
         // Fallback to empty list on error
         setAvis([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -123,6 +256,32 @@ export default function AvisPage() {
       loadAvis();
     }
   }, [session?.user]);
+
+  // Load accessible patients from API
+  useEffect(() => {
+    const loadAccessiblePatients = async () => {
+      try {
+        const response = await fetch("/api/patients", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        const result = await response.json();
+
+        if (result.success && Array.isArray(result.data)) {
+          setAccessiblePatients(result.data);
+        } else {
+          setAccessiblePatients([]);
+        }
+      } catch (error) {
+        console.error("Error loading patients:", error);
+        setAccessiblePatients([]);
+      }
+    };
+
+    loadAccessiblePatients();
+  }, []);
 
   const filteredAvis = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -342,7 +501,7 @@ export default function AvisPage() {
     createForm.date &&
     createForm.patientSource &&
     createForm.specialty &&
-    createForm.opinion;
+    hasQuillContent(createForm.opinion);
   
     if (!session) return null;
 
@@ -502,17 +661,15 @@ export default function AvisPage() {
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
           {t("avis.forms.opinion")}
         </label>
-        <textarea
+        <QuillOpinionEditor
           value={createForm.opinion}
-          onChange={(e) =>
+          onChange={(value) =>
             setCreateForm((prev) => ({
               ...prev,
-              opinion: e.target.value,
+              opinion: value,
             }))
           }
           placeholder={t("avis.forms.opinionPlaceholder")}
-          rows={6}
-          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
         />
       </div>
     </div>
@@ -593,9 +750,10 @@ export default function AvisPage() {
         <header className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
           {t("avis.sections.observation")}
         </header>
-        <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
-          {activeAvi.opinion}
-        </p>
+        <div
+          className="text-sm leading-relaxed text-slate-700 prose prose-sm max-w-none"
+          dangerouslySetInnerHTML={{ __html: activeAvi.opinion }}
+        />
       </section>
 
       {/* Response Section - Only for Incoming Avis */}
@@ -676,9 +834,10 @@ export default function AvisPage() {
           )}
         </div>
       )}
-      <p className="mt-3 text-sm text-slate-600 line-clamp-2">
-        {avi.opinion}
-      </p>
+      <div
+        className="mt-3 text-sm text-slate-600 line-clamp-2 prose prose-sm max-w-none"
+        dangerouslySetInnerHTML={{ __html: avi.opinion }}
+      />
       {avi.direction === "incoming" && avi.response && (
         <div className="mt-3 rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-xs">
           <p className="font-semibold text-green-700">{t("avis.sections.responseSent")}</p>
@@ -763,6 +922,7 @@ export default function AvisPage() {
         emptyDescription={t("avis.empty.description")}
         searchPlaceholder={t("avis.searchPlaceholder")}
         isSubmitting={isSubmitting}
+        isLoading={isLoading}
         createTitle={t("avis.modals.createTitle")}
         createDescription={t("avis.modals.createDescription")}
         saveButtonText={t("avis.buttons.save")}
@@ -773,7 +933,7 @@ export default function AvisPage() {
       <PatientModal
         isOpen={showPatientModal}
         onClose={() => setShowPatientModal(false)}
-        patients={mockPatients}
+        patients={accessiblePatients}
         onSelectPatient={handleSelectPatient}
         newPatientFields={["fullName","age", "histoire"]}
         onCreatePatient={handleCreateNewPatient}

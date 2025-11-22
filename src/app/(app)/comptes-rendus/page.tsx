@@ -1,16 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useSession } from "next-auth/react";
 import { Calendar, FilePlus, Stethoscope, User, X, Plus, MoreVertical, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataListLayout } from "@/components/document/DataListLayout";
 import { PatientModal } from "@/components/document/PatientModal";
 import type { Patient } from "@/types/document";
-import { operationTypes, teamMembers, mockPatients } from "@/data/comptes-rendus/comptes-rendus-data";
+import { operationTypes, mockPatients } from "@/data/comptes-rendus/comptes-rendus-data";
 import { createCompteRendu, getComptesRendus, deleteCompteRendu } from "@/lib/api/comptes-rendus";
 import type { DocumentItem } from "@/types/document";
+import "quill/dist/quill.snow.css";
 
 type Operation = {
   id: string;
@@ -19,6 +21,7 @@ type Operation = {
   date: string;
   duration: number;
   operators: Operator[];
+  participants?: Operator[];
   details: string;
   postNotes: string;
   patient?: Patient;
@@ -41,6 +44,120 @@ type TeamMember = {
   role: string;
 };
 
+// Simple Quill editor component for details field
+function QuillDetailsEditor({ value, onChange, placeholder }: { value: string; onChange: (val: string) => void; placeholder?: string }) {
+  const editorRef = useRef<HTMLDivElement>(null);
+  const quillRef = useRef<any>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || !editorRef.current) return;
+
+    import("quill").then((Quill) => {
+      if (!editorRef.current || quillRef.current) return;
+
+      const quill = new Quill.default(editorRef.current, {
+        theme: "snow",
+        placeholder: placeholder || "Déroulement de l'intervention, observations, incidents…",
+        modules: {
+          toolbar: [
+            ["bold", "italic", "underline"],
+            ["list", { "list": "ordered" }],
+          ],
+        },
+        formats: ["bold", "italic", "underline", "list"],
+      });
+
+      quillRef.current = quill;
+
+      if (value) {
+        quill.root.innerHTML = value;
+      }
+
+      quill.on("text-change", () => {
+        onChange(quill.root.innerHTML);
+      });
+
+      return () => {
+        quillRef.current = null;
+      };
+    });
+  }, [mounted, placeholder]);
+
+  useEffect(() => {
+    if (quillRef.current && value !== undefined && quillRef.current.root.innerHTML !== value) {
+      quillRef.current.root.innerHTML = value;
+    }
+  }, [value]);
+
+  if (!mounted) {
+    return (
+      <div className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500">
+        Chargement de l'éditeur…
+      </div>
+    );
+  }
+
+  return (
+    <div className="quill-details-editor">
+      <div ref={editorRef} />
+      <style jsx global>{`
+        .quill-details-editor .ql-container {
+          border: none !important;
+          font-family: inherit;
+        }
+
+        .quill-details-editor .ql-editor {
+          min-height: 150px;
+          padding: 0.75rem;
+          font-size: 0.875rem;
+          line-height: 1.5;
+          color: rgb(15 23 42);
+          border: 1px solid rgb(226 232 240);
+          border-radius: 0.75rem;
+        }
+
+        .quill-details-editor .ql-editor.ql-blank::before {
+          color: rgb(148 163 184);
+          font-style: normal;
+          left: 0.75rem;
+        }
+
+        .quill-details-editor .ql-toolbar {
+          border: 1px solid rgb(226 232 240);
+          border-bottom: none;
+          border-radius: 0.75rem 0.75rem 0 0;
+          background-color: rgb(248 250 252);
+        }
+
+        .quill-details-editor .ql-toolbar button {
+          color: rgb(100 116 139);
+        }
+
+        .quill-details-editor .ql-toolbar button:hover,
+        .quill-details-editor .ql-toolbar button.ql-active {
+          color: rgb(79 70 229);
+        }
+
+        .quill-details-editor {
+          border-radius: 0.75rem;
+          overflow: hidden;
+          border: 1px solid rgb(226 232 240);
+          focus-within: ring(2) ring-indigo-200);
+        }
+
+        .quill-details-editor .ql-editor {
+          border-radius: 0 0 0.75rem 0.75rem;
+        }
+      `}</style>
+    </div>
+  );
+}
+
 function formatDate(dateString: string) {
   return new Intl.DateTimeFormat("fr-FR", {
     day: "2-digit",
@@ -51,6 +168,7 @@ function formatDate(dateString: string) {
 
 export default function ComptesRendusPage() {
   const { t } = useTranslation();
+  const { data: session } = useSession();
   const [operations, setOperations] = useState<Operation[]>([]);
   const [activeOperationId, setActiveOperationId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -65,6 +183,8 @@ export default function ComptesRendusPage() {
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [teammates, setTeammates] = useState<TeamMember[]>([]);
+  const [accessiblePatients, setAccessiblePatients] = useState<Patient[]>([]);
 
   // Load comptes-rendus from API on mount
   useEffect(() => {
@@ -106,6 +226,84 @@ export default function ComptesRendusPage() {
     loadOperations();
   }, []);
 
+  // Load teammates from teams API
+  useEffect(() => {
+    const loadTeammates = async () => {
+      try {
+        const response = await fetch("/api/teams", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          // Collect all teammates from all user's teams
+          const allTeammates = new Set<string>();
+          const teammateMaps = new Map<string, TeamMember>();
+
+          result.data.forEach((team: any) => {
+            if (team.members && Array.isArray(team.members)) {
+              team.members.forEach((member: any) => {
+                const firstName = member.firstName?.trim() || "";
+                const lastName = member.lastName?.trim() || "";
+                const username = member.username?.trim() || "";
+                const teammateName = (firstName && lastName) ? `${firstName} ${lastName}` : username;
+                const id = String(member.id);
+
+                if (teammateName && !allTeammates.has(id)) {
+                  allTeammates.add(id);
+                  teammateMaps.set(id, {
+                    id,
+                    name: teammateName,
+                    role: member.specialty || "Équipe médicale",
+                  });
+                }
+              });
+            }
+          });
+
+          setTeammates(Array.from(teammateMaps.values()));
+        } else {
+          // Fallback to empty teammates if API fails
+          setTeammates([]);
+        }
+      } catch (error) {
+        console.error("Error loading teammates:", error);
+        setTeammates([]);
+      }
+    };
+
+    loadTeammates();
+  }, []);
+
+  // Load patients that user has access to
+  useEffect(() => {
+    const loadAccessiblePatients = async () => {
+      try {
+        const response = await fetch("/api/patients", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        const result = await response.json();
+
+        if (result.success && Array.isArray(result.data)) {
+          setAccessiblePatients(result.data);
+        } else {
+          setAccessiblePatients([]);
+        }
+      } catch (error) {
+        console.error("Error loading patients:", error);
+        setAccessiblePatients([]);
+      }
+    };
+
+    loadAccessiblePatients();
+  }, []);
+
   const [createForm, setCreateForm] = useState({
     title: "",
     type: "",
@@ -120,6 +318,30 @@ export default function ComptesRendusPage() {
     details: "",
     postNotes: "",
   });
+
+  // Helper to get current user as an operator
+  const getCurrentUserOperator = (): Operator | null => {
+    if (!session?.user) return null;
+    const user = session.user as any;
+    return {
+      id: String(user.id || user.username || `user-${Date.now()}`),
+      name: `${user.firstName || user.name || ""}`.trim() || user.username || "Vous",
+      role: user.specialty || "Équipe médicale",
+    };
+  };
+
+  // Add current user to surgical team when session is loaded
+  useEffect(() => {
+    if (session?.user && createForm.operators.length === 0) {
+      const currentUser = getCurrentUserOperator();
+      if (currentUser) {
+        setCreateForm((prev) => ({
+          ...prev,
+          operators: [currentUser],
+        }));
+      }
+    }
+  }, [(session?.user as any)?.id]);
 
   const userOperations = useMemo(() => {
     return operations.filter((op) => op.createdBy === "Vous");
@@ -210,12 +432,13 @@ export default function ComptesRendusPage() {
   const handleOpenCreate = () => {
     setIsCreateMode(true);
     setActiveOperationId(null);
+    const currentUserOperator = getCurrentUserOperator();
     setCreateForm({
       title: "",
       type: "",
       date: new Date().toISOString().split("T")[0],
       duration: "",
-      operators: [],
+      operators: currentUserOperator ? [currentUserOperator] : [],
       patient: null,
       patientSource: null,
       patientName: "",
@@ -251,6 +474,11 @@ export default function ComptesRendusPage() {
   };
 
   const handleRemoveOperator = (id: string) => {
+    // Prevent removing the current user from the surgical team
+    const currentUser = getCurrentUserOperator();
+    if (currentUser && id === currentUser.id) {
+      return;
+    }
     setCreateForm((prev) => ({
       ...prev,
       operators: prev.operators.filter((op) => op.id !== id),
@@ -285,15 +513,22 @@ export default function ComptesRendusPage() {
     setShowPatientModal(false);
   };
 
+  // Helper function to check if Quill editor has actual content (not just HTML tags)
+  const hasQuillContent = (html: string): boolean => {
+    if (!html) return false;
+    // Remove HTML tags and check if there's actual text content
+    const text = html.replace(/<[^>]*>/g, "").trim();
+    return text.length > 0;
+  };
+
   const handleCreateOperation = async () => {
     if (
       !createForm.title ||
       !createForm.type ||
       !createForm.date ||
       !createForm.duration ||
-      !createForm.details ||
-      !createForm.postNotes ||
-      createForm.operators.length === 0 ||
+      !hasQuillContent(createForm.details) ||
+      !hasQuillContent(createForm.postNotes) ||
       !createForm.patientSource
     ) {
       return;
@@ -330,12 +565,19 @@ export default function ComptesRendusPage() {
         });
       }
 
-      // Prepare operator IDs
+      // Prepare operator IDs (all operators including the current user)
       const operatorIds = createForm.operators.map((op) => parseInt(op.id) || op.id);
-      console.log(apiData)
+
+      // Prepare participant IDs (residents added to the surgical team, excluding current user)
+      const currentUserOp = getCurrentUserOperator();
+      const participantIds = createForm.operators
+        .filter((op) => !currentUserOp || op.id !== currentUserOp.id)
+        .map((op) => parseInt(op.id) || op.id);
+
       const result = await createCompteRendu({
         ...apiData,
         operatorIds,
+        participantIds,
       } as any);
 
       if (result.success && result.data) {
@@ -347,9 +589,13 @@ export default function ComptesRendusPage() {
           date: result.data.date,
           duration: result.data.duration,
           operators: result.data.operators,
+          participants: result.data.participants,
           details: result.data.details,
           postNotes: result.data.postNotes,
           patient: result.data.patient,
+          patientName: result.data.patientName,
+          patientAge: result.data.patientAge,
+          patientHistory: result.data.patientHistory,
           createdAt: result.data.createdAt,
           createdBy: "Vous",
         };
@@ -358,12 +604,13 @@ export default function ComptesRendusPage() {
         setIsCreateMode(false);
         closeMobilePanel();
         setActiveOperationId(newOperation.id);
+        const currentUserOperator = getCurrentUserOperator();
         setCreateForm({
           title: "",
           type: "",
           date: new Date().toISOString().split("T")[0],
           duration: "",
-          operators: [],
+          operators: currentUserOperator ? [currentUserOperator] : [],
           patient: null,
           patientSource: null,
           patientName: "",
@@ -410,7 +657,7 @@ export default function ComptesRendusPage() {
     }
   };
 
-  const availableOperators = teamMembers.filter(
+  const availableOperators = teammates.filter(
     (member) => !createForm.operators.some((op) => op.id === member.id)
   );
 
@@ -419,9 +666,8 @@ export default function ComptesRendusPage() {
     createForm.title &&
     createForm.date &&
     createForm.duration &&
-    createForm.details &&
-    createForm.postNotes &&
-    createForm.operators.length > 0 &&
+    hasQuillContent(createForm.details) &&
+    hasQuillContent(createForm.postNotes) &&
     createForm.patientSource;
 
   const createFormContent = (
@@ -519,7 +765,7 @@ export default function ComptesRendusPage() {
           <div className="space-y-2">
             <input
               type="text"
-              value={createForm.patient?.fullName || ""}
+              value={createForm.patient ? `${createForm.patient.fullName} (${(createForm.patient as any).pid || createForm.patient.id})` : ""}
               readOnly
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700"
             />
@@ -614,25 +860,88 @@ export default function ComptesRendusPage() {
 
       {/* Operators */}
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-            {t("reports.forms.surgicalTeam")}
-          </label>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setShowOperatorSelect(!showOperatorSelect)}
-            className="h-6 px-2 text-xs"
-          >
-            <Plus className="h-3 w-3 mr-1" />
-            {t("reports.buttons.add")}
-          </Button>
-        </div>
+        <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+          {t("reports.forms.surgicalTeam")}
+          <span className="text-slate-400 font-normal ml-1">(optionnel)</span>
+        </label>
+
+        {createForm.operators.length === 0 ? (
+          // Empty state when no operators added
+          <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50/50 p-4 text-center space-y-3">
+            <div className="flex justify-center">
+              <div className="p-2 bg-slate-200 rounded-lg">
+                <Plus className="h-5 w-5 text-slate-500" />
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-700">
+                {t("reports.surgical_team.empty_title")}
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                {t("reports.surgical_team.empty_description")}
+              </p>
+            </div>
+            {availableOperators.length > 0 ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setShowOperatorSelect(!showOperatorSelect)}
+                className="w-full"
+              >
+                <Plus className="h-3 w-3 mr-2" />
+                {t("reports.buttons.add")}
+              </Button>
+            ) : (
+              <p className="text-xs text-slate-500 italic">
+                {t("reports.surgical_team.no_teammates")}
+              </p>
+            )}
+          </div>
+        ) : (
+          // Show added operators
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {createForm.operators.map((operator) => {
+                const currentUser = getCurrentUserOperator();
+                const isCurrentUser = !!(currentUser && operator.id === currentUser.id);
+                return (
+                  <Badge
+                    key={operator.id}
+                    variant="muted"
+                    className="rounded-full pl-3 pr-1.5 py-1"
+                  >
+                    {operator.name}
+                    {isCurrentUser && <span className="ml-1 text-xs text-slate-400">(Vous)</span>}
+                    <button
+                      onClick={() => handleRemoveOperator(operator.id)}
+                      disabled={isCurrentUser}
+                      className="ml-1.5 hover:text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title={isCurrentUser ? "Vous ne pouvez pas vous retirer de l'équipe" : undefined}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                );
+              })}
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => setShowOperatorSelect(!showOperatorSelect)}
+              className="w-full"
+            >
+              <Plus className="h-3 w-3 mr-2" />
+              {t("reports.buttons.add")}
+            </Button>
+          </div>
+        )}
 
         {showOperatorSelect && (
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2 max-h-40 overflow-y-auto">
             {availableOperators.length === 0 ? (
-              <p className="text-xs text-slate-500 py-2">
+              <p className="text-xs text-slate-500 py-2 text-center">
                 {t("reports.forms.allOperatorsAdded")}
               </p>
             ) : (
@@ -649,24 +958,6 @@ export default function ComptesRendusPage() {
             )}
           </div>
         )}
-
-        <div className="flex flex-wrap gap-2">
-          {createForm.operators.map((operator) => (
-            <Badge
-              key={operator.id}
-              variant="muted"
-              className="rounded-full pl-3 pr-1.5 py-1"
-            >
-              {operator.name}
-              <button
-                onClick={() => handleRemoveOperator(operator.id)}
-                className="ml-1.5 hover:text-slate-700"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
       </div>
 
       {/* Details */}
@@ -674,13 +965,11 @@ export default function ComptesRendusPage() {
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
           {t("reports.forms.details")}
         </label>
-        <textarea
+        <QuillDetailsEditor
           value={createForm.details}
-          onChange={(event) =>
-            setCreateForm((prev) => ({ ...prev, details: event.target.value }))
+          onChange={(value) =>
+            setCreateForm((prev) => ({ ...prev, details: value }))
           }
-          rows={4}
-          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
           placeholder={t("reports.forms.detailsPlaceholder")}
         />
       </div>
@@ -751,7 +1040,7 @@ export default function ComptesRendusPage() {
               <>
                 <div>
                   <p className="text-xs uppercase tracking-wide text-indigo-500 font-semibold mb-1">
-                    Nom
+                    {t("reports.sections.patientName")}
                   </p>
                   <p className="text-sm font-semibold text-slate-900">
                     {activeOperation.patient.fullName}
@@ -760,7 +1049,7 @@ export default function ComptesRendusPage() {
                 {(activeOperation.patient as any).age && (
                   <div>
                     <p className="text-xs uppercase tracking-wide text-indigo-500 font-semibold mb-1">
-                      Âge
+                      {t("reports.sections.patientAge")}
                     </p>
                     <p className="text-sm font-medium text-slate-800">
                       {(activeOperation.patient as any).age} ans
@@ -770,7 +1059,7 @@ export default function ComptesRendusPage() {
                 {(activeOperation.patient as any).histoire && (
                   <div>
                     <p className="text-xs uppercase tracking-wide text-indigo-500 font-semibold mb-1">
-                      Antécédents
+                      {t("reports.sections.patientHistory")}
                     </p>
                     <p className="text-sm text-slate-700 leading-relaxed">
                       {(activeOperation.patient as any).histoire}
@@ -785,7 +1074,7 @@ export default function ComptesRendusPage() {
               <>
                 <div>
                   <p className="text-xs uppercase tracking-wide text-indigo-500 font-semibold mb-1">
-                    Nom
+                    {t("reports.sections.patientName")}
                   </p>
                   <p className="text-sm font-semibold text-slate-900">
                     {activeOperation.patientName}
@@ -794,7 +1083,7 @@ export default function ComptesRendusPage() {
                 {activeOperation.patientAge && (
                   <div>
                     <p className="text-xs uppercase tracking-wide text-indigo-500 font-semibold mb-1">
-                      Âge
+                      {t("reports.sections.patientAge")}
                     </p>
                     <p className="text-sm font-medium text-slate-800">
                       {activeOperation.patientAge} ans
@@ -804,7 +1093,7 @@ export default function ComptesRendusPage() {
                 {activeOperation.patientHistory && (
                   <div>
                     <p className="text-xs uppercase tracking-wide text-indigo-500 font-semibold mb-1">
-                      Antécédents
+                      {t("reports.sections.patientHistory")}
                     </p>
                     <p className="text-sm text-slate-700 leading-relaxed">
                       {activeOperation.patientHistory}
@@ -821,24 +1110,24 @@ export default function ComptesRendusPage() {
       <section className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
         <header className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
           <Calendar className="h-4 w-4" />
-          Informations opératoires
+          {t("reports.sections.operativeInfo")}
         </header>
         <div className="grid gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-xs uppercase tracking-wide text-slate-500">
-                Durée
+                {t("reports.sections.duration")}
               </p>
               <p className="mt-1 text-sm font-medium text-slate-800">
-                {activeOperation.duration} minutes
+                {activeOperation.duration} {t("reports.units.minutes")}
               </p>
             </div>
             <div>
               <p className="text-xs uppercase tracking-wide text-slate-500">
-                Équipe
+                {t("reports.sections.team")}
               </p>
               <p className="mt-1 text-sm font-medium text-slate-800">
-                {activeOperation.operators.length} personnes
+                {activeOperation.operators.length} {t("reports.units.people")}
               </p>
             </div>
           </div>
@@ -848,7 +1137,7 @@ export default function ComptesRendusPage() {
       {/* Team Members */}
       <section className="rounded-2xl bg-white p-4 shadow-sm">
         <header className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Équipe opératoire ({activeOperation.operators.length})
+          {t("reports.sections.surgicalTeam")} ({activeOperation.operators.length})
         </header>
         <div className="flex flex-wrap gap-2">
           {activeOperation.operators.map((operator) => (
@@ -868,24 +1157,49 @@ export default function ComptesRendusPage() {
         </div>
       </section>
 
+      {/* Participants - Residents/Staff */}
+      {activeOperation.participants && activeOperation.participants.length > 0 && (
+        <section className="rounded-2xl bg-white p-4 shadow-sm">
+          <header className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            {t("reports.sections.participants")} ({activeOperation.participants.length})
+          </header>
+          <div className="flex flex-wrap gap-2">
+            {activeOperation.participants.map((participant) => (
+              <div
+                key={participant.id}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm"
+              >
+                <div className="h-6 w-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-semibold flex-shrink-0">
+                  {participant.name.charAt(0)}
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-slate-900">{participant.name}</p>
+                  <p className="text-xs text-slate-500">{participant.role}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Details */}
       <section className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
         <header className="mb-3 text-xs font-semibold uppercase tracking-wide text-indigo-600">
-          Détails de l'intervention
+          {t("reports.sections.interventionDetails")}
         </header>
-        <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
-          {activeOperation.details}
-        </p>
+        <div className="text-sm leading-relaxed text-slate-700 quill-details-view">
+          <div dangerouslySetInnerHTML={{ __html: activeOperation.details }} />
+        </div>
       </section>
 
       {/* Post Notes */}
       <section className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm flex-1">
         <header className="mb-3 text-xs font-semibold uppercase tracking-wide text-indigo-600">
-          Recommandations post-opératoires
+          {t("reports.sections.postOpRecommendations")}
         </header>
-        <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
-          {activeOperation.postNotes}
-        </p>
+        <div className="text-sm leading-relaxed text-slate-700 quill-details-view">
+          <div dangerouslySetInnerHTML={{ __html: activeOperation.postNotes }} />
+        </div>
       </section>
     </>
   ) : null;
@@ -900,7 +1214,7 @@ export default function ComptesRendusPage() {
               {operation.title}
             </p>
             <p className="text-xs text-slate-500">
-              {(operation as any).type} • Créé par {operation.createdBy}
+              {(operation as any).type} • {t("reports.sections.createdBy")} {operation.createdBy}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -929,7 +1243,7 @@ export default function ComptesRendusPage() {
                     className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 rounded-t-lg"
                   >
                     <Trash2 className="h-4 w-4" />
-                    Supprimer
+                    {t("reports.buttons.delete")}
                   </button>
                 </div>
               )}
@@ -946,7 +1260,7 @@ export default function ComptesRendusPage() {
         )}
         <div className="mt-3 space-y-1 text-xs text-slate-600">
           <p className="font-semibold text-slate-700">
-            {(operation as any).duration}min • {(operation as any).operators.length} opérateurs
+            {(operation as any).duration}{t("reports.units.minutes").charAt(0).toLowerCase()} • {(operation as any).operators.length} {t("reports.units.operators")}
           </p>
           <p className="text-xs text-slate-500 line-clamp-1">
             {(operation as any).operators.map((o: any) => o.name).join(", ")}
@@ -1007,7 +1321,7 @@ export default function ComptesRendusPage() {
       <PatientModal
         isOpen={showPatientModal}
         onClose={() => setShowPatientModal(false)}
-        patients={mockPatients}
+        patients={accessiblePatients}
         onSelectPatient={handleSelectPatient}
         newPatientFields={["fullName", "age","histoire"]}
         onCreatePatient={handleCreateNewPatient}
@@ -1054,6 +1368,83 @@ export default function ComptesRendusPage() {
           </div>
         </div>
       )}
+
+      <style jsx global>{`
+        .quill-details-view {
+          overflow-wrap: break-word;
+          word-wrap: break-word;
+        }
+
+        .quill-details-view h1 {
+          font-size: 2em;
+          font-weight: 700;
+          margin: 0.67em 0;
+        }
+
+        .quill-details-view h2 {
+          font-size: 1.5em;
+          font-weight: 700;
+          margin: 0.75em 0;
+        }
+
+        .quill-details-view h3 {
+          font-size: 1.17em;
+          font-weight: 700;
+          margin: 0.83em 0;
+        }
+
+        .quill-details-view p {
+          margin: 0.5em 0;
+        }
+
+        .quill-details-view strong,
+        .quill-details-view b {
+          font-weight: 700;
+        }
+
+        .quill-details-view em,
+        .quill-details-view i {
+          font-style: italic;
+        }
+
+        .quill-details-view u {
+          text-decoration: underline;
+        }
+
+        .quill-details-view ul,
+        .quill-details-view ol {
+          margin: 0.5em 0;
+          padding-left: 1.5em;
+        }
+
+        .quill-details-view ul {
+          list-style-type: disc;
+        }
+
+        .quill-details-view ol {
+          list-style-type: decimal;
+        }
+
+        .quill-details-view li {
+          margin: 0.25em 0;
+        }
+
+        .quill-details-view blockquote {
+          border-left: 4px solid #e2e8f0;
+          margin: 0.5em 0;
+          padding-left: 1em;
+          color: #64748b;
+        }
+
+        .quill-details-view a {
+          color: #4f46e5;
+          text-decoration: underline;
+        }
+
+        .quill-details-view a:hover {
+          color: #4338ca;
+        }
+      `}</style>
     </>
   );
 }

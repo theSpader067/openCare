@@ -44,7 +44,6 @@ import { ActivitySection } from "@/components/activities/ActivitySection";
 import type { TaskItem } from "@/types/tasks";
 import { statsSummaryConfig } from "@/data/dashboard/dashboard-stats";
 import type { Stat } from "@/data/dashboard/dashboard-stats";
-import type { SimplePatient } from "@/data/dashboard/dashboard-patients";
 import type { PatientItem } from "@/data/dashboard/dashboard-patients";
 import {
   activityTypeMeta,

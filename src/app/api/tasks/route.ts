@@ -38,15 +38,40 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Get user's teams to find teammate IDs
+    const userTeams = await prisma.team.findMany({
+      where: {
+        OR: [
+          { adminId: parseInt(userId) },
+          { members: { some: { id: parseInt(userId) } } },
+        ],
+      },
+      include: { members: true },
+    });
+
+    // Collect all teammate IDs (including user's own ID)
+    const userIds = new Set<number>();
+    userIds.add(parseInt(userId));
+    userTeams.forEach((team) => {
+      team.members.forEach((member) => {
+        userIds.add(member.id);
+      });
+    });
+
     const tasks = await prisma.task.findMany({
       where: {
         OR: [
           { creatorId: parseInt(userId) },
-          { isPrivate: false },
+          {
+            AND: [
+              { creatorId: { in: Array.from(userIds) } },
+              { isPrivate: false },
+            ],
+          },
         ],
       },
       orderBy: { createdAt: "desc" },
-      
+
     });
 
     const convertedTasks = tasks.map(convertTaskToTaskItem);

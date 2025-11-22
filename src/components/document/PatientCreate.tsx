@@ -175,7 +175,7 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
                   className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition"
                 >
                   <p className="font-medium text-slate-900">
-                    {patient.fullName}
+                    {patient.fullName} <span className="text-slate-400">({(patient as any).pid || patient.id})</span>
                   </p>
                   <p className="text-xs text-slate-500 line-clamp-2">
                     {Object.entries(patient)

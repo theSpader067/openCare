@@ -628,7 +628,9 @@
       "selectPatient": "Sélectionner un patient",
       "changePatient": "Changer de patient",
       "selectOtherPatient": "Sélectionner un autre patient",
+      "selectAnotherPatient": "Sélectionner un autre patient",
       "sendResponse": "Envoyer la réponse",
+      "sending": "Envoi en cours...",
       "save": "Enregistrer"
     },
     "searchPlaceholder": "Rechercher des avis...",
@@ -656,6 +658,10 @@
       "senderSpecialty": "Spécialité de l'émetteur",
       "recipientSpecialty": "Spécialité destinataire",
       "patientInfo": "Informations du patient",
+      "name": "Nom",
+      "age": "Âge",
+      "medicalHistory": "Antécédents médicaux",
+      "noHistory": "Aucun antécédent noté",
       "observation": "Observation",
       "yourResponse": "Votre réponse",
       "sendResponse": "Envoyer une réponse",
@@ -666,7 +672,10 @@
     "modals": {
       "title": "Avis médicaux",
       "createTitle": "Nouvel avis",
-      "createDescription": "Enregistrez un nouvel avis médical"
+      "createDescription": "Enregistrez un nouvel avis médical",
+      "selectPatientTitle": "Sélectionner ou créer un patient",
+      "searchPatientPlaceholder": "Rechercher un patient...",
+      "noPatientFound": "Aucun patient trouvé"
     },
     "empty": {
       "noOpinions": "Aucun avis",
@@ -689,6 +698,7 @@
       "selectPatient": "Sélectionner un patient",
       "changePatient": "Changer de patient",
       "selectOtherPatient": "Sélectionner un autre patient",
+      "selectAnotherPatient": "Sélectionner un autre patient",
       "add": "Ajouter",
       "delete": "Supprimer",
       "cancel": "Annuler",
@@ -707,6 +717,7 @@
       "patient": "Patient",
       "surgicalTeam": "Équipe opératoire",
       "interventionDetails": "Détails de l'intervention",
+      "details": "Détails de l'intervention",
       "postOpRecommendations": "Recommandations post-opératoires",
       "patientName": "Nom du patient",
       "patientAge": "Âge du patient",
@@ -731,9 +742,13 @@
       "duration": "Durée",
       "team": "Équipe",
       "surgicalTeam": "Équipe opératoire",
+      "participants": "Participants",
       "interventionDetails": "Détails de l'intervention",
       "postOpRecommendations": "Recommandations post-opératoires",
       "patient": "Patient",
+      "patientName": "Nom",
+      "patientAge": "Âge",
+      "patientHistory": "Antécédents",
       "history": "Antécédents",
       "createdBy": "Créé par"
     },
@@ -757,6 +772,11 @@
     },
     "fields": {
       "allOperatorsAdded": "Tous les opérateurs ont été ajoutés"
+    },
+    "surgical_team": {
+      "empty_title": "Pas d'équipe opératoire",
+      "empty_description": "Ajoutez les membres de votre équipe",
+      "no_teammates": "Aucun coéquipier disponible"
     }
   },
   "prescriptions": {
@@ -767,6 +787,7 @@
       "selectPatient": "Sélectionner un patient",
       "changePatient": "Changer de patient",
       "selectOtherPatient": "Sélectionner un autre patient",
+      "selectAnotherPatient": "Sélectionner un autre patient",
       "save": "Enregistrer"
     },
     "searchPlaceholder": "Rechercher une ordonnance...",
@@ -808,7 +829,10 @@
     "modals": {
       "title": "Ordonnances",
       "createTitle": "Nouvelle ordonnance",
-      "createDescription": "Enregistrez une nouvelle prescription"
+      "createDescription": "Enregistrez une nouvelle prescription",
+      "selectPatientTitle": "Sélectionner ou créer un patient",
+      "searchPatientPlaceholder": "Rechercher un patient...",
+      "noPatientFound": "Aucun patient trouvé"
     },
     "empty": {
       "noPrescriptions": "Aucune ordonnance",
@@ -1239,7 +1263,10 @@
       "historicalResults": "Anciens résultats",
       "reportLabel": "Rapport d'analyse",
       "noReportAvailable": "Aucun rapport disponible pour le moment.",
-      "noDetailedResults": "Les résultats détaillés ne sont pas disponibles pour ce bilan."
+      "noDetailedResults": "Les résultats détaillés ne sont pas disponibles pour ce bilan.",
+      "resultsInput": "Saisie des résultats",
+      "reference": "Référence :",
+      "close": "Fermer"
     },
     "loading": {
       "fetchingHistory": "Récupération de l'historique...",
@@ -1256,6 +1283,11 @@
     "mobilePanelHeader": {
       "title": "Ordres en attente",
       "subtitle": "Analyses non traitées"
+    },
+    "statuses": {
+      "enCours": "En cours",
+      "terminee": "Terminée",
+      "urgent": "Urgent"
     }
   },
   "tasks": {
@@ -1340,5 +1372,22 @@
       "daysAgo": "Il y a {{count}} jour{{count > 1 ? \"s\" : \"\" }}"
     },
     "counter": "{{count}} notification{{count > 1 ? \"s\" : \"\"}}"
+  },
+  "pages": {
+    "timeline": {
+      "title": "Timeline patient",
+      "subtitle": "Vue chronologique complète du parcours de soins et des événements médicaux.",
+      "patientInfo": "Parcours de soins",
+      "careJourney": "Parcours de soins",
+      "clickForDetails": "Cliquez sur un événement pour afficher les détails complets",
+      "historyWillAppear": "L'historique des événements médicaux s'affichera ici",
+      "noEvents": "Aucun événement enregistré",
+      "eventsRecorded_one": "1 événement enregistré dans le parcours de soins",
+      "eventsRecorded_other": "{{count}} événements enregistrés dans le parcours de soins",
+      "loadError": "Erreur de chargement",
+      "retry": "Réessayer",
+      "loading": "Chargement de la timeline...",
+      "backToDossier": "Retour au dossier patient"
+    }
   }
 }

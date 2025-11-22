@@ -104,11 +104,17 @@ export function ListSection<T extends DocumentItem>({
                 const isActive = item.id === activeItemId;
                 return (
                   <li key={item.id}>
-                    <button
-                      type="button"
+                    <div
                       onClick={() => onSelectItem(item)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          onSelectItem(item);
+                        }
+                      }}
                       className={cn(
-                        "w-full rounded-2xl border px-4 py-4 text-left shadow-sm transition",
+                        "w-full rounded-2xl border px-4 py-4 text-left shadow-sm transition cursor-pointer",
                         "hover:-translate-y-[1px] hover:shadow-md",
                         isActive
                           ? "border-indigo-200 bg-indigo-50/80"
@@ -116,7 +122,7 @@ export function ListSection<T extends DocumentItem>({
                       )}
                     >
                       {renderItemContent(item)}
-                    </button>
+                    </div>
                   </li>
                 );
               })}

@@ -43,6 +43,7 @@ export type Analyse = {
   requester: string;
   status: "En cours" | "Terminée" | "Urgent";
   bilanCategory: "bilan" | "imagerie" | "anapath" | "autres";
+  interpretation?: string | null; // For non-bilan types (imagerie/anapath/autres)
   pendingTests?: Array<{
     id: string;
     label: string;
@@ -182,6 +183,7 @@ export default function AnalysesPage() {
             requester: "Current User",
             status: (analyse.status as "En cours" | "Terminée" | "Urgent") || "Terminée",
             bilanCategory: (analyse.category as "bilan" | "imagerie" | "anapath" | "autres") || "bilan",
+            interpretation: analyse.interpretation || undefined,
             labEntries: analyse.labEntries || [],
           }));
         setHistoryAnalyses(convertedAnalyses);
@@ -209,7 +211,7 @@ export default function AnalysesPage() {
   });
   const PAGE_SIZE = 8;
 
-  const handleAnalysisCompleted = (analyse: Analyse, testValues: Record<string, string>) => {
+  const handleAnalysisCompleted = async (analyse: Analyse, testValues: Record<string, string>) => {
     // Move from pending to history with Terminée status
     const completedAnalysis: Analyse = {
       ...analyse,
@@ -225,6 +227,48 @@ export default function AnalysesPage() {
 
     // Add to history
     setHistoryAnalyses((prev) => [completedAnalysis, ...prev]);
+
+    // Reload both pending and history data from API to ensure consistency
+    try {
+      const apiAnalyses = await fetchAnalyses();
+
+      // Update pending analyses
+      const updatedPending = apiAnalyses
+        .filter((analyse) => !analyse.status || analyse.status === "En cours")
+        .map((analyse) => ({
+          id: analyse.labId || analyse.id.toString(),
+          apiId: analyse.id,
+          patient: analyse.patient?.fullName || analyse.patientName || "",
+          type: analyse.title || "",
+          requestedAt: "Aujourd'hui",
+          requestedDate: analyse.createdAt,
+          requester: "Current User",
+          status: ("En cours" as "En cours" | "Terminée" | "Urgent"),
+          bilanCategory: (analyse.category as "bilan" | "imagerie" | "anapath" | "autres") || "bilan",
+          labEntries: analyse.labEntries || [],
+        }));
+      setPendingAnalyses(updatedPending);
+
+      // Update history analyses
+      const updatedHistory = apiAnalyses
+        .filter((analyse) => analyse.status === "Terminée")
+        .map((analyse) => ({
+          id: analyse.labId || analyse.id.toString(),
+          apiId: analyse.id,
+          patient: analyse.patient?.fullName || analyse.patientName || "",
+          type: analyse.title || "",
+          requestedAt: "Aujourd'hui",
+          requestedDate: analyse.createdAt,
+          requester: "Current User",
+          status: (analyse.status as "En cours" | "Terminée" | "Urgent") || "Terminée",
+          bilanCategory: (analyse.category as "bilan" | "imagerie" | "anapath" | "autres") || "bilan",
+          interpretation: analyse.interpretation || undefined,
+          labEntries: analyse.labEntries || [],
+        }));
+      setHistoryAnalyses(updatedHistory);
+    } catch (error) {
+      console.error("Error reloading analyses:", error);
+    }
   };
 
   const uniqueHistoryTypes = useMemo(
@@ -284,6 +328,29 @@ export default function AnalysesPage() {
     setCurrentPage(1);
   }, [historyFilters]);
 
+  // Load accessible patients from API
+  useEffect(() => {
+    const loadAccessiblePatients = async () => {
+      try {
+        const response = await fetch("/api/patients", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        const result = await response.json();
+        if (result.success && Array.isArray(result.data)) {
+          setAccessiblePatients(result.data);
+        } else {
+          setAccessiblePatients([]);
+        }
+      } catch (error) {
+        console.error("Error loading patients:", error);
+        setAccessiblePatients([]);
+      }
+    };
+
+    loadAccessiblePatients();
+  }, []);
+
   const paginatedHistory = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
     return filteredHistoryAnalyses.slice(start, start + PAGE_SIZE);
@@ -306,6 +373,7 @@ export default function AnalysesPage() {
     fullName: "",
     histoire: "",
   });
+  const [accessiblePatients, setAccessiblePatients] = useState<Patient[]>([]);
   const [newRequestForm, setNewRequestForm] = useState({
     category: "" as "bilan" | "imagerie" | "anapath" | "autres" | "",
     name: "",
@@ -317,20 +385,18 @@ export default function AnalysesPage() {
   const [editedLabValues, setEditedLabValues] = useState<Record<number, string>>({});
   const [isSavingLabValues, setIsSavingLabValues] = useState(false);
 
-  const mockPatients: Patient[] = mockPatientsAnalyses;
-
   const filteredPatients = useMemo(() => {
     const query = patientSearch.trim().toLowerCase();
     if (!query) {
-      return mockPatients;
+      return accessiblePatients;
     }
-    return mockPatients.filter((patient) => {
+    return accessiblePatients.filter((patient) => {
       return (
         patient.fullName.toLowerCase().includes(query) ||
         patient.histoire.toLowerCase().includes(query)
       );
     });
-  }, [patientSearch]);
+  }, [patientSearch, accessiblePatients]);
 
   const handleSelectPatient = (patient: Patient) => {
     setSelectedPatient(patient);
@@ -533,7 +599,12 @@ export default function AnalysesPage() {
   };
 
   const selectedDetails = selectedBilan
-    ? analyseDetails[selectedBilan.id]
+    ? {
+        ...analyseDetails[selectedBilan.id],
+        // Override interpretation with actual data from selectedBilan if available
+        interpretation: (selectedBilan as any).interpretation || analyseDetails[selectedBilan.id]?.interpretation,
+        results: (selectedBilan as any).labEntries ? [] : analyseDetails[selectedBilan.id]?.results,
+      }
     : undefined;
 
   const handleHistoryFilterChange = <K extends keyof typeof historyFilters>(
@@ -918,7 +989,7 @@ export default function AnalysesPage() {
           setSelectedBilan(null);
           setEditedLabValues({});
         }}
-        title={selectedBilan ? `Bilan ${selectedBilan.id}` : undefined}
+        title={selectedBilan ? `${t("analyses.modal.title")} ${selectedBilan.id}` : undefined}
         description={
           selectedBilan
             ? `${selectedBilan.type} · ${selectedBilan.patient}`
@@ -929,7 +1000,7 @@ export default function AnalysesPage() {
             setSelectedBilan(null);
             setEditedLabValues({});
           }}>
-            Fermer
+            {t("analyses.details.close")}
           </Button>
         }
       >
@@ -937,7 +1008,7 @@ export default function AnalysesPage() {
           <div className="space-y-4 h-[45vh] overflow-y-auto flex flex-col">
             <div className="grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
               <p>
-                <span className="font-semibold text-slate-800">Demande :</span>{" "}
+                <span className="font-semibold text-slate-800">{t("analyses.details.requestDate")}</span>{" "}
                 {formatAnalyseDateTime(selectedBilan.requestedDate)}
               </p>
             </div>
@@ -948,7 +1019,7 @@ export default function AnalysesPage() {
                 {/* BILAN: Results input form */}
                 <div className="rounded-2xl border border-slate-200 bg-white/80 p-4">
                   <h3 className="text-sm font-semibold text-slate-800 mb-4">
-                    Saisie des résultats
+                    {t("analyses.details.resultsInput")}
                   </h3>
                   {(selectedBilan as any).labEntries && (selectedBilan as any).labEntries.length > 0 ? (
                     <div className="space-y-3">
@@ -962,7 +1033,7 @@ export default function AnalysesPage() {
                           </span>
                           <input
                             type="text"
-                            placeholder="Entrez la valeur"
+                            placeholder={t("analyses.results.enterValue")}
                             value={editedLabValues[entry.id] !== undefined ? editedLabValues[entry.id] : (entry.value || "")}
                             onChange={(e) =>
                               setEditedLabValues((prev) => ({
@@ -986,10 +1057,10 @@ export default function AnalysesPage() {
                         {isSavingLabValues ? (
                           <>
                             <Loader className="mr-2 h-4 w-4 animate-spin" />
-                            Sauvegarde...
+                            {t("analyses.loading.saving")}
                           </>
                         ) : (
-                          "Sauvegarder les résultats"
+                          t("analyses.buttons.saveResults")
                         )}
                       </Button>
                     </div>
@@ -1008,7 +1079,7 @@ export default function AnalysesPage() {
                               {item.value}
                             </p>
                             <p className="text-xs text-slate-500">
-                              Référence : {item.reference}
+                              {t("analyses.details.reference")} {item.reference}
                             </p>
                           </div>
                         </li>
@@ -1023,7 +1094,7 @@ export default function AnalysesPage() {
                 {selectedDetails ? (
                   <div className="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-4 text-sm text-slate-700">
                     <h4 className="text-sm font-semibold text-indigo-700">
-                      Interprétation
+                      {t("analyses.details.interpretation")}
                     </h4>
                     <p className="mt-2 leading-relaxed">
                       {selectedDetails.interpretation}
@@ -1033,7 +1104,7 @@ export default function AnalysesPage() {
                 {selectedDetails?.historicalValues && selectedDetails.historicalValues.length > 0 ? (
                   <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
                     <h3 className="text-sm font-semibold text-slate-800">
-                      Anciens résultats
+                      {t("analyses.details.historicalResults")}
                     </h3>
                     <div className="mt-3 space-y-3">
                       {selectedDetails.historicalValues.map((history, index) => (
@@ -1068,11 +1139,11 @@ export default function AnalysesPage() {
                 {/* IMAGERIE/ANAPATH/AUTRES: Report textarea view */}
                 <div className="flex-1 flex flex-col">
                   <label className="text-sm font-semibold text-slate-800 mb-2">
-                    Rapport d'analyse
+                    {t("analyses.details.reportLabel")}
                   </label>
                   <textarea
                     disabled
-                    value={selectedDetails?.interpretation || "Aucun rapport disponible pour le moment."}
+                    value={selectedDetails?.interpretation || t("analyses.details.noReportAvailable")}
                     className="flex-1 w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 resize-none focus:outline-none"
                   />
                 </div>
@@ -1308,7 +1379,7 @@ export default function AnalysesPage() {
             {!newRequestForm.patient ? (
               // Show PatientCreate when no patient selected
               <PatientCreate
-                patients={[]}
+                patients={filteredPatients}
                 onSelectPatient={handleSelectPatient}
                 onCreatePatient={handleCreateNewPatient}
                 newPatientFields={["fullName", "age", "histoire"]}

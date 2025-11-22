@@ -8,13 +8,13 @@ export async function GET(req: NextRequest) {
     const session = await getSession();
 
     if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const userId = (session.user as any).id;
     if (!userId) {
       return NextResponse.json(
-        { error: "User ID not found" },
+        { success: false, error: "User ID not found" },
         { status: 400 }
       );
     }
@@ -49,11 +49,11 @@ export async function GET(req: NextRequest) {
       },
       orderBy: { createdAt: "desc" },
     });
-    return NextResponse.json({ teams: userTeams });
+    return NextResponse.json({ success: true, data: userTeams });
   } catch (error) {
     console.error("Error fetching teams:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { success: false, error: "Internal server error" },
       { status: 500 }
     );
   }

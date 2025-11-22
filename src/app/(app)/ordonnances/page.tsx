@@ -54,6 +54,7 @@ export default function OrdonnancesPage() {
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [accessiblePatients, setAccessiblePatients] = useState<Patient[]>([]);
 
   const [createForm, setCreateForm] = useState({
     title: "",
@@ -105,6 +106,29 @@ export default function OrdonnancesPage() {
     };
 
     loadOrdonnances();
+  }, []);
+
+  // Load accessible patients from API
+  useEffect(() => {
+    const loadAccessiblePatients = async () => {
+      try {
+        const response = await fetch("/api/patients", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        const result = await response.json();
+        if (result.success && Array.isArray(result.data)) {
+          setAccessiblePatients(result.data);
+        } else {
+          setAccessiblePatients([]);
+        }
+      } catch (error) {
+        console.error("Error loading patients:", error);
+        setAccessiblePatients([]);
+      }
+    };
+
+    loadAccessiblePatients();
   }, []);
 
   const userOrdonnances = useMemo(() => {
@@ -335,7 +359,7 @@ export default function OrdonnancesPage() {
       {/* Title */}
       <div className="space-y-2">
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Titre de l'ordonnance
+          {t("prescriptions.forms.title")}
         </label>
         <input
           type="text"
@@ -343,7 +367,7 @@ export default function OrdonnancesPage() {
           onChange={(e) =>
             setCreateForm((prev) => ({ ...prev, title: e.target.value }))
           }
-          placeholder="Ex: Traitement post-opératoire"
+          placeholder={t("prescriptions.forms.titleExample")}
           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
         />
       </div>
@@ -351,7 +375,7 @@ export default function OrdonnancesPage() {
       {/* Date */}
       <div className="space-y-2">
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Date
+          {t("prescriptions.forms.date")}
         </label>
         <input
           type="date"
@@ -366,7 +390,7 @@ export default function OrdonnancesPage() {
       {/* Privacy Toggle */}
       <div className="space-y-2">
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Type de partage
+          {t("prescriptions.forms.shareType")}
         </label>
         <div className="flex gap-2">
           <button
@@ -381,7 +405,7 @@ export default function OrdonnancesPage() {
             }`}
           >
             <Lock className="h-4 w-4" />
-            <span className="text-sm font-medium">Privée</span>
+            <span className="text-sm font-medium">{t("prescriptions.forms.private")}</span>
           </button>
           <button
             type="button"
@@ -395,7 +419,7 @@ export default function OrdonnancesPage() {
             }`}
           >
             <Users className="h-4 w-4" />
-            <span className="text-sm font-medium">Équipe</span>
+            <span className="text-sm font-medium">{t("prescriptions.forms.team")}</span>
           </button>
         </div>
       </div>
@@ -403,7 +427,7 @@ export default function OrdonnancesPage() {
       {/* Patient Selection */}
       <div className="space-y-2">
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Patient
+          {t("prescriptions.forms.patient")}
         </label>
 
         {!createForm.patientSource ? (
@@ -450,7 +474,7 @@ export default function OrdonnancesPage() {
           <div className="space-y-3">
             <div>
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Nom du patient
+                {t("prescriptions.forms.patientName")}
               </label>
               <input
                 type="text"
@@ -458,14 +482,14 @@ export default function OrdonnancesPage() {
                 onChange={(e) =>
                   setCreateForm((prev) => ({ ...prev, patientName: e.target.value }))
                 }
-                placeholder="Ex: Jean Dupont"
+                placeholder={t("prescriptions.forms.patientNameExample")}
                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 mt-1"
               />
             </div>
 
             <div>
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Âge du patient
+                {t("prescriptions.forms.patientAge")}
               </label>
               <input
                 type="number"
@@ -475,21 +499,21 @@ export default function OrdonnancesPage() {
                 onChange={(e) =>
                   setCreateForm((prev) => ({ ...prev, patientAge: e.target.value }))
                 }
-                placeholder="Ex: 65"
+                placeholder={t("prescriptions.forms.patientAgeExample")}
                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 mt-1"
               />
             </div>
 
             <div>
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Antécédents du patient
+                {t("prescriptions.forms.patientHistory")}
               </label>
               <textarea
                 value={createForm.patientHistory}
                 onChange={(e) =>
                   setCreateForm((prev) => ({ ...prev, patientHistory: e.target.value }))
                 }
-                placeholder="Historique médical, allergies, traitements actuels..."
+                placeholder={t("prescriptions.forms.patientHistoryPlaceholder")}
                 rows={2}
                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 mt-1"
               />
@@ -509,7 +533,7 @@ export default function OrdonnancesPage() {
               }
               className="w-full text-sm"
             >
-              Sélectionner un autre patient
+              {t("prescriptions.buttons.selectAnotherPatient")}
             </Button>
           </div>
         )}
@@ -518,7 +542,7 @@ export default function OrdonnancesPage() {
       {/* Clinical Info */}
       <div className="space-y-2">
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Renseignement clinique
+          {t("prescriptions.forms.clinicalInfo")}
         </label>
         <textarea
           value={createForm.clinicalInfo}
@@ -528,7 +552,7 @@ export default function OrdonnancesPage() {
               clinicalInfo: e.target.value,
             }))
           }
-          placeholder="Contexte clinique et antécédents pertinents..."
+          placeholder={t("prescriptions.forms.clinicalInfoPlaceholder")}
           rows={3}
           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
         />
@@ -537,7 +561,7 @@ export default function OrdonnancesPage() {
       {/* Prescription Details */}
       <div className="space-y-2">
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Détails de la prescription
+          {t("prescriptions.forms.prescriptionDetails")}
         </label>
         <textarea
           value={createForm.prescriptionDetails}
@@ -547,7 +571,7 @@ export default function OrdonnancesPage() {
               prescriptionDetails: e.target.value,
             }))
           }
-          placeholder="1. Médicament A - dosage × fréquence..."
+          placeholder={t("prescriptions.forms.prescriptionPlaceholder")}
           rows={6}
           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
         />
@@ -738,10 +762,13 @@ export default function OrdonnancesPage() {
       <PatientModal
         isOpen={showPatientModal}
         onClose={() => setShowPatientModal(false)}
-        patients={mockPatients}
+        patients={accessiblePatients}
         onSelectPatient={handleSelectPatient}
         newPatientFields={["fullName", "age", "histoire"]}
         onCreatePatient={handleCreateNewPatient}
+        titleTranslationKey="prescriptions.modals.selectPatientTitle"
+        searchPlaceholderTranslationKey="prescriptions.modals.searchPatientPlaceholder"
+        noResultsTranslationKey="prescriptions.modals.noPatientFound"
       />
     </>
   );

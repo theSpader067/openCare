@@ -371,7 +371,7 @@ export default function PatientDossierPage() {
             <Button
               type="button"
               variant="ghost"
-              className="border-2 border-emerald-300 bg-emerald-50 text-emerald-700 font-semibold hover:bg-emerald-100 hover:border-emerald-400 shadow-sm hover:shadow-md transition-all"
+              className="border-2 border-blue-300 bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100 hover:border-blue-400 shadow-sm hover:shadow-md transition-all"
               onClick={() => router.push(`/timeline?id=${formData.pid}`)}
             >
               <Clock className="mr-2 h-4 w-4" />
@@ -830,18 +830,8 @@ export default function PatientDossierPage() {
         </CardContent>
       </Card>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {isExistingPatient && (
-          <Button
-            type="button"
-            variant="ghost"
-            className="border-2 border-emerald-300 bg-emerald-50 text-emerald-700 font-semibold hover:bg-emerald-100 hover:border-emerald-400 shadow-sm hover:shadow-md transition-all"
-            onClick={() => router.push(`/timeline?id=${formData.pid}`)}
-          >
-            <Clock className="mr-2 h-4 w-4" />
-            {t("patients.buttons.carePathway")}
-          </Button>
-        )}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        
         <div className="flex flex-wrap items-center gap-3 ml-auto">
           <Button
             type="button"

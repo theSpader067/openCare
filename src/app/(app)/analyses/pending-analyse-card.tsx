@@ -101,8 +101,14 @@ export function PendingAnalyseCard({
         });
 
         if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || "Failed to save lab values");
+          let errorMessage = "Failed to save lab values";
+          try {
+            const error = await response.json();
+            errorMessage = error.error || errorMessage;
+          } catch {
+            errorMessage = `Server error: ${response.status}`;
+          }
+          throw new Error(errorMessage);
         }
 
         const result = await response.json();
@@ -123,7 +129,33 @@ export function PendingAnalyseCard({
           return;
         }
 
-        // For non-bilan types, just call the callback
+        // Call API to save non-bilan results
+        const response = await fetch(`/api/analyses/${analyse.apiId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            interpretation: textareaResults,
+            status: "Terminée",
+          }),
+        });
+
+        if (!response.ok) {
+          let errorMessage = "Failed to save analysis results";
+          try {
+            const error = await response.json();
+            errorMessage = error.error || errorMessage;
+          } catch {
+            errorMessage = `Server error: ${response.status}`;
+          }
+          throw new Error(errorMessage);
+        }
+
+        const result = await response.json();
+        console.log("✓ Analysis results saved successfully:", result);
+
+        // Call the parent callback if provided
         if (onCompleted) {
           onCompleted(analyse, { results: textareaResults });
         }
@@ -148,6 +180,12 @@ export function PendingAnalyseCard({
     setIsScannerOpen(false);
   };
 
+  const statusKeyMap: Record<string, string> = {
+    "En cours": "analyses.statuses.enCours",
+    "Terminée": "analyses.statuses.terminee",
+    "Urgent": "analyses.statuses.urgent",
+  };
+
   const categoryBadgeMap: Record<"bilan" | "imagerie" | "anapath" | "autres", { label: string; color: string }> = {
     bilan: { label: t("analyses.categories.bilan"), color: "bg-violet-500/15 text-violet-700" },
     imagerie: { label: t("analyses.categories.imagerie"), color: "bg-blue-500/15 text-blue-700" },
@@ -168,7 +206,7 @@ export function PendingAnalyseCard({
 
         <div className="px-4 py-3">
           {/* Main Content */}
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-start justify-between gap-3">
             {/* Patient and Type */}
             <div className="flex-1 min-w-0 space-y-1">
               <h3 className="text-sm font-semibold text-slate-900 truncate">
@@ -179,21 +217,19 @@ export function PendingAnalyseCard({
               </p>
             </div>
 
-            {/* Date and Status */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <div className="text-right">
-                <p className="text-xs text-slate-500">
-                  {formatAnalyseDateTime(analyse.requestedDate)}
-                </p>
-              </div>
+            {/* Status and Date */}
+            <div className="flex flex-col items-end gap-1 flex-shrink-0">
               <span
                 className={cn(
                   "inline-flex items-center rounded-full border px-2 py-1 text-xs font-semibold whitespace-nowrap",
                   config.badge,
                 )}
               >
-                {analyse.status}
+                {t(statusKeyMap[analyse.status] || "analyses.statuses.enCours")}
               </span>
+              <p className="text-xs text-slate-500">
+                {formatAnalyseDateTime(analyse.requestedDate)}
+              </p>
             </div>
           </div>
 

@@ -21,6 +21,7 @@ export interface AnalyseResponse {
   patientAge: string | null;
   patientHistory: string | null;
   details: string | null;
+  interpretation?: string | null;
   status: string;
   createdAt: string;
   updatedAt: string;

@@ -272,13 +272,20 @@ export default function ProfilePage() {
           hospital: team.hospital,
           service: team.service,
           description: team.service ? `Service: ${team.service}` : (team.hospital ? `Hôpital: ${team.hospital}` : "Équipe"),
-          teamMembers: team.members?.map((member: any) => ({
-            id: member.id.toString(),
-            name: member.username? `${member.username || ""} ` : member.firstName && member.lastName? `${member.firstName || ""} ${member.lastName || ""}`.trim(): 'N/A',
-            avatar: `${member.firstName?.[0] || ""}${member.lastName?.[0] || ""}`.toUpperCase(),
-            role: team.adminId === member.id ? "Admin" : "Membre",
-            specialty: member.specialty || "",
-          })),
+          teamMembers: team.members?.map((member: any) => {
+            const firstName = member.firstName?.trim() || "";
+            const lastName = member.lastName?.trim() || "";
+            const username = member.username?.trim() || "";
+            const displayName = (firstName && lastName) ? `${firstName} ${lastName}` : username || "N/A";
+            const avatarInitials = `${firstName[0] || ""}${lastName[0] || ""}`.toUpperCase() || username[0]?.toUpperCase() || "?";
+            return {
+              id: member.id.toString(),
+              name: displayName,
+              avatar: avatarInitials,
+              role: team.adminId === member.id ? "Admin" : "Membre",
+              specialty: member.specialty || "",
+            };
+          }),
         }));
 
         console.log(transformedTeams.map((t : any)=>t.teamMembers.map((m:any)=>m.name)))
@@ -526,13 +533,20 @@ export default function ProfilePage() {
         members: newTeam.members?.length || 1,
         joined: true,
         description: newTeam.service ? `Service: ${newTeam.service}` : "Nouvelle équipe",
-        teamMembers: newTeam.members?.map((member: any) => ({
-          id: member.id.toString(),
-          name: `${member.firstName || ""} ${member.lastName || ""}`.trim(),
-          avatar: `${member.firstName?.[0] || ""}${member.lastName?.[0] || ""}`.toUpperCase(),
-          role: newTeam.adminId === member.id ? "Admin" : "Membre",
-          specialty: member.specialty || "",
-        })),
+        teamMembers: newTeam.members?.map((member: any) => {
+          const firstName = member.firstName?.trim() || "";
+          const lastName = member.lastName?.trim() || "";
+          const username = member.username?.trim() || "";
+          const displayName = (firstName && lastName) ? `${firstName} ${lastName}` : username || "N/A";
+          const avatarInitials = `${firstName[0] || ""}${lastName[0] || ""}`.toUpperCase() || username[0]?.toUpperCase() || "?";
+          return {
+            id: member.id.toString(),
+            name: displayName,
+            avatar: avatarInitials,
+            role: newTeam.adminId === member.id ? "Admin" : "Membre",
+            specialty: member.specialty || "",
+          };
+        }),
       };
 
       setUserTeams([...userTeams, transformedTeam]);
@@ -701,7 +715,7 @@ export default function ProfilePage() {
         >
           {t("profile.tabs.teams")}
         </button>
-        <button
+        {/* <button
           onClick={() => setActiveTab("statistiques")}
           className={cn(
             "px-4 py-3 text-sm font-medium border-b-2 transition",
@@ -711,7 +725,7 @@ export default function ProfilePage() {
           )}
         >
           {t("profile.tabs.statistics")}
-        </button>
+        </button> */}
       </div>
 
       {/* Personal Tab */}
@@ -1610,13 +1624,20 @@ export default function ProfilePage() {
                               hospital: team.hospital,
                               service: team.service,
                               description: team.service ? `Service: ${team.service}` : (team.hospital ? `Hôpital: ${team.hospital}` : "Équipe"),
-                              teamMembers: team.members?.map((member: any) => ({
-                                id: member.id.toString(),
-                                name: `${member.username || ""}`.trim(),
-                                avatar: `${member.firstName?.[0] || ""}${member.lastName?.[0] || ""}`.toUpperCase(),
-                                role: team.adminId === member.id ? "Admin" : "Membre",
-                                specialty: member.specialty || "",
-                              })),
+                              teamMembers: team.members?.map((member: any) => {
+                                const firstName = member.firstName?.trim() || "";
+                                const lastName = member.lastName?.trim() || "";
+                                const username = member.username?.trim() || "";
+                                const displayName = (firstName && lastName) ? `${firstName} ${lastName}` : username || "N/A";
+                                const avatarInitials = `${firstName[0] || ""}${lastName[0] || ""}`.toUpperCase() || username[0]?.toUpperCase() || "?";
+                                return {
+                                  id: member.id.toString(),
+                                  name: displayName,
+                                  avatar: avatarInitials,
+                                  role: team.adminId === member.id ? "Admin" : "Membre",
+                                  specialty: member.specialty || "",
+                                };
+                              }),
                             }));
                             setUserTeams(transformedTeams);
                           }

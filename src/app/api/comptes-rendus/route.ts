@@ -7,6 +7,23 @@ import { connect } from "http2";
 function convertRapportToJSON(rapport: any) {
   const interventionDate = rapport.date ? new Date(rapport.date).toISOString().split("T")[0] : new Date(rapport.createdAt).toISOString().split("T")[0];
 
+  // Build participants list with creator first
+  const participantsList = rapport.participants?.map((p: any) => ({
+    id: p.id.toString(),
+    name: `${p.firstName || ""} ${p.lastName || ""}`.trim() || p.username || "Unknown",
+    role: p.specialty || "Medical Staff",
+  })) || [];
+
+  // Sort to ensure creator comes first
+  const creatorId = rapport.creator?.id.toString();
+  if (creatorId) {
+    const creatorIndex = participantsList.findIndex((p: any) => p.id === creatorId);
+    if (creatorIndex > 0) {
+      const [creator] = participantsList.splice(creatorIndex, 1);
+      participantsList.unshift(creator);
+    }
+  }
+
   return {
     id: rapport.id.toString(),
     title: rapport.title,
@@ -15,16 +32,18 @@ function convertRapportToJSON(rapport: any) {
     duration: parseInt(rapport.duration || "0"),
     operators: rapport.participants?.map((p: any) => ({
       id: p.id.toString(),
-      name: `${p.firstName || ""} ${p.lastName || ""}`.trim(),
+      name: `${p.firstName || ""} ${p.lastName || ""}`.trim() || p.username || "Unknown",
       role: p.specialty || "Medical Staff",
     })) || [],
+    participants: participantsList,
     details: rapport.details || "",
     postNotes: rapport.recommandations || "",
     patient: rapport.patient ? {
       id: rapport.patient.id.toString(),
       fullName: rapport.patient.fullName,
+      pid: rapport.patient.pid,
       age: rapport.patient.dateOfBirth ? Math.floor((Date.now() - new Date(rapport.patient.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : undefined,
-      histoire: rapport.patientHistory || "",
+      histoire: rapport.patient.atcdsMedical || "",
     } : null,
     patientName: rapport.patientName || null,
     patientAge: rapport.patientAge || null,
@@ -54,9 +73,34 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Get user's teams to find teammate IDs
+    const userTeams = await prisma.team.findMany({
+      where: {
+        OR: [
+          { adminId: parseInt(userId) },
+          { members: { some: { id: parseInt(userId) } } },
+        ],
+      },
+      include: { members: true },
+    });
+
+    // Collect all teammate IDs (including user's own ID)
+    const userIds = new Set<number>();
+    userIds.add(parseInt(userId));
+    userTeams.forEach((team) => {
+      team.members.forEach((member) => {
+        userIds.add(member.id);
+      });
+    });
+
     const rapports = await prisma.rapport.findMany({
       where: {
-        creatorId: parseInt(userId),
+        OR: [
+          // Rapports created by the user
+          { creatorId: parseInt(userId) },
+          // Rapports created by teammates
+          { creatorId: { in: Array.from(userIds) } },
+        ],
       },
       include: {
         patient: true,
@@ -126,9 +170,9 @@ export async function POST(request: NextRequest) {
       details,
       postNotes,
       operatorIds = [],
+      participantIds = [],
     } = body;
-    console.log('rapport data ||||||||||||||||||||')
-    console.log(body)
+
     // Validation
     if (!title || !title.trim()) {
       return NextResponse.json(
@@ -158,12 +202,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!operatorIds || operatorIds.length === 0) {
-      return NextResponse.json(
-        { success: false, error: "At least one operator is required" },
-        { status: 400 }
-      );
-    }
+    // Participants are now optional (users can have rapports without resident participants)
+    // Just ensure they are valid if provided
+    const validParticipantIds = participantIds
+      .map((id: any) => {
+        const parsed = parseInt(String(id));
+        return !isNaN(parsed) ? parsed : null;
+      })
+      .filter((id: number | null) => id !== null) as number[];
 
     // Build the data object for rapport creation
     const rapportData: any = {
@@ -200,7 +246,12 @@ export async function POST(request: NextRequest) {
               connect:{
                   id: rapportData.creatorId,
                   }
-                }
+                },
+            ...(validParticipantIds.length > 0 && {
+              participants: {
+                connect: validParticipantIds.map(id => ({ id }))
+              }
+            })
           },
         });
     
@@ -236,7 +287,12 @@ export async function POST(request: NextRequest) {
             connect:{
                 id: rapportData.creatorId,
                 }
-              }
+              },
+          ...(validParticipantIds.length > 0 && {
+            participants: {
+              connect: validParticipantIds.map(id => ({ id }))
+            }
+          })
         },
       });
   

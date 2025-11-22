@@ -41,9 +41,39 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Get user's teams to find teammate IDs
+    const userTeams = await prisma.team.findMany({
+      where: {
+        OR: [
+          { adminId: parseInt(userId) },
+          { members: { some: { id: parseInt(userId) } } },
+        ],
+      },
+      include: { members: true },
+    });
+
+    // Collect all teammate IDs (including user's own ID)
+    const userIds = new Set<number>();
+    userIds.add(parseInt(userId));
+    userTeams.forEach((team) => {
+      team.members.forEach((member) => {
+        userIds.add(member.id);
+      });
+    });
+
     const ordonnances = await prisma.ordonnance.findMany({
       where: {
-        creatorId: parseInt(userId),
+        OR: [
+          // Ordonnances created by the user (all of them)
+          { creatorId: parseInt(userId) },
+          // Public ordonnances created by teammates
+          {
+            AND: [
+              { creatorId: { in: Array.from(userIds) } },
+              { isPrivate: false },
+            ],
+          },
+        ],
       },
       include: {
         patient: true,

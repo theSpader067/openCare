@@ -22,8 +22,40 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Get user's teams to find teammate IDs
+    const userTeams = await prisma.team.findMany({
+      where: {
+        OR: [
+          { adminId: parseInt(userId) },
+          { members: { some: { id: parseInt(userId) } } },
+        ],
+      },
+      include: { members: true },
+    });
+
+    // Collect all teammate IDs (including user's own ID)
+    const userIds = new Set<number>();
+    userIds.add(parseInt(userId));
+    userTeams.forEach((team) => {
+      team.members.forEach((member) => {
+        userIds.add(member.id);
+      });
+    });
+
     const patients = await prisma.patient.findMany({
-      where: { userId: parseInt(userId) },
+      where: {
+        OR: [
+          // Patients created by the user (all of them)
+          { userId: parseInt(userId) },
+          // Public patients created by teammates
+          {
+            AND: [
+              { userId: { in: Array.from(userIds) } },
+              { isPrivate: false },
+            ],
+          },
+        ],
+      },
       orderBy: { createdAt: "desc" },
       include: {
         observations: {
@@ -32,25 +64,24 @@ export async function GET(request: NextRequest) {
       },
     });
     const today = new Date()
-    const parsedPatients:Patient[]= patients.map((p:any)=>{
+    const parsedPatients = patients.map((p:any)=>{
       return {
-        id:p.id,
+        id:String(p.id),
+        fullName:p.fullName,
         pid:p.pid,
-        name:p.fullName,
-        birthDate:p.dateOfBirth,
-        age:today.getFullYear() -
+        birthDate:p.dateOfBirth?.toISOString().split("T")[0],
+        age:p.dateOfBirth ? today.getFullYear() -
         p.dateOfBirth.getFullYear() -
-        (today < new Date(today.getFullYear(), p.dateOfBirth.getMonth(), p.dateOfBirth.getDate()) ? 1 : 0)
-      ,
+        (today < new Date(today.getFullYear(), p.dateOfBirth.getMonth(), p.dateOfBirth.getDate()) ? 1 : 0) : undefined,
         service:p.service,
         status:p.status,
         nextVisit:p.nextContact,
         type:p.isPrivate? 'privé':'équipe',
         diagnosis:{code:p.cim, label:p.diagnostic},
         histories:{
-            medical:[p.atcdsMedical],
-            surgical:[p.atcdsChirurgical],
-            other:[p.atcdsExtra]
+            medical:p.atcdsMedical ? [p.atcdsMedical] : [],
+            surgical:p.atcdsChirurgical ? [p.atcdsChirurgical] : [],
+            other:p.atcdsExtra ? [p.atcdsExtra] : []
         },
         observations: p.observations.map((obs:any) => ({
           id: String(obs.id),

@@ -147,6 +147,7 @@ export async function GET(
     return NextResponse.json({
       success: true,
       data: {
+        patientId: patient.id,
         patientName: patient.fullName,
         events: timelineEvents,
       },

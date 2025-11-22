@@ -751,7 +751,7 @@
     }
   },
   "avis": {
-    "title": "Inter-service Opinions",
+    "title": "Inter-service Communications",
     "subtitle": "Consult opinion requests from other services and share your recommendations in return.",
     "tabs": {
       "all": "All",
@@ -764,7 +764,9 @@
       "selectPatient": "Select a patient",
       "changePatient": "Change patient",
       "selectOtherPatient": "Select another patient",
+      "selectAnotherPatient": "Select another patient",
       "sendResponse": "Send response",
+      "sending": "Sending...",
       "save": "Save"
     },
     "searchPlaceholder": "Search opinions...",
@@ -798,6 +800,10 @@
       "senderSpecialty": "Sender specialty",
       "recipientSpecialty": "Recipient specialty",
       "patientInfo": "Patient information",
+      "name": "Name",
+      "age": "Age",
+      "medicalHistory": "Medical history",
+      "noHistory": "No history noted",
       "observation": "Observation",
       "yourResponse": "Your response",
       "sendResponse": "Send a response",
@@ -808,7 +814,10 @@
     "modals": {
       "title": "Medical Opinions",
       "createTitle": "New Opinion",
-      "createDescription": "Record a new medical opinion"
+      "createDescription": "Record a new medical opinion",
+      "selectPatientTitle": "Select or create a patient",
+      "searchPatientPlaceholder": "Search for a patient...",
+      "noPatientFound": "No patient found"
     },
     "fields": {
       "name": "Name",
@@ -825,6 +834,7 @@
       "selectPatient": "Select a patient",
       "changePatient": "Change patient",
       "selectOtherPatient": "Select another patient",
+      "selectAnotherPatient": "Select another patient",
       "add": "Add",
       "delete": "Delete",
       "cancel": "Cancel",
@@ -843,6 +853,7 @@
       "patient": "Patient",
       "surgicalTeam": "Surgical team",
       "interventionDetails": "Intervention details",
+      "details": "Intervention details",
       "postOpRecommendations": "Post-operative recommendations",
       "patientName": "Patient name",
       "patientAge": "Patient age",
@@ -867,9 +878,13 @@
       "duration": "Duration",
       "team": "Team",
       "surgicalTeam": "Surgical team",
+      "participants": "Participants",
       "interventionDetails": "Intervention details",
       "postOpRecommendations": "Post-operative recommendations",
       "patient": "Patient",
+      "patientName": "Name",
+      "patientAge": "Age",
+      "patientHistory": "History",
       "history": "History",
       "createdBy": "Created by"
     },
@@ -893,6 +908,11 @@
     },
     "fields": {
       "allOperatorsAdded": "All operators have been added"
+    },
+    "surgical_team": {
+      "empty_title": "No surgical team",
+      "empty_description": "Add team members",
+      "no_teammates": "No teammates available"
     }
   },
   "prescriptions": {
@@ -903,6 +923,7 @@
       "selectPatient": "Select a patient",
       "changePatient": "Change patient",
       "selectOtherPatient": "Select another patient",
+      "selectAnotherPatient": "Select another patient",
       "save": "Save"
     },
     "searchPlaceholder": "Search prescriptions...",
@@ -944,7 +965,10 @@
     "modals": {
       "title": "Prescriptions",
       "createTitle": "New prescription",
-      "createDescription": "Record a new prescription"
+      "createDescription": "Record a new prescription",
+      "selectPatientTitle": "Select or create a patient",
+      "searchPatientPlaceholder": "Search for a patient...",
+      "noPatientFound": "No patient found"
     },
     "empty": {
       "noPrescriptions": "No prescriptions",
@@ -1239,7 +1263,10 @@
       "historicalResults": "Historical Results",
       "reportLabel": "Analysis Report",
       "noReportAvailable": "No report available at this time.",
-      "noDetailedResults": "Detailed results are not available for this analysis."
+      "noDetailedResults": "Detailed results are not available for this analysis.",
+      "resultsInput": "Results Input",
+      "reference": "Reference:",
+      "close": "Close"
     },
     "loading": {
       "fetchingHistory": "Fetching history...",
@@ -1256,6 +1283,11 @@
     "mobilePanelHeader": {
       "title": "Pending Orders",
       "subtitle": "Unprocessed Analyses"
+    },
+    "statuses": {
+      "enCours": "In Progress",
+      "terminee": "Completed",
+      "urgent": "Urgent"
     }
   },
   "tasks": {
@@ -1340,5 +1372,24 @@
       "daysAgo": "{{count}} day{{count > 1 ? \"s\" : \"\" }} ago"
     },
     "counter": "{{count}} notification{{count > 1 ? \"s\" : \"\"}}"
+  },
+  "pages": {
+    "timeline": {
+      "title": "Patient Timeline",
+      "subtitle": "Complete chronological view of care journey and medical events.",
+      "patientInfo": "Care Journey",
+      "careJourney": "Care Journey",
+      "clickForDetails": "Click on an event to display full details",
+      "historyWillAppear": "The history of medical events will appear here",
+      "noEvents": "No events recorded",
+      "eventsRecorded_one": "1 event recorded in the care journey",
+      "eventsRecorded_other": "{{count}} events recorded in the care journey",
+      "loadError": "Loading error",
+      "retry": "Retry",
+      "loading": "Loading timeline...",
+      "noPatientId": "No patient identifier provided",
+      "invalidResponse": "Invalid response format",
+      "backToDossier": "Back to patient dossier"
+    }
   }
 }

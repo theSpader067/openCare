@@ -378,7 +378,7 @@ export default function PatientsPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="rounded-full border-2 border-emerald-300 bg-emerald-50 text-emerald-700 font-semibold hover:bg-emerald-100 hover:border-emerald-400 shadow-sm hover:shadow-md transition-all"
+                className="rounded-full border-2 border-blue-300 bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100 hover:border-blue-400 shadow-sm hover:shadow-md transition-all"
                 onClick={(e) => {
                   e.stopPropagation();
                   router.push(`/timeline?id=${selectedPatient.pid}`);

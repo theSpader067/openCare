@@ -40,9 +40,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const userId = (session.user as any).id;
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: "User ID not found" },
+        { status: 400 }
+      );
+    }
+
     const activities = await prisma.activity.findMany({
       orderBy: { createdAt: "desc" },
-      
+      where: { creatorId: parseInt(userId) },
       include: {
         creator: {
           select: {

@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import Providers from "./provider";
-import { SessionProvider } from "next-auth/react";
+import { OpenPanelComponent } from '@openpanel/nextjs';
+
 
 const inter = Inter({
   subsets: ["latin"],
@@ -32,7 +33,15 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${manrope.variable} font-sans antialiased`}>
         <Providers>
-          {children}
+        <>
+      <OpenPanelComponent
+        clientId={process.env.OPENPANEL_API_KEY!}
+        trackScreenViews={true}
+        // trackAttributes={true}
+        // trackOutgoingLinks={true}
+      />
+      {children}
+    </>
         </Providers>
       </body>
     </html>

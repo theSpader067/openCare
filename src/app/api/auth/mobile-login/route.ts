@@ -65,15 +65,20 @@ export async function POST(req: Request) {
     }
 
     // Generate JWT token
+    const secret = process.env.NEXTAUTH_SECRET || "fallback-secret-key";
+    console.log("[MOBILE_LOGIN] Secret available:", !!process.env.NEXTAUTH_SECRET);
+    console.log("[MOBILE_LOGIN] Using secret:", secret === "fallback-secret-key" ? "FALLBACK" : "FROM_ENV");
+
     const token = jwt.sign(
       {
         userId: user.id,
         email: user.email,
         username: user.username,
       },
-      process.env.NEXTAUTH_SECRET || "fallback-secret-key",
+      secret,
       { expiresIn: "30d" } // 30 day expiry, matching NextAuth session maxAge
-    )
+    );
+    console.log("[MOBILE_LOGIN] Token generated successfully");
 
     // Return user data and token
     console.log("[MOBILE_LOGIN] Login successful for user:", user.email)

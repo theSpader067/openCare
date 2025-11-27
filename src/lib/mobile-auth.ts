@@ -8,16 +8,22 @@ import { NextRequest } from "next/server";
 export function verifyMobileToken(request: NextRequest): number | null {
   try {
     const authHeader = request.headers.get("authorization");
+    console.log("[MOBILE_AUTH] Auth header present:", !!authHeader);
+
     if (!authHeader?.startsWith("Bearer ")) {
+      console.log("[MOBILE_AUTH] No Bearer token in header");
       return null;
     }
 
     const token = authHeader.substring(7);
+    console.log("[MOBILE_AUTH] Token found, verifying...");
+
     const decoded = jwt.verify(
       token,
       process.env.NEXTAUTH_SECRET || "fallback-secret-key"
     ) as any;
 
+    console.log("[MOBILE_AUTH] Token verified successfully, userId:", decoded.userId);
     return decoded.userId;
   } catch (error) {
     console.error("[MOBILE_AUTH] Token verification failed:", error);

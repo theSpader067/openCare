@@ -23,13 +23,20 @@ function convertTaskToTaskItem(task: any): TaskItem {
 // GET - Fetch all tasks for a user
 export async function GET(request: NextRequest) {
   try {
+    console.log("[TASKS_API] GET request received");
+
     // Try JWT token first (mobile app)
     let userId = verifyMobileToken(request);
+    console.log("[TASKS_API] JWT verification result, userId:", userId);
 
     // Fall back to session (web app)
     if (!userId) {
+      console.log("[TASKS_API] No JWT token, checking session...");
       const session = await getSession();
+      console.log("[TASKS_API] Session check result, has user:", !!session?.user);
+
       if (!session?.user) {
+        console.log("[TASKS_API] No session and no JWT token - returning 401");
         return NextResponse.json(
           { success: false, error: "Unauthorized" },
           { status: 401 }
@@ -37,6 +44,7 @@ export async function GET(request: NextRequest) {
       }
       userId = parseInt((session.user as any).id);
     }
+    console.log("[TASKS_API] Final userId:", userId);
     if (!userId) {
       return NextResponse.json(
         { success: false, error: "User ID not found" },

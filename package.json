@@ -20,6 +20,7 @@
     "bcrypt": "^6.0.0",
     "daisyui": "^5.5.5",
     "framer-motion": "^11.18.2",
+    "google-auth-library": "^10.5.0",
     "i18next": "^25.6.3",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.545.0",

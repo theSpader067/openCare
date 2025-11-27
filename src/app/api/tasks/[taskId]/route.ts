@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { verifyMobileToken } from "@/lib/mobile-auth";
 import type { TaskItem } from "@/types/tasks";
 import { taskServerAnalytics } from "@/lib/server-analytics";
 
@@ -25,12 +26,18 @@ export async function GET(
   { params }: { params: Promise<{ taskId: string }> }
 ) {
   try {
-    const session = await getSession();
-    if (!session?.user) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
+    // Try JWT token first (mobile app)
+    let userId = verifyMobileToken(request);
+
+    // Fall back to session (web app)
+    if (!userId) {
+      const session = await getSession();
+      if (!session?.user) {
+        return NextResponse.json(
+          { success: false, error: "Unauthorized" },
+          { status: 401 }
+        );
+      }
     }
 
     const { taskId: taskIdStr } = await params;
@@ -75,12 +82,18 @@ export async function PUT(
   { params }: { params: Promise<{ taskId: string }> }
 ) {
   try {
-    const session = await getSession();
-    if (!session?.user) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
+    // Try JWT token first (mobile app)
+    let userId = verifyMobileToken(request);
+
+    // Fall back to session (web app)
+    if (!userId) {
+      const session = await getSession();
+      if (!session?.user) {
+        return NextResponse.json(
+          { success: false, error: "Unauthorized" },
+          { status: 401 }
+        );
+      }
     }
 
     const { taskId: taskIdStr } = await params;
@@ -199,12 +212,18 @@ export async function DELETE(
   { params }: { params: Promise<{ taskId: string }> }
 ) {
   try {
-    const session = await getSession();
-    if (!session?.user) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
+    // Try JWT token first (mobile app)
+    let userId = verifyMobileToken(request);
+
+    // Fall back to session (web app)
+    if (!userId) {
+      const session = await getSession();
+      if (!session?.user) {
+        return NextResponse.json(
+          { success: false, error: "Unauthorized" },
+          { status: 401 }
+        );
+      }
     }
 
     const { taskId: taskIdStr } = await params;

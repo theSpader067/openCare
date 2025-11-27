@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { verifyMobileToken } from "@/lib/mobile-auth";
 import type { TaskItem } from "@/types/tasks";
 import { taskServerAnalytics } from "@/lib/server-analytics";
 
@@ -22,15 +23,20 @@ function convertTaskToTaskItem(task: any): TaskItem {
 // GET - Fetch all tasks for a user
 export async function GET(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session?.user) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    // Try JWT token first (mobile app)
+    let userId = verifyMobileToken(request);
 
-    const userId = (session.user as any).id;
+    // Fall back to session (web app)
+    if (!userId) {
+      const session = await getSession();
+      if (!session?.user) {
+        return NextResponse.json(
+          { success: false, error: "Unauthorized" },
+          { status: 401 }
+        );
+      }
+      userId = parseInt((session.user as any).id);
+    }
     if (!userId) {
       return NextResponse.json(
         { success: false, error: "User ID not found" },
@@ -42,8 +48,8 @@ export async function GET(request: NextRequest) {
     const userTeams = await prisma.team.findMany({
       where: {
         OR: [
-          { adminId: parseInt(userId) },
-          { members: { some: { id: parseInt(userId) } } },
+          { adminId: userId },
+          { members: { some: { id: userId } } },
         ],
       },
       include: { members: true },
@@ -51,7 +57,7 @@ export async function GET(request: NextRequest) {
 
     // Collect all teammate IDs (including user's own ID)
     const userIds = new Set<number>();
-    userIds.add(parseInt(userId));
+    userIds.add(userId);
     userTeams.forEach((team) => {
       team.members.forEach((member) => {
         userIds.add(member.id);
@@ -61,7 +67,7 @@ export async function GET(request: NextRequest) {
     const tasks = await prisma.task.findMany({
       where: {
         OR: [
-          { creatorId: parseInt(userId) },
+          { creatorId: userId },
           {
             AND: [
               { creatorId: { in: Array.from(userIds) } },
@@ -71,7 +77,6 @@ export async function GET(request: NextRequest) {
         ],
       },
       orderBy: { createdAt: "desc" },
-
     });
 
     const convertedTasks = tasks.map(convertTaskToTaskItem);
@@ -91,15 +96,21 @@ export async function GET(request: NextRequest) {
 // POST - Create a new task
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session?.user) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
+    // Try JWT token first (mobile app)
+    let userId = verifyMobileToken(request);
+
+    // Fall back to session (web app)
+    if (!userId) {
+      const session = await getSession();
+      if (!session?.user) {
+        return NextResponse.json(
+          { success: false, error: "Unauthorized" },
+          { status: 401 }
+        );
+      }
+      userId = parseInt((session.user as any).id);
     }
 
-    const userId = (session.user as any).id;
     if (!userId) {
       return NextResponse.json(
         { success: false, error: "User ID not found" },
@@ -130,7 +141,7 @@ export async function POST(request: NextRequest) {
     // Build the data object for task creation
     const taskData: any = {
       title: title.trim(),
-      creatorId: parseInt(userId),
+      creatorId: userId,
       isPrivate: isPrivate,
       isComplete: false,
     };

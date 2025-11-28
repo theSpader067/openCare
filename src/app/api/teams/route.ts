@@ -1,30 +1,40 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
+import { verifyMobileToken } from "@/lib/mobile-auth";
 import { prisma } from "@/lib/prisma";
+
+// Helper function to get userId from session or JWT token
+async function getUserId(request: NextRequest): Promise<number | null> {
+  // Try mobile JWT authentication first
+  const mobileUserId = verifyMobileToken(request);
+  if (mobileUserId) {
+    return mobileUserId;
+  }
+
+  // Fall back to session-based authentication (web)
+  const session = await getSession();
+  if (session?.user) {
+    return parseInt((session.user as any).id);
+  }
+
+  return null;
+}
 
 // GET - Fetch user's teams
 export async function GET(req: NextRequest) {
   try {
-    const session = await getSession();
+    const userId = await getUserId(req);
 
-    if (!session?.user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-
-    const userId = (session.user as any).id;
     if (!userId) {
-      return NextResponse.json(
-        { success: false, error: "User ID not found" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     // Get teams where user is admin or member
     const userTeams = await prisma.team.findMany({
       where: {
         OR: [
-          { adminId: parseInt(userId) },
-          { members: { some: { id: parseInt(userId) } } },
+          { adminId: (userId) },
+          { members: { some: { id: (userId) } } },
         ],
       },
       include: {
@@ -62,18 +72,10 @@ export async function GET(req: NextRequest) {
 // POST - Create a new team
 export async function POST(req: NextRequest) {
   try {
-    const session = await getSession();
+    const userId = await getUserId(req);
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const userId = (session.user as any).id;
     if (!userId) {
-      return NextResponse.json(
-        { error: "User ID not found" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { name, hospital, service } = await req.json();
@@ -92,9 +94,9 @@ export async function POST(req: NextRequest) {
         name: name.trim(),
         hospital: hospital || null,
         service: service || null,
-        adminId: parseInt(userId),
+        adminId: userId,
         members: {
-          connect: [{ id: parseInt(userId) }],
+          connect: [{ id: userId }],
         },
       },
       include: {

@@ -1,24 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { verifyMobileToken } from "@/lib/mobile-auth";
 import { Patient } from "@/data/patients/patients-data";
+
+// Helper function to get userId from session or JWT token
+async function getUserId(request: NextRequest): Promise<number | null> {
+  // Try mobile JWT authentication first
+  const mobileUserId = verifyMobileToken(request);
+  if (mobileUserId) {
+    return mobileUserId;
+  }
+
+  // Fall back to session-based authentication (web)
+  const session = await getSession();
+  if (session?.user) {
+    return parseInt((session.user as any).id);
+  }
+
+  return null;
+}
 
 // GET - Fetch all patients for current user
 export async function GET(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session?.user) {
+    const userId = await getUserId(request);
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
-      );
-    }
-
-    const userId = (session.user as any).id;
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: "User ID not found" },
-        { status: 400 }
       );
     }
 
@@ -26,8 +36,8 @@ export async function GET(request: NextRequest) {
     const userTeams = await prisma.team.findMany({
       where: {
         OR: [
-          { adminId: parseInt(userId) },
-          { members: { some: { id: parseInt(userId) } } },
+          { adminId: userId },
+          { members: { some: { id: userId } } },
         ],
       },
       include: { members: true },
@@ -35,7 +45,7 @@ export async function GET(request: NextRequest) {
 
     // Collect all teammate IDs (including user's own ID)
     const userIds = new Set<number>();
-    userIds.add(parseInt(userId));
+    userIds.add(userId);
     userTeams.forEach((team) => {
       team.members.forEach((member) => {
         userIds.add(member.id);
@@ -107,19 +117,11 @@ export async function GET(request: NextRequest) {
 // POST - Create a new patient
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session?.user) {
+    const userId = await getUserId(request);
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
-      );
-    }
-
-    const userId = (session.user as any).id;
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: "User ID not found" },
-        { status: 400 }
       );
     }
 
@@ -141,7 +143,7 @@ export async function POST(request: NextRequest) {
       data: {
         fullName: patientData.fullName.trim(),
         pid: patientData.pid,
-        userId: parseInt(userId),
+        userId: userId,
         dateOfBirth:new Date(patientData.birthdate) || new Date(),
         isPrivate: patientData.isPrivate === "privé",
         service: patientData.service?.trim() || undefined,

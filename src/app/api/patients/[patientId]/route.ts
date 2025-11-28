@@ -1,7 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { verifyMobileToken } from "@/lib/mobile-auth";
 import { Patient } from "@/data/patients/patients-data";
+
+// Helper function to get userId from session or JWT token
+async function getUserId(request: NextRequest): Promise<number | null> {
+  // Try mobile JWT authentication first
+  const mobileUserId = verifyMobileToken(request);
+  if (mobileUserId) {
+    return mobileUserId;
+  }
+
+  // Fall back to session-based authentication (web)
+  const session = await getSession();
+  if (session?.user) {
+    return parseInt((session.user as any).id);
+  }
+
+  return null;
+}
 
 // GET - Fetch a single patient by patientId
 export async function GET(
@@ -9,8 +27,8 @@ export async function GET(
   { params }: { params: Promise<{ patientId: string }> }
 ) {
   try {
-    const session = await getSession();
-    if (!session?.user) {
+    const userId = await getUserId(request);
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -91,8 +109,8 @@ export async function PUT(
   { params }: { params: Promise<{ patientId: string }> }
 ) {
   try {
-    const session = await getSession();
-    if (!session?.user) {
+    const userId = await getUserId(request);
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -191,19 +209,11 @@ export async function DELETE(
   { params }: { params: Promise<{ patientId: string }> }
 ) {
   try {
-    const session = await getSession();
-    if (!session?.user) {
+    const userId = await getUserId(request);
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
-      );
-    }
-
-    const userId = (session.user as any).id;
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: "User ID not found" },
-        { status: 400 }
       );
     }
 
@@ -235,7 +245,7 @@ export async function DELETE(
       );
     }
 
-    if (patient.userId !== parseInt(userId)) {
+    if (patient.userId !== userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized - patient does not belong to your account" },
         { status: 403 }

@@ -20,7 +20,7 @@ async function getUserId(request: NextRequest): Promise<number | null> {
   return null;
 }
 
-// GET - Fetch user's teams
+// GET - Fetch user's teams or search all teams
 export async function GET(req: NextRequest) {
   try {
     const userId = await getUserId(req);
@@ -29,37 +29,77 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get teams where user is admin or member
-    const userTeams = await prisma.team.findMany({
-      where: {
-        OR: [
-          { adminId: (userId) },
-          { members: { some: { id: (userId) } } },
-        ],
-      },
-      include: {
-        admin: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            username:true,
-            specialty: true,
+    // Get search parameter from query
+    const { searchParams } = new URL(req.url);
+    const searchQuery = searchParams.get("search");
+
+    if (searchQuery && searchQuery.trim()) {
+      // If search query is provided, search all teams
+      const searchTerm = searchQuery.toLowerCase().trim();
+      const allTeams = await prisma.team.findMany({
+        where: {
+          OR: [
+            { name: { contains: searchTerm, mode: "insensitive" } },
+            { hospital: { contains: searchTerm, mode: "insensitive" } },
+            { service: { contains: searchTerm, mode: "insensitive" } },
+          ],
+        },
+        include: {
+          admin: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              username: true,
+              specialty: true,
+            },
+          },
+          members: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              username: true,
+              specialty: true,
+            },
           },
         },
-        members: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            username:true,
-            specialty: true,
+        orderBy: { createdAt: "desc" },
+      });
+      return NextResponse.json({ success: true, data: allTeams });
+    } else {
+      // If no search query, get teams where user is admin or member
+      const userTeams = await prisma.team.findMany({
+        where: {
+          OR: [
+            { adminId: userId },
+            { members: { some: { id: userId } } },
+          ],
+        },
+        include: {
+          admin: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              username: true,
+              specialty: true,
+            },
+          },
+          members: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              username: true,
+              specialty: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-    return NextResponse.json({ success: true, data: userTeams });
+        orderBy: { createdAt: "desc" },
+      });
+      return NextResponse.json({ success: true, data: userTeams });
+    }
   } catch (error) {
     console.error("Error fetching teams:", error);
     return NextResponse.json(

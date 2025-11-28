@@ -138,7 +138,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    console.log('BODY@@@@@@@@@@@@@@')
+    console.log('UPDATE PATIENT BODY@@@@@@@@@@@@@@')
     console.log(body)
     const {
       fullName,
@@ -154,6 +154,11 @@ export async function PUT(
       nextContact,
       isPrivate,
     } = body;
+
+    console.log('Extracted fields:');
+    console.log('atcdsMedical:', atcdsMedical);
+    console.log('atcdsChirurgical:', atcdsChirurgical);
+    console.log('atcdsExtra:', atcdsExtra);
 
 
     // Calculate dateOfBirth if birthdate is provided
@@ -172,17 +177,17 @@ export async function PUT(
     const updatedPatient = await prisma.patient.update({
       where: { id:parseInt(patientId) },
       data: {
-        ...(fullName && { fullName: fullName.trim() }),
-        ...(pid && { pid: pid }),
+        ...(fullName !== undefined && { fullName: fullName.trim() }),
+        ...(pid !== undefined && { pid: pid }),
         ...(dateOfBirth && { dateOfBirth }),
-        ...(service && { service: service.trim() }),
-        ...(diagnostic && { diagnostic: diagnostic.trim() }),
-        ...(cim && { cim: cim.trim() }),
-        ...(atcdsMedical && { atcdsMedical: atcdsMedical.trim() }),
-        ...(atcdsChirurgical && { atcdsChirurgical: atcdsChirurgical.trim() }),
-        ...(atcdsExtra && { atcdsExtra: atcdsExtra.trim() }),
-        ...(status && { status: status.trim() }),
-        ...(nextContact && { nextContact: nextContact }),
+        ...(service !== undefined && { service: service.trim() }),
+        ...(diagnostic !== undefined && { diagnostic: diagnostic.trim() }),
+        ...(cim !== undefined && { cim: cim.trim() }),
+        ...(atcdsMedical !== undefined && { atcdsMedical: atcdsMedical ? atcdsMedical.trim() : "" }),
+        ...(atcdsChirurgical !== undefined && { atcdsChirurgical: atcdsChirurgical ? atcdsChirurgical.trim() : "" }),
+        ...(atcdsExtra !== undefined && { atcdsExtra: atcdsExtra ? atcdsExtra.trim() : "" }),
+        ...(status !== undefined && { status: status.trim() }),
+        ...(nextContact !== undefined && { nextContact: nextContact }),
         ...(isPrivate !== undefined && { isPrivate: isPrivate === "privé" || isPrivate === true }),
       },
     });

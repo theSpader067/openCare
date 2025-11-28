@@ -25,6 +25,7 @@ async function getUserId(request: NextRequest): Promise<number | null> {
 export async function GET(request: NextRequest) {
   try {
     const userId = await getUserId(request);
+    console.log('[PATIENTS_API] Current userId:', userId);
     if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
@@ -52,6 +53,8 @@ export async function GET(request: NextRequest) {
       });
     });
 
+    console.log('[PATIENTS_API] userIds for query:', Array.from(userIds));
+
     const patients = await prisma.patient.findMany({
       where: {
         OR: [
@@ -73,6 +76,10 @@ export async function GET(request: NextRequest) {
         },
       },
     });
+
+    console.log('[PATIENTS_API] Found patients count:', patients.length);
+    console.log('[PATIENTS_API] Patients data:', JSON.stringify(patients.slice(0, 1)));
+
     const today = new Date()
     const parsedPatients = patients.map((p:any)=>{
       return {

@@ -1,6 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { verifyMobileToken } from "@/lib/mobile-auth";
+
+// Helper function to get userId from session or JWT token
+async function getUserId(request: NextRequest): Promise<number | null> {
+  // Try mobile JWT authentication first
+  const mobileUserId = verifyMobileToken(request);
+  if (mobileUserId) {
+    return mobileUserId;
+  }
+
+  // Fall back to session-based authentication (web)
+  const session = await getSession();
+  if (session?.user) {
+    return parseInt((session.user as any).id);
+  }
+
+  return null;
+}
 
 // Helper function to convert Prisma Ordonnance to a serializable format
 function convertOrdonnanceToJSON(ordonnance: any) {
@@ -25,19 +43,11 @@ function convertOrdonnanceToJSON(ordonnance: any) {
 // GET - Fetch all ordonnances for a user
 export async function GET(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session?.user) {
+    const userId = await getUserId(request);
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
-      );
-    }
-
-    const userId = (session.user as any).id;
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: "User ID not found" },
-        { status: 400 }
       );
     }
 
@@ -45,8 +55,8 @@ export async function GET(request: NextRequest) {
     const userTeams = await prisma.team.findMany({
       where: {
         OR: [
-          { adminId: parseInt(userId) },
-          { members: { some: { id: parseInt(userId) } } },
+          { adminId: (userId) },
+          { members: { some: { id: (userId) } } },
         ],
       },
       include: { members: true },
@@ -54,7 +64,7 @@ export async function GET(request: NextRequest) {
 
     // Collect all teammate IDs (including user's own ID)
     const userIds = new Set<number>();
-    userIds.add(parseInt(userId));
+    userIds.add((userId));
     userTeams.forEach((team) => {
       team.members.forEach((member) => {
         userIds.add(member.id);
@@ -65,7 +75,7 @@ export async function GET(request: NextRequest) {
       where: {
         OR: [
           // Ordonnances created by the user (all of them)
-          { creatorId: parseInt(userId) },
+          { creatorId: (userId) },
           // Public ordonnances created by teammates
           {
             AND: [
@@ -104,19 +114,11 @@ export async function GET(request: NextRequest) {
 // POST - Create a new ordonnance
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session?.user) {
+    const userId = await getUserId(request);
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
-      );
-    }
-
-    const userId = (session.user as any).id;
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: "User ID not found" },
-        { status: 400 }
       );
     }
 
@@ -171,7 +173,7 @@ export async function POST(request: NextRequest) {
     const ordonnanceData: any = {
       title: title.trim(),
       date: date ? new Date(date) : null,
-      creatorId: parseInt(userId),
+      creatorId: (userId),
       isPrivate: isPrivate,
       renseignementClinique: clinicalInfo.trim(),
       details: prescriptionDetails.trim(),

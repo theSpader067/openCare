@@ -1,6 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { verifyMobileToken } from "@/lib/mobile-auth";
+
+// Helper function to get userId from session or JWT token
+async function getUserId(request: NextRequest): Promise<number | null> {
+  // Try mobile JWT authentication first
+  const mobileUserId = verifyMobileToken(request);
+  if (mobileUserId) {
+    return mobileUserId;
+  }
+
+  // Fall back to session-based authentication (web)
+  const session = await getSession();
+  if (session?.user) {
+    return parseInt((session.user as any).id);
+  }
+
+  return null;
+}
 
 // Helper function to convert Prisma Avis to a serializable format
 function convertAvisToJSON(avis: any) {
@@ -26,19 +44,11 @@ function convertAvisToJSON(avis: any) {
 // GET - Fetch all avis for a user
 export async function GET(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session?.user) {
+    const userId = await getUserId(request);
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
-      );
-    }
-
-    const userId = (session.user as any).id;
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: "User ID not found" },
-        { status: 400 }
       );
     }
 
@@ -46,8 +56,8 @@ export async function GET(request: NextRequest) {
     const userTeams = await prisma.team.findMany({
       where: {
         OR: [
-          { adminId: parseInt(userId) },
-          { members: { some: { id: parseInt(userId) } } },
+          { adminId: (userId) },
+          { members: { some: { id: (userId) } } },
         ],
       },
       include: { members: true },
@@ -56,7 +66,7 @@ export async function GET(request: NextRequest) {
     // Collect all teammate IDs and team names
     const userIds = new Set<number>();
     const teamNames = new Set<string>();
-    userIds.add(parseInt(userId));
+    userIds.add((userId));
     userTeams.forEach((team) => {
       teamNames.add(team.name);
       team.members.forEach((member) => {
@@ -68,7 +78,7 @@ export async function GET(request: NextRequest) {
       where: {
         OR: [
           // Avis created by the user
-          { creatorId: parseInt(userId) },
+          { creatorId: (userId) },
           // Avis created by teammates
           { creatorId: { in: Array.from(userIds) } },
           // Avis destined for user's teams
@@ -107,19 +117,11 @@ export async function GET(request: NextRequest) {
 // POST - Create a new avis
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session?.user) {
+    const userId = await getUserId(request);
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
-      );
-    }
-
-    const userId = (session.user as any).id;
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: "User ID not found" },
-        { status: 400 }
       );
     }
 
@@ -165,7 +167,7 @@ export async function POST(request: NextRequest) {
       destination_specialty: destination_specialty.trim(),
       details: opinion.trim(),
       answer_date: answer_date ? new Date(answer_date) : null,
-      creatorId: parseInt(userId),
+      creatorId: (userId),
     };
 
     // Handle patient information
@@ -257,8 +259,8 @@ export async function POST(request: NextRequest) {
 // PATCH - Update avis answer
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session?.user) {
+    const userId = await getUserId(request);
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }

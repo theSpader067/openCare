@@ -162,11 +162,7 @@ export async function POST(req: NextRequest) {
     };
 
     if (patientId) {
-      analyseData.patient = {
-        connect: {
-          id: patientId,
-        },
-      };
+      analyseData.patientId = patientId;
     }
 
     const analyse = await prisma.analyse.create({

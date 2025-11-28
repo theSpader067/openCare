@@ -237,11 +237,7 @@ export async function POST(request: NextRequest) {
             duration:rapportData.duration,
             details:rapportData.details,
             recommandations: rapportData.recommandations,
-            patient: {
-              connect:{
-                id:rapportData.patientId
-              }
-            },
+            patientId: rapportData.patientId,
             creator: {
               connect:{
                   id: rapportData.creatorId,
@@ -252,6 +248,25 @@ export async function POST(request: NextRequest) {
                 connect: validParticipantIds.map(id => ({ id }))
               }
             })
+          },
+          include: {
+            patient: true,
+            creator: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                specialty: true,
+              },
+            },
+            participants: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                specialty: true,
+              },
+            },
           },
         });
     

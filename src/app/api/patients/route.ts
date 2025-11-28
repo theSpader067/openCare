@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
       where: {
         OR: [
           // Patients created by the user (all of them)
-          { userId: parseInt(userId) },
+          { userId: userId },
           // Public patients created by teammates
           {
             AND: [

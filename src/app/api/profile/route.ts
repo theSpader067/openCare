@@ -1,29 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
+import { verifyMobileToken } from "@/lib/mobile-auth";
 import { prisma } from "@/lib/prisma";
-import { tree } from "next/dist/build/templates/app-page";
+
+// Helper function to get userId from session or JWT token
+async function getUserId(request: NextRequest): Promise<number | null> {
+  // Try mobile JWT authentication first
+  const mobileUserId = verifyMobileToken(request);
+  if (mobileUserId) {
+    return mobileUserId;
+  }
+
+  // Fall back to session-based authentication (web)
+  const session = await getSession();
+  if (session?.user) {
+    return parseInt((session.user as any).id);
+  }
+
+  return null;
+}
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getSession();
+    const userId = await getUserId(req);
 
-    if (!session?.user) {
+    if (!userId) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    const userId = (session.user as any).id;
-    if (!userId) {
-      return NextResponse.json(
-        { error: "User ID not found" },
-        { status: 400 }
-      );
-    }
-
     const user = await prisma.user.findUnique({
-      where: { id: parseInt(userId) },
+      where: { id: userId },
       select: {
         id: true,
         firstName: true,
@@ -79,20 +88,12 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const session = await getSession();
+    const userId = await getUserId(req);
 
-    if (!session?.user) {
+    if (!userId) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
-      );
-    }
-
-    const userId = (session.user as any).id;
-    if (!userId) {
-      return NextResponse.json(
-        { error: "User ID not found" },
-        { status: 400 }
       );
     }
     const body = await req.json();
@@ -115,7 +116,7 @@ export async function PUT(req: NextRequest) {
 
     // Update user in database
     const updatedUser = await prisma.user.update({
-      where: { id: parseInt(userId) },
+      where: { id: userId },
       data: {
         firstName: firstName || undefined,
         lastName: lastName || undefined,

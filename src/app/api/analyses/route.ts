@@ -1,21 +1,34 @@
 import { getSession } from "@/lib/auth";
+import { verifyMobileToken } from "@/lib/mobile-auth";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { bilanStructure } from "@/data/analyses/analyses-data";
 
+// Helper function to get userId from session or JWT token
+async function getUserId(request: NextRequest): Promise<number | null> {
+  // Try mobile JWT authentication first
+  const mobileUserId = verifyMobileToken(request);
+  if (mobileUserId) {
+    return mobileUserId;
+  }
+
+  // Fall back to session-based authentication (web)
+  const session = await getSession();
+  if (session?.user) {
+    return parseInt((session.user as any).id);
+  }
+
+  return null;
+}
+
 export async function GET(req: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const userId = (session.user as any).id;
+    const userId = await getUserId(req);
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userIdNum = parseInt(userId as string);
+    const userIdNum = userId;
 
     // Get analyses created by this user
     const analyses = await prisma.analyse.findMany({
@@ -66,17 +79,12 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const userId = (session.user as any).id;
+    const userId = await getUserId(req);
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userIdNum = parseInt(userId as string);
+    const userIdNum = userId;
 
     const data = await req.json();
     const {

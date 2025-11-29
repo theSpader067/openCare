@@ -234,14 +234,23 @@ export async function POST(request: NextRequest) {
 
     if (hasExistingPatient) {
       rapportData.patientId = parsedPatientId;
-    } else if (patientName && patientName.trim()) {
-      // Store inline patient data (not linked to DB)
-      rapportData.patientId = null;
-      rapportData.patientName = patientName.trim();
-      rapportData.patientAge = patientAge ? String(patientAge).trim() : null;
-      rapportData.patientHistory = patientHistory ? String(patientHistory).trim() : null;
     } else {
-      // Neither patientId nor patientName provided
+      rapportData.patientId = null;
+    }
+
+    // Inline patient info (optional; stored when not linked or provided explicitly)
+    if (patientName && patientName.trim()) {
+      rapportData.patientName = patientName.trim();
+    }
+    if (patientAge !== undefined) {
+      rapportData.patientAge = patientAge ? String(patientAge).trim() : null;
+    }
+    if (patientHistory !== undefined) {
+      rapportData.patientHistory = patientHistory ? String(patientHistory).trim() : null;
+    }
+
+    // Require at least a patient link or a name
+    if (!rapportData.patientId && !(rapportData.patientName && rapportData.patientName.trim())) {
       return NextResponse.json(
         { success: false, error: "Either provide a patient ID or patient name" },
         { status: 400 }

@@ -32,6 +32,7 @@ function convertAvisToJSON(avis: any) {
     patientAge: avis.patientAge,
     patientHistory: avis.patientHistory,
     details: avis.details,
+    opinion: avis.details || "",
     answer: avis.answer,
     creatorId: avis.creatorId,
     createdAt: new Date(avis.createdAt).toISOString(),

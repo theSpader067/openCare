@@ -232,11 +232,9 @@ export async function POST(request: NextRequest) {
         : NaN;
     const hasExistingPatient = !isNaN(parsedPatientId);
 
-    if (hasExistingPatient) {
-      rapportData.patientId = parsedPatientId;
-    } else {
-      rapportData.patientId = null;
-    }
+    const patientConnect = hasExistingPatient
+      ? { connect: { id: parsedPatientId } }
+      : null;
 
     // Inline patient info (optional; stored when not linked or provided explicitly)
     if (patientName && patientName.trim()) {
@@ -250,7 +248,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Require at least a patient link or a name
-    if (!rapportData.patientId && !(rapportData.patientName && rapportData.patientName.trim())) {
+    if (!patientConnect && !(rapportData.patientName && rapportData.patientName.trim())) {
       return NextResponse.json(
         { success: false, error: "Either provide a patient ID or patient name" },
         { status: 400 }
@@ -265,10 +263,10 @@ export async function POST(request: NextRequest) {
         duration: rapportData.duration,
         details: rapportData.details,
         recommandations: rapportData.recommandations,
-        patientId: rapportData.patientId ?? undefined,
-        patientName: rapportData.patientName,
-        patientAge: rapportData.patientAge,
-        patientHistory: rapportData.patientHistory,
+        ...(patientConnect && { patient: patientConnect }),
+        ...(rapportData.patientName && { patientName: rapportData.patientName }),
+        ...(rapportData.patientAge !== undefined && { patientAge: rapportData.patientAge }),
+        ...(rapportData.patientHistory !== undefined && { patientHistory: rapportData.patientHistory }),
         creator: {
           connect: {
             id: rapportData.creatorId,

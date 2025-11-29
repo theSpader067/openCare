@@ -155,13 +155,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!clinicalInfo || !clinicalInfo.trim()) {
-      return NextResponse.json(
-        { success: false, error: "Clinical information cannot be empty" },
-        { status: 400 }
-      );
-    }
-
     if (!prescriptionDetails || !prescriptionDetails.trim()) {
       return NextResponse.json(
         { success: false, error: "Prescription details cannot be empty" },
@@ -169,18 +162,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const hasExistingPatientId =
+      patientId !== undefined &&
+      patientId !== null &&
+      String(patientId).trim() !== "" &&
+      !isNaN(parseInt(String(patientId)));
+
+    if (!hasExistingPatientId && (!clinicalInfo || !clinicalInfo.trim())) {
+      return NextResponse.json(
+        { success: false, error: "Clinical information cannot be empty when creating a new patient" },
+        { status: 400 }
+      );
+    }
+
+    const clinicalInfoValue = clinicalInfo?.trim() || null;
+
     // Build the data object for ordonnance creation
     const ordonnanceData: any = {
       title: title.trim(),
       date: date ? new Date(date) : null,
       creatorId: (userId),
       isPrivate: isPrivate,
-      renseignementClinique: clinicalInfo.trim(),
+      renseignementClinique: clinicalInfoValue,
       details: prescriptionDetails.trim(),
     };
 
     // If an existing patient is selected, use patientId
-    if (patientId) {
+    if (hasExistingPatientId) {
       const parsedPatientId = parseInt(String(patientId));
       if (!isNaN(parsedPatientId)) {
         ordonnanceData.patientId = parsedPatientId;

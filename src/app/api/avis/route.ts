@@ -170,38 +170,24 @@ export async function POST(request: NextRequest) {
       creatorId: (userId),
     };
 
-    // Handle patient information
-    if (patientId) {
-      const parsedPatientId = parseInt(String(patientId));
-      if (!isNaN(parsedPatientId)) {
-        avisData.patientId = parsedPatientId;
-      } else {
-        // If patientId is invalid, use inline patient data
-        if (patientName && patientName.trim()) {
-          avisData.patientId = null;
-          avisData.patientName = patientName.trim();
-          avisData.patientAge = patientAge ? String(patientAge).trim() : null;
-          avisData.patientHistory = patientHistory ? String(patientHistory).trim() : null;
-        } else {
-          return NextResponse.json(
-            { success: false, error: "Patient information is required" },
-            { status: 400 }
-          );
-        }
-      }
+    const parsedPatientId =
+      patientId !== undefined && patientId !== null && String(patientId).trim() !== ""
+        ? parseInt(String(patientId))
+        : NaN;
+    const hasExistingPatientId = !isNaN(parsedPatientId);
+
+    if (hasExistingPatientId) {
+      avisData.patientId = parsedPatientId;
+    } else if (patientName && patientName.trim()) {
+      avisData.patientId = null;
+      avisData.patientName = patientName.trim();
+      avisData.patientAge = patientAge ? String(patientAge).trim() : null;
+      avisData.patientHistory = patientHistory ? String(patientHistory).trim() : null;
     } else {
-      // If no patientId, require inline patient data
-      if (patientName && patientName.trim()) {
-        avisData.patientId = null;
-        avisData.patientName = patientName.trim();
-        avisData.patientAge = patientAge ? String(patientAge).trim() : null;
-        avisData.patientHistory = patientHistory ? String(patientHistory).trim() : null;
-      } else {
-        return NextResponse.json(
-          { success: false, error: "Patient information is required" },
-          { status: 400 }
-        );
-      }
+      return NextResponse.json(
+        { success: false, error: "Patient information is required" },
+        { status: 400 }
+      );
     }
 
     console.log("Prisma creating avis with data:", avisData);
@@ -215,7 +201,7 @@ export async function POST(request: NextRequest) {
     };
 
     // If patientId exists, connect to existing patient
-    if (avisData.patientId) {
+    if (hasExistingPatientId && avisData.patientId) {
       createData.patientId = avisData.patientId;
     }
     else{

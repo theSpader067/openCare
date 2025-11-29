@@ -226,97 +226,20 @@ export async function POST(request: NextRequest) {
 
     // Handle patient - either use existing patient or store inline patient data
     // Either patientId OR patientName must be provided
-    if (patientId) {
-      // Use existing patient from DB
-      const parsedPatientId = parseInt(String(patientId));
-      if (!isNaN(parsedPatientId)) {
-        rapportData.patientId = parsedPatientId;
-        const rapport = await prisma.rapport.create({
-          data: {
-            title:rapportData.title,
-            category:rapportData.category,
-            date:rapportData.date,
-            duration:rapportData.duration,
-            details:rapportData.details,
-            recommandations: rapportData.recommandations,
-            patientId: rapportData.patientId,
-            creator: {
-              connect:{
-                  id: rapportData.creatorId,
-                  }
-                },
-            ...(validParticipantIds.length > 0 && {
-              participants: {
-                connect: validParticipantIds.map(id => ({ id }))
-              }
-            })
-          },
-          include: {
-            patient: true,
-            creator: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                specialty: true,
-              },
-            },
-            participants: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                specialty: true,
-              },
-            },
-          },
-        });
-    
-        return NextResponse.json({
-          success: true,
-          data: convertRapportToJSON(rapport),
-        });
-      } else {
-        return NextResponse.json(
-          { success: false, error: "Invalid patient ID" },
-          { status: 400 }
-        );
-      }
+    const parsedPatientId =
+      patientId !== undefined && patientId !== null && String(patientId).trim() !== ""
+        ? parseInt(String(patientId))
+        : NaN;
+    const hasExistingPatient = !isNaN(parsedPatientId);
+
+    if (hasExistingPatient) {
+      rapportData.patientId = parsedPatientId;
     } else if (patientName && patientName.trim()) {
       // Store inline patient data (not linked to DB)
       rapportData.patientId = null;
       rapportData.patientName = patientName.trim();
       rapportData.patientAge = patientAge ? String(patientAge).trim() : null;
       rapportData.patientHistory = patientHistory ? String(patientHistory).trim() : null;
-
-      const rapport = await prisma.rapport.create({
-        data: {
-          title:rapportData.title,
-          category:rapportData.category,
-          date:rapportData.date,
-          duration:rapportData.duration,
-          details:rapportData.details,
-          recommandations: rapportData.recommandations,
-          patientName:rapportData.patientName,
-          patientAge:rapportData.patientAge,
-          patientHistory:rapportData.patientHistory,
-          creator: {
-            connect:{
-                id: rapportData.creatorId,
-                }
-              },
-          ...(validParticipantIds.length > 0 && {
-            participants: {
-              connect: validParticipantIds.map(id => ({ id }))
-            }
-          })
-        },
-      });
-  
-      return NextResponse.json({
-        success: true,
-        data: convertRapportToJSON(rapport),
-      });
     } else {
       // Neither patientId nor patientName provided
       return NextResponse.json(
@@ -324,6 +247,55 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const rapport = await prisma.rapport.create({
+      data: {
+        title: rapportData.title,
+        category: rapportData.category,
+        date: rapportData.date,
+        duration: rapportData.duration,
+        details: rapportData.details,
+        recommandations: rapportData.recommandations,
+        patientId: rapportData.patientId ?? undefined,
+        patientName: rapportData.patientName,
+        patientAge: rapportData.patientAge,
+        patientHistory: rapportData.patientHistory,
+        creator: {
+          connect: {
+            id: rapportData.creatorId,
+          },
+        },
+        ...(validParticipantIds.length > 0 && {
+          participants: {
+            connect: validParticipantIds.map((id) => ({ id })),
+          },
+        }),
+      },
+      include: {
+        patient: true,
+        creator: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            specialty: true,
+          },
+        },
+        participants: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            specialty: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: convertRapportToJSON(rapport),
+    });
 
     
   } catch (error) {

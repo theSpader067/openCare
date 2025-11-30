@@ -21,8 +21,7 @@
       "Bash(npx prisma migrate dev:*)",
       "Bash(npx prisma generate:*)",
       "Bash(git add:*)",
-      "Bash(npm run lint:*)",
-      "Bash(yes:*)"
+      "Bash(npm run lint:*)"
     ],
     "deny": [],
     "ask": []

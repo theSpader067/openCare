@@ -323,7 +323,8 @@
       "medicalHistory": "ATCDs médicaux",
       "surgicalHistory": "ATCDs chirurgicaux",
       "otherInfo": "Autres éléments",
-      "observations": "Observations"
+      "observations": "Observations",
+      "demographicInfo": "Informations démographiques"
     },
     "labels": {
       "patientId": "Identifiant patient",
@@ -392,6 +393,14 @@
       "otherInfo": "Autres informations (allergies, traitements, etc.)",
       "allergyExample": "Ex. Allergies: Pénicilline",
       "separateByLine": "Séparez les éléments par un saut de ligne",
+      "motif": "Motif de consultation",
+      "atcdsGynObstetrique": "ATCDs gynéco-obstétrique",
+      "atcdsFamiliaux": "ATCDs familiaux",
+      "addressOrigin": "Adresse d'origine",
+      "addressHabitat": "Adresse de résidence",
+      "couvertureSociale": "Couverture sociale",
+      "situationFamiliale": "Situation familiale",
+      "profession": "Profession",
       "observations": "Observations",
       "observationsDesc": "Notez les observations cliniques.",
       "observationHistory": "Historique des observations ({{count}})",
@@ -406,7 +415,39 @@
       "notFound": "Dossier introuvable",
       "notFoundDesc": "Le patient recherché n'existe pas ou a été archivé.",
       "backToPatientList": "Retour à la liste des patients",
-      "noInfoAvailable": "Aucune information disponible pour le dossier demandé."
+      "noInfoAvailable": "Aucune information disponible pour le dossier demandé.",
+      "quickFill": "Ajout rapide",
+      "quickFillDesc": "Ajouter rapidement une observation avec les examens cliniques",
+      "clinicalExams": "Examens cliniques",
+      "noObservation": "Pas d'observation",
+      "noObservationDesc": "Sélectionnez des examens pour créer une observation",
+      "observation": "Observation",
+      "accordionPlaceholder": "Contenu de l'examen",
+      "noPatientFound": "Patient introuvable",
+      "planHemodynamique": "Plan Hémodynamique",
+      "planNeurologique": "Plan Neurologique",
+      "planRespiratoire": "Plan Respiratoire",
+      "inspection": "Inspection",
+      "palpation": "Palpation",
+      "percussion": "Percussion",
+      "auscultation": "Auscultation",
+      "additionalSigns": "Signes supplémentaires",
+      "exams": {
+        "examenGeneral": "Examen général",
+        "abdominal": "Abdominal",
+        "cardiorespiratoire": "Cardiorespiratoire",
+        "pleuropulmonaire": "Pleuropulmonaire",
+        "neurologique": "Neurologique",
+        "cutaneomuqueux": "Cutanéomuqueux",
+        "osteoarticulaire": "Ostéoarticulaire",
+        "ganglionnaire": "Ganglionnaire",
+        "stomatologique": "Stomatologique",
+        "nouveaune": "Du nouveau-né",
+        "gynecologique": "Gynécologique"
+      },
+      "generalState": "État général",
+      "skinState": "État cutanéomuqueuse",
+      "additionalNotesPlaceholder": "Notes supplémentaires..."
     },
     "filters": {
       "title": "Filtres & recherche",
@@ -450,12 +491,15 @@
       "delete": "Supprimer",
       "update": "Mettre à jour",
       "close": "Fermer",
-      "saving": "Enregistrement..."
+      "saving": "Enregistrement...",
+      "create": "Créer",
+      "back": "Retour"
     },
     "labels": {
       "fullName": "Nom complet",
       "dateOfBirth": "Date de naissance",
-      "optional": "optionnel"
+      "optional": "optionnel",
+      "yearsOld": "ans"
     },
     "loading": {
       "creating": "Création..."

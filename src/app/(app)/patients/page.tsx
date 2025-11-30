@@ -12,6 +12,7 @@ import {
   UserRound,
   X,
   Clock,
+  ChevronRight,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -378,18 +379,6 @@ export default function PatientsPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="rounded-full border-2 border-blue-300 bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100 hover:border-blue-400 shadow-sm hover:shadow-md transition-all"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  router.push(`/timeline?id=${selectedPatient.pid}`);
-                }}
-              >
-                <Clock className="mr-2 h-4 w-4" />
-                {t("patients.buttons.carePathway")}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
                 className="rounded-full border border-indigo-200 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700"
                 onClick={() =>
                   router.push(`/patients/dossier?id=${selectedPatient.id}`)
@@ -436,6 +425,20 @@ export default function PatientsPage() {
           </div>
         </section>
 
+        {/* Care Pathway Text Button */}
+        <div className="flex items-center justify-start">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/timeline?id=${selectedPatient.pid}`);
+            }}
+            className="text-sm text-indigo-600 font-medium hover:underline transition-all flex items-center gap-1 group"
+          >
+            {t("patients.buttons.carePathway")}
+            <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </button>
+        </div>
+
         <section className="rounded-3xl border border-slate-200/70 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-5">
             <div>
@@ -469,6 +472,38 @@ export default function PatientsPage() {
                 </p>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-4">
+            {t("patients.section.demographicInfo")}
+          </p>
+          <div className="space-y-3 text-sm">
+            {selectedPatient.profession && (
+              <div>
+                <p className="text-xs text-slate-500 mb-1">{t("patients.dossier.profession")}</p>
+                <p className="text-slate-700 font-medium">{selectedPatient.profession}</p>
+              </div>
+            )}
+            {selectedPatient.situationFamiliale && (
+              <div>
+                <p className="text-xs text-slate-500 mb-1">{t("patients.dossier.situationFamiliale")}</p>
+                <p className="text-slate-700 font-medium">{selectedPatient.situationFamiliale}</p>
+              </div>
+            )}
+            {selectedPatient.couvertureSociale && (
+              <div>
+                <p className="text-xs text-slate-500 mb-1">{t("patients.dossier.couvertureSociale")}</p>
+                <p className="text-slate-700 font-medium">{selectedPatient.couvertureSociale}</p>
+              </div>
+            )}
+            {selectedPatient.addressHabitat && (
+              <div>
+                <p className="text-xs text-slate-500 mb-1">{t("patients.dossier.addressHabitat")}</p>
+                <p className="text-slate-700 font-medium">{selectedPatient.addressHabitat}</p>
+              </div>
+            )}
           </div>
         </section>
 

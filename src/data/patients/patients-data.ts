@@ -32,4 +32,12 @@ export type Patient = {
     other: String[];
   };
   observations: ObservationEntry[];
+  motif?: string;
+  atcdsGynObstetrique?: string;
+  atcdsFamiliaux?: string;
+  addressOrigin?: string;
+  addressHabitat?: string;
+  couvertureSociale?: string;
+  situationFamiliale?: string;
+  profession?: string;
 };

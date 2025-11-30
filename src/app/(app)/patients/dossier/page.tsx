@@ -38,9 +38,17 @@ type PatientFormState = {
   nextVisit: string;
   diagnosisCode:string,
   diagnosisLabel:string,
+  motif: string;
   medicalHistory: string;
   surgicalHistory: string;
   otherHistory: string;
+  atcdsGynObstetrique: string;
+  atcdsFamiliaux: string;
+  addressOrigin: string;
+  addressHabitat: string;
+  couvertureSociale: string;
+  situationFamiliale: string;
+  profession: string;
   initialObservation?: string;
 };
 
@@ -56,9 +64,17 @@ const emptyForm: PatientFormState = {
   nextVisit: "",
   diagnosisCode:"",
   diagnosisLabel:"",
+  motif: "",
   medicalHistory: "",
   surgicalHistory: "",
   otherHistory: "",
+  atcdsGynObstetrique: "",
+  atcdsFamiliaux: "",
+  addressOrigin: "",
+  addressHabitat: "",
+  couvertureSociale: "",
+  situationFamiliale: "",
+  profession: "",
   initialObservation: "",
 };
 
@@ -79,9 +95,17 @@ function toFormState(patient?: Patient | null): PatientFormState {
     nextVisit: patient.nextVisit,
     diagnosisCode: patient.diagnosis.code,
     diagnosisLabel:patient.diagnosis.label,
+    motif: patient.motif || "",
     medicalHistory: patient.histories.medical.join("\n"),
     surgicalHistory: patient.histories.surgical.join("\n"),
-    otherHistory: patient.histories.other.join('\n')
+    otherHistory: patient.histories.other.join('\n'),
+    atcdsGynObstetrique: patient.atcdsGynObstetrique || "",
+    atcdsFamiliaux: patient.atcdsFamiliaux || "",
+    addressOrigin: patient.addressOrigin || "",
+    addressHabitat: patient.addressHabitat || "",
+    couvertureSociale: patient.couvertureSociale || "",
+    situationFamiliale: patient.situationFamiliale || "",
+    profession: patient.profession || ""
   };
 }
 
@@ -171,6 +195,14 @@ export default function PatientDossierPage() {
                 other: apiPatient.histories.other ? [apiPatient.histories.other] : [],
               },
               observations: apiPatient.observations,
+              motif: apiPatient.motif,
+              atcdsGynObstetrique: apiPatient.atcdsGynObstetrique,
+              atcdsFamiliaux: apiPatient.atcdsFamiliaux,
+              addressOrigin: apiPatient.addressOrigin,
+              addressHabitat: apiPatient.addressHabitat,
+              couvertureSociale: apiPatient.couvertureSociale,
+              situationFamiliale: apiPatient.situationFamiliale,
+              profession: apiPatient.profession,
             };
 
             // Update formData with loaded patient data
@@ -186,9 +218,17 @@ export default function PatientDossierPage() {
               nextVisit: transformedPatient.nextVisit,
               diagnosisCode: transformedPatient.diagnosis.code,
               diagnosisLabel:transformedPatient.diagnosis.label,
+              motif: transformedPatient.motif || "",
               medicalHistory: transformedPatient.histories.medical.join("\n"),
               surgicalHistory: transformedPatient.histories.surgical.join("\n"),
               otherHistory: transformedPatient.histories.other.join("\n"),
+              atcdsGynObstetrique: transformedPatient.atcdsGynObstetrique || "",
+              atcdsFamiliaux: transformedPatient.atcdsFamiliaux || "",
+              addressOrigin: transformedPatient.addressOrigin || "",
+              addressHabitat: transformedPatient.addressHabitat || "",
+              couvertureSociale: transformedPatient.couvertureSociale || "",
+              situationFamiliale: transformedPatient.situationFamiliale || "",
+              profession: transformedPatient.profession || "",
             });
             setObservations(apiPatient.observations)
             setIsLoadingObservations(false)
@@ -271,9 +311,17 @@ export default function PatientDossierPage() {
           service: formData.service?.trim(),
           diagnostic: formData.diagnosisLabel?.trim(),
           cim: formData.diagnosisCode?.trim(),
+          motif: formData.motif?.trim(),
           atcdsMedical:formData.medicalHistory?.trim(),
           atcdsChirurgical: formData.surgicalHistory?.trim(),
           atcdsExtra: formData.otherHistory?.trim(),
+          atcdsGynObstetrique: formData.atcdsGynObstetrique?.trim(),
+          atcdsFamiliaux: formData.atcdsFamiliaux?.trim(),
+          addressOrigin: formData.addressOrigin?.trim(),
+          addressHabitat: formData.addressHabitat?.trim(),
+          couvertureSociale: formData.couvertureSociale?.trim(),
+          situationFamiliale: formData.situationFamiliale?.trim(),
+          profession: formData.profession?.trim(),
           status: formData.status?.trim(),
           nextContact: formData.nextVisit ? String(formData.nextVisit).trim() : undefined,
           isPrivate: formData.type,
@@ -299,9 +347,17 @@ export default function PatientDossierPage() {
           diagnostic: formData.diagnosisLabel?.trim(),
           histoire: formData.medicalHistory?.trim(),
           cim: formData.diagnosisCode?.trim(),
+          motif: formData.motif?.trim(),
           atcdsMedical: formData.medicalHistory?.trim(),
           atcdsChirurgical: formData.surgicalHistory?.trim(),
           atcdsExtra: formData.otherHistory?.trim(),
+          atcdsGynObstetrique: formData.atcdsGynObstetrique?.trim(),
+          atcdsFamiliaux: formData.atcdsFamiliaux?.trim(),
+          addressOrigin: formData.addressOrigin?.trim(),
+          addressHabitat: formData.addressHabitat?.trim(),
+          couvertureSociale: formData.couvertureSociale?.trim(),
+          situationFamiliale: formData.situationFamiliale?.trim(),
+          profession: formData.profession?.trim(),
           status: formData.status?.trim(),
           nextContact: formData.nextVisit ? String(formData.nextVisit).trim() : undefined,
           isPrivate: formData.type,
@@ -481,6 +537,65 @@ export default function PatientDossierPage() {
               placeholder={t("patients.dossier.nextContactExample")}
             />
           </div>
+
+          {/* Demographic Information Section */}
+          <div className="border-t border-slate-200 pt-6 mt-6">
+            <h3 className="text-sm font-semibold text-slate-800 mb-4">Informations démographiques</h3>
+
+            {/* Row 1: Address Origin, Address Habitat, Profession */}
+            <div className="grid gap-4 md:grid-cols-3 mb-4">
+              <InputField
+                label={t("patients.dossier.addressOrigin")}
+                id="patient-address-origin"
+                value={formData.addressOrigin}
+                onChange={handleInputChange("addressOrigin")}
+                placeholder={t("patients.dossier.addressOrigin")}
+              />
+              <InputField
+                label={t("patients.dossier.addressHabitat")}
+                id="patient-address-habitat"
+                value={formData.addressHabitat}
+                onChange={handleInputChange("addressHabitat")}
+                placeholder={t("patients.dossier.addressHabitat")}
+              />
+              <InputField
+                label={t("patients.dossier.profession")}
+                id="patient-profession"
+                value={formData.profession}
+                onChange={handleInputChange("profession")}
+                placeholder={t("patients.dossier.profession")}
+              />
+            </div>
+
+            {/* Row 2: Social Coverage, Family Situation */}
+            <div className="grid gap-4 md:grid-cols-2">
+              <SelectField
+                label={t("patients.dossier.couvertureSociale")}
+                id="patient-couverture-sociale"
+                value={formData.couvertureSociale}
+                onChange={handleInputChange("couvertureSociale")}
+                options={[
+                  { label: "AMO", value: "AMO" },
+                  { label: "CNOPS", value: "CNOPS" },
+                  { label: "CNSS", value: "CNSS" },
+                  { label: "Autre", value: "Autre" },
+                ]}
+              />
+              <SelectField
+                label={t("patients.dossier.situationFamiliale")}
+                id="patient-situation-familiale"
+                value={formData.situationFamiliale}
+                onChange={handleInputChange("situationFamiliale")}
+                options={[
+                  { label: "Célibataire", value: "Célibataire" },
+                  { label: "Marié", value: "Marié" },
+                  { label: "Divorcé", value: "Divorcé" },
+                  { label: "Veuf", value: "Veuf" },
+                ]}
+              />
+            </div>
+          </div>
+
           {isExistingPatient ? (
             <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
               <Badge variant="muted">{formData.identifier}</Badge>
@@ -528,20 +643,134 @@ export default function PatientDossierPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <TextareaField
-            label={t("patients.dossier.medicalHistory")}
-            id="patient-medical-history"
-            value={formData.medicalHistory}
-            onChange={handleInputChange("medicalHistory")}
-            placeholder={t("patients.dossier.separateByLine")}
+          <InputField
+            label={t("patients.dossier.motif")}
+            id="patient-motif"
+            value={formData.motif}
+            onChange={handleInputChange("motif")}
+            placeholder={t("patients.dossier.motif")}
           />
-          <TextareaField
-            label={t("patients.dossier.surgicalHistory")}
-            id="patient-surgical-history"
-            value={formData.surgicalHistory}
-            onChange={handleInputChange("surgicalHistory")}
-            placeholder={t("patients.dossier.separateByLine")}
-          />
+
+          {/* Medical History Section */}
+          <div>
+            <label className="text-sm font-medium text-[#221b5b]">{t("patients.dossier.medicalHistory")}</label>
+            <div className="mt-2 mb-3">
+              <div className="flex flex-wrap gap-2">
+                {["HTA", "Diabète", "Hépatopathie", "Néphropathie", "Cardiopathie", "Asthme", "BPCO", "Obésité", "Dyslipidémie", "Hypercholestérolémie", "Hypothyroïdie", "Hyperthyroïdie", "Épilepsie", "Migraines", "Dépression", "Anxiété", "VIH", "Hépatite", "Tuberculose", "Autres maladies chroniques"].map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => {
+                      const currentText = formData.medicalHistory.trim();
+                      const newText = currentText ? `${currentText}, ${tag}` : tag;
+                      setFormData((prev) => ({ ...prev, medicalHistory: newText }));
+                    }}
+                    className="px-2.5 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors border border-blue-200"
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <TextareaField
+              label=""
+              id="patient-medical-history"
+              value={formData.medicalHistory}
+              onChange={handleInputChange("medicalHistory")}
+              placeholder={t("patients.dossier.separateByLine")}
+            />
+          </div>
+
+          {/* Surgical History Section */}
+          <div>
+            <label className="text-sm font-medium text-[#221b5b]">{t("patients.dossier.surgicalHistory")}</label>
+            <div className="mt-2 mb-3">
+              <div className="flex flex-wrap gap-2">
+                {["Appendicectomie", "Cholécystectomie", "Laparoscopie", "Coeliostomie", "Hystérectomie", "Césarienne", "Cure hernie", "Ligature trompe", "Vasectomie", "Prostatectomie", "Néphrectomie", "Thyroïdectomie", "Mastectomie", "Tumorectomie", "Péridural", "Chirurgie bariatrique", "Chirurgie cardiaque", "Chirurgie vasculaire", "Chirurgie ORL", "Autres chirurgies"].map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => {
+                      const currentText = formData.surgicalHistory.trim();
+                      const newText = currentText ? `${currentText}, ${tag}` : tag;
+                      setFormData((prev) => ({ ...prev, surgicalHistory: newText }));
+                    }}
+                    className="px-2.5 py-1 text-xs font-medium rounded-full bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors border border-amber-200"
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <TextareaField
+              label=""
+              id="patient-surgical-history"
+              value={formData.surgicalHistory}
+              onChange={handleInputChange("surgicalHistory")}
+              placeholder={t("patients.dossier.separateByLine")}
+            />
+          </div>
+
+          {/* Gynecological/Obstetric History Section */}
+          <div>
+            <label className="text-sm font-medium text-[#221b5b]">{t("patients.dossier.atcdsGynObstetrique")}</label>
+            <div className="mt-2 mb-3">
+              <div className="flex flex-wrap gap-2">
+                {["Ménopause", "Préménopause", "Dysménorrhée", "Aménorrhée", "Infertilité", "Endométriose", "Fibrome utérin", "Kyste ovarien", "Cancer du sein", "Cancer de l'utérus", "Cancer de l'ovaire", "Grossesse multiple", "Placenta praevia", "Prééclampsie", "Éclampsie", "Diabète gestationnel", "Hémorragie de la délivrance", "Dépression post-partum", "Fausse couche récidivante", "Autres complications gynéco-obstétriques"].map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => {
+                      const currentText = formData.atcdsGynObstetrique.trim();
+                      const newText = currentText ? `${currentText}, ${tag}` : tag;
+                      setFormData((prev) => ({ ...prev, atcdsGynObstetrique: newText }));
+                    }}
+                    className="px-2.5 py-1 text-xs font-medium rounded-full bg-pink-100 text-pink-700 hover:bg-pink-200 transition-colors border border-pink-200"
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <TextareaField
+              label=""
+              id="patient-atcds-gynobstetrique"
+              value={formData.atcdsGynObstetrique}
+              onChange={handleInputChange("atcdsGynObstetrique")}
+              placeholder={t("patients.dossier.separateByLine")}
+            />
+          </div>
+
+          {/* Family History Section */}
+          <div>
+            <label className="text-sm font-medium text-[#221b5b]">{t("patients.dossier.atcdsFamiliaux")}</label>
+            <div className="mt-2 mb-3">
+              <div className="flex flex-wrap gap-2">
+                {["Cancer", "Diabète", "HTA", "Cardiopathie", "AVC", "Asthme", "Emphysème", "Maladie mentale", "Épilepsie", "Hémophilie", "Drépanocytose", "Mucoviscidose", "Maladie d'Alzheimer", "Parkinson", "Polyarthrite", "Lupus", "Hérédité familiale", "Consanguinité", "Infertilité familiale", "Autres antécédents familiaux"].map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => {
+                      const currentText = formData.atcdsFamiliaux.trim();
+                      const newText = currentText ? `${currentText}, ${tag}` : tag;
+                      setFormData((prev) => ({ ...prev, atcdsFamiliaux: newText }));
+                    }}
+                    className="px-2.5 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors border border-purple-200"
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <TextareaField
+              label=""
+              id="patient-atcds-familiaux"
+              value={formData.atcdsFamiliaux}
+              onChange={handleInputChange("atcdsFamiliaux")}
+              placeholder={t("patients.dossier.separateByLine")}
+            />
+          </div>
+
           <TextareaField
             label={t("patients.dossier.otherInfo")}
             id="patient-other-history"
@@ -734,11 +963,22 @@ export default function PatientDossierPage() {
 
           {/* New Observation Input - Smart Editor with AI */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[#221b5b]">
-              {isExistingPatient
-                ? t("patients.dossier.addObservation")
-                : t("patients.dossier.initialObservations")}
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-[#221b5b]">
+                {isExistingPatient
+                  ? t("patients.dossier.addObservation")
+                  : t("patients.dossier.initialObservations")}
+              </label>
+              {isExistingPatient && (
+                <button
+                  type="button"
+                  onClick={() => router.push(`/patients/dossier/quickFill?id=${formData.id}`)}
+                  className="text-sm text-indigo-600 font-medium hover:underline transition-all"
+                >
+                  {t("patients.dossier.quickFill") || "Ajout rapide"}
+                </button>
+              )}
+            </div>
             <SmartEditor
               value={observationDraft}
               onChange={setObservationDraft}
@@ -831,7 +1071,7 @@ export default function PatientDossierPage() {
       </Card>
 
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        
+
         <div className="flex flex-wrap items-center gap-3 ml-auto">
           <Button
             type="button"

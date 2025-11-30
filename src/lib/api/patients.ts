@@ -11,9 +11,17 @@ export async function createPatient({
   service,
   diagnostic,
   cim,
+  motif,
   atcdsMedical,
   atcdsChirurgical,
   atcdsExtra,
+  atcdsGynObstetrique,
+  atcdsFamiliaux,
+  addressOrigin,
+  addressHabitat,
+  couvertureSociale,
+  situationFamiliale,
+  profession,
   status,
   nextContact,
   isPrivate,
@@ -26,9 +34,17 @@ export async function createPatient({
   service?: string;
   diagnostic?: string;
   cim?: string;
+  motif?: string;
   atcdsMedical?:string,
   atcdsChirurgical?: string;
   atcdsExtra?: string;
+  atcdsGynObstetrique?: string;
+  atcdsFamiliaux?: string;
+  addressOrigin?: string;
+  addressHabitat?: string;
+  couvertureSociale?: string;
+  situationFamiliale?: string;
+  profession?: string;
   status?: string;
   nextContact?: string;
   isPrivate?: String;
@@ -48,9 +64,17 @@ export async function createPatient({
         service,
         diagnostic,
         cim,
+        motif,
         atcdsMedical,
         atcdsChirurgical,
         atcdsExtra,
+        atcdsGynObstetrique,
+        atcdsFamiliaux,
+        addressOrigin,
+        addressHabitat,
+        couvertureSociale,
+        situationFamiliale,
+        profession,
         status,
         nextContact,
         isPrivate,
@@ -137,9 +161,17 @@ export async function updatePatient(
     service,
     diagnostic,
     cim,
+    motif,
     atcdsMedical,
     atcdsChirurgical,
     atcdsExtra,
+    atcdsGynObstetrique,
+    atcdsFamiliaux,
+    addressOrigin,
+    addressHabitat,
+    couvertureSociale,
+    situationFamiliale,
+    profession,
     status,
     nextContact,
     isPrivate,
@@ -150,9 +182,17 @@ export async function updatePatient(
     service?: string;
     diagnostic?: string;
     cim?: string;
+    motif?: string;
     atcdsMedical?: string;
     atcdsChirurgical?: string;
     atcdsExtra?: string;
+    atcdsGynObstetrique?: string;
+    atcdsFamiliaux?: string;
+    addressOrigin?: string;
+    addressHabitat?: string;
+    couvertureSociale?: string;
+    situationFamiliale?: string;
+    profession?: string;
     status?: string;
     nextContact?: string;
     isPrivate?: string | boolean;
@@ -171,9 +211,17 @@ export async function updatePatient(
         service,
         diagnostic,
         cim,
+        motif,
         atcdsMedical,
         atcdsChirurgical,
         atcdsExtra,
+        atcdsGynObstetrique,
+        atcdsFamiliaux,
+        addressOrigin,
+        addressHabitat,
+        couvertureSociale,
+        situationFamiliale,
+        profession,
         status,
         nextContact,
         isPrivate,

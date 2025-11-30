@@ -459,7 +459,8 @@
       "medicalHistory": "Medical History",
       "surgicalHistory": "Surgical History",
       "otherInfo": "Other information",
-      "observations": "Observations"
+      "observations": "Observations",
+      "demographicInfo": "Demographic Information"
     },
     "labels": {
       "patientId": "Patient ID",
@@ -528,6 +529,14 @@
       "otherInfo": "Other information (allergies, treatments, etc.)",
       "allergyExample": "Ex. Allergies: Penicillin",
       "separateByLine": "Separate items by line break",
+      "motif": "Reason for Visit",
+      "atcdsGynObstetrique": "Gynecological/Obstetric History",
+      "atcdsFamiliaux": "Family History",
+      "addressOrigin": "Origin Address",
+      "addressHabitat": "Living Address",
+      "couvertureSociale": "Social Security Coverage",
+      "situationFamiliale": "Family Situation",
+      "profession": "Profession",
       "observations": "Observations",
       "observationsDesc": "Record clinical observations.",
       "observationHistory": "Observation History ({{count}})",
@@ -542,7 +551,39 @@
       "notFound": "File not found",
       "notFoundDesc": "The requested patient does not exist or has been archived.",
       "backToPatientList": "Back to patient list",
-      "noInfoAvailable": "No information available for the requested file."
+      "noInfoAvailable": "No information available for the requested file.",
+      "quickFill": "Quick Add",
+      "quickFillDesc": "Quickly add an observation with clinical exams",
+      "clinicalExams": "Clinical Exams",
+      "noObservation": "No observation",
+      "noObservationDesc": "Select exams to create an observation",
+      "observation": "Observation",
+      "accordionPlaceholder": "Exam content",
+      "noPatientFound": "Patient not found",
+      "planHemodynamique": "Hemodynamic Plan",
+      "planNeurologique": "Neurological Plan",
+      "planRespiratoire": "Respiratory Plan",
+      "inspection": "Inspection",
+      "palpation": "Palpation",
+      "percussion": "Percussion",
+      "auscultation": "Auscultation",
+      "additionalSigns": "Additional Signs",
+      "exams": {
+        "examenGeneral": "General Exam",
+        "abdominal": "Abdominal",
+        "cardiorespiratoire": "Cardiorespiratory",
+        "pleuropulmonaire": "Pleuropulmonary",
+        "neurologique": "Neurological",
+        "cutaneomuqueux": "Cutaneous & Mucosal",
+        "osteoarticulaire": "Musculoskeletal",
+        "ganglionnaire": "Lymph Nodes",
+        "stomatologique": "Stomatological",
+        "nouveaune": "Newborn",
+        "gynecologique": "Gynecological"
+      },
+      "generalState": "General State",
+      "skinState": "Cutaneous & Mucosal State",
+      "additionalNotesPlaceholder": "Additional notes..."
     },
     "filters": {
       "title": "Filters & Search",
@@ -586,12 +627,15 @@
       "delete": "Delete",
       "update": "Update",
       "close": "Close",
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "create": "Create",
+      "back": "Back"
     },
     "labels": {
       "fullName": "Full name",
       "dateOfBirth": "Date of birth",
-      "optional": "optional"
+      "optional": "optional",
+      "yearsOld": "years old"
     },
     "loading": {
       "creating": "Creating..."

@@ -64,29 +64,37 @@ model Observation {
 }
 
 model Patient {
-  id                Int            @id @default(autoincrement())
-  fullName          String
-  pid               String         @unique
-  dateOfBirth       DateTime?
-  service           String?
-  status            String?
-  userId            Int
-  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  isPrivate         Boolean        @default(false)
-  nextContact       String?
-  diagnostic        String?
-  cim               String?
-  atcdsMedical      String?
-  atcdsChirurgical  String?
-  atcdsExtra        String?
-  observations      Observation[]
-  ordonnances       Ordonnance[]
-  avis              Avis[]
-  rapports          Rapport[]
-  analyses          Analyse[]
-  tasks             Task[]
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  id                    Int            @id @default(autoincrement())
+  fullName              String
+  pid                   String         @unique
+  dateOfBirth           DateTime?
+  service               String?
+  status                String?
+  userId                Int
+  user                  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isPrivate             Boolean        @default(false)
+  nextContact           String?
+  diagnostic            String?
+  cim                   String?
+  motif                 String?
+  atcdsMedical          String?
+  atcdsChirurgical      String?
+  atcdsExtra            String?
+  atcdsGynObstetrique   String?
+  atcdsFamiliaux        String?
+  addressOrigin         String?
+  addressHabitat        String?
+  couvertureSociale     String?
+  situationFamiliale    String?
+  profession            String?
+  observations          Observation[]
+  ordonnances           Ordonnance[]
+  avis                  Avis[]
+  rapports              Rapport[]
+  analyses              Analyse[]
+  tasks                 Task[]
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
 }
 
 model Team {

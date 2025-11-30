@@ -12,6 +12,7 @@ import {
   Loader2,
   CheckSquare2,
   Square,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -1320,6 +1321,145 @@ ${patient.motif}
     }
   };
 
+  const handleExportPDF = () => {
+    if (!observation) return;
+
+    const element = document.getElementById('observation-export');
+    if (!element) return;
+
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    // Get today's date
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
+    // Build HTML content
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Observation Médicale - ${patient?.name}</title>
+        <style>
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #1e293b;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20mm;
+          }
+          .title-section {
+            text-align: center;
+            margin-bottom: 2rem;
+            border-bottom: 3px solid #4f46e5;
+            padding-bottom: 1rem;
+          }
+          .title-section h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0 0 1rem 0;
+            color: #1e293b;
+          }
+          .date-section {
+            text-align: right;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+            color: #475569;
+          }
+          h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #334155;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+          }
+          h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #475569;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+          }
+          p {
+            font-size: 0.875rem;
+            line-height: 1.6;
+            color: #475569;
+            margin-bottom: 0.75rem;
+          }
+          strong {
+            color: #1e293b;
+            font-weight: 600;
+          }
+          ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin: 0.75rem 0;
+          }
+          li {
+            padding-left: 1.5rem;
+            position: relative;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            color: #475569;
+            margin-bottom: 0.25rem;
+          }
+          li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4f46e5;
+            font-weight: bold;
+          }
+          @media print {
+            body {
+              margin: 0;
+              padding: 20mm;
+            }
+            h2 {
+              page-break-after: avoid;
+            }
+            h3 {
+              page-break-after: avoid;
+            }
+            p {
+              orphans: 3;
+              widows: 3;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="title-section">
+          <h1>Observation Médicale</h1>
+        </div>
+        <div class="date-section">
+          <p>Fait le ${dateStr}</p>
+        </div>
+        <div class="content">
+          ${element.innerHTML}
+        </div>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+
+    // Trigger print dialog
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 250);
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -1396,7 +1536,19 @@ ${patient.motif}
                 </span>
                 <span>
                   <span className="font-medium text-slate-700">
-                    {patient.age} {t("common.labels.yearsOld")}
+                    {(() => {
+                      const calculateAge = (birthDateStr: string): number => {
+                        const birthDate = new Date(birthDateStr);
+                        const today = new Date();
+                        let age = today.getFullYear() - birthDate.getFullYear();
+                        const monthDiff = today.getMonth() - birthDate.getMonth();
+                        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                          age--;
+                        }
+                        return age;
+                      };
+                      return patient.birthDate ? calculateAge(patient.birthDate) : patient.age;
+                    })()} {t("common.labels.yearsOld")}
                   </span>
                 </span>
                 {patient.diagnosis.label && (
@@ -1782,25 +1934,38 @@ ${patient.motif}
             <h3 className="text-sm font-semibold text-slate-800">
               {t("patients.dossier.observation")}
             </h3>
-            <Button
-              variant="primary"
-              size="sm"
-              disabled={!hasAnyModifiedExam || isCreating}
-              onClick={handleCreateObservation}
-              className={isCreating ? "opacity-75 cursor-not-allowed" : ""}
-            >
-              {isCreating ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  {t("common.buttons.saving")}
-                </>
-              ) : (
-                <>
-                  <Plus className="h-4 w-4 mr-2" />
-                  {t("common.buttons.create")}
-                </>
+            <div className="flex items-center gap-2">
+              {observation && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportPDF}
+                  title="Export as PDF"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  PDF
+                </Button>
               )}
-            </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                disabled={!hasAnyModifiedExam || isCreating}
+                onClick={handleCreateObservation}
+                className={isCreating ? "opacity-75 cursor-not-allowed" : ""}
+              >
+                {isCreating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    {t("common.buttons.saving")}
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-2" />
+                    {t("common.buttons.create")}
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
           <div className="flex-1 rounded-2xl border border-slate-200/80 bg-slate-50 p-6 flex flex-col overflow-y-auto">
             {isCreating ? (
@@ -1814,6 +1979,24 @@ ${patient.motif}
             ) : observation ? (
               <div className="w-full bg-white rounded-lg border border-slate-200 p-8 text-slate-800 prose prose-sm max-w-none">
                 <style>{`
+                  .observation-header {
+                    text-align: center;
+                    margin-bottom: 2rem;
+                    border-bottom: 3px solid #4f46e5;
+                    padding-bottom: 1rem;
+                  }
+                  .observation-header h1 {
+                    font-size: 1.875rem;
+                    font-weight: 700;
+                    color: #1e293b;
+                    margin: 0 0 1rem 0;
+                  }
+                  .observation-date {
+                    text-align: right;
+                    margin-bottom: 2rem;
+                    font-size: 0.875rem;
+                    color: #475569;
+                  }
                   .observation-content h1 {
                     font-size: 1.875rem;
                     font-weight: 700;
@@ -1871,6 +2054,7 @@ ${patient.motif}
                     margin-bottom: 0.75rem;
                   }
                   @media print {
+                    .observation-header,
                     .observation-content {
                       background: white;
                       color: black;
@@ -1883,7 +2067,14 @@ ${patient.motif}
                     }
                   }
                 `}</style>
+                <div className="observation-header">
+                  <h1>Observation Médicale</h1>
+                </div>
+                <div className="observation-date">
+                  <p>Fait le {new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                </div>
                 <div
+                  id="observation-export"
                   className="observation-content"
                   dangerouslySetInnerHTML={{
                     __html: observation

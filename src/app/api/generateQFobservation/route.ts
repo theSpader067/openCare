@@ -81,7 +81,10 @@ export async function POST(request: NextRequest) {
     let examinationFindings = "";
 
     // Add hemodynamic findings if present
-    if (hemodynamicsData && Object.keys(hemodynamicsData).some((key) => hemodynamicsData[key])) {
+    if (hemodynamicsData && (hemodynamicsData.fc || hemodynamicsData.taSys || hemodynamicsData.taDias ||
+        hemodynamicsData.trc || hemodynamicsData.gcs || hemodynamicsData.fr || hemodynamicsData.sao2 ||
+        hemodynamicsData.temperature || hemodynamicsData.dextro || hemodynamicsData.weight ||
+        hemodynamicsData.height || hemodynamicsData.generalState || (hemodynamicsData.skinState && hemodynamicsData.skinState.length > 0))) {
       examinationFindings += "**Examen général:**\n";
       const findings = [];
 
@@ -97,7 +100,6 @@ export async function POST(request: NextRequest) {
       if (hemodynamicsData.dextro) findings.push(`Dextro: ${hemodynamicsData.dextro} mg/dL`);
       if (hemodynamicsData.weight) findings.push(`Poids: ${hemodynamicsData.weight} kg`);
       if (hemodynamicsData.height) findings.push(`Taille: ${hemodynamicsData.height} cm`);
-      if (hemodynamicsData.imc) findings.push(`IMC: ${hemodynamicsData.imc}`);
 
       examinationFindings += findings.join(", ") + "\n";
 
@@ -107,29 +109,50 @@ export async function POST(request: NextRequest) {
       if (hemodynamicsData.skinState && hemodynamicsData.skinState.length > 0) {
         examinationFindings += `État cutanéomuqueux: ${hemodynamicsData.skinState.join(", ")}\n`;
       }
+      if (hemodynamicsData.additionalNotes) {
+        examinationFindings += `Notes supplémentaires: ${hemodynamicsData.additionalNotes}\n`;
+      }
     }
 
     // Add exam selections
     if (examSelections && Object.keys(examSelections).length > 0) {
-      examinationFindings += "\n**Examens complémentaires:**\n";
+      let hasComplementaryExams = false;
+      const complementaryExamsText: string[] = [];
+
       for (const [examName, examData] of Object.entries(examSelections)) {
         const data = examData as any;
-        if (data && examName !== "Examen général" && (Object.keys(data).some((key) => (data[key] as any)?.length > 0) || data.extraNotes)) {
-          examinationFindings += `\n*${examName}:* `;
-          const signs = [];
-          if (data.inspection?.length > 0) signs.push(`Inspection: ${data.inspection.join(", ")}`);
-          if (data.palpation?.length > 0) signs.push(`Palpation: ${data.palpation.join(", ")}`);
-          if (data.percussion?.length > 0) signs.push(`Percussion: ${data.percussion.join(", ")}`);
-          if (data.auscultation?.length > 0) signs.push(`Auscultation: ${data.auscultation.join(", ")}`);
+        if (data && examName !== "Examen général") {
+          const hasInspection = Array.isArray(data.inspection) && data.inspection.length > 0;
+          const hasPalpation = Array.isArray(data.palpation) && data.palpation.length > 0;
+          const hasPercussion = Array.isArray(data.percussion) && data.percussion.length > 0;
+          const hasAuscultation = Array.isArray(data.auscultation) && data.auscultation.length > 0;
+          const hasExtraNotes = data.extraNotes && data.extraNotes.trim().length > 0;
 
-          if (signs.length > 0) {
-            examinationFindings += signs.join(" | ");
+          if (hasInspection || hasPalpation || hasPercussion || hasAuscultation || hasExtraNotes) {
+            hasComplementaryExams = true;
+            let examText = `*${examName}:* `;
+            const signs = [];
+
+            if (hasInspection) signs.push(`Inspection: ${data.inspection.join(", ")}`);
+            if (hasPalpation) signs.push(`Palpation: ${data.palpation.join(", ")}`);
+            if (hasPercussion) signs.push(`Percussion: ${data.percussion.join(", ")}`);
+            if (hasAuscultation) signs.push(`Auscultation: ${data.auscultation.join(", ")}`);
+
+            if (signs.length > 0) {
+              examText += signs.join(" | ");
+            }
+            if (hasExtraNotes) {
+              examText += ` (${data.extraNotes})`;
+            }
+
+            complementaryExamsText.push(examText);
           }
-          if (data.extraNotes) {
-            examinationFindings += ` (${data.extraNotes})`;
-          }
-          examinationFindings += "\n";
         }
+      }
+
+      if (hasComplementaryExams) {
+        examinationFindings += "\n**Examens complémentaires:**\n";
+        examinationFindings += complementaryExamsText.join("\n") + "\n";
       }
     }
 

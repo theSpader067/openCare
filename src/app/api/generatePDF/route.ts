@@ -1,8 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
-import puppeteer from "puppeteer";
+import { PDFDocument, PDFPage, rgb } from "pdf-lib";
+
+function wrapText(text: string, maxWidth: number, fontSize: number): string[] {
+  const lines: string[] = [];
+  const words = text.split(' ');
+  let currentLine = '';
+
+  for (const word of words) {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    // Approximate character width based on font size
+    const approxWidth = testLine.length * (fontSize * 0.55);
+
+    if (approxWidth > maxWidth && currentLine) {
+      lines.push(currentLine);
+      currentLine = word;
+    } else {
+      currentLine = testLine;
+    }
+  }
+
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+
+  return lines;
+}
 
 export async function POST(request: NextRequest) {
-  let browser;
   try {
     const { htmlContent, filename } = await request.json();
 
@@ -13,102 +37,119 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Launch Puppeteer browser
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    // Create a new PDF document
+    const pdfDoc = await PDFDocument.create();
+    let page = pdfDoc.addPage([595, 842]); // A4 size in points
+    let yPosition = 750;
+    const marginLeft = 40;
+    const marginRight = 40;
+    const pageWidth = 595 - marginLeft - marginRight;
+    const fontSize = 11;
+
+    // Add title
+    const titleText = 'Observation Médicale';
+    const titleWidth = titleText.length * 7; // Approximate width
+    page.drawText(titleText, {
+      x: (595 - titleWidth) / 2,
+      y: yPosition,
+      size: 18,
+      color: rgb(0, 0, 0),
     });
+    yPosition -= 30;
 
-    const page = await browser.newPage();
-
-    // Build complete HTML document with styling
-    const htmlDocument = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <title>Observation Médicale</title>
-        <style>
-          * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-          }
-          body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            padding: 20mm;
-          }
-          h1 {
-            font-size: 24px;
-            font-weight: bold;
-            margin-top: 20px;
-            margin-bottom: 10px;
-            text-align: center;
-          }
-          h2 {
-            font-size: 18px;
-            font-weight: bold;
-            margin-top: 15px;
-            margin-bottom: 8px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
-          }
-          h3 {
-            font-size: 14px;
-            font-weight: bold;
-            margin-top: 10px;
-            margin-bottom: 5px;
-          }
-          p {
-            margin-bottom: 8px;
-            text-align: justify;
-          }
-          ul, ol {
-            margin-left: 20px;
-            margin-bottom: 8px;
-          }
-          li {
-            margin-bottom: 4px;
-          }
-          .date {
-            text-align: right;
-            margin-top: 10px;
-            font-style: italic;
-          }
-          body > h1:nth-of-type(2) {
-            display: none;
-          }
-          @page {
-            margin: 10mm;
-            size: A4;
-          }
-        </style>
-      </head>
-      <body>
-        <h1 style="text-align: center; font-size: 28px; margin-bottom: 30px;">Observation Médicale</h1>
-        ${htmlContent}
-        <div class="date">Fait le ${new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
-      </body>
-      </html>
-    `;
-
-    await page.setContent(htmlDocument, { waitUntil: 'networkidle0' });
-
-    const pdf = await page.pdf({
-      format: 'A4',
-      margin: {
-        top: '10mm',
-        bottom: '10mm',
-        left: '10mm',
-        right: '10mm',
-      },
+    // Add date
+    const today = new Date().toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
+    const dateText = `Fait le ${today}`;
+    const dateWidth = dateText.length * 5;
+    page.drawText(dateText, {
+      x: 595 - marginRight - dateWidth,
+      y: yPosition,
+      size: 10,
+      color: rgb(0, 0, 0),
+    });
+    yPosition -= 25;
 
-    await browser.close();
+    // Strip HTML tags and parse content
+    const plainText = htmlContent
+      .replace(/<h1[^>]*>Observation Médicale<\/h1>/gi, '')
+      .replace(/<h2[^>]*>/g, '\n### ')
+      .replace(/<\/h2>/g, '')
+      .replace(/<h3[^>]*>/g, '\n#### ')
+      .replace(/<\/h3>/g, '')
+      .replace(/<p[^>]*>/g, '')
+      .replace(/<\/p>/g, '\n')
+      .replace(/<li[^>]*>/g, '• ')
+      .replace(/<\/li>/g, '\n')
+      .replace(/<ul[^>]*>/g, '')
+      .replace(/<\/ul>/g, '')
+      .replace(/<ol[^>]*>/g, '')
+      .replace(/<\/ol>/g, '')
+      .replace(/<br\s*\/?>/g, '\n')
+      .replace(/<strong[^>]*>/g, '')
+      .replace(/<\/strong>/g, '')
+      .replace(/<b[^>]*>/g, '')
+      .replace(/<\/b>/g, '')
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .trim();
 
-    return new NextResponse(Buffer.from(pdf), {
+    // Parse and render lines
+    const lines = plainText.split('\n');
+
+    for (const line of lines) {
+      let currentFontSize = fontSize;
+      let textColor = rgb(0, 0, 0);
+
+      // Detect heading levels
+      if (line.startsWith('### ')) {
+        currentFontSize = 14;
+        yPosition -= 8;
+      } else if (line.startsWith('#### ')) {
+        currentFontSize = 12;
+        yPosition -= 5;
+      }
+
+      // Remove heading markers
+      let textToDraw = line.replace(/^### |^#### /, '').trim();
+
+      if (!textToDraw) {
+        yPosition -= 8;
+        continue;
+      }
+
+      // Wrap text to fit page width
+      const wrappedLines = wrapText(textToDraw, pageWidth, currentFontSize);
+
+      for (const wrappedLine of wrappedLines) {
+        if (yPosition < 40) {
+          page = pdfDoc.addPage([595, 842]);
+          yPosition = 750;
+        }
+
+        page.drawText(wrappedLine, {
+          x: marginLeft,
+          y: yPosition,
+          size: currentFontSize,
+          color: textColor,
+        });
+
+        yPosition -= currentFontSize + 4;
+      }
+
+      yPosition -= 4; // Extra space between paragraphs
+    }
+
+    // Serialize the PDF
+    const pdfBytes = await pdfDoc.save();
+
+    return new NextResponse(Buffer.from(pdfBytes), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${filename || 'observation.pdf'}"`,
@@ -116,9 +157,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error generating PDF:', error);
-    if (browser) {
-      await browser.close();
-    }
     return NextResponse.json(
       {
         success: false,

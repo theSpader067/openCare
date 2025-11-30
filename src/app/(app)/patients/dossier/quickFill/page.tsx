@@ -980,12 +980,27 @@ export default function QuickFillPage() {
 
 `;
 
-    // Build identity paragraph with all available demographic data
+    // Calculate age from birthDate
+    const calculateAge = (birthDateStr: string): number => {
+      const birthDate = new Date(birthDateStr);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age;
+    };
+
+    const calculatedAge = patient?.birthDate ? calculateAge(patient.birthDate) : patient?.age;
+
+    // Identité section with all demographic info
     const identityParts = [];
-    if (patient?.name) identityParts.push(`${patient.name}`);
-    if (patient?.age) identityParts.push(`âgé(e) de ${patient.age} ans`);
-    if (patient?.motif) identityParts.push(`${patient.motif}`);
-    
+    if (patient?.name) identityParts.push(patient.name);
+    if (calculatedAge) identityParts.push(`âgé(e) de ${calculatedAge} ans`);
+    if (patient?.profession) identityParts.push(patient.profession);
+    if (patient?.situationFamiliale) identityParts.push(patient.situationFamiliale);
+
     if (identityParts.length > 0) {
       markdown += `## Identité
 
@@ -997,10 +1012,9 @@ export default function QuickFillPage() {
 
     // Motif d'hospitalisation / consultation
     if (patient?.motif) {
-      markdown += `## Motif d'Hospitalisation / Consultation
+      markdown += `## Motif
 
-`;
-      markdown += `${patient.motif}
+${patient.motif}
 
 `;
     }
@@ -1010,9 +1024,10 @@ export default function QuickFillPage() {
     const surgicalHist = patient?.histories?.surgical?.join(', ') || '';
     const otherHist = patient?.histories?.other?.join(', ') || '';
 
-    const atcdsExist = patient?.motif || patient?.atcdsGynObstetrique ||
-                      patient?.atcdsFamiliaux || medicalHist ||
-                      surgicalHist || otherHist;
+    const atcdsExist = medicalHist || surgicalHist ||
+                      patient?.atcdsGynObstetrique ||
+                      patient?.atcdsFamiliaux ||
+                      otherHist;
 
     if (atcdsExist) {
       markdown += `## Antécédents
@@ -1021,52 +1036,22 @@ export default function QuickFillPage() {
 
       // ATCDs Médicaux
       if (medicalHist && medicalHist.trim()) {
-        markdown += `### ATCDs Médicaux
-
-`;
-        markdown += `${medicalHist}
-
-`;
+        markdown += `**Médicaux:** ${medicalHist}\n\n`;
       }
 
       // ATCDs Chirurgicaux
       if (surgicalHist && surgicalHist.trim()) {
-        markdown += `### ATCDs Chirurgicaux
-
-`;
-        markdown += `${surgicalHist}
-
-`;
-      }
-
-      // ATCDs Gynéco-Obstétriques
-      if (patient?.atcdsGynObstetrique && patient.atcdsGynObstetrique.trim()) {
-        markdown += `### ATCDs Gynéco-Obstétriques
-
-`;
-        markdown += `${patient.atcdsGynObstetrique}
-
-`;
+        markdown += `**Chirurgicaux:** ${surgicalHist}\n\n`;
       }
 
       // ATCDs Familiaux
       if (patient?.atcdsFamiliaux && patient.atcdsFamiliaux.trim()) {
-        markdown += `### ATCDs Familiaux
-
-`;
-        markdown += `${patient.atcdsFamiliaux}
-
-`;
+        markdown += `**Familiaux:** ${patient.atcdsFamiliaux}\n\n`;
       }
 
       // Autres éléments
       if (otherHist && otherHist.trim()) {
-        markdown += `### Autres Informations
-
-`;
-        markdown += `${otherHist}
-
-`;
+        markdown += `**Autres:** ${otherHist}\n\n`;
       }
     }
 
@@ -1211,15 +1196,11 @@ export default function QuickFillPage() {
     markdown += `## Conclusion
 
 `;
-    
-    // Build conclusion paragraph
-    const conclusionParts = [];
-    conclusionParts.push(`Il s'agit de ${patient?.name}`);
-    if (patient?.age) conclusionParts.push(`agé de ${patient.age} ans`);
-    conclusionParts.push(`admis pour ${patient?.motif || 'consultation'}`);
-    
-    markdown += `${conclusionParts.join(', ')}, `;
-    
+
+    const diagnosis = patient?.diagnosis?.label || patient?.motif || 'consultation';
+
+    markdown += `Il s'agit de ${patient?.name}, agé(e) de ${calculatedAge}, admis pour ${diagnosis}, ayant comme ATCDs `;
+
     // Combine all ATCDs
     const allAtcds = [];
     if (medicalHist && medicalHist.trim()) allAtcds.push(medicalHist);
@@ -1229,46 +1210,77 @@ export default function QuickFillPage() {
     if (otherHist && otherHist.trim()) allAtcds.push(otherHist);
 
     if (allAtcds.length > 0) {
-      markdown += `ayant comme ATCDs ${allAtcds.join(', ')}
+      markdown += `${allAtcds.join(', ')}.
 
 `;
     } else {
-      markdown += `sans ATCDs notables
+      markdown += `sans ATCDs notables.
 
 `;
     }
 
-    markdown += `chez qui l'histoire de maladie remonte à:
+    markdown += `L'histoire de maladie remonte à:
 
 
 
 
 `;
 
-    markdown += `À l'examen clinique:
+    markdown += `Chez qui l'examen clinique trouve:
 
 `;
-    // Collect all exam findings
-    const examFindings: string[] = [];
+
+    // Collect all exam findings from Examen Général and other exams
+    const examFindingsDetail: string[] = [];
+
+    // Add Examen Général findings
+    if (isExamModified("Examen général")) {
+      const generalFindings: string[] = [];
+      if (hemodynamicsData.gcs) generalFindings.push(`GCS à ${hemodynamicsData.gcs}/15`);
+      const hemoData = [];
+      if (hemodynamicsData.fc) hemoData.push(`FC`);
+      if (hemodynamicsData.taSys || hemodynamicsData.taDias) hemoData.push(`TA`);
+      if (hemodynamicsData.trc) hemoData.push(`TRC`);
+      if (hemoData.length > 0) generalFindings.push(hemoData.join(', '));
+      const respData = [];
+      if (hemodynamicsData.fr) respData.push(`FR`);
+      if (hemodynamicsData.sao2) respData.push(`SaO2`);
+      if (respData.length > 0) generalFindings.push(respData.join(', '));
+      const otherData = [];
+      if (hemodynamicsData.weight) otherData.push(`Poids`);
+      if (hemodynamicsData.height) otherData.push(`Taille`);
+      if (imc) otherData.push(`IMC`);
+      if (hemodynamicsData.dextro) otherData.push(`Dextro`);
+      if (hemodynamicsData.temperature) otherData.push(`T°`);
+      if (otherData.length > 0) generalFindings.push(otherData.join(', '));
+      if (hemodynamicsData.generalState) generalFindings.push(hemodynamicsData.generalState);
+      if (hemodynamicsData.skinState.length > 0) generalFindings.push(hemodynamicsData.skinState.join(', '));
+
+      if (generalFindings.length > 0) {
+        examFindingsDetail.push(generalFindings.join(', '));
+      }
+    }
+
+    // Add other exam findings
     Object.entries(examSelections).forEach(([exam, data]) => {
       if (exam === "Examen général") return;
-      
+
       const allItems = [];
       if (data.inspection?.length > 0) allItems.push(...data.inspection);
       if (data.palpation?.length > 0) allItems.push(...data.palpation);
       if (data.percussion?.length > 0) allItems.push(...data.percussion);
       if (data.auscultation?.length > 0) allItems.push(...data.auscultation);
-      
+
       if (allItems.length > 0) {
-        examFindings.push(`${getExamDisplayName(exam)}: ${allItems.join(', ')}`);
+        examFindingsDetail.push(`${getExamDisplayName(exam)}: ${allItems.join(', ')}`);
       }
       if (data.extraNotes) {
-        examFindings.push(data.extraNotes);
+        examFindingsDetail.push(data.extraNotes);
       }
     });
 
-    if (examFindings.length > 0) {
-      markdown += examFindings.join("\n");
+    if (examFindingsDetail.length > 0) {
+      markdown += examFindingsDetail.join("\n");
     }
 
     return markdown;

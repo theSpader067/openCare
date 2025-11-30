@@ -64,12 +64,12 @@ export async function POST(request: NextRequest) {
     });
 
     // Prepare patient context for the prompt
-    const calculateAge = (birthDateStr: Date): number => {
-      const birthDate = new Date(birthDateStr);
+    const calculateAge = (birthDate: Date | string): number => {
+      const date = typeof birthDate === 'string' ? new Date(birthDate) : birthDate;
       const today = new Date();
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      let age = today.getFullYear() - date.getFullYear();
+      const monthDiff = today.getMonth() - date.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.getDate())) {
         age--;
       }
       return age;

@@ -982,18 +982,18 @@ export default function QuickFillPage() {
 `;
 
     // Calculate age from birthDate
-    const calculateAge = (birthDateStr: string): number => {
-      const birthDate = new Date(birthDateStr);
+    const calculateAge = (birthDate: Date | string): number => {
+      const date = typeof birthDate === 'string' ? new Date(birthDate) : birthDate;
       const today = new Date();
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      let age = today.getFullYear() - date.getFullYear();
+      const monthDiff = today.getMonth() - date.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.getDate())) {
         age--;
       }
       return age;
     };
 
-    const calculatedAge = patient?.birthDate ? calculateAge(patient.birthDate) : patient?.age;
+    const calculatedAge = patient?.birthDate ? calculateAge(patient.birthDate) : patient?.age || 0;
 
     // Identité section with all demographic info
     const identityParts = [];
@@ -1537,17 +1537,17 @@ ${patient.motif}
                 <span>
                   <span className="font-medium text-slate-700">
                     {(() => {
-                      const calculateAge = (birthDateStr: string): number => {
-                        const birthDate = new Date(birthDateStr);
+                      const calculateAge = (birthDate: Date | string): number => {
+                        const date = typeof birthDate === 'string' ? new Date(birthDate) : birthDate;
                         const today = new Date();
-                        let age = today.getFullYear() - birthDate.getFullYear();
-                        const monthDiff = today.getMonth() - birthDate.getMonth();
-                        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                        let age = today.getFullYear() - date.getFullYear();
+                        const monthDiff = today.getMonth() - date.getMonth();
+                        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.getDate())) {
                           age--;
                         }
                         return age;
                       };
-                      return patient.birthDate ? calculateAge(patient.birthDate) : patient.age;
+                      return patient.birthDate ? calculateAge(patient.birthDate) : (patient.age || 0);
                     })()} {t("common.labels.yearsOld")}
                   </span>
                 </span>

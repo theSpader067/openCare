@@ -156,26 +156,69 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create the prompt for OpenAI
-    const prompt = `Tu es un médecin expérimenté. Basé sur les informations et examens cliniques fournis, génère une observation clinique structurée et bien détaillée.
+    // Build Identité paragraph with conditional fields
+    const identiteParts: string[] = [];
+    identiteParts.push(`Il s'agit de ${patient.fullName} agé de ${age} ans`);
 
-Informations du patient:
-- Nom: ${patient.fullName}
-- Âge: ${age} ans
-- PID: ${patient.pid}
-- Diagnostic: ${patient.diagnostic || "Non spécifié"}
-- Motif: ${patient.motif || "Non spécifié"}
-- Profession: ${patient.profession || "Non spécifiée"}
-- Situation familiale: ${patient.situationFamiliale || "Non spécifiée"}
-- Antécédents médicaux: ${patient.atcdsMedical || "Aucun"}
-- Antécédents chirurgicaux: ${patient.atcdsChirurgical || "Aucun"}
-- Antécédents gynéco-obstétriques: ${patient.atcdsGynObstetrique || "Aucun"}
-- Antécédents familiaux: ${patient.atcdsFamiliaux || "Aucun"}
+    if (patient.situationFamiliale?.trim()) {
+      identiteParts.push(`${patient.situationFamiliale}`);
+    }
 
-Examens cliniques effectués:
-${examinationFindings || "Aucun examen détaillé fourni"}
+    const addressParts: string[] = [];
+    if (patient.addressOrigin?.trim()) {
+      addressParts.push(`originaire de ${patient.addressOrigin}`);
+    }
+    if (patient.addressHabitat?.trim()) {
+      addressParts.push(`habitant à ${patient.addressHabitat}`);
+    }
+    if (addressParts.length > 0) {
+      identiteParts.push(addressParts.join(` et `));
+    }
 
-Génère une observation clinique bien structurée. L'observation doit être professionnelle, concise et cliniquement pertinente. Utilise du markdown pour la mise en forme.`;
+    if (patient.profession?.trim()) {
+      identiteParts.push(`profession: ${patient.profession}`);
+    }
+
+    if (patient.couvertureSociale?.trim()) {
+      identiteParts.push(`ayant comme couverture sociale ${patient.couvertureSociale}`);
+    }
+
+    const identiteText = identiteParts.join(`, `);
+
+    // Create the prompt for OpenAI with detailed structure
+    const prompt = `Tu es un médecin expérimenté. Génère une observation clinique professionnelle et bien structurée au format markdown. Chaque section doit être rédigée sous forme de paragraphes cohérents et fluides, pas sous forme de listes.
+
+**STRUCTURE OBLIGATOIRE:**
+
+## Identité
+${identiteText}.
+
+## Motif de Consultation
+${patient.motif || "Non spécifié"}
+
+## Antécédents
+Rédige les antécédents du patient sous forme de paragraphe:
+${patient.atcdsMedical ? `- Antécédents médicaux: ${patient.atcdsMedical}` : ""}
+${patient.atcdsChirurgical ? `- Antécédents chirurgicaux: ${patient.atcdsChirurgical}` : ""}
+${patient.atcdsGynObstetrique ? `- Antécédents gynéco-obstétriques: ${patient.atcdsGynObstetrique}` : ""}
+${patient.atcdsFamiliaux ? `- Antécédents familiaux: ${patient.atcdsFamiliaux}` : ""}
+
+${patient.atcdsMedical || patient.atcdsChirurgical || patient.atcdsGynObstetrique || patient.atcdsFamiliaux ? "" : "Le patient ne rapporte pas d'antécédents notables."}
+
+## Examen Clinique
+Rédige l'examen clinique du patient sous forme de paragraphes détaillés en mettant en évidence les résultats objectifs:
+
+${examinationFindings || "Aucun examen détaillé fourni."}
+
+## Conclusion
+Rédige une brève conclusion synthétisant l'état clinique général du patient et ses principaux problèmes.
+
+**INSTRUCTIONS IMPORTANTES:**
+- Chaque section doit être rédigée en paragraphes fluides, pas en listes à puces
+- Utilise un langage médical professionnel et approprié
+- Sois concis mais exhaustif
+- N'ajoute pas de section supplémentaire non demandée
+- Assure-toi que l'observation est appropriée pour être imprimée`;
 
     // Call OpenAI API
     const message = await openai.chat.completions.create({

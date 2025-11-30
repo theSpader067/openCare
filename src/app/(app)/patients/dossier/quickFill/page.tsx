@@ -13,11 +13,16 @@ import {
   CheckSquare2,
   Square,
   Download,
+  Save,
+  Edit2,
+  Wand2,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Patient } from "@/data/patients/patients-data";
 import { getPatientByPid } from "@/lib/api/patients";
+import { QuillEditor } from "@/components/QuillEditor";
 
 // Comprehensive clinical exam structure with extensive exams
 const CLINICAL_EXAMS_DATA = {
@@ -740,9 +745,8 @@ export default function QuickFillPage() {
 
   const [patient, setPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(true);
-  const [expandedAccordions, setExpandedAccordions] = useState<AccordionState>(
-    { "Examen général": true }
-  );
+  const [expandedAccordions, setExpandedAccordions] = useState<AccordionState>({});
+  const [examTabActive, setExamTabActive] = useState<'clinique' | 'paraclinique' | 'traitement'>('clinique');
   const [hemodynamicsData, setHemodynamicsData] = useState<HemodynamicsData>({
     fc: "",
     taSys: "",
@@ -762,6 +766,18 @@ export default function QuickFillPage() {
   const [examSelections, setExamSelections] = useState<ExamSelectionState>({});
   const [isCreating, setIsCreating] = useState(false);
   const [observation, setObservation] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
+  // Paraclinique state
+  const [paracliniques, setParacliniques] = useState<Array<{ bilan: string; valeur: string }>>([]);
+  const [showParaclinicalForm, setShowParaclinicalForm] = useState(false);
+  const [paraClinicalForm, setParaClinicalForm] = useState({ bilan: '', valeur: '' });
+
+  // Traitement state
+  const [traitements, setTraitements] = useState<Array<{ name: string; administration: string; posologie: string; duree: string }>>([]);
+  const [showTreatmentForm, setShowTreatmentForm] = useState(false);
+  const [treatmentForm, setTreatmentForm] = useState({ name: '', administration: 'VO', posologie: '', duree: '' });
 
   // Get sorted exam list (Examen général first, then alphabetical)
   const sortedExams = useMemo(() => {
@@ -770,6 +786,15 @@ export default function QuickFillPage() {
     const others = exams.filter((e) => e !== "Examen général").sort();
     return [...examenGeneral, ...others];
   }, []);
+
+  // Initialize all accordion states
+  useEffect(() => {
+    const initialState: AccordionState = {};
+    sortedExams.forEach((exam) => {
+      initialState[exam] = exam === "Examen général";
+    });
+    setExpandedAccordions(initialState);
+  }, [sortedExams]);
 
   // Check if exam has been modified
   const isExamModified = (exam: string): boolean => {
@@ -887,10 +912,15 @@ export default function QuickFillPage() {
   }, [patientId]);
 
   const toggleAccordion = (exam: string) => {
-    setExpandedAccordions((prev) => ({
-      ...prev,
-      [exam]: !prev[exam],
-    }));
+    setExpandedAccordions((prev) => {
+      // If clicking the already open accordion, keep it open
+      // Otherwise, close all and open only the clicked one
+      const newState: AccordionState = {};
+      Object.keys(prev).forEach((key) => {
+        newState[key] = key === exam;
+      });
+      return newState;
+    });
   };
 
   const toggleSign = (exam: string, section: string, sign: string) => {
@@ -1291,16 +1321,22 @@ ${patient.motif}
     setIsCreating(true);
 
     try {
+      const requestPayload = {
+        patientId: patient?.id,
+        examSelections,
+        hemodynamicsData,
+        paracliniques,
+        traitements,
+      };
+
+      console.log('DEBUG: Sending to API:', JSON.stringify(requestPayload));
+
       const response = await fetch("/api/generateQFobservation", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          patientId: patient?.id,
-          examSelections,
-          hemodynamicsData,
-        }),
+        body: JSON.stringify(requestPayload),
       });
 
       if (!response.ok) {
@@ -1321,143 +1357,77 @@ ${patient.motif}
     }
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (!observation) return;
 
-    const element = document.getElementById('observation-export');
-    if (!element) return;
+    try {
+      const today = new Date();
+      const filename = `Observation_Medicale_${today.toISOString().split('T')[0]}.pdf`;
 
-    // Create a new window for printing
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
+      // Call API to generate PDF
+      const response = await fetch('/api/generatePDF', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          htmlContent: observation,
+          filename: filename,
+        }),
+      });
 
-    // Get today's date
-    const today = new Date();
-    const dateStr = today.toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to generate PDF');
+      }
 
-    // Build HTML content
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <title>Observation Médicale - ${patient?.name}</title>
-        <style>
-          body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #1e293b;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20mm;
-          }
-          .title-section {
-            text-align: center;
-            margin-bottom: 2rem;
-            border-bottom: 3px solid #4f46e5;
-            padding-bottom: 1rem;
-          }
-          .title-section h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            margin: 0 0 1rem 0;
-            color: #1e293b;
-          }
-          .date-section {
-            text-align: right;
-            margin-bottom: 2rem;
-            font-size: 0.95rem;
-            color: #475569;
-          }
-          h2 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #334155;
-            margin-top: 1.5rem;
-            margin-bottom: 0.75rem;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 0.5rem;
-          }
-          h3 {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: #475569;
-            margin-top: 1rem;
-            margin-bottom: 0.5rem;
-          }
-          p {
-            font-size: 0.875rem;
-            line-height: 1.6;
-            color: #475569;
-            margin-bottom: 0.75rem;
-          }
-          strong {
-            color: #1e293b;
-            font-weight: 600;
-          }
-          ul {
-            list-style-type: none;
-            padding-left: 0;
-            margin: 0.75rem 0;
-          }
-          li {
-            padding-left: 1.5rem;
-            position: relative;
-            font-size: 0.875rem;
-            line-height: 1.5;
-            color: #475569;
-            margin-bottom: 0.25rem;
-          }
-          li:before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            color: #4f46e5;
-            font-weight: bold;
-          }
-          @media print {
-            body {
-              margin: 0;
-              padding: 20mm;
-            }
-            h2 {
-              page-break-after: avoid;
-            }
-            h3 {
-              page-break-after: avoid;
-            }
-            p {
-              orphans: 3;
-              widows: 3;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="title-section">
-          <h1>Observation Médicale</h1>
-        </div>
-        <div class="date-section">
-          <p>Fait le ${dateStr}</p>
-        </div>
-        <div class="content">
-          ${element.innerHTML}
-        </div>
-      </body>
-      </html>
-    `;
+      // Get the PDF blob
+      const blob = await response.blob();
 
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
+      // Create a download link
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    }
+  };
 
-    // Trigger print dialog
-    setTimeout(() => {
-      printWindow.print();
-      printWindow.close();
-    }, 250);
+  const handleSaveObservation = async () => {
+    if (!observation || !patient?.id) return;
+
+    setIsSaving(true);
+    try {
+      const response = await fetch("/api/observations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          patientId: patient.id,
+          text: observation,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error("Error saving observation");
+        return;
+      }
+
+      // Mark as saved
+      setIsSaved(true);
+      console.log("Observation saved successfully");
+    } catch (error) {
+      console.error("Error saving observation:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (loading) {
@@ -1571,13 +1541,51 @@ ${patient.motif}
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-2 gap-6">
-        {/* Left Column: Clinical Exams Accordion (Full Height) */}
+        {/* Left Column: Clinical Exams with Tabs */}
         <div className="space-y-3 flex flex-col h-full">
           <h3 className="text-sm font-semibold text-slate-800 px-1">
             {t("patients.dossier.clinicalExams")}
           </h3>
+
+          {/* Tab Navigation */}
+          <div className="flex gap-2 border-b border-slate-200">
+            <button
+              onClick={() => setExamTabActive('clinique')}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition ${
+                examTabActive === 'clinique'
+                  ? 'border-indigo-600 text-indigo-600'
+                  : 'border-transparent text-slate-600 hover:text-slate-800'
+              }`}
+            >
+              Clinique
+            </button>
+            <button
+              onClick={() => setExamTabActive('paraclinique')}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition ${
+                examTabActive === 'paraclinique'
+                  ? 'border-indigo-600 text-indigo-600'
+                  : 'border-transparent text-slate-600 hover:text-slate-800'
+              }`}
+            >
+              Paraclinique
+            </button>
+            <button
+              onClick={() => setExamTabActive('traitement')}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition ${
+                examTabActive === 'traitement'
+                  ? 'border-indigo-600 text-indigo-600'
+                  : 'border-transparent text-slate-600 hover:text-slate-800'
+              }`}
+            >
+              Traitement
+            </button>
+          </div>
+
+          {/* Tab Content */}
           <div className="space-y-2 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm flex-1 overflow-y-auto">
-            {sortedExams.map((exam) => {
+            {examTabActive === 'clinique' && (
+              <>
+              {sortedExams.map((exam) => {
               const isModified = isExamModified(exam);
 
               return (
@@ -1925,6 +1933,314 @@ ${patient.motif}
                 </div>
               );
             })}
+              </>
+            )}
+
+            {examTabActive === 'paraclinique' && (
+              <div className="space-y-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowParaclinicalForm(!showParaclinicalForm)}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter
+                </Button>
+
+                {showParaclinicalForm && (
+                  <div className="border border-slate-200 rounded-lg p-4 bg-slate-50">
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-medium text-slate-600 block mb-1">
+                            Bilan
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g., Hémoglobine"
+                            value={paraClinicalForm.bilan}
+                            onChange={(e) =>
+                              setParaClinicalForm({
+                                ...paraClinicalForm,
+                                bilan: e.target.value,
+                              })
+                            }
+                            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-slate-600 block mb-1">
+                            Valeur
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g., 13.5 g/dL"
+                            value={paraClinicalForm.valeur}
+                            onChange={(e) =>
+                              setParaClinicalForm({
+                                ...paraClinicalForm,
+                                valeur: e.target.value,
+                              })
+                            }
+                            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => {
+                            if (paraClinicalForm.bilan && paraClinicalForm.valeur) {
+                              setParacliniques([
+                                ...paracliniques,
+                                paraClinicalForm,
+                              ]);
+                              setParaClinicalForm({ bilan: '', valeur: '' });
+                              setShowParaclinicalForm(false);
+                            }
+                          }}
+                        >
+                          Ajouter
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setShowParaclinicalForm(false);
+                            setParaClinicalForm({ bilan: '', valeur: '' });
+                          }}
+                        >
+                          Annuler
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {paracliniques.length > 0 && (
+                  <div className="space-y-2">
+                    {paracliniques.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-lg"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-slate-700">
+                            {item.bilan}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {item.valeur}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setParacliniques(
+                              paracliniques.filter((_, i) => i !== idx)
+                            );
+                          }}
+                          className="text-slate-400 hover:text-red-600 transition"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {paracliniques.length === 0 && !showParaclinicalForm && (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <p className="text-slate-500 font-medium text-sm">
+                      Aucun bilan ajouté
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {examTabActive === 'traitement' && (
+              <div className="space-y-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowTreatmentForm(!showTreatmentForm)}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter
+                </Button>
+
+                {showTreatmentForm && (
+                  <div className="border border-slate-200 rounded-lg p-4 bg-slate-50 space-y-3">
+                    <div>
+                      <label className="text-xs font-medium text-slate-600 block mb-1">
+                        Nom du traitement
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g., Amoxicilline"
+                        value={treatmentForm.name}
+                        onChange={(e) =>
+                          setTreatmentForm({
+                            ...treatmentForm,
+                            name: e.target.value,
+                          })
+                        }
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium text-slate-600 block mb-1">
+                        Administration
+                      </label>
+                      <select
+                        value={treatmentForm.administration}
+                        onChange={(e) =>
+                          setTreatmentForm({
+                            ...treatmentForm,
+                            administration: e.target.value,
+                          })
+                        }
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                      >
+                        <option value="VO">VO (Voie Orale)</option>
+                        <option value="IV">IV (Intraveineuse)</option>
+                        <option value="IM">IM (Intramusculaire)</option>
+                        <option value="SC">SC (Sous-cutanée)</option>
+                        <option value="Topique">Topique</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium text-slate-600 block mb-1">
+                        Posologie quotidienne
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g., 500mg x 3/jour"
+                        value={treatmentForm.posologie}
+                        onChange={(e) =>
+                          setTreatmentForm({
+                            ...treatmentForm,
+                            posologie: e.target.value,
+                          })
+                        }
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium text-slate-600 block mb-1">
+                        Durée
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g., 7 jours"
+                        value={treatmentForm.duree}
+                        onChange={(e) =>
+                          setTreatmentForm({
+                            ...treatmentForm,
+                            duree: e.target.value,
+                          })
+                        }
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                      />
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => {
+                          if (
+                            treatmentForm.name &&
+                            treatmentForm.posologie &&
+                            treatmentForm.duree
+                          ) {
+                            setTraitements([...traitements, treatmentForm]);
+                            setTreatmentForm({
+                              name: '',
+                              administration: 'VO',
+                              posologie: '',
+                              duree: '',
+                            });
+                            setShowTreatmentForm(false);
+                          }
+                        }}
+                      >
+                        Ajouter
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setShowTreatmentForm(false);
+                          setTreatmentForm({
+                            name: '',
+                            administration: 'VO',
+                            posologie: '',
+                            duree: '',
+                          });
+                        }}
+                      >
+                        Annuler
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {traitements.length > 0 && (
+                  <div className="space-y-2">
+                    {traitements.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="p-3 bg-slate-50 border border-slate-200 rounded-lg"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <p className="text-sm font-medium text-slate-700">
+                            {item.name}
+                          </p>
+                          <button
+                            onClick={() => {
+                              setTraitements(
+                                traitements.filter((_, i) => i !== idx)
+                              );
+                            }}
+                            className="text-slate-400 hover:text-red-600 transition"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                        <div className="space-y-1 text-xs text-slate-600">
+                          <p>
+                            <span className="font-medium">Administration:</span>{' '}
+                            {item.administration}
+                          </p>
+                          <p>
+                            <span className="font-medium">Posologie:</span>{' '}
+                            {item.posologie}
+                          </p>
+                          <p>
+                            <span className="font-medium">Durée:</span>{' '}
+                            {item.duree}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {traitements.length === 0 && !showTreatmentForm && (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <p className="text-slate-500 font-medium text-sm">
+                      Aucun traitement ajouté
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -1935,7 +2251,7 @@ ${patient.motif}
               {t("patients.dossier.observation")}
             </h3>
             <div className="flex items-center gap-2">
-              {observation && (
+              {observation && isSaved && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -1946,25 +2262,49 @@ ${patient.motif}
                   PDF
                 </Button>
               )}
-              <Button
-                variant="primary"
-                size="sm"
-                disabled={!hasAnyModifiedExam || isCreating}
-                onClick={handleCreateObservation}
-                className={isCreating ? "opacity-75 cursor-not-allowed" : ""}
-              >
-                {isCreating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    {t("common.buttons.saving")}
-                  </>
-                ) : (
-                  <>
-                    <Plus className="h-4 w-4 mr-2" />
-                    {t("common.buttons.create")}
-                  </>
-                )}
-              </Button>
+              {observation ? (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={isSaving}
+                  onClick={handleSaveObservation}
+                  className={isSaving ? "opacity-75 cursor-not-allowed" : ""}
+                  title="Save observation to database"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Enregistrer
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={!hasAnyModifiedExam || isCreating}
+                  onClick={handleCreateObservation}
+                  className={isCreating ? "opacity-75 cursor-not-allowed" : ""}
+                  title="Generate observation using AI"
+                >
+                  {isCreating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      {t("common.buttons.saving")}
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="h-4 w-4 mr-2" />
+                      Générer
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
           <div className="flex-1 rounded-2xl border border-slate-200/80 bg-slate-50 p-6 flex flex-col overflow-y-auto">
@@ -1976,144 +2316,80 @@ ${patient.motif}
                 <SkeletonSection />
                 <SkeletonSection />
               </div>
-            ) : observation ? (
-              <div className="w-full bg-white rounded-lg border border-slate-200 p-8 text-slate-800 prose prose-sm max-w-none">
+            ) : isSaved ? (
+              <div className="w-full bg-white rounded-lg border border-slate-200 p-8 flex flex-col overflow-y-auto">
                 <style>{`
-                  .observation-header {
+                  .observation-title {
                     text-align: center;
-                    margin-bottom: 2rem;
-                    border-bottom: 3px solid #4f46e5;
-                    padding-bottom: 1rem;
-                  }
-                  .observation-header h1 {
-                    font-size: 1.875rem;
+                    font-size: 2.25rem;
                     font-weight: 700;
-                    color: #1e293b;
+                    color: #0f172a;
                     margin: 0 0 1rem 0;
+                    letter-spacing: -0.02em;
                   }
-                  .observation-date {
+                  .observation-display h1 {
+                    text-align: center;
+                    font-size: 2.25rem;
+                    font-weight: 700;
+                    color: #0f172a;
+                    margin: 0 0 1rem 0;
+                    letter-spacing: -0.02em;
+                  }
+                  .observation-display .observation-date {
                     text-align: right;
-                    margin-bottom: 2rem;
                     font-size: 0.875rem;
                     color: #475569;
+                    margin-bottom: 2rem;
+                    font-weight: 500;
                   }
-                  .observation-content h1 {
-                    font-size: 1.875rem;
-                    font-weight: 700;
-                    color: #1e293b;
-                    margin-bottom: 1rem;
-                    border-bottom: 3px solid #4f46e5;
-                    padding-bottom: 0.75rem;
-                  }
-                  .observation-content h2 {
+                  .observation-display h2 {
                     font-size: 1.25rem;
                     font-weight: 600;
                     color: #334155;
                     margin-top: 1.5rem;
                     margin-bottom: 0.75rem;
+                    border-bottom: 2px solid #e2e8f0;
+                    padding-bottom: 0.5rem;
                   }
-                  .observation-content h3 {
-                    font-size: 0.95rem;
+                  .observation-display h3 {
+                    font-size: 1rem;
                     font-weight: 600;
                     color: #475569;
                     margin-top: 1rem;
                     margin-bottom: 0.5rem;
                   }
-                  .observation-content ul {
-                    list-style-type: none;
-                    padding-left: 0;
-                  }
-                  .observation-content li {
-                    padding-left: 1.5rem;
-                    position: relative;
-                    font-size: 0.875rem;
-                    line-height: 1.5;
-                    color: #475569;
-                    margin-bottom: 0.25rem;
-                  }
-                  .observation-content li:before {
-                    content: "✓";
-                    position: absolute;
-                    left: 0;
-                    color: #4f46e5;
-                    font-weight: bold;
-                  }
-                  .observation-content strong {
-                    color: #1e293b;
-                    font-weight: 600;
-                  }
-                  .observation-content hr {
-                    border: none;
-                    border-top: 2px solid #e2e8f0;
-                    margin: 2rem 0;
-                  }
-                  .observation-content p {
+                  .observation-display p {
                     font-size: 0.875rem;
                     line-height: 1.6;
                     color: #475569;
-                    margin-bottom: 0.75rem;
+                    margin: 0.25rem 0;
                   }
-                  @media print {
-                    .observation-header,
-                    .observation-content {
-                      background: white;
-                      color: black;
-                    }
-                    .observation-content h1 {
-                      page-break-after: avoid;
-                    }
-                    .observation-content h2 {
-                      page-break-after: avoid;
-                    }
+                  .observation-display ul, .observation-display ol {
+                    margin: 0.5rem 0;
+                    padding-left: 1.5rem;
+                  }
+                  .observation-display li {
+                    font-size: 0.875rem;
+                    line-height: 1.6;
+                    color: #475569;
+                    margin: 0.25rem 0;
                   }
                 `}</style>
-                <div className="observation-header">
-                  <h1>Observation Médicale</h1>
+                <div className="observation-display">
+                  <div className="observation-date">
+                    Fait le {new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </div>
+                  <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: observation || "" }} />
                 </div>
-                <div className="observation-date">
-                  <p>Fait le {new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                </div>
-                <div
-                  id="observation-export"
-                  className="observation-content"
-                  dangerouslySetInnerHTML={{
-                    __html: observation
-                      .split('\n')
-                      .map((line) => {
-                        // Handle headers
-                        if (line.startsWith('# '))
-                          return `<h1>${line.replace('# ', '')}</h1>`;
-                        if (line.startsWith('## '))
-                          return `<h2>${line.replace('## ', '')}</h2>`;
-                        if (line.startsWith('### '))
-                          return `<h3>${line.replace('### ', '')}</h3>`;
-                        // Handle list items
-                        if (line.startsWith('- '))
-                          return `<li>${line.replace('- ', '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</li>`;
-                        // Handle horizontal rules
-                        if (line === '---')
-                          return '<hr />';
-                        // Handle bold text
-                        if (line.includes('**'))
-                          return `<p>${line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>`;
-                        // Regular paragraphs
-                        if (line.trim() !== '')
-                          return `<p>${line}</p>`;
-                        return '';
-                      })
-                      .join('')
-                      .replace(/<li>/g, '<ul><li>')
-                      .replace(/<\/li>(?!.*<li>)/g, '</li></ul>')
-                      .replace(/<\/li>/g, '</li>')
-                  }}
-                />
               </div>
             ) : (
-              <EmptyState
-                icon={UserRound}
-                title={t("patients.dossier.noObservation")}
-                description={t("patients.dossier.noObservationDesc")}
-              />
+              <div className="w-full bg-white rounded-lg border border-slate-200 flex flex-col">
+                <QuillEditor
+                  value={observation || ""}
+                  onChange={setObservation}
+                  readOnly={false}
+                />
+              </div>
             )}
           </div>
         </div>

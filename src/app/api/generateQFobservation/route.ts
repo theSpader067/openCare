@@ -31,6 +31,11 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { patientId, examSelections, hemodynamicsData } = body;
+    const paracliniques = body.paracliniques || [];
+    const traitements = body.traitements || [];
+
+    console.log('DEBUG: paracliniques received:', JSON.stringify(paracliniques));
+    console.log('DEBUG: traitements received:', JSON.stringify(traitements));
 
     if (!patientId) {
       return NextResponse.json(
@@ -77,48 +82,70 @@ export async function POST(request: NextRequest) {
 
     const age = patient.dateOfBirth ? calculateAge(patient.dateOfBirth) : 0;
 
-    // Build the examination findings description
-    let examinationFindings = "";
+    // Build examen clinique with strict structure
+    let examineClinique = "";
 
-    // Add hemodynamic findings if present
-    if (hemodynamicsData && (hemodynamicsData.fc || hemodynamicsData.taSys || hemodynamicsData.taDias ||
-        hemodynamicsData.trc || hemodynamicsData.gcs || hemodynamicsData.fr || hemodynamicsData.sao2 ||
-        hemodynamicsData.temperature || hemodynamicsData.dextro || hemodynamicsData.weight ||
-        hemodynamicsData.height || hemodynamicsData.generalState || (hemodynamicsData.skinState && hemodynamicsData.skinState.length > 0))) {
-      examinationFindings += "**Examen général:**\n";
-      const findings = [];
+    // EXAMEN GÉNÉRAL - 6 specific lines
+    examineClinique += "### Examen général\n";
 
-      if (hemodynamicsData.fc) findings.push(`FC: ${hemodynamicsData.fc} bpm`);
-      if (hemodynamicsData.taSys || hemodynamicsData.taDias) {
-        findings.push(`TA: ${hemodynamicsData.taSys}/${hemodynamicsData.taDias} mmHg`);
-      }
-      if (hemodynamicsData.trc) findings.push(`TRC: ${hemodynamicsData.trc} sec`);
-      if (hemodynamicsData.gcs) findings.push(`GCS: ${hemodynamicsData.gcs}`);
-      if (hemodynamicsData.fr) findings.push(`FR: ${hemodynamicsData.fr} /min`);
-      if (hemodynamicsData.sao2) findings.push(`SaO2: ${hemodynamicsData.sao2}%`);
-      if (hemodynamicsData.temperature) findings.push(`T°: ${hemodynamicsData.temperature}°C`);
-      if (hemodynamicsData.dextro) findings.push(`Dextro: ${hemodynamicsData.dextro} mg/dL`);
-      if (hemodynamicsData.weight) findings.push(`Poids: ${hemodynamicsData.weight} kg`);
-      if (hemodynamicsData.height) findings.push(`Taille: ${hemodynamicsData.height} cm`);
-
-      examinationFindings += findings.join(", ") + "\n";
-
-      if (hemodynamicsData.generalState) {
-        examinationFindings += `État général: ${hemodynamicsData.generalState}\n`;
-      }
-      if (hemodynamicsData.skinState && hemodynamicsData.skinState.length > 0) {
-        examinationFindings += `État cutanéomuqueux: ${hemodynamicsData.skinState.join(", ")}\n`;
-      }
-      if (hemodynamicsData.additionalNotes) {
-        examinationFindings += `Notes supplémentaires: ${hemodynamicsData.additionalNotes}\n`;
-      }
+    // Line 1: Plan hémodynamique (FC, TA, TRC)
+    const hemodynamiqueParts = [];
+    if (hemodynamicsData?.fc) hemodynamiqueParts.push(`FC: ${hemodynamicsData.fc}`);
+    if (hemodynamicsData?.taSys || hemodynamicsData?.taDias) {
+      hemodynamiqueParts.push(`TA: ${hemodynamicsData.taSys}/${hemodynamicsData.taDias}`);
+    }
+    if (hemodynamicsData?.trc) hemodynamiqueParts.push(`TRC: ${hemodynamicsData.trc}`);
+    if (hemodynamiqueParts.length > 0) {
+      examineClinique += `Plan hémodynamique: ${hemodynamiqueParts.join(", ")}\n`;
     }
 
-    // Add exam selections
-    if (examSelections && Object.keys(examSelections).length > 0) {
-      let hasComplementaryExams = false;
-      const complementaryExamsText: string[] = [];
+    // Line 2: Plan neurologique (GCS)
+    if (hemodynamicsData?.gcs) {
+      examineClinique += `Plan neurologique: GCS ${hemodynamicsData.gcs}\n`;
+    }
 
+    // Line 3: Plan respiratoire (FR, SaO2)
+    const respiratoryParts = [];
+    if (hemodynamicsData?.fr) respiratoryParts.push(`FR: ${hemodynamicsData.fr}`);
+    if (hemodynamicsData?.sao2) respiratoryParts.push(`SaO2: ${hemodynamicsData.sao2}%`);
+    if (respiratoryParts.length > 0) {
+      examineClinique += `Plan respiratoire: ${respiratoryParts.join(", ")}\n`;
+    }
+
+    // Line 4: Taille et poids et IMC
+    const anthropometryParts = [];
+    if (hemodynamicsData?.height) anthropometryParts.push(`Taille: ${hemodynamicsData.height} cm`);
+    if (hemodynamicsData?.weight) anthropometryParts.push(`Poids: ${hemodynamicsData.weight} kg`);
+    if (anthropometryParts.length > 0) {
+      examineClinique += `${anthropometryParts.join(", ")}\n`;
+    }
+
+    // Line 5: T° et dextro
+    const tempDextroParts = [];
+    if (hemodynamicsData?.temperature) tempDextroParts.push(`T°: ${hemodynamicsData.temperature}°C`);
+    if (hemodynamicsData?.dextro) tempDextroParts.push(`Dextro: ${hemodynamicsData.dextro} mg/dL`);
+    if (tempDextroParts.length > 0) {
+      examineClinique += `${tempDextroParts.join(", ")}\n`;
+    }
+
+    // Line 6: État cutanéomuqueux et autres observations
+    const cutaneousParts = [];
+    if (hemodynamicsData?.skinState && hemodynamicsData.skinState.length > 0) {
+      cutaneousParts.push(`État cutanéomuqueux: ${hemodynamicsData.skinState.join(", ")}`);
+    }
+    if (hemodynamicsData?.generalState) {
+      cutaneousParts.push(`État général: ${hemodynamicsData.generalState}`);
+    }
+    if (hemodynamicsData?.additionalNotes) {
+      cutaneousParts.push(`${hemodynamicsData.additionalNotes}`);
+    }
+    if (cutaneousParts.length > 0) {
+      examineClinique += `${cutaneousParts.join(", ")}\n`;
+    }
+
+    // OTHER EXAMS - apparatus by apparatus, only modified ones
+    const otherExamsText: string[] = [];
+    if (examSelections && Object.keys(examSelections).length > 0) {
       for (const [examName, examData] of Object.entries(examSelections)) {
         const data = examData as any;
         if (data && examName !== "Examen général") {
@@ -129,39 +156,37 @@ export async function POST(request: NextRequest) {
           const hasExtraNotes = data.extraNotes && data.extraNotes.trim().length > 0;
 
           if (hasInspection || hasPalpation || hasPercussion || hasAuscultation || hasExtraNotes) {
-            hasComplementaryExams = true;
-            let examText = `*${examName}:* `;
-            const signs = [];
+            otherExamsText.push(`### ${examName}`);
 
-            if (hasInspection) signs.push(`Inspection: ${data.inspection.join(", ")}`);
-            if (hasPalpation) signs.push(`Palpation: ${data.palpation.join(", ")}`);
-            if (hasPercussion) signs.push(`Percussion: ${data.percussion.join(", ")}`);
-            if (hasAuscultation) signs.push(`Auscultation: ${data.auscultation.join(", ")}`);
-
-            if (signs.length > 0) {
-              examText += signs.join(" | ");
+            if (hasInspection) {
+              otherExamsText.push(`Inspection: ${data.inspection.join(", ")}`);
+            }
+            if (hasPalpation) {
+              otherExamsText.push(`Palpation: ${data.palpation.join(", ")}`);
+            }
+            if (hasPercussion) {
+              otherExamsText.push(`Percussion: ${data.percussion.join(", ")}`);
+            }
+            if (hasAuscultation) {
+              otherExamsText.push(`Auscultation: ${data.auscultation.join(", ")}`);
             }
             if (hasExtraNotes) {
-              examText += ` (${data.extraNotes})`;
+              otherExamsText.push(`${data.extraNotes}`);
             }
-
-            complementaryExamsText.push(examText);
           }
         }
       }
-
-      if (hasComplementaryExams) {
-        examinationFindings += "\n**Examens complémentaires:**\n";
-        examinationFindings += complementaryExamsText.join("\n") + "\n";
-      }
     }
 
-    // Build Identité paragraph with conditional fields
-    const identiteParts: string[] = [];
-    identiteParts.push(`Il s'agit de ${patient.fullName} agé de ${age} ans`);
+    if (otherExamsText.length > 0) {
+      examineClinique += "\n" + otherExamsText.join("\n");
+    }
+
+    // Build Identité paragraph with STRICT format
+    let identiteText = `Il s'agit de ${patient.fullName} agé de ${age} ans`;
 
     if (patient.situationFamiliale?.trim()) {
-      identiteParts.push(`${patient.situationFamiliale}`);
+      identiteText += `, ${patient.situationFamiliale}`;
     }
 
     const addressParts: string[] = [];
@@ -172,90 +197,141 @@ export async function POST(request: NextRequest) {
       addressParts.push(`habitant à ${patient.addressHabitat}`);
     }
     if (addressParts.length > 0) {
-      identiteParts.push(addressParts.join(` et `));
+      identiteText += `, ${addressParts.join(` et `)}`;
     }
 
     if (patient.profession?.trim()) {
-      identiteParts.push(`profession: ${patient.profession}`);
+      identiteText += `, profession: ${patient.profession}`;
     }
 
     if (patient.couvertureSociale?.trim()) {
-      identiteParts.push(`ayant comme couverture sociale ${patient.couvertureSociale}`);
+      identiteText += `, ayant comme couverture sociale ${patient.couvertureSociale}`;
     }
 
-    const identiteText = identiteParts.join(`, `);
+    identiteText += ".";
 
-    // Create the prompt for OpenAI with detailed structure
-    const prompt = `Tu es un médecin expérimenté. Génère une observation clinique professionnelle et bien structurée au format markdown. Chaque section doit être rédigée sous forme de paragraphes cohérents et fluides, pas sous forme de listes.
-
-**STRUCTURE OBLIGATOIRE:**
-
-## Identité
-${identiteText}.
-
-## Motif de Consultation
-${patient.motif || "Non spécifié"}
-
-## Antécédents
-Rédige les antécédents du patient sous forme de paragraphe:
-${patient.atcdsMedical ? `- Antécédents médicaux: ${patient.atcdsMedical}` : ""}
-${patient.atcdsChirurgical ? `- Antécédents chirurgicaux: ${patient.atcdsChirurgical}` : ""}
-${patient.atcdsGynObstetrique ? `- Antécédents gynéco-obstétriques: ${patient.atcdsGynObstetrique}` : ""}
-${patient.atcdsFamiliaux ? `- Antécédents familiaux: ${patient.atcdsFamiliaux}` : ""}
-
-${patient.atcdsMedical || patient.atcdsChirurgical || patient.atcdsGynObstetrique || patient.atcdsFamiliaux ? "" : "Le patient ne rapporte pas d'antécédents notables."}
-
-## Examen Clinique
-Rédige l'examen clinique du patient sous forme de paragraphes détaillés en mettant en évidence les résultats objectifs:
-
-${examinationFindings || "Aucun examen détaillé fourni."}
-
-## Conclusion
-Rédige une brève conclusion synthétisant l'état clinique général du patient et ses principaux problèmes.
-
-**INSTRUCTIONS IMPORTANTES:**
-- Chaque section doit être rédigée en paragraphes fluides, pas en listes à puces
-- Utilise un langage médical professionnel et approprié
-- Sois concis mais exhaustif
-- N'ajoute pas de section supplémentaire non demandée
-- Assure-toi que l'observation est appropriée pour être imprimée`;
-
-    // Call OpenAI API
-    const message = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 1500,
-    });
-
-    const observationContent = message.choices[0].message.content;
-
-    if (!observationContent) {
-      return NextResponse.json(
-        { success: false, error: "Failed to generate observation" },
-        { status: 500 }
-      );
+    // Build ATCDs list (only show non-empty ones)
+    const atcdsList: string[] = [];
+    if (patient.atcdsMedical?.trim()) {
+      atcdsList.push(`<b>- Antécédents médicaux: </b> ${patient.atcdsMedical}`);
+    }
+    if (patient.atcdsChirurgical?.trim()) {
+      atcdsList.push(`<b>- Antécédents chirurgicaux:</b> ${patient.atcdsChirurgical}`);
+    }
+    if (patient.atcdsFamiliaux?.trim()) {
+      atcdsList.push(`<b>- Antécédents familiaux:</b> ${patient.atcdsFamiliaux}`);
+    }
+    if (patient.atcdsExtra?.trim()) {
+      atcdsList.push(`<b>- Autres antécédents:</b> ${patient.atcdsExtra}`);
     }
 
-    // Save observation to database
-    const observation = await prisma.observation.create({
-      data: {
-        text: observationContent,
-        patientId: parseInt(patientId),
-      },
-    });
+    const atcdsText = atcdsList.length > 0
+      ? atcdsList.join("\n")
+      : "Le patient ne rapporte pas d'antécédents notables.";
 
+    // Build ATCDs summary for conclusion
+    const atcdsConclusionText = atcdsList.length > 0
+      ? atcdsList.map(item => item.replace("- ", "").replace(": ", " ")).join(", ")
+      : "sans antécédents notables";
+
+    // Gather all examination findings for conclusion
+    const examinationSummary: string[] = [];
+
+    // Add hemodynamic findings if present
+    
+    // Add apparatus exam findings
+    if (examSelections && Object.keys(examSelections).length > 0) {
+      for (const [examName, examData] of Object.entries(examSelections)) {
+        const data = examData as any;
+        if (data && examName !== "Examen général") {
+          if (Array.isArray(data.inspection) && data.inspection.length > 0) {
+            examinationSummary.push(`${examName} - Inspection: ${data.inspection.join(", ")}`);
+          }
+          if (Array.isArray(data.palpation) && data.palpation.length > 0) {
+            examinationSummary.push(`${examName} - Palpation: ${data.palpation.join(", ")}`);
+          }
+          if (Array.isArray(data.percussion) && data.percussion.length > 0) {
+            examinationSummary.push(`${examName} - Percussion: ${data.percussion.join(", ")}`);
+          }
+          if (Array.isArray(data.auscultation) && data.auscultation.length > 0) {
+            examinationSummary.push(`${examName} - Auscultation: ${data.auscultation.join(", ")}`);
+          }
+        }
+      }
+    }
+
+    const examinationText = examinationSummary.length > 0
+      ? examinationSummary.join(", ")
+      : "examen sans particularités";
+
+    // Build conclusion with examination findings
+    const conclusionText = `Il s'agit de ${patient.fullName} agé de ${age} ans, admis pour ${patient.motif || "consultation"}, \n <br/>Ayant comme ATCDs ${atcdsConclusionText}.\n<br/>Histoire de maladie remonte à _____________________.\n<br/>Chez qui l'examen clinique trouve ${examinationText}.`;
+
+    // Wrap conclusion in p tag
+    const conclusionTextHtml = `<p>${conclusionText}</p>`;
+
+    // Build complete observation as HTML
+    const examinationHtml = examineClinique
+      .split('\n')
+      .filter(line => line.trim())
+      .map(line => {
+        if (line.startsWith('### ')) {
+          return `<h3>${line.replace('### ', '')}</h3>`;
+        }
+        return `<p>${line}</p>`;
+      })
+      .join('');
+
+    const atcdsHtml = atcdsList.length > 0
+      ? `<ul>${atcdsList.map(item => `<li>${item.replace('- ', '')}</li>`).join('')}</ul>`
+      : '<p>Le patient ne rapporte pas d\'antécédents notables.</p>';
+
+    // Build Paraclinique section
+    const paracliniquesHtml = paracliniques && paracliniques.length > 0
+      ? `<ul>${(paracliniques as any[]).map(item => `<li>${item.bilan}: ${item.valeur}</li>`).join('')}</ul>`
+      : '<p>Aucun bilan paraclinique.</p>';
+
+    // Build Traitement section
+    const traitementsList = traitements && traitements.length > 0
+      ? (traitements as any[]).map(t => `<li><strong>${t.name}</strong><br/>Administration: ${t.administration}<br/>Posologie: ${t.posologie}<br/>Durée: ${t.duree}</li>`).join('')
+      : '';
+    const traitementHtml = traitements && traitements.length > 0
+      ? `<ul>${traitementsList}</ul>`
+      : '<p>Aucun traitement prescrit.</p>';
+
+    const fullObservation = `
+<h1>Observation Médicale</h1>
+
+<h2>Identité</h2>
+<p>${identiteText}</p>
+
+<h2>Motif</h2>
+<p>${patient.motif || "Non spécifié"}</p>
+
+<h2>Antécédents</h2>
+${atcdsText}
+
+<h2>Histoire de maladie</h2>
+<p>Histoire de maladie remonte à _____________________.</p>
+
+<h2>Examen Clinique</h2>
+${examinationHtml}
+
+<h2>Conclusion</h2>
+${conclusionTextHtml}
+
+<h2>Paraclinique</h2>
+${paracliniquesHtml}
+
+<h2>Traitement</h2>
+${traitementHtml}
+`;
+
+    // Return observation WITHOUT saving to database
     return NextResponse.json({
       success: true,
       data: {
-        id: observation.id,
-        observation: observationContent,
-        timestamp: observation.createdAt.toISOString(),
+        observation: fullObservation,
       },
     });
   } catch (error) {

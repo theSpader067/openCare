@@ -64,17 +64,18 @@ export async function POST(request: NextRequest) {
     });
 
     // Prepare patient context for the prompt
-    const age = patient.dateOfBirth
-      ? new Date().getFullYear() - patient.dateOfBirth.getFullYear() -
-        (new Date() <
-        new Date(
-          new Date().getFullYear(),
-          patient.dateOfBirth.getMonth(),
-          patient.dateOfBirth.getDate()
-        )
-          ? 1
-          : 0)
-      : 0;
+    const calculateAge = (birthDateStr: Date): number => {
+      const birthDate = new Date(birthDateStr);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age;
+    };
+
+    const age = patient.dateOfBirth ? calculateAge(patient.dateOfBirth) : 0;
 
     // Build the examination findings description
     let examinationFindings = "";
@@ -92,22 +93,19 @@ export async function POST(request: NextRequest) {
       if (hemodynamicsData.gcs) findings.push(`GCS: ${hemodynamicsData.gcs}`);
       if (hemodynamicsData.fr) findings.push(`FR: ${hemodynamicsData.fr} /min`);
       if (hemodynamicsData.sao2) findings.push(`SaO2: ${hemodynamicsData.sao2}%`);
-      if (hemodynamicsData.temp) findings.push(`T°: ${hemodynamicsData.temp}°C`);
+      if (hemodynamicsData.temperature) findings.push(`T°: ${hemodynamicsData.temperature}°C`);
       if (hemodynamicsData.dextro) findings.push(`Dextro: ${hemodynamicsData.dextro} mg/dL`);
       if (hemodynamicsData.weight) findings.push(`Poids: ${hemodynamicsData.weight} kg`);
       if (hemodynamicsData.height) findings.push(`Taille: ${hemodynamicsData.height} cm`);
-      if (hemodynamicsData.bmi) findings.push(`IMC: ${hemodynamicsData.bmi}`);
+      if (hemodynamicsData.imc) findings.push(`IMC: ${hemodynamicsData.imc}`);
 
       examinationFindings += findings.join(", ") + "\n";
 
-      if (hemodynamicsData.etatGeneral) {
-        examinationFindings += `État général: ${hemodynamicsData.etatGeneral}\n`;
+      if (hemodynamicsData.generalState) {
+        examinationFindings += `État général: ${hemodynamicsData.generalState}\n`;
       }
-      if (hemodynamicsData.etatCutaneomuqueux && hemodynamicsData.etatCutaneomuqueux.length > 0) {
-        examinationFindings += `État cutanéomuqueux: ${hemodynamicsData.etatCutaneomuqueux.join(", ")}\n`;
-      }
-      if (hemodynamicsData.additionalNotes) {
-        examinationFindings += `Notes supplémentaires: ${hemodynamicsData.additionalNotes}\n`;
+      if (hemodynamicsData.skinState && hemodynamicsData.skinState.length > 0) {
+        examinationFindings += `État cutanéomuqueux: ${hemodynamicsData.skinState.join(", ")}\n`;
       }
     }
 
@@ -116,14 +114,14 @@ export async function POST(request: NextRequest) {
       examinationFindings += "\n**Examens complémentaires:**\n";
       for (const [examName, examData] of Object.entries(examSelections)) {
         const data = examData as any;
-        if (data && (Object.keys(data).some((key) => (data[key] as any).length > 0) || data.extraNotes)) {
+        if (data && examName !== "Examen général" && (Object.keys(data).some((key) => (data[key] as any)?.length > 0) || data.extraNotes)) {
           examinationFindings += `\n*${examName}:* `;
           const signs = [];
-          for (const [section, items] of Object.entries(data)) {
-            if (section !== "extraNotes" && Array.isArray(items) && items.length > 0) {
-              signs.push(`${items.join(", ")}`);
-            }
-          }
+          if (data.inspection?.length > 0) signs.push(`Inspection: ${data.inspection.join(", ")}`);
+          if (data.palpation?.length > 0) signs.push(`Palpation: ${data.palpation.join(", ")}`);
+          if (data.percussion?.length > 0) signs.push(`Percussion: ${data.percussion.join(", ")}`);
+          if (data.auscultation?.length > 0) signs.push(`Auscultation: ${data.auscultation.join(", ")}`);
+
           if (signs.length > 0) {
             examinationFindings += signs.join(" | ");
           }
@@ -136,32 +134,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the prompt for OpenAI
-    const prompt = `Tu es un médecin expérimenté. Basé sur les informations et examens cliniques fournis, génère une observation clinique professionnelle et bien structurée au format markdown. L'observation doit être brève, précise et cliniquement pertinente.
+    const prompt = `Tu es un médecin expérimenté. Basé sur les informations et examens cliniques fournis, génère une observation clinique structurée et bien détaillée.
 
 Informations du patient:
 - Nom: ${patient.fullName}
 - Âge: ${age} ans
 - PID: ${patient.pid}
 - Diagnostic: ${patient.diagnostic || "Non spécifié"}
-- Adresse d'origine: ${patient.addressOrigin || "Non spécifiée"}
-- Adresse d'habitation: ${patient.addressHabitat || "Non spécifiée"}
-- Couverture sociale: ${patient.couvertureSociale || "Non spécifiée"}
+- Motif: ${patient.motif || "Non spécifié"}
+- Profession: ${patient.profession || "Non spécifiée"}
+- Situation familiale: ${patient.situationFamiliale || "Non spécifiée"}
+- Antécédents médicaux: ${patient.atcdsMedical || "Aucun"}
+- Antécédents chirurgicaux: ${patient.atcdsChirurgical || "Aucun"}
+- Antécédents gynéco-obstétriques: ${patient.atcdsGynObstetrique || "Aucun"}
+- Antécédents familiaux: ${patient.atcdsFamiliaux || "Aucun"}
 
 Examens cliniques effectués:
-${examinationFindings}
+${examinationFindings || "Aucun examen détaillé fourni"}
 
-Génère une observation clinique structurée avec les sections suivantes:
-
-## **Identité**
-Il s'agit du patient [fullname], agé de [age] ans, originaire de [address_origin] et habitant à [address_habitat], ayant pour couverture sociale [couverture_social].
-
-## **Examen Clinique**
-Décris les résultats de l'examen clinique en mettant en évidence ce qui est présent et ce qui est absent. Sois concis et professionnel.
-
-## **Conclusion**
-Fournis une brève conclusion sur l'état clinique global du patient.
-
-Utilise du markdown pour la mise en forme (gras, italique, listes si nécessaire). Assure-toi que l'observation est appropriée pour être imprimée.`;
+Génère une observation clinique bien structurée. L'observation doit être professionnelle, concise et cliniquement pertinente. Utilise du markdown pour la mise en forme.`;
 
     // Call OpenAI API
     const message = await openai.chat.completions.create({

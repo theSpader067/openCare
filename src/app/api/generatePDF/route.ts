@@ -23,13 +23,45 @@ export async function POST(request: NextRequest) {
     if (isProduction) {
       // Production (Vercel, etc.) - use @sparticuz/chromium
       console.log('Using @sparticuz/chromium for PDF generation (Serverless)');
-      executablePath = await chromium.executablePath();
-      launchOptions = {
-        args: chromium.args,
-        executablePath: executablePath,
-        headless: true,
-      };
-      browser = await puppeteer.launch(launchOptions);
+      try {
+        executablePath = await chromium.executablePath();
+        launchOptions = {
+          args: chromium.args,
+          executablePath: executablePath,
+          headless: true,
+        };
+        browser = await puppeteer.launch(launchOptions);
+      } catch (error) {
+        console.error('Failed to launch with @sparticuz/chromium:', error);
+        console.log('Falling back to environment Chrome');
+        // Fallback to environment Chrome
+        const fs = await import('fs');
+        const homeDir = process.env.HOME || process.env.USERPROFILE || '';
+        const possiblePaths = [
+          '/usr/bin/google-chrome',
+          '/usr/bin/chromium',
+          '/usr/bin/chromium-browser',
+        ];
+
+        let foundPath: string | undefined;
+        for (const path of possiblePaths) {
+          if (fs.existsSync(path)) {
+            foundPath = path;
+            break;
+          }
+        }
+
+        if (foundPath) {
+          launchOptions = {
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+            executablePath: foundPath,
+          };
+          browser = await puppeteer.launch(launchOptions);
+        } else {
+          throw error;
+        }
+      }
     } else {
       // Local development - try to find Chrome/Chromium
       console.log('Using local Chrome for PDF generation (Development)');

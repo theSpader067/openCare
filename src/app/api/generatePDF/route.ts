@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import puppeteer from "puppeteer";
 
 export async function POST(request: NextRequest) {
-  let browser;
+  let browser: any;
   try {
     const { htmlContent, filename } = await request.json();
 
@@ -89,38 +88,28 @@ export async function POST(request: NextRequest) {
     const isProduction = process.env.NODE_ENV === 'production';
     const browserlessToken = process.env.BROWSERLESS_TOKEN;
 
-    // Determine launch configuration
-    let launchConfig: Parameters<typeof puppeteer.launch>[0];
-
     if (isProduction && browserlessToken) {
-      // Production: Use Browserless.io
+      // Production: Use Browserless.io with puppeteer-core
       console.log('Connecting to Browserless.io');
+      const puppeteerCore = await import('puppeteer-core');
       const browserlessUrl = `wss://chrome.browserless.io?token=${browserlessToken}`;
-      browser = await puppeteer.connect({ browserWSEndpoint: browserlessUrl });
-    } else if (isProduction && !browserlessToken) {
-      // Production without token - use local puppeteer if available
-      console.log('Production mode: Using local Puppeteer');
-      launchConfig = {
-        headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-        ],
-      };
-      browser = await puppeteer.launch(launchConfig);
+      browser = await puppeteerCore.default.connect({ browserWSEndpoint: browserlessUrl });
+    } else if (isProduction) {
+      // Production without token - use Playwright or fallback
+      console.log('Production mode: Using remote browser via Microsoft Playwright');
+      throw new Error('BROWSERLESS_TOKEN environment variable is required for production. Please set it in your Vercel project settings.');
     } else {
-      // Local development
+      // Local development - use standard puppeteer
       console.log('Development mode: Using local Puppeteer');
-      launchConfig = {
+      const puppeteer = await import('puppeteer');
+      browser = await puppeteer.default.launch({
         headless: true,
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
         ],
-      };
-      browser = await puppeteer.launch(launchConfig);
+      });
     }
 
     const page = await browser.newPage();

@@ -35,24 +35,27 @@ export async function POST(request: NextRequest) {
     } else {
       // Local development - try to find Chrome/Chromium
       const fs = await import('fs');
-      const path = await import('path');
-      const glob = await import('glob');
 
-      // Look for Chromium installed by Puppeteer
+      // Look for Chromium installed by Puppeteer - search common cache locations
       const homeDir = process.env.HOME || process.env.USERPROFILE || '';
       let puppeteerChromePath: string | undefined;
 
       if (homeDir) {
         try {
-          const matches = await glob.glob(
-            `${homeDir}/.cache/puppeteer/chrome/*/chrome-linux64/chrome`
-          );
-          if (matches.length > 0) {
-            puppeteerChromePath = matches[0];
-            console.log(`Found Puppeteer Chrome at: ${puppeteerChromePath}`);
+          const cacheDir = `${homeDir}/.cache/puppeteer`;
+          if (fs.existsSync(cacheDir)) {
+            const versions = fs.readdirSync(cacheDir);
+            for (const version of versions) {
+              const chromePath = `${cacheDir}/${version}/chrome-linux64/chrome`;
+              if (fs.existsSync(chromePath)) {
+                puppeteerChromePath = chromePath;
+                console.log(`Found Puppeteer Chrome at: ${puppeteerChromePath}`);
+                break;
+              }
+            }
           }
         } catch (e) {
-          // Glob failed, continue
+          console.log('Error searching for Puppeteer Chrome:', e);
         }
       }
 
@@ -80,16 +83,17 @@ export async function POST(request: NextRequest) {
             break;
           }
         } catch (e) {
-          // Continue to next path
+          console.log(`Chrome not found at ${candidatePath}`);
         }
       }
 
-      if (executablePath) {
-        launchOptions.executablePath = executablePath;
-      } else {
-        console.warn('Chrome not found in common paths. Attempting to launch without explicit path.');
+      if (!executablePath) {
+        throw new Error(
+          'Chrome/Chromium not found. Please install it with: npx puppeteer browsers install chrome'
+        );
       }
 
+      launchOptions.executablePath = executablePath;
       browser = await puppeteer.launch(launchOptions);
     }
 

@@ -13,8 +13,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Determine if we're in production or development
+    // Determine environment and get browser
     const isProduction = process.env.NODE_ENV === 'production';
+    const openPuppeteerUrl = process.env.OPEN_PUPPETEER_URL;
 
     // Launch puppeteer-core with appropriate configuration
     const launchOptions: Parameters<typeof puppeteer.launch>[0] = {
@@ -26,12 +27,23 @@ export async function POST(request: NextRequest) {
       ],
     };
 
-    // For production, use remote Chromium (Browserless.io or similar)
-    // For local development, use installed Chromium
-    if (isProduction && process.env.BROWSERLESS_TOKEN) {
-      const browserlessToken = process.env.BROWSERLESS_TOKEN;
-      const browserlessUrl = `wss://chrome.browserless.io?token=${browserlessToken}`;
-      browser = await puppeteer.connect({ browserWSEndpoint: browserlessUrl });
+    // For production with OpenPuppeteer URL, use remote Chromium
+    if (isProduction && openPuppeteerUrl) {
+      console.log('Using OpenPuppeteer for PDF generation');
+      try {
+        browser = await puppeteer.connect({ browserWSEndpoint: openPuppeteerUrl });
+      } catch (error) {
+        console.error('Failed to connect to OpenPuppeteer:', error);
+        throw new Error(
+          'Failed to connect to OpenPuppeteer. Please verify your OPEN_PUPPETEER_URL is correct.'
+        );
+      }
+    } else if (isProduction && !openPuppeteerUrl) {
+      // Production without URL - provide helpful error
+      throw new Error(
+        'PDF generation requires OPEN_PUPPETEER_URL environment variable in production. ' +
+        'Get your WebSocket URL from https://openpuppeteer.com and add it to your Vercel environment variables.'
+      );
     } else {
       // Local development - try to find Chrome/Chromium
       const fs = await import('fs');

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 
 export async function POST(request: NextRequest) {
   let browser;
@@ -13,39 +14,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Determine environment and get browser
+    // Determine environment
     const isProduction = process.env.NODE_ENV === 'production';
-    const openPuppeteerUrl = process.env.OPEN_PUPPETEER_URL;
 
-    // Launch puppeteer-core with appropriate configuration
-    const launchOptions: Parameters<typeof puppeteer.launch>[0] = {
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-      ],
-    };
+    let executablePath: string;
+    let launchOptions: Parameters<typeof puppeteer.launch>[0];
 
-    // For production with OpenPuppeteer URL, use remote Chromium
-    if (isProduction && openPuppeteerUrl) {
-      console.log('Using OpenPuppeteer for PDF generation');
-      try {
-        browser = await puppeteer.connect({ browserWSEndpoint: openPuppeteerUrl });
-      } catch (error) {
-        console.error('Failed to connect to OpenPuppeteer:', error);
-        throw new Error(
-          'Failed to connect to OpenPuppeteer. Please verify your OPEN_PUPPETEER_URL is correct.'
-        );
-      }
-    } else if (isProduction && !openPuppeteerUrl) {
-      // Production without URL - provide helpful error
-      throw new Error(
-        'PDF generation requires OPEN_PUPPETEER_URL environment variable in production. ' +
-        'Get your WebSocket URL from https://openpuppeteer.com and add it to your Vercel environment variables.'
-      );
+    if (isProduction) {
+      // Production (Vercel, etc.) - use @sparticuz/chromium
+      console.log('Using @sparticuz/chromium for PDF generation (Serverless)');
+      executablePath = await chromium.executablePath();
+      launchOptions = {
+        args: chromium.args,
+        executablePath: executablePath,
+        headless: true,
+      };
+      browser = await puppeteer.launch(launchOptions);
     } else {
       // Local development - try to find Chrome/Chromium
+      console.log('Using local Chrome for PDF generation (Development)');
       const fs = await import('fs');
 
       // Look for Chromium installed by Puppeteer - search common cache locations
@@ -105,7 +92,15 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      launchOptions.executablePath = executablePath;
+      launchOptions = {
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+        ],
+        executablePath: executablePath,
+      };
       browser = await puppeteer.launch(launchOptions);
     }
 

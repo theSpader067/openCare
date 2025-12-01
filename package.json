@@ -13,6 +13,7 @@
     "@novu/nextjs": "^3.11.0",
     "@openpanel/nextjs": "^1.0.17",
     "@prisma/client": "^6.19.0",
+    "@sparticuz/chromium": "^141.0.0",
     "@tiptap/extension-underline": "^3.10.4",
     "@tiptap/react": "^3.10.4",
     "@tiptap/starter-kit": "^3.10.4",

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import puppeteer from "puppeteer-core";
-import chromium from "@sparticuz/chromium";
+import puppeteer from "puppeteer";
 
 export async function POST(request: NextRequest) {
   let browser;
@@ -21,47 +20,17 @@ export async function POST(request: NextRequest) {
     let launchOptions: Parameters<typeof puppeteer.launch>[0];
 
     if (isProduction) {
-      // Production (Vercel, etc.) - use @sparticuz/chromium
-      console.log('Using @sparticuz/chromium for PDF generation (Serverless)');
-      try {
-        executablePath = await chromium.executablePath();
-        launchOptions = {
-          args: chromium.args,
-          executablePath: executablePath,
-          headless: true,
-        };
-        browser = await puppeteer.launch(launchOptions);
-      } catch (error) {
-        console.error('Failed to launch with @sparticuz/chromium:', error);
-        console.log('Falling back to environment Chrome');
-        // Fallback to environment Chrome
-        const fs = await import('fs');
-        const homeDir = process.env.HOME || process.env.USERPROFILE || '';
-        const possiblePaths = [
-          '/usr/bin/google-chrome',
-          '/usr/bin/chromium',
-          '/usr/bin/chromium-browser',
-        ];
-
-        let foundPath: string | undefined;
-        for (const path of possiblePaths) {
-          if (fs.existsSync(path)) {
-            foundPath = path;
-            break;
-          }
-        }
-
-        if (foundPath) {
-          launchOptions = {
-            headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-            executablePath: foundPath,
-          };
-          browser = await puppeteer.launch(launchOptions);
-        } else {
-          throw error;
-        }
-      }
+      // Production (Vercel, etc.) - use bundled Chromium from puppeteer
+      console.log('Using bundled Chromium for PDF generation (Production)');
+      launchOptions = {
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+        ],
+      };
+      browser = await puppeteer.launch(launchOptions);
     } else {
       // Local development - try to find Chrome/Chromium
       console.log('Using local Chrome for PDF generation (Development)');

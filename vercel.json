@@ -1,11 +1,8 @@
 {
   "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "env": {
-    "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD": "true"
-  },
   "functions": {
-    "src/app/api/generatePDF/route.ts": {
+    "src/app/api/**": {
       "memory": 3008,
       "maxDuration": 60
     }

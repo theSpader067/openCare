@@ -5,9 +5,16 @@ import jwt from "jsonwebtoken";
 
 function extractEmailFromToken(token: string): string | null {
   try {
+    console.log("[ONBOARDING] Verifying JWT token with secret:", process.env.NEXTAUTH_SECRET ? "SET" : "NOT SET");
     const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET || "fallback-secret-key") as any;
+    console.log("[ONBOARDING] JWT decoded successfully:", {
+      userId: decoded.userId,
+      email: decoded.email,
+      username: decoded.username,
+    });
     return decoded.email || null;
-  } catch {
+  } catch (error) {
+    console.error("[ONBOARDING] JWT verification failed:", error instanceof Error ? error.message : error);
     return null;
   }
 }
@@ -27,10 +34,17 @@ export async function POST(request: NextRequest) {
   // If no session, try to get from JWT token (mobile flow)
   if (!userEmail) {
     const authHeader = request.headers.get("authorization");
+    console.log("[ONBOARDING] Authorization header present:", !!authHeader);
+    if (authHeader) {
+      console.log("[ONBOARDING] Authorization header (first 30 chars):", authHeader.substring(0, 30) + "...");
+    }
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.substring(7);
+      console.log("[ONBOARDING] Extracted token (first 20 chars):", token.substring(0, 20) + "...");
       userEmail = extractEmailFromToken(token);
-      console.log("Got email from JWT token:", userEmail);
+      console.log("[ONBOARDING] Got email from JWT token:", userEmail);
+    } else {
+      console.log("[ONBOARDING] Authorization header does not start with 'Bearer '");
     }
   }
 

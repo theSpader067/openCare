@@ -44,7 +44,8 @@ export async function sendVerificationEmail(email: string, token: string, userNa
 }
 
 export async function sendSignupNotificationToAdmin(userName: string, userEmail: string) {
-  const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || process.env.EMAIL_SERVER_USER
+  // Send to hardcoded email address for signup notifications
+  const adminEmail = "nawfalbouziane037@gmail.com"
 
   if (!adminEmail) {
     console.warn("[EMAIL] No admin email configured for signup notifications")

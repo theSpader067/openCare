@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer"
 import { generateVerificationEmailHTML, generateVerificationEmailText } from "./email-templates/verification-email"
 import { generateSignupNotificationHTML, generateSignupNotificationText } from "./email-templates/signup-notification"
+import { generateVerificationCodeHTML, generateVerificationCodeText } from "./email-templates/verification-code"
 
 export const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_SERVER_HOST,
@@ -30,6 +31,40 @@ export async function sendVerificationEmail(email: string, token: string, userNa
   const subjects = {
     en: "✉️ Verify your email address - OpenCare",
     fr: "✉️ Vérifiez votre adresse email - OpenCare"
+  }
+
+  const subject = subjects[language as 'en' | 'fr'] || subjects.en
+
+  await transporter.sendMail({
+    from: `"OpenCare" <${process.env.EMAIL_FROM || process.env.EMAIL_SERVER_USER}>`,
+    to: email,
+    subject,
+    html: htmlContent,
+    text: textContent,
+  })
+}
+
+export async function sendVerificationCodeEmail(
+  email: string,
+  code: string,
+  userName: string,
+  language: string = 'en'
+) {
+  const htmlContent = generateVerificationCodeHTML({
+    userName,
+    code,
+    language,
+  })
+
+  const textContent = generateVerificationCodeText({
+    userName,
+    code,
+    language,
+  })
+
+  const subjects = {
+    en: "✉️ Verify your email with code - OpenCare",
+    fr: "✉️ Vérifiez votre email avec le code - OpenCare"
   }
 
   const subject = subjects[language as 'en' | 'fr'] || subjects.en

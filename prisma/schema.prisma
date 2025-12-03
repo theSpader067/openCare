@@ -293,6 +293,19 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model VerificationCode {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  code      String    // 6-digit code as string
+  expiresAt DateTime  // 10 minutes from creation
+  attempts  Int       @default(0)
+  maxAttempts Int     @default(5)
+  createdAt DateTime  @default(now())
+
+  @@index([email])
+  @@index([expiresAt])
+}
+
 model Contact {
   id        Int       @id @default(autoincrement())
   fullName  String

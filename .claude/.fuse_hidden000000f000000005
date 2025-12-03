@@ -22,9 +22,7 @@
       "Bash(npx prisma generate:*)",
       "Bash(git add:*)",
       "Bash(npm run lint:*)",
-      "Bash(yes:*)",
-      "Bash(node --version:*)",
-      "WebFetch(domain:ocr.space)"
+      "Bash(yes:*)"
     ],
     "deny": [],
     "ask": []

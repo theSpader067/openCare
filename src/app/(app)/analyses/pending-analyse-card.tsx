@@ -1,12 +1,13 @@
 "use client";
 
-import { Clock, Download, User, Camera, X, Loader } from "lucide-react";
+import { Clock, Download, User, Camera, X, Loader, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { AnalysisScannerModal } from "@/components/analysis-scanner-modal";
 import { Analyse } from "./page";
 import { useTranslation } from "react-i18next";
+import Tesseract from "tesseract.js";
 
 
 const statusConfig: Record<
@@ -48,9 +49,11 @@ export function PendingAnalyseCard({
 }) {
   const { t } = useTranslation();
   const config = statusConfig[analyse.status];
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isOcrProcessing, setIsOcrProcessing] = useState(false);
   const [testValues, setTestValues] = useState<Record<string, string>>(
     analyse.labEntries?.reduce((acc, test) => {
       acc[test.id!] = test.value || "";
@@ -58,9 +61,81 @@ export function PendingAnalyseCard({
     }, {} as Record<string, string>) || {}
   );
   const [textareaResults, setTextareaResults] = useState("");
+  const [ocrExtractedText, setOcrExtractedText] = useState("");
+  const [isExtractingValues, setIsExtractingValues] = useState(false);
 
   const handleTestValueChange = (testId: string, value: string) => {
     setTestValues((prev) => ({ ...prev, [testId]: value }));
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+      alert(t("analyses.errors.invalidFileType") || "Only images and PDF files are allowed");
+      return;
+    }
+
+    setIsOcrProcessing(true);
+
+    try {
+      // Use Tesseract.js for client-side OCR
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const imageUrl = e.target?.result as string;
+
+          // Process with Tesseract.js (French language)
+          // Use higher confidence settings for more accurate number extraction
+          const result = await Tesseract.recognize(imageUrl, "fra", {
+            logger: (m) => {
+              console.log("Tesseract progress:", m.progress);
+            },
+          });
+
+          // Clean up and preserve the extracted text carefully
+          let extractedText = result.data.text || '';
+
+          // Log detailed text extraction info
+          console.log("=== TESSERACT EXTRACTION ===");
+          console.log("Raw extracted text:", extractedText);
+          console.log("Confidence:", result.data.confidence);
+
+          // Normalize whitespace but preserve decimal points
+          // Replace multiple spaces/tabs with single space
+          extractedText = extractedText.replace(/\s+/g, ' ').trim();
+
+          console.log("Cleaned extracted text:", extractedText);
+          console.log("=== END TESSERACT ===\n");
+
+          setOcrExtractedText(extractedText);
+
+          // Automatically extract values if it's a bilan (lab work) analysis
+          if (analyse.bilanCategory === "bilan" && analyse.labEntries && analyse.labEntries.length > 0) {
+            console.log("Auto-extracting values for bilan analysis...");
+            await handleExtractValuesAuto(extractedText, analyse.labEntries);
+          }
+        } catch (error) {
+          console.error("OCR processing error:", error);
+          alert(t("analyses.errors.ocrFailed") || "Failed to extract text from file. Please try again.");
+        } finally {
+          setIsOcrProcessing(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("File upload error:", error);
+      setIsOcrProcessing(false);
+      alert(t("analyses.errors.fileUploadFailed") || "Failed to upload file. Please try again.");
+    }
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleSaveResults = async () => {
@@ -168,6 +243,167 @@ export function PendingAnalyseCard({
       console.error("Error saving results:", error);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleExtractValuesAuto = async (
+    extractedText: string,
+    labEntries: typeof analyse.labEntries
+  ) => {
+    if (!extractedText.trim() || !labEntries || labEntries.length === 0) {
+      console.log("handleExtractValuesAuto: Missing required data");
+      return;
+    }
+
+    try {
+      // Get test labels from lab entries
+      const testLabels = labEntries.map((entry) => entry.name).filter(Boolean) as string[];
+
+      console.log("=== AUTO EXTRACT VALUES ===");
+      console.log("OCR extracted text:", extractedText);
+      console.log("Test labels to extract:", testLabels);
+
+      // Call backend to extract values
+      const response = await fetch("/api/analyses/extract-values", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          parsedText: extractedText,
+          testLabels,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to extract values");
+      }
+
+      const result = await response.json();
+
+      console.log("Backend response:", result);
+      console.log("Extracted values count:", result.count);
+      console.log("Extracted values data:", result.extractedValues);
+
+      // Populate test values from extracted data
+      if (result.extractedValues && Array.isArray(result.extractedValues)) {
+        const updatedValues = { ...testValues };
+
+        console.log("Starting to map extracted values to lab entries...");
+
+        for (const extracted of result.extractedValues) {
+          console.log(`Processing extracted: ${extracted.testName} = ${extracted.value}`);
+
+          // Find the matching lab entry
+          const labEntry = labEntries.find(
+            (entry) => entry.name?.toLowerCase() === extracted.testName.toLowerCase()
+          );
+
+          console.log(`Found lab entry for "${extracted.testName}":`, labEntry);
+
+          if (labEntry && labEntry.id) {
+            console.log(`✓ Setting ${labEntry.id} = ${extracted.value}`);
+            updatedValues[labEntry.id] = extracted.value;
+          } else {
+            console.log(`✗ No matching lab entry for "${extracted.testName}"`);
+          }
+        }
+
+        console.log("Updated values:", updatedValues);
+        setTestValues(updatedValues);
+        console.log(`✓ Successfully auto-extracted ${result.count} values from OCR text`);
+      } else {
+        console.log("No extracted values in response");
+      }
+
+      console.log("=== END AUTO EXTRACT ===\n");
+    } catch (error) {
+      console.error("Error auto-extracting values:", error);
+    }
+  };
+
+  const handleExtractValues = async () => {
+    if (!ocrExtractedText.trim() || !analyse.labEntries || analyse.labEntries.length === 0) {
+      console.log("handleExtractValues: Missing required data", {
+        hasText: !!ocrExtractedText.trim(),
+        hasLabEntries: !!analyse.labEntries,
+        labEntriesLength: analyse.labEntries?.length || 0,
+      });
+      return;
+    }
+
+    setIsExtractingValues(true);
+
+    try {
+      // Get test labels from lab entries
+      const testLabels = analyse.labEntries.map((entry) => entry.name).filter(Boolean) as string[];
+
+      console.log("=== FRONTEND EXTRACT VALUES ===");
+      console.log("OCR extracted text:", ocrExtractedText);
+      console.log("Test labels to extract:", testLabels);
+      console.log("Lab entries:", analyse.labEntries);
+
+      // Call backend to extract values
+      const response = await fetch("/api/analyses/extract-values", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          parsedText: ocrExtractedText,
+          testLabels,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to extract values");
+      }
+
+      const result = await response.json();
+
+      console.log("Backend response:", result);
+      console.log("Extracted values count:", result.count);
+      console.log("Extracted values data:", result.extractedValues);
+
+      // Populate test values from extracted data
+      if (result.extractedValues && Array.isArray(result.extractedValues)) {
+        const updatedValues = { ...testValues };
+
+        console.log("Starting to map extracted values to lab entries...");
+
+        for (const extracted of result.extractedValues) {
+          console.log(`Processing extracted: ${extracted.testName} = ${extracted.value}`);
+
+          // Find the matching lab entry
+          const labEntry = analyse.labEntries.find(
+            (entry) => entry.name?.toLowerCase() === extracted.testName.toLowerCase()
+          );
+
+          console.log(`Found lab entry for "${extracted.testName}":`, labEntry);
+
+          if (labEntry && labEntry.id) {
+            console.log(`✓ Setting ${labEntry.id} = ${extracted.value}`);
+            updatedValues[labEntry.id] = extracted.value;
+          } else {
+            console.log(`✗ No matching lab entry for "${extracted.testName}"`);
+          }
+        }
+
+        console.log("Updated values:", updatedValues);
+        setTestValues(updatedValues);
+        console.log(`✓ Successfully extracted ${result.count} values from OCR text`);
+      } else {
+        console.log("No extracted values in response");
+      }
+
+      console.log("=== END FRONTEND EXTRACT ===\n");
+    } catch (error) {
+      console.error("Error extracting values:", error);
+      alert(t("analyses.errors.extractionFailed") || "Failed to extract values. Please check the text and try again.");
+    } finally {
+      setIsExtractingValues(false);
     }
   };
 
@@ -338,15 +574,69 @@ export function PendingAnalyseCard({
                     <h3 className="text-xs sm:text-sm font-semibold text-slate-900">
                       {t("analyses.results.sectionTitle")}
                     </h3>
-                    <button
-                      onClick={() => setIsScannerOpen(true)}
-                      className="inline-flex align-end h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition flex-shrink-0"
-                      title={t("analyses.results.scanCamera")}
-                    >
-                      <Camera className="h-4 w-4" />
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isOcrProcessing}
+                        className="inline-flex align-end h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title={t("analyses.results.uploadFile") || "Upload file for OCR"}
+                      >
+                        {isOcrProcessing ? (
+                          <Loader className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Upload className="h-4 w-4" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setIsScannerOpen(true)}
+                        className="inline-flex align-end h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition flex-shrink-0"
+                        title={t("analyses.results.scanCamera")}
+                      >
+                        <Camera className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    aria-label="Upload file for OCR"
+                  />
                   <hr className="my-2 sm:my-3" />
+
+                  {/* OCR Extracted Text Display - Only for non-bilan analyses */}
+                  {ocrExtractedText && analyse.bilanCategory !== "bilan" && (
+                    <div className="mb-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs sm:text-sm font-semibold text-slate-700">
+                          {t("analyses.results.extractedText") || "Extracted Text"}
+                        </label>
+                        <button
+                          onClick={() => setOcrExtractedText("")}
+                          className="text-xs text-slate-500 hover:text-slate-700 transition"
+                        >
+                          {t("analyses.buttons.clear") || "Clear"}
+                        </button>
+                      </div>
+                      <textarea
+                        value={ocrExtractedText}
+                        onChange={(e) => setOcrExtractedText(e.target.value)}
+                        rows={3}
+                        className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-xs sm:text-sm text-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition"
+                      />
+                      <button
+                        onClick={() => {
+                          setTextareaResults(ocrExtractedText);
+                          setOcrExtractedText("");
+                        }}
+                        className="w-full text-xs text-indigo-600 hover:text-indigo-700 font-medium transition"
+                      >
+                        {t("analyses.buttons.useExtracted") || "Use Extracted Text"}
+                      </button>
+                    </div>
+                  )}
 
                   {/* Bilan: Test inputs */}
                   {analyse.bilanCategory === "bilan" ? (

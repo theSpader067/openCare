@@ -1202,7 +1202,9 @@
       "reset": "Réinitialiser",
       "previous": "Précédent",
       "next": "Suivant",
-      "saveResults": "Sauvegarder les résultats"
+      "saveResults": "Sauvegarder les résultats",
+      "useExtracted": "Utiliser le texte extrait",
+      "clear": "Effacer"
     },
     "sections": {
       "historyTitle": "Historique des Bilans",
@@ -1298,8 +1300,10 @@
       "sectionTitle": "Saisie des résultats",
       "enterValue": "Entrez la valeur",
       "scanCamera": "Scanner avec caméra",
+      "uploadFile": "Charger un fichier pour OCR",
       "describeResults": "Décrivez les résultats et observations...",
-      "noTestsPending": "Aucun test en attente"
+      "noTestsPending": "Aucun test en attente",
+      "extractedText": "Texte extrait"
     },
     "details": {
       "requestDate": "Demande :",
@@ -1332,6 +1336,12 @@
       "enCours": "En cours",
       "terminee": "Terminée",
       "urgent": "Urgent"
+    },
+    "errors": {
+      "invalidFileType": "Seules les images et les fichiers PDF sont autorisés",
+      "ocrFailed": "Échec de l'extraction de texte du fichier. Veuillez réessayer.",
+      "fileUploadFailed": "Échec du chargement du fichier. Veuillez réessayer.",
+      "extractionFailed": "Échec de l'extraction des valeurs. Veuillez vérifier le texte et réessayer."
     }
   },
   "tasks": {

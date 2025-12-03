@@ -1202,7 +1202,9 @@
       "reset": "Reset",
       "previous": "Previous",
       "next": "Next",
-      "saveResults": "Save results"
+      "saveResults": "Save results",
+      "useExtracted": "Use extracted text",
+      "clear": "Clear"
     },
     "sections": {
       "historyTitle": "Analysis History",
@@ -1298,8 +1300,10 @@
       "sectionTitle": "Results Entry",
       "enterValue": "Enter value",
       "scanCamera": "Scan with camera",
+      "uploadFile": "Upload file for OCR",
       "describeResults": "Describe results and observations...",
-      "noTestsPending": "No pending tests"
+      "noTestsPending": "No pending tests",
+      "extractedText": "Extracted Text"
     },
     "details": {
       "requestDate": "Request:",
@@ -1332,6 +1336,12 @@
       "enCours": "In Progress",
       "terminee": "Completed",
       "urgent": "Urgent"
+    },
+    "errors": {
+      "invalidFileType": "Only images and PDF files are allowed",
+      "ocrFailed": "Failed to extract text from file. Please try again.",
+      "fileUploadFailed": "Failed to upload file. Please try again.",
+      "extractionFailed": "Failed to extract values. Please check the text and try again."
     }
   },
   "tasks": {

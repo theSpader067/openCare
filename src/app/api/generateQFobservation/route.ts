@@ -4,6 +4,18 @@ import { getSession } from "@/lib/auth";
 import { verifyMobileToken } from "@/lib/mobile-auth";
 import { OpenAI } from "openai";
 
+// CORS headers for mobile app access
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
+// OPTIONS handler for CORS preflight
+export async function OPTIONS(request: NextRequest) {
+  return NextResponse.json({}, { headers: corsHeaders });
+}
+
 // Helper function to get userId from session or JWT token
 async function getUserId(request: NextRequest): Promise<number | null> {
   const mobileUserId = verifyMobileToken(request);
@@ -25,7 +37,7 @@ export async function POST(request: NextRequest) {
     if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
-        { status: 401 }
+        { status: 401, headers: corsHeaders }
       );
     }
 
@@ -40,7 +52,7 @@ export async function POST(request: NextRequest) {
     if (!patientId) {
       return NextResponse.json(
         { success: false, error: "Patient ID is required" },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
@@ -52,14 +64,14 @@ export async function POST(request: NextRequest) {
     if (!patient) {
       return NextResponse.json(
         { success: false, error: "Patient not found" },
-        { status: 404 }
+        { status: 404, headers: corsHeaders }
       );
     }
 
     if (patient.userId !== userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
-        { status: 403 }
+        { status: 403, headers: corsHeaders }
       );
     }
 
@@ -333,7 +345,7 @@ ${traitementHtml}
       data: {
         observation: fullObservation,
       },
-    });
+    }, { headers: corsHeaders });
   } catch (error) {
     console.error("Error generating observation:", error);
     return NextResponse.json(
@@ -341,7 +353,7 @@ ${traitementHtml}
         success: false,
         error: error instanceof Error ? error.message : "Failed to generate observation",
       },
-      { status: 500 }
+      { status: 500, headers: corsHeaders }
     );
   }
 }

@@ -81,6 +81,13 @@ export async function POST(req: Request) {
     const code = generateVerificationCode()
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
 
+    // Delete old verification code if exists (unique constraint on email)
+    await prisma.verificationCode.deleteMany({
+      where: { email }
+    }).catch(() => {
+      // Ignore if no code exists
+    })
+
     // Store verification code
     await prisma.verificationCode.create({
       data: {
@@ -94,9 +101,14 @@ export async function POST(req: Request) {
 
     // Send verification code email
     const displayName = `${firstName} ${lastName}`
-    await sendVerificationCodeEmail(email, code, displayName, "en")
-
-    console.log(`[MOBILE_SIGNUP] Verification code sent to ${email}`)
+    try {
+      await sendVerificationCodeEmail(email, code, displayName, "en")
+      console.log(`[MOBILE_SIGNUP] Verification code sent to ${email}`)
+    } catch (emailError) {
+      console.error("[MOBILE_SIGNUP] Failed to send verification code email:", emailError)
+      // Note: We don't throw here - user is already created with code in DB
+      // Mobile app will show verification screen, and email may arrive later
+    }
 
     // Generate JWT token for immediate use (will be re-verified after code entry)
     const token = jwt.sign(

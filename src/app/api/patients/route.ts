@@ -154,12 +154,25 @@ export async function POST(request: NextRequest) {
     // Extract initial observation if provided
     const { initialObservation, ...patientData } = body;
 
+    // Parse birthdate - handle string dates properly
+    let parsedBirthDate: Date | undefined = undefined;
+    if (patientData.birthdate) {
+      console.log('[PATIENTS_API] Parsing birthdate:', patientData.birthdate);
+      const parsed = new Date(patientData.birthdate);
+      if (!isNaN(parsed.getTime())) {
+        parsedBirthDate = parsed;
+        console.log('[PATIENTS_API] Parsed birthdate successfully:', parsedBirthDate);
+      } else {
+        console.log('[PATIENTS_API] Invalid birthdate string:', patientData.birthdate);
+      }
+    }
+
     const patient = await prisma.patient.create({
       data: {
         fullName: patientData.fullName.trim(),
         pid: patientData.pid,
         userId: userId,
-        dateOfBirth:new Date(patientData.birthdate) || new Date(),
+        dateOfBirth: parsedBirthDate,
         isPrivate: patientData.isPrivate === "privé",
         service: patientData.service?.trim() || undefined,
         diagnostic: patientData.diagnostic?.trim() || undefined,

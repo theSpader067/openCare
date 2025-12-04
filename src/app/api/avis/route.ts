@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { verifyMobileToken } from "@/lib/mobile-auth";
+import { avisServerAnalytics } from "@/lib/server-analytics";
 
 // Helper function to get userId from session or JWT token
 async function getUserId(request: NextRequest): Promise<number | null> {
@@ -227,6 +228,15 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Track avis creation event
+    await avisServerAnalytics.trackAvisCreated({
+      id: avis.id,
+      destination_specialty: avis.destination_specialty,
+      creatorId: avis.creatorId,
+      patientId: avis.patientId ?? undefined,
+      patientName: avis.patientName ?? undefined,
+    });
+
     return NextResponse.json({
       success: true,
       data: convertAvisToJSON(avis),
@@ -290,6 +300,14 @@ export async function PATCH(request: NextRequest) {
           },
         },
       },
+    });
+
+    // Track avis answer event
+    await avisServerAnalytics.trackAvisAnswered({
+      id: updatedAvis.id,
+      destination_specialty: updatedAvis.destination_specialty,
+      creatorId: updatedAvis.creatorId,
+      answerLength: updatedAvis.answer?.length || 0,
     });
 
     return NextResponse.json({

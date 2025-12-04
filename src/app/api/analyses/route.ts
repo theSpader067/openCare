@@ -3,6 +3,7 @@ import { verifyMobileToken } from "@/lib/mobile-auth";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { bilanStructure } from "@/data/analyses/analyses-data";
+import { analyseServerAnalytics } from "@/lib/server-analytics";
 
 // Helper function to get userId from session or JWT token
 async function getUserId(request: NextRequest): Promise<number | null> {
@@ -184,6 +185,16 @@ export async function POST(req: NextRequest) {
         },
         labEntries: true,
       },
+    });
+
+    // Track analyse creation event
+    await analyseServerAnalytics.trackAnalyseCreated({
+      id: analyse.id,
+      title: analyse.title,
+      category: analyse.category,
+      creatorId: analyse.creatorId,
+      patientId: analyse.patientId ?? undefined,
+      patientName: analyse.patientName ?? undefined,
     });
 
     // If type is bilan, create LabEntry records for each selected item

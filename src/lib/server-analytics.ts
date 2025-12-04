@@ -240,6 +240,141 @@ export const patientServerAnalytics = {
 };
 
 /**
+ * Analyse analytics - track analyse operations on the backend
+ */
+export const analyseServerAnalytics = {
+  trackAnalyseCreated: async (analyseData: {
+    id: number;
+    title: string;
+    category: string;
+    creatorId: number;
+    patientId?: number;
+    patientName?: string;
+  }) => {
+    await sendEventToOpenPanel('analyse_created', {
+      analyse_id: analyseData.id,
+      title: analyseData.title,
+      category: analyseData.category,
+      user_id: analyseData.creatorId,
+      patient_id: analyseData.patientId,
+      patient_name: analyseData.patientName,
+    }, analyseData.creatorId.toString());
+  },
+};
+
+/**
+ * Observation analytics - track observation operations on the backend
+ */
+export const observationServerAnalytics = {
+  trackObservationCreated: async (observationData: {
+    id: number;
+    patientId: number;
+    text: string;
+    creatorId: number;
+  }) => {
+    await sendEventToOpenPanel('observation_created', {
+      observation_id: observationData.id,
+      patient_id: observationData.patientId,
+      text_length: observationData.text.length,
+      user_id: observationData.creatorId,
+    }, observationData.creatorId.toString());
+  },
+
+  trackObservationPdfGenerated: async (observationData: {
+    patientId: number;
+    observationCount?: number;
+    creatorId: number;
+  }) => {
+    await sendEventToOpenPanel('observation_pdf_generated', {
+      patient_id: observationData.patientId,
+      observation_count: observationData.observationCount,
+      user_id: observationData.creatorId,
+    }, observationData.creatorId.toString());
+  },
+};
+
+/**
+ * Compte-rendu (Rapport) analytics - track report operations on the backend
+ */
+export const compteRenduServerAnalytics = {
+  trackCompteRenduCreated: async (compteRenduData: {
+    id: number;
+    title: string;
+    category: string;
+    creatorId: number;
+    patientId?: number;
+    patientName?: string;
+  }) => {
+    await sendEventToOpenPanel('compte_rendu_created', {
+      compte_rendu_id: compteRenduData.id,
+      title: compteRenduData.title,
+      type: compteRenduData.category,
+      user_id: compteRenduData.creatorId,
+      patient_id: compteRenduData.patientId,
+      patient_name: compteRenduData.patientName,
+    }, compteRenduData.creatorId.toString());
+  },
+};
+
+/**
+ * Ordonnance analytics - track prescription operations on the backend
+ */
+export const ordonnanceServerAnalytics = {
+  trackOrdonnanceCreated: async (ordonnanceData: {
+    id: number;
+    title: string;
+    creatorId: number;
+    patientId?: number;
+    patientName?: string;
+    isPrivate: boolean;
+  }) => {
+    await sendEventToOpenPanel('ordonnance_created', {
+      ordonnance_id: ordonnanceData.id,
+      title: ordonnanceData.title,
+      user_id: ordonnanceData.creatorId,
+      patient_id: ordonnanceData.patientId,
+      patient_name: ordonnanceData.patientName,
+      type: ordonnanceData.isPrivate ? 'private' : 'team',
+    }, ordonnanceData.creatorId.toString());
+  },
+};
+
+/**
+ * Avis analytics - track medical opinion operations on the backend
+ */
+export const avisServerAnalytics = {
+  trackAvisCreated: async (avisData: {
+    id: number;
+    destination_specialty: string;
+    creatorId: number;
+    patientId?: number;
+    patientName?: string;
+  }) => {
+    await sendEventToOpenPanel('avis_created', {
+      avis_id: avisData.id,
+      destination_specialty: avisData.destination_specialty,
+      user_id: avisData.creatorId,
+      patient_id: avisData.patientId,
+      patient_name: avisData.patientName,
+    }, avisData.creatorId.toString());
+  },
+
+  trackAvisAnswered: async (avisData: {
+    id: number;
+    destination_specialty: string;
+    creatorId: number;
+    answerLength?: number;
+  }) => {
+    await sendEventToOpenPanel('avis_answered', {
+      avis_id: avisData.id,
+      destination_specialty: avisData.destination_specialty,
+      user_id: avisData.creatorId,
+      answer_length: avisData.answerLength,
+    }, avisData.creatorId.toString());
+  },
+};
+
+/**
  * User analytics - track user actions on the backend
  */
 export const userServerAnalytics = {

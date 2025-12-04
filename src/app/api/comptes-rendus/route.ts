@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { verifyMobileToken } from "@/lib/mobile-auth";
+import { compteRenduServerAnalytics } from "@/lib/server-analytics";
 import { connect } from "http2";
 
 // Helper function to get userId from session or JWT token
@@ -299,12 +300,22 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Track compte-rendu creation event
+    await compteRenduServerAnalytics.trackCompteRenduCreated({
+      id: rapport.id,
+      title: rapport.title,
+      category: rapport.category,
+      creatorId: rapport.creatorId,
+      patientId: rapport.patientId ?? undefined,
+      patientName: rapport.patientName ?? undefined,
+    });
+
     return NextResponse.json({
       success: true,
       data: convertRapportToJSON(rapport),
     });
 
-    
+
   } catch (error) {
     console.error("Error creating rapport:", error);
     return NextResponse.json(

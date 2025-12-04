@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { verifyMobileToken } from "@/lib/mobile-auth";
+import { observationServerAnalytics } from "@/lib/server-analytics";
 
 // Helper function to get userId from session or JWT token
 async function getUserId(request: NextRequest): Promise<number | null> {
@@ -153,6 +154,14 @@ export async function POST(request: NextRequest) {
         text: text.trim(),
         patientId: patient.id,
       },
+    });
+
+    // Track observation creation event
+    await observationServerAnalytics.trackObservationCreated({
+      id: observation.id,
+      patientId: observation.patientId,
+      text: observation.text,
+      creatorId: userId,
     });
 
     return NextResponse.json({

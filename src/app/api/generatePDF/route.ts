@@ -1,9 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getSession } from "@/lib/auth";
+import { verifyMobileToken } from "@/lib/mobile-auth";
+import { observationServerAnalytics } from "@/lib/server-analytics";
+
+// Helper function to get userId from session or JWT token
+async function getUserId(request: NextRequest): Promise<number | null> {
+  // Try mobile JWT authentication first
+  const mobileUserId = verifyMobileToken(request);
+  if (mobileUserId) {
+    return mobileUserId;
+  }
+
+  // Fall back to session-based authentication (web)
+  const session = await getSession();
+  if (session?.user) {
+    return parseInt((session.user as any).id);
+  }
+
+  return null;
+}
 
 export async function POST(request: NextRequest) {
   let browser: any;
   try {
-    const { htmlContent, filename } = await request.json();
+    const userId = await getUserId(request);
+    const { htmlContent, filename, patientId, observationCount } = await request.json();
 
     if (!htmlContent) {
       return NextResponse.json(
@@ -127,6 +148,15 @@ export async function POST(request: NextRequest) {
     });
 
     await browser.close();
+
+    // Track observation PDF generation event
+    if (userId && patientId) {
+      await observationServerAnalytics.trackObservationPdfGenerated({
+        patientId: patientId,
+        observationCount: observationCount,
+        creatorId: userId,
+      });
+    }
 
     return new NextResponse(Buffer.from(pdfBuffer), {
       headers: {

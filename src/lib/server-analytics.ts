@@ -45,8 +45,10 @@ interface PatientEventData extends EventProperties {
 async function sendEventToOpenPanel(eventName: string, properties: EventProperties) {
   try {
     const clientId = process.env.OPENPANEL_CLIENT_ID;
-    if (!clientId) {
-      console.warn('OPENPANEL_CLIENT_ID not configured, skipping analytics');
+    const secretId = process.env.OPENPANEL_SECRET_ID;
+
+    if (!clientId || !secretId) {
+      console.warn('OPENPANEL_CLIENT_ID or OPENPANEL_SECRET_ID not configured, skipping analytics');
       return;
     }
 
@@ -62,13 +64,16 @@ async function sendEventToOpenPanel(eventName: string, properties: EventProperti
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${clientId}`,
+        'Authorization': `Bearer ${secretId}`,
       },
       body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
-      console.error(`Failed to send event to OpenPanel: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`Failed to send event to OpenPanel: ${response.statusText}`, errorText);
+    } else {
+      console.log(`Event '${eventName}' sent to OpenPanel successfully`);
     }
   } catch (error) {
     console.error('Error sending event to OpenPanel:', error);

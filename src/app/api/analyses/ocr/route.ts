@@ -145,7 +145,6 @@ export async function POST(req: NextRequest) {
 
     console.log("Sending OCR request to OCRSpace API");
     console.log("Base64 image length:", base64Image.length);
-    console.log("Test labels to search for:", testLabels);
 
     // OCRSpace language codes: fre (French), eng (English), spa (Spanish), deu (German), etc.
     const bodyString = `apikey=K82729097788957&base64image=${encodeURIComponent(base64ImageWithPrefix)}&language=fre&filetype=jpeg`;

@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
     // Build URL parameters for OCRSpace API
     const params = new URLSearchParams();
-    params.append("apikey", "K87899142C87");
+    params.append("apikey", "K82729097788957");
     params.append("base64image", base64Image);
     params.append("language", "fra");
 
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
     // Note: URL encoding large base64 images can be problematic
     // URLSearchParams has size limits, so we use a different approach
-    const bodyString = `apikey=K87899142C87&base64image=${encodeURIComponent(base64Image)}&language=fra`;
+    const bodyString = `apikey=K82729097788957&base64image=${encodeURIComponent(base64Image)}&language=fra`;
 
     // Call OCRSpace API with URL-encoded body
     const ocrResponse = await fetch("https://api.ocr.space/parse/image", {

@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client"
 import bcrypt from "bcrypt"
 import { NextResponse } from "next/server"
 import jwt from "jsonwebtoken"
+import { sendSignupNotificationEmail } from "@/lib/mailer"
 
 const prisma = new PrismaClient()
 
@@ -81,6 +82,33 @@ export async function POST(req: Request) {
       process.env.NEXTAUTH_SECRET || "fallback-secret-key",
       { expiresIn: "30d" } // 30 day expiry, matching NextAuth session maxAge
     )
+
+    // Send signup notification email to admin
+    try {
+      const adminEmail = "nawfalbouziane037@gmail.com"
+      const fullName = `${user.firstName} ${user.lastName}`
+
+      console.log("[MOBILE_SIGNUP] ========== SENDING SIGNUP EMAIL ==========")
+      console.log("[MOBILE_SIGNUP] About to send notification for user:", fullName, "<", user.email, ">")
+      console.log("[MOBILE_SIGNUP] Admin email:", adminEmail)
+
+      await sendSignupNotificationEmail({
+        data: {
+          userName: fullName,
+          userEmail: user.email,
+          signupDate: new Date(),
+        },
+        recipientEmail: adminEmail,
+      })
+
+      console.log("[MOBILE_SIGNUP] ✓ Notification email sent successfully to admin")
+      console.log("[MOBILE_SIGNUP] ==========================================")
+    } catch (emailError) {
+      console.error("[MOBILE_SIGNUP] ✗ Failed to send notification email")
+      console.error("[MOBILE_SIGNUP] Error details:", emailError)
+      console.error("[MOBILE_SIGNUP] ==========================================")
+      // Don't fail the signup if email fails - just log it
+    }
 
     // Return user data and token
     return NextResponse.json(

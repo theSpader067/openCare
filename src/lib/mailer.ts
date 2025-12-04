@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { generateContactEmailHTML, generateContactEmailText, type ContactEmailData } from "./email-templates/contact-notification";
+import { generateSignupNotificationHTML, generateSignupNotificationText, type SignupNotificationData } from "./email-templates/signup-notification";
 
 // Create transporter using environment variables
 function getTransporter() {
@@ -83,6 +84,57 @@ export async function sendContactEmail(options: SendContactEmailOptions): Promis
     });
   } catch (error) {
     console.error("[EMAIL] ✗ Failed to send contact email:", error);
+    throw error;
+  }
+}
+
+export interface SendSignupNotificationOptions {
+  data: SignupNotificationData;
+  recipientEmail: string;
+}
+
+export async function sendSignupNotificationEmail(options: SendSignupNotificationOptions): Promise<void> {
+  const { data, recipientEmail } = options;
+
+  try {
+    console.log("[EMAIL] ========== SIGNUP NOTIFICATION ==========");
+    console.log("[EMAIL] Preparing to send signup notification...");
+    console.log("[EMAIL] Recipient:", recipientEmail);
+    console.log("[EMAIL] New user:", data.userName, "Email:", data.userEmail);
+
+    const transporter = getTransporter();
+    console.log("[EMAIL] Transporter created successfully");
+
+    const htmlContent = generateSignupNotificationHTML(data);
+    const textContent = generateSignupNotificationText(data);
+
+    const fromEmail = process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER;
+    console.log("[EMAIL] From email:", fromEmail);
+
+    const mailOptions = {
+      from: `"OpenCare Signup" <${fromEmail}>`,
+      to: recipientEmail,
+      subject: `✨ Nouvelle inscription utilisateur - ${data.userName}`,
+      html: htmlContent,
+      text: textContent,
+    };
+
+    console.log("[EMAIL] Sending signup notification with options:", {
+      to: mailOptions.to,
+      from: mailOptions.from,
+      subject: mailOptions.subject,
+    });
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log("[EMAIL] ✓ Signup notification email sent successfully!", {
+      messageId: result.messageId,
+      response: result.response,
+    });
+    console.log("[EMAIL] ==========================================");
+  } catch (error) {
+    console.error("[EMAIL] ✗ Failed to send signup notification email:");
+    console.error("[EMAIL] Error:", error);
+    console.error("[EMAIL] ==========================================");
     throw error;
   }
 }

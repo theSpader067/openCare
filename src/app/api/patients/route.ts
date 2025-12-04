@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { verifyMobileToken } from "@/lib/mobile-auth";
+import { patientServerAnalytics } from "@/lib/server-analytics";
 import { Patient } from "@/data/patients/patients-data";
 
 // Helper function to get userId from session or JWT token
@@ -191,6 +192,17 @@ export async function POST(request: NextRequest) {
         status: patientData.status?.trim() || undefined,
         nextContact: patientData.nextContact,
       },
+    });
+
+    // Track patient creation event
+    await patientServerAnalytics.trackPatientCreated({
+      id: patient.id,
+      fullName: patient.fullName,
+      isPrivate: patient.isPrivate,
+      userId: patient.userId,
+      dateOfBirth: patient.dateOfBirth ?? undefined,
+      service: patient.service ?? undefined,
+      diagnostic: patient.diagnostic ?? undefined,
     });
 
     // Create initial observation if provided

@@ -28,6 +28,16 @@ interface ActivityEventData extends EventProperties {
   user_id?: string | number;
 }
 
+interface PatientEventData extends EventProperties {
+  patient_id?: string | number;
+  patient_name?: string;
+  user_id?: string | number;
+  patient_type?: 'team' | 'private';
+  service?: string;
+  diagnostic?: string;
+  age?: number;
+}
+
 /**
  * Send event to OpenPanel API
  * This function makes a direct HTTP request to OpenPanel
@@ -151,6 +161,63 @@ export const activityServerAnalytics = {
   trackActivityDeleted: async (activityId: number) => {
     await sendEventToOpenPanel('activity_deleted', {
       activity_id: activityId,
+    });
+  },
+};
+
+/**
+ * Patient analytics - track patient operations on the backend
+ */
+export const patientServerAnalytics = {
+  trackPatientCreated: async (patientData: {
+    id: number;
+    fullName: string;
+    isPrivate: boolean;
+    userId: number;
+    dateOfBirth?: Date;
+    service?: string;
+    diagnostic?: string;
+  }) => {
+    let age: number | undefined;
+    if (patientData.dateOfBirth) {
+      const today = new Date();
+      age = today.getFullYear() - patientData.dateOfBirth.getFullYear();
+      const hasBirthdayPassed =
+        today.getMonth() > patientData.dateOfBirth.getMonth() ||
+        (today.getMonth() === patientData.dateOfBirth.getMonth() &&
+         today.getDate() >= patientData.dateOfBirth.getDate());
+      if (!hasBirthdayPassed) {
+        age--;
+      }
+    }
+
+    await sendEventToOpenPanel('patient_created', {
+      patient_id: patientData.id,
+      patient_name: patientData.fullName,
+      patient_type: patientData.isPrivate ? 'private' : 'team',
+      user_id: patientData.userId,
+      service: patientData.service,
+      diagnostic: patientData.diagnostic,
+      age: age,
+    });
+  },
+
+  trackPatientUpdated: async (patientData: {
+    id: number;
+    fullName: string;
+    isPrivate: boolean;
+    updatedAt?: Date;
+  }) => {
+    await sendEventToOpenPanel('patient_updated', {
+      patient_id: patientData.id,
+      patient_name: patientData.fullName,
+      patient_type: patientData.isPrivate ? 'private' : 'team',
+    });
+  },
+
+  trackPatientDeleted: async (patientId: number) => {
+    await sendEventToOpenPanel('patient_deleted', {
+      patient_id: patientId,
     });
   },
 };

@@ -47,6 +47,9 @@ async function sendEventToOpenPanel(eventName: string, properties: EventProperti
     const clientId = process.env.OPENPANEL_CLIENT_ID;
     const clientSecret = process.env.OPENPANEL_SECRET_ID;
 
+    console.log('[OpenPanel Debug] clientId:', clientId ? `${clientId.substring(0, 8)}...` : 'MISSING');
+    console.log('[OpenPanel Debug] clientSecret:', clientSecret ? `${clientSecret.substring(0, 8)}...` : 'MISSING');
+
     if (!clientId || !clientSecret) {
       console.warn('OPENPANEL_CLIENT_ID or OPENPANEL_SECRET_ID not configured, skipping analytics');
       return;
@@ -64,6 +67,8 @@ async function sendEventToOpenPanel(eventName: string, properties: EventProperti
       },
     };
 
+    console.log('[OpenPanel Debug] Sending payload:', JSON.stringify(payload));
+
     const response = await fetch('https://api.openpanel.dev/track', {
       method: 'POST',
       headers: {
@@ -74,14 +79,17 @@ async function sendEventToOpenPanel(eventName: string, properties: EventProperti
       body: JSON.stringify(payload),
     });
 
+    console.log('[OpenPanel Debug] Response status:', response.status);
+
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Failed to send event to OpenPanel: ${response.statusText}`, errorText);
+      console.error(`[OpenPanel Error] Failed to send event to OpenPanel: ${response.statusText}`);
+      console.error(`[OpenPanel Error] Response:`, errorText);
     } else {
-      console.log(`Event '${eventName}' sent to OpenPanel successfully`);
+      console.log(`[OpenPanel Success] Event '${eventName}' sent to OpenPanel successfully`);
     }
   } catch (error) {
-    console.error('Error sending event to OpenPanel:', error);
+    console.error('[OpenPanel Error] Exception:', error);
     // Silently fail - don't break application if analytics fails
   }
 }

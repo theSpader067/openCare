@@ -143,8 +143,10 @@ export async function POST(req: NextRequest) {
     // Format base64 image with data URI prefix as required by OCRSpace
     const base64ImageWithPrefix = `data:image/jpeg;base64,${base64Image}`;
 
-    console.log("Sending OCR request to OCRSpace API");
+    console.log("=== OCR REQUEST RECEIVED ===");
     console.log("Base64 image length:", base64Image.length);
+    console.log("Base64 first 100 chars:", base64Image.substring(0, 100));
+    console.log("Sending OCR request to OCRSpace API");
 
     // OCRSpace language codes: fre (French), eng (English), spa (Spanish), deu (German), etc.
     const bodyString = `apikey=K82729097788957&base64image=${encodeURIComponent(base64ImageWithPrefix)}&language=fre&filetype=jpeg`;
@@ -188,6 +190,13 @@ export async function POST(req: NextRequest) {
     }
 
     const parsedText = result.ParsedText || "";
+
+    console.log("=== OCR EXTRACTION COMPLETE ===");
+    console.log("Extracted Text:");
+    console.log(parsedText);
+    console.log("Text Length:", parsedText.length);
+    console.log("Confidence:", result.Confidence);
+    console.log("==============================");
 
     return NextResponse.json({
       parsedText: parsedText,

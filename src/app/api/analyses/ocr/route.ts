@@ -131,18 +131,11 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { base64Image, testLabels } = body;
+    const { base64Image } = body;
 
     if (!base64Image) {
       return NextResponse.json(
         { error: "Missing base64Image in request body" },
-        { status: 400 }
-      );
-    }
-
-    if (!testLabels || !Array.isArray(testLabels)) {
-      return NextResponse.json(
-        { error: "Missing or invalid testLabels array" },
         { status: 400 }
       );
     }
@@ -197,15 +190,9 @@ export async function POST(req: NextRequest) {
 
     const parsedText = result.ParsedText || "";
 
-    // Extract values from the parsed text
-    console.log("Extracting values from OCR text...");
-    const extractedValues = extractValuesFromText(parsedText, testLabels);
-    console.log("Extracted values:", extractedValues);
-
     return NextResponse.json({
       parsedText: parsedText,
       confidence: result.Confidence || 0,
-      extractedValues: extractedValues,
     });
   } catch (error) {
     console.error("OCR API error:", error);

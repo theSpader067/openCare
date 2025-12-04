@@ -53,6 +53,7 @@ async function sendEventToOpenPanel(eventName: string, properties: EventProperti
     }
 
     const payload = {
+      clientId: clientId,
       type: 'track',
       payload: {
         name: eventName,
@@ -67,7 +68,7 @@ async function sendEventToOpenPanel(eventName: string, properties: EventProperti
     console.log('Sending to OpenPanel with clientId:', clientId);
     console.log('Payload:', JSON.stringify(payload, null, 2));
 
-    const response = await fetch(`https://api.openpanel.dev/track?clientId=${clientId}`, {
+    const response = await fetch('https://api.openpanel.dev/track', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

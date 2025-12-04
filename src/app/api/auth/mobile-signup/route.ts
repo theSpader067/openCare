@@ -2,9 +2,14 @@ import { PrismaClient } from "@prisma/client"
 import bcrypt from "bcrypt"
 import { NextResponse } from "next/server"
 import jwt from "jsonwebtoken"
-import { sendSignupNotificationToAdmin } from "@/lib/mail"
+import { sendSignupNotificationToAdmin, sendVerificationCodeEmail } from "@/lib/mail"
 
 const prisma = new PrismaClient()
+
+// Helper function to generate a secure 6-digit code
+function generateVerificationCode(): string {
+  return Math.floor(Math.random() * 900000 + 100000).toString()
+}
 
 /**
  * POST /api/auth/mobile-signup
@@ -59,7 +64,7 @@ export async function POST(req: Request) {
     // Generate username from first and last name
     const username = `${firstName.toLowerCase()}.${lastName.toLowerCase()}`
 
-    // Create user
+    // Create user - NOT auto-verified, will verify via code
     const user = await prisma.user.create({
       data: {
         email,
@@ -67,12 +72,33 @@ export async function POST(req: Request) {
         firstName,
         lastName,
         username,
-        emailVerified: true, // Auto-verify for mobile app
+        emailVerified: false, // Will be verified after code entry
         language: "en",
       },
     })
 
-    // Generate JWT token
+    // Generate 6-digit verification code for mobile
+    const code = generateVerificationCode()
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+
+    // Store verification code
+    await prisma.verificationCode.create({
+      data: {
+        email,
+        code,
+        expiresAt,
+        attempts: 0,
+        maxAttempts: 5,
+      },
+    })
+
+    // Send verification code email
+    const displayName = `${firstName} ${lastName}`
+    await sendVerificationCodeEmail(email, code, displayName, "en")
+
+    console.log(`[MOBILE_SIGNUP] Verification code sent to ${email}`)
+
+    // Generate JWT token for immediate use (will be re-verified after code entry)
     const token = jwt.sign(
       {
         userId: user.id,

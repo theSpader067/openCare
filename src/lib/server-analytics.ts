@@ -53,7 +53,6 @@ async function sendEventToOpenPanel(eventName: string, properties: EventProperti
     }
 
     const payload = {
-      clientId: clientId,
       type: 'track',
       payload: {
         name: eventName,
@@ -65,14 +64,12 @@ async function sendEventToOpenPanel(eventName: string, properties: EventProperti
       },
     };
 
-    console.log('Sending to OpenPanel with clientId:', clientId);
-    console.log('Payload:', JSON.stringify(payload, null, 2));
-
     const response = await fetch('https://api.openpanel.dev/track', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${clientSecret}`,
+        'openpanel-client-id': clientId,
+        'openpanel-client-secret': clientSecret,
       },
       body: JSON.stringify(payload),
     });
@@ -80,7 +77,6 @@ async function sendEventToOpenPanel(eventName: string, properties: EventProperti
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Failed to send event to OpenPanel: ${response.statusText}`, errorText);
-      console.error('Response:', errorText);
     } else {
       console.log(`Event '${eventName}' sent to OpenPanel successfully`);
     }

@@ -64,12 +64,14 @@ async function sendEventToOpenPanel(eventName: string, properties: EventProperti
       },
     };
 
+    // Create Basic auth header with clientId:clientSecret
+    const authString = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+
     const response = await fetch('https://api.openpanel.dev/track', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'openpanel-client-id': clientId,
-        'openpanel-client-secret': clientSecret,
+        'Authorization': `Basic ${authString}`,
       },
       body: JSON.stringify(payload),
     });
@@ -77,6 +79,7 @@ async function sendEventToOpenPanel(eventName: string, properties: EventProperti
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Failed to send event to OpenPanel: ${response.statusText}`, errorText);
+      console.error('Response:', errorText);
     } else {
       console.log(`Event '${eventName}' sent to OpenPanel successfully`);
     }

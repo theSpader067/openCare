@@ -64,14 +64,14 @@ async function sendEventToOpenPanel(eventName: string, properties: EventProperti
       },
     };
 
-    // Create Basic auth header with clientId:clientSecret
-    const authString = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+    console.log('Sending to OpenPanel with clientId:', clientId);
+    console.log('Payload:', JSON.stringify(payload, null, 2));
 
-    const response = await fetch('https://api.openpanel.dev/track', {
+    const response = await fetch(`https://api.openpanel.dev/track?clientId=${clientId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${authString}`,
+        'Authorization': `Bearer ${clientSecret}`,
       },
       body: JSON.stringify(payload),
     });

@@ -48,14 +48,20 @@ export async function POST(req: NextRequest) {
     // OCRSpace language codes: fre (French), eng (English), spa (Spanish), deu (German), etc.
     const bodyString = `apikey=K82729097788957&base64image=${encodeURIComponent(base64ImageWithPrefix)}&language=fre&filetype=jpeg`;
 
-    // Call OCRSpace API with URL-encoded body
+    // Call OCRSpace API with URL-encoded body (with timeout)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout for OCR processing
+
     const ocrResponse = await fetch("https://api.ocr.space/parse/image", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: bodyString,
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     console.log("OCRSpace API response status:", ocrResponse.status);
 

@@ -231,7 +231,7 @@ export async function POST(request: NextRequest) {
     // Track avis creation event
     await avisServerAnalytics.trackAvisCreated({
       id: avis.id,
-      destination_specialty: avis.destination_specialty,
+      destination_specialty: avis.destination_specialty!,
       creatorId: avis.creatorId,
       patientId: avis.patientId ?? undefined,
       patientName: avis.patientName ?? undefined,
@@ -305,7 +305,7 @@ export async function PATCH(request: NextRequest) {
     // Track avis answer event
     await avisServerAnalytics.trackAvisAnswered({
       id: updatedAvis.id,
-      destination_specialty: updatedAvis.destination_specialty,
+      destination_specialty: updatedAvis.destination_specialty!,
       creatorId: updatedAvis.creatorId,
       answerLength: updatedAvis.answer?.length || 0,
     });

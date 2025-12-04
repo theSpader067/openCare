@@ -190,8 +190,8 @@ export async function POST(req: NextRequest) {
     // Track analyse creation event
     await analyseServerAnalytics.trackAnalyseCreated({
       id: analyse.id,
-      title: analyse.title,
-      category: analyse.category,
+      title: analyse.title!,
+      category: analyse.category!,
       creatorId: analyse.creatorId,
       patientId: analyse.patientId ?? undefined,
       patientName: analyse.patientName ?? undefined,

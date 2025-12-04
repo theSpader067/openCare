@@ -303,8 +303,8 @@ export async function POST(request: NextRequest) {
     // Track compte-rendu creation event
     await compteRenduServerAnalytics.trackCompteRenduCreated({
       id: rapport.id,
-      title: rapport.title,
-      category: rapport.category,
+      title: rapport.title!,
+      category: rapport.category!,
       creatorId: rapport.creatorId,
       patientId: rapport.patientId ?? undefined,
       patientName: rapport.patientName ?? undefined,

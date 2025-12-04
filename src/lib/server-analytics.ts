@@ -42,29 +42,34 @@ interface PatientEventData extends EventProperties {
  * Send event to OpenPanel API
  * This function makes a direct HTTP request to OpenPanel
  */
-async function sendEventToOpenPanel(eventName: string, properties: EventProperties) {
+async function sendEventToOpenPanel(eventName: string, properties: EventProperties, profileId?: string) {
   try {
     const clientId = process.env.OPENPANEL_CLIENT_ID;
-    const secretId = process.env.OPENPANEL_SECRET_ID;
+    const clientSecret = process.env.OPENPANEL_SECRET_ID;
 
-    if (!clientId || !secretId) {
+    if (!clientId || !clientSecret) {
       console.warn('OPENPANEL_CLIENT_ID or OPENPANEL_SECRET_ID not configured, skipping analytics');
       return;
     }
 
     const payload = {
-      event: eventName,
-      properties: {
-        ...properties,
-        timestamp: new Date().toISOString(),
+      type: 'track',
+      payload: {
+        name: eventName,
+        profileId: profileId,
+        properties: {
+          ...properties,
+          timestamp: new Date().toISOString(),
+        },
       },
     };
 
-    const response = await fetch('https://api.openpanel.dev/events', {
+    const response = await fetch('https://api.openpanel.dev/track', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${secretId}`,
+        'openpanel-client-id': clientId,
+        'openpanel-client-secret': clientSecret,
       },
       body: JSON.stringify(payload),
     });
@@ -200,11 +205,10 @@ export const patientServerAnalytics = {
       patient_id: patientData.id,
       patient_name: patientData.fullName,
       patient_type: patientData.isPrivate ? 'private' : 'team',
-      user_id: patientData.userId,
       service: patientData.service,
       diagnostic: patientData.diagnostic,
       age: age,
-    });
+    }, patientData.userId.toString());
   },
 
   trackPatientUpdated: async (patientData: {

@@ -1,20 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
+import { verifyMobileToken } from "@/lib/mobile-auth";
 
 const prisma = new PrismaClient();
+
+// CORS headers for mobile app access
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
+// OPTIONS handler for CORS preflight
+export async function OPTIONS(request: NextRequest) {
+  return NextResponse.json({}, { headers: corsHeaders });
+}
+
+// Helper to get userId from session or JWT token
+async function getUserId(request: NextRequest): Promise<number | null> {
+  // Try mobile JWT authentication first
+  const mobileUserId = verifyMobileToken(request);
+  if (mobileUserId) {
+    console.log('[timeline] Mobile JWT auth successful, userId:', mobileUserId);
+    return mobileUserId;
+  }
+
+  // Fall back to NextAuth session (web)
+  const session = await getServerSession();
+  if (session?.user?.email) {
+    console.log('[timeline] NextAuth session found for:', session.user.email);
+    // For web sessions, we'd need to get the userId from the session
+    // This is a placeholder - adjust based on your actual session structure
+    return parseInt((session.user as any).id) || null;
+  }
+
+  return null;
+}
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ patientId: string }> }
 ) {
   try {
-    const session = await getServerSession();
-    if (!session?.user?.email) {
+    const userId = await getUserId(request);
+    if (!userId) {
+      console.log('[timeline] Unauthorized - no valid auth found');
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { patientId } = await params;
+    console.log('[timeline] Fetching timeline for patient:', patientId, 'by user:', userId);
 
     // Get patient with creator info - patientId is the pid (string identifier)
     const patient = await prisma.patient.findUnique({
@@ -51,7 +87,14 @@ export async function GET(
     });
 
     if (!patient) {
+      console.log('[timeline] Patient not found:', patientId);
       return NextResponse.json({ error: "Patient not found" }, { status: 404 });
+    }
+
+    // Verify that the patient belongs to the current user
+    if (patient.userId !== userId) {
+      console.log('[timeline] Unauthorized - patient belongs to user:', patient.userId, 'but request from:', userId);
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     // Build timeline events
@@ -144,19 +187,24 @@ export async function GET(
     // Sort all events by date (most recent first)
     timelineEvents.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        patientId: patient.id,
-        patientName: patient.fullName,
-        events: timelineEvents,
+    console.log('[timeline] Successfully built timeline with', timelineEvents.length, 'events');
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          patientId: patient.id,
+          patientName: patient.fullName,
+          events: timelineEvents,
+        },
       },
-    });
+      { headers: corsHeaders }
+    );
   } catch (error) {
     console.error("Error fetching timeline:", error);
     return NextResponse.json(
       { error: "Failed to fetch timeline" },
-      { status: 500 }
+      { status: 500, headers: corsHeaders }
     );
   }
 }

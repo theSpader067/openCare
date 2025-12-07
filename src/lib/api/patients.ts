@@ -26,6 +26,7 @@ export async function createPatient({
   nextContact,
   isPrivate,
   initialObservation,
+  fdrs,
 }: {
   pid:string,
   fullName: string;
@@ -49,6 +50,7 @@ export async function createPatient({
   nextContact?: string;
   isPrivate?: String;
   initialObservation?: string;
+  fdrs?: string;
 }): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
     const response = await fetch("/api/patients", {
@@ -79,6 +81,7 @@ export async function createPatient({
         nextContact,
         isPrivate,
         initialObservation,
+        fdrs,
       }),
     });
 
@@ -175,6 +178,7 @@ export async function updatePatient(
     status,
     nextContact,
     isPrivate,
+    fdrs,
   }: {
     fullName?: string;
     pid?:string,
@@ -196,6 +200,7 @@ export async function updatePatient(
     status?: string;
     nextContact?: string;
     isPrivate?: string | boolean;
+    fdrs?: string;
   }
 ): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
@@ -225,6 +230,7 @@ export async function updatePatient(
         status,
         nextContact,
         isPrivate,
+        fdrs,
       }),
     });
 

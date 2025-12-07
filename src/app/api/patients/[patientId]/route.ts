@@ -169,6 +169,7 @@ export async function PUT(
       status,
       nextContact,
       isPrivate,
+      fdrs,
     } = body;
 
     console.log('Extracted fields:');
@@ -213,6 +214,7 @@ export async function PUT(
         ...(status !== undefined && { status: status.trim() }),
         ...(nextContact !== undefined && { nextContact: nextContact }),
         ...(isPrivate !== undefined && { isPrivate: isPrivate === "privé" || isPrivate === true }),
+        ...(fdrs !== undefined && { fdrs: fdrs }),
       },
     });
 

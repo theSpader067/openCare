@@ -25,6 +25,9 @@ import { Separator } from "@/components/ui/separator";
 import { Patient, PatientStatus, PatientType, ObservationEntry } from "@/data/patients/patients-data";
 import { SmartEditor } from "@/components/editor/smart-editor";
 import { createPatient, getPatientByPid, updatePatient, saveObservation } from "@/lib/api/patients";
+import { FDRData, initializeFDRs, FDRType, PediatricATCDSData, FamilyATCDSData } from "@/types/fdrs";
+import { FDRTags } from "@/components/fdrs/fdr-tags";
+import { ATCDSTabs, formatPediatricATCDSParagraph, parsePediatricATCDSParagraph, parseFamilyATCDSParagraph } from "@/components/fdrs/atcds-tabs";
 
 type PatientFormState = {
   id:number,
@@ -49,6 +52,10 @@ type PatientFormState = {
   couvertureSociale: string;
   situationFamiliale: string;
   profession: string;
+  fdrs: FDRData[];
+  otherFdrs: string;
+  pediatricAtcds?: PediatricATCDSData;
+  familyAtcds?: FamilyATCDSData;
   initialObservation?: string;
 };
 
@@ -75,6 +82,10 @@ const emptyForm: PatientFormState = {
   couvertureSociale: "",
   situationFamiliale: "",
   profession: "",
+  fdrs: initializeFDRs(),
+  otherFdrs: "",
+  pediatricAtcds: {},
+  familyAtcds: {},
   initialObservation: "",
 };
 
@@ -105,7 +116,9 @@ function toFormState(patient?: Patient | null): PatientFormState {
     addressHabitat: patient.addressHabitat || "",
     couvertureSociale: patient.couvertureSociale || "",
     situationFamiliale: patient.situationFamiliale || "",
-    profession: patient.profession || ""
+    profession: patient.profession || "",
+    fdrs: initializeFDRs(),
+    otherFdrs: ""
   };
 }
 
@@ -152,6 +165,27 @@ export default function PatientDossierPage() {
   const [observationSaved, setObservationSaved] = useState(false);
   const observationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isLoadingObservations,setIsLoadingObservations] = useState(false)
+  const [atcdsActiveTab, setAtcdsActiveTab] = useState<"adulte" | "enfant">("adulte");
+
+  // Calculate age from birth date
+  const calculateAge = (birthDateString: string): number => {
+    if (!birthDateString) return 0;
+    const today = new Date();
+    const birthDate = new Date(birthDateString);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  // Auto-generate patient ID on create page load (only for new patients)
+  useEffect(() => {
+    if (!isExistingPatient && !formData.pid && mode === "create") {
+      generateRandomPatientId();
+    }
+  }, [mode]);
 
   // Load patient data from API if patientId exists but patient is not in seeded data
   useEffect(() => {
@@ -205,6 +239,40 @@ export default function PatientDossierPage() {
               profession: apiPatient.profession,
             };
 
+            // Determine if patient is a child (< 16 years old)
+            const isChild = (transformedPatient.age ?? 0) < 16;
+
+            // Parse pediatric and family ATCDS if they exist
+            let pediatricAtcds: PediatricATCDSData = {};
+            let familyAtcds: FamilyATCDSData = {};
+            let fdrs: FDRData[] = initializeFDRs();
+
+            if (isChild) {
+              // Parse the medical history as pediatric ATCDS
+              if (transformedPatient.histories.medical.length > 0) {
+                pediatricAtcds = parsePediatricATCDSParagraph(
+                  transformedPatient.histories.medical.join(" ")
+                );
+              }
+              // Parse family ATCDS if it exists
+              if (transformedPatient.atcdsFamiliaux) {
+                familyAtcds = parseFamilyATCDSParagraph(transformedPatient.atcdsFamiliaux);
+              }
+            }
+
+            // Parse FDRs if they exist in the API response
+            if (apiPatient.fdrs) {
+              try {
+                const parsedFdrs = JSON.parse(apiPatient.fdrs);
+                if (Array.isArray(parsedFdrs)) {
+                  fdrs = parsedFdrs;
+                }
+              } catch (error) {
+                console.error("Error parsing FDRs:", error);
+                fdrs = initializeFDRs();
+              }
+            }
+
             // Update formData with loaded patient data
             setFormData({
               id:parseInt(transformedPatient.id),
@@ -219,7 +287,7 @@ export default function PatientDossierPage() {
               diagnosisCode: transformedPatient.diagnosis.code,
               diagnosisLabel:transformedPatient.diagnosis.label,
               motif: transformedPatient.motif || "",
-              medicalHistory: transformedPatient.histories.medical.join("\n"),
+              medicalHistory: isChild ? "" : transformedPatient.histories.medical.join("\n"),
               surgicalHistory: transformedPatient.histories.surgical.join("\n"),
               otherHistory: transformedPatient.histories.other.join("\n"),
               atcdsGynObstetrique: transformedPatient.atcdsGynObstetrique || "",
@@ -229,7 +297,19 @@ export default function PatientDossierPage() {
               couvertureSociale: transformedPatient.couvertureSociale || "",
               situationFamiliale: transformedPatient.situationFamiliale || "",
               profession: transformedPatient.profession || "",
+              fdrs: fdrs,
+              otherFdrs: "",
+              pediatricAtcds: pediatricAtcds,
+              familyAtcds: familyAtcds,
             });
+
+            // Set the correct active tab based on patient age
+            if (isChild) {
+              setAtcdsActiveTab("enfant");
+            } else {
+              setAtcdsActiveTab("adulte");
+            }
+
             setObservations(apiPatient.observations)
             setIsLoadingObservations(false)
             setIsExistingPatient(true)
@@ -278,6 +358,17 @@ export default function PatientDossierPage() {
         ...previous,
         [field]: value,
       }));
+
+      // If birth date changed, calculate age and switch tabs accordingly
+      if (field === "birthDate" && value) {
+        const age = calculateAge(value);
+        // If age < 16, switch to Enfant tab; otherwise switch to Adulte tab
+        if (age < 16) {
+          setAtcdsActiveTab("enfant");
+        } else {
+          setAtcdsActiveTab("adulte");
+        }
+      }
     };
 
   const generateRandomPatientId = () => {
@@ -297,11 +388,67 @@ export default function PatientDossierPage() {
     }));
   };
 
+  const formatFamilyATCDSParagraph = (familyData?: FamilyATCDSData): string => {
+    if (!familyData) return "";
+
+    const parts: string[] = [];
+
+    // Father section
+    if (familyData.pere) {
+      const fatherParts: string[] = ["Père"];
+      if (familyData.pere.age) fatherParts.push(`âge: ${familyData.pere.age}`);
+      if (familyData.pere.profession) fatherParts.push(`profession: ${familyData.pere.profession}`);
+      if (familyData.pere.origin) fatherParts.push(`pays d'origine: ${familyData.pere.origin}`);
+      parts.push(fatherParts.join(", "));
+    }
+
+    // Mother section
+    if (familyData.mere) {
+      const motherParts: string[] = ["Mère"];
+      if (familyData.mere.age) motherParts.push(`âge: ${familyData.mere.age}`);
+      if (familyData.mere.profession) motherParts.push(`profession: ${familyData.mere.profession}`);
+      if (familyData.mere.origin) motherParts.push(`pays d'origine: ${familyData.mere.origin}`);
+      parts.push(motherParts.join(", "));
+    }
+
+    // Consanguinity
+    if (familyData.consanguinity === "yes") {
+      const degree = familyData.consanguinityDegree ? ` (${familyData.consanguinityDegree})` : "";
+      parts.push(`Consanguinité: Oui${degree}`);
+    } else if (familyData.consanguinity === "no") {
+      parts.push("Consanguinité: Non");
+    }
+
+    // Pathologies
+    if (familyData.pathologies) {
+      parts.push(`Antécédents personnels: ${familyData.pathologies}`);
+    }
+
+    // Siblings
+    if (familyData.siblingsCount) {
+      parts.push(`Fratrie: ${familyData.siblingsCount} frères/sœurs`);
+    }
+
+    if (familyData.siblingsInfo) {
+      parts.push(`Antécédents fratrie: ${familyData.siblingsInfo}`);
+    }
+
+    return parts.join(". ");
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSaving(true);
 
     try {
+      // Format pediatric ATCDS data if it exists
+      const pediatricATCDSParagraph = formatPediatricATCDSParagraph(formData.pediatricAtcds || {});
+
+      // Format family ATCDS data if Enfant tab is active
+      const familyATCDSParagraph = atcdsActiveTab === "enfant"
+        ? formatFamilyATCDSParagraph(formData.familyAtcds || {})
+        : formData.atcdsFamiliaux?.trim();
+
       if (isExistingPatient) {
         // Update existing patient
         const result = await updatePatient(formData.id, {
@@ -312,11 +459,11 @@ export default function PatientDossierPage() {
           diagnostic: formData.diagnosisLabel?.trim(),
           cim: formData.diagnosisCode?.trim(),
           motif: formData.motif?.trim(),
-          atcdsMedical:formData.medicalHistory?.trim(),
+          atcdsMedical: pediatricATCDSParagraph || formData.medicalHistory?.trim(),
           atcdsChirurgical: formData.surgicalHistory?.trim(),
           atcdsExtra: formData.otherHistory?.trim(),
           atcdsGynObstetrique: formData.atcdsGynObstetrique?.trim(),
-          atcdsFamiliaux: formData.atcdsFamiliaux?.trim(),
+          atcdsFamiliaux: familyATCDSParagraph,
           addressOrigin: formData.addressOrigin?.trim(),
           addressHabitat: formData.addressHabitat?.trim(),
           couvertureSociale: formData.couvertureSociale?.trim(),
@@ -325,6 +472,7 @@ export default function PatientDossierPage() {
           status: formData.status?.trim(),
           nextContact: formData.nextVisit ? String(formData.nextVisit).trim() : undefined,
           isPrivate: formData.type,
+          fdrs: formData.fdrs ? JSON.stringify(formData.fdrs) : undefined,
         });
 
         if (result.success) {
@@ -348,11 +496,11 @@ export default function PatientDossierPage() {
           histoire: formData.medicalHistory?.trim(),
           cim: formData.diagnosisCode?.trim(),
           motif: formData.motif?.trim(),
-          atcdsMedical: formData.medicalHistory?.trim(),
+          atcdsMedical: pediatricATCDSParagraph || formData.medicalHistory?.trim(),
           atcdsChirurgical: formData.surgicalHistory?.trim(),
           atcdsExtra: formData.otherHistory?.trim(),
           atcdsGynObstetrique: formData.atcdsGynObstetrique?.trim(),
-          atcdsFamiliaux: formData.atcdsFamiliaux?.trim(),
+          atcdsFamiliaux: familyATCDSParagraph,
           addressOrigin: formData.addressOrigin?.trim(),
           addressHabitat: formData.addressHabitat?.trim(),
           couvertureSociale: formData.couvertureSociale?.trim(),
@@ -362,6 +510,7 @@ export default function PatientDossierPage() {
           nextContact: formData.nextVisit ? String(formData.nextVisit).trim() : undefined,
           isPrivate: formData.type,
           initialObservation: observationDraft,
+          fdrs: formData.fdrs ? JSON.stringify(formData.fdrs) : undefined,
         });
 
         if (result.success) {
@@ -384,6 +533,28 @@ export default function PatientDossierPage() {
       setIsSaving(false);
     }
   };
+
+  // Show loading state while fetching patient data
+  if (patientId && !isExistingPatient && mode !== "create" && isLoadingObservations) {
+    return (
+      <div className="space-y-6">
+        <section className="flex flex-col gap-2">
+          <h1 className="text-2xl font-semibold text-slate-900">
+            {t("patients.dossier.title")}
+          </h1>
+          <p className="text-sm text-slate-500">
+            {t("patients.dossier.loading")}
+          </p>
+        </section>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mb-4" />
+            <p className="text-sm text-slate-600">{t("patients.dossier.loadingPatientData")}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (patientId && !isExistingPatient && mode !== "create") {
     return (
@@ -651,123 +822,413 @@ export default function PatientDossierPage() {
             placeholder={t("patients.dossier.motif")}
           />
 
-          {/* Medical History Section */}
-          <div>
-            <label className="text-sm font-medium text-[#221b5b]">{t("patients.dossier.medicalHistory")}</label>
-            <div className="mt-2 mb-3">
-              <div className="flex flex-wrap gap-2">
-                {["HTA", "Diabète", "Hépatopathie", "Néphropathie", "Cardiopathie", "Asthme", "BPCO", "Obésité", "Dyslipidémie", "Hypercholestérolémie", "Hypothyroïdie", "Hyperthyroïdie", "Épilepsie", "Migraines", "Dépression", "Anxiété", "VIH", "Hépatite", "Tuberculose", "Autres maladies chroniques"].map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => {
-                      const currentText = formData.medicalHistory.trim();
-                      const newText = currentText ? `${currentText}, ${tag}` : tag;
-                      setFormData((prev) => ({ ...prev, medicalHistory: newText }));
-                    }}
-                    className="px-2.5 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors border border-blue-200"
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <TextareaField
-              label=""
-              id="patient-medical-history"
-              value={formData.medicalHistory}
-              onChange={handleInputChange("medicalHistory")}
-              placeholder={t("patients.dossier.separateByLine")}
+          {/* ATCDS Tabs Section - Adulte/Enfant */}
+          <div className="border-t border-slate-200 pt-6 mt-6">
+            <h3 className="text-sm font-semibold text-slate-800 mb-4">ATCDs et éléments complémentaires</h3>
+            <ATCDSTabs
+              medicalHistory={formData.medicalHistory}
+              surgicalHistory={formData.surgicalHistory}
+              onMedicalHistoryChange={(value) => {
+                setFormData((prev) => ({ ...prev, medicalHistory: value }));
+              }}
+              onSurgicalHistoryChange={(value) => {
+                setFormData((prev) => ({ ...prev, surgicalHistory: value }));
+              }}
+              pediatricData={formData.pediatricAtcds || {}}
+              onPediatricDataChange={(data) => {
+                setFormData((prev) => ({ ...prev, pediatricAtcds: data }));
+              }}
+              activeTab={atcdsActiveTab}
+              onActiveTabChange={setAtcdsActiveTab}
             />
           </div>
 
-          {/* Surgical History Section */}
-          <div>
-            <label className="text-sm font-medium text-[#221b5b]">{t("patients.dossier.surgicalHistory")}</label>
-            <div className="mt-2 mb-3">
-              <div className="flex flex-wrap gap-2">
-                {["Appendicectomie", "Cholécystectomie", "Laparoscopie", "Coeliostomie", "Hystérectomie", "Césarienne", "Cure hernie", "Ligature trompe", "Vasectomie", "Prostatectomie", "Néphrectomie", "Thyroïdectomie", "Mastectomie", "Tumorectomie", "Péridural", "Chirurgie bariatrique", "Chirurgie cardiaque", "Chirurgie vasculaire", "Chirurgie ORL", "Autres chirurgies"].map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => {
-                      const currentText = formData.surgicalHistory.trim();
-                      const newText = currentText ? `${currentText}, ${tag}` : tag;
-                      setFormData((prev) => ({ ...prev, surgicalHistory: newText }));
-                    }}
-                    className="px-2.5 py-1 text-xs font-medium rounded-full bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors border border-amber-200"
-                  >
-                    {tag}
-                  </button>
-                ))}
+          {/* Gynecological/Obstetric History Section - Hidden for Enfant tab */}
+          {atcdsActiveTab !== "enfant" && (
+            <div>
+              <label className="text-sm font-medium text-[#221b5b]">{t("patients.dossier.atcdsGynObstetrique")}</label>
+              <div className="mt-2 mb-3">
+                <div className="flex flex-wrap gap-2">
+                  {["Ménopause", "Préménopause", "Dysménorrhée", "Aménorrhée", "Infertilité", "Endométriose", "Fibrome utérin", "Kyste ovarien", "Cancer du sein", "Cancer de l'utérus", "Cancer de l'ovaire", "Grossesse multiple", "Placenta praevia", "Prééclampsie", "Éclampsie", "Diabète gestationnel", "Hémorragie de la délivrance", "Dépression post-partum", "Fausse couche récidivante", "Autres complications gynéco-obstétriques"].map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => {
+                        const currentText = formData.atcdsGynObstetrique.trim();
+                        const newText = currentText ? `${currentText}, ${tag}` : tag;
+                        setFormData((prev) => ({ ...prev, atcdsGynObstetrique: newText }));
+                      }}
+                      className="px-2.5 py-1 text-xs font-medium rounded-full bg-pink-100 text-pink-700 hover:bg-pink-200 transition-colors border border-pink-200"
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
               </div>
+              <TextareaField
+                label=""
+                id="patient-atcds-gynobstetrique"
+                value={formData.atcdsGynObstetrique}
+                onChange={handleInputChange("atcdsGynObstetrique")}
+                placeholder={t("patients.dossier.separateByLine")}
+              />
             </div>
-            <TextareaField
-              label=""
-              id="patient-surgical-history"
-              value={formData.surgicalHistory}
-              onChange={handleInputChange("surgicalHistory")}
-              placeholder={t("patients.dossier.separateByLine")}
-            />
-          </div>
+          )}
 
-          {/* Gynecological/Obstetric History Section */}
-          <div>
-            <label className="text-sm font-medium text-[#221b5b]">{t("patients.dossier.atcdsGynObstetrique")}</label>
-            <div className="mt-2 mb-3">
-              <div className="flex flex-wrap gap-2">
-                {["Ménopause", "Préménopause", "Dysménorrhée", "Aménorrhée", "Infertilité", "Endométriose", "Fibrome utérin", "Kyste ovarien", "Cancer du sein", "Cancer de l'utérus", "Cancer de l'ovaire", "Grossesse multiple", "Placenta praevia", "Prééclampsie", "Éclampsie", "Diabète gestationnel", "Hémorragie de la délivrance", "Dépression post-partum", "Fausse couche récidivante", "Autres complications gynéco-obstétriques"].map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => {
-                      const currentText = formData.atcdsGynObstetrique.trim();
-                      const newText = currentText ? `${currentText}, ${tag}` : tag;
-                      setFormData((prev) => ({ ...prev, atcdsGynObstetrique: newText }));
-                    }}
-                    className="px-2.5 py-1 text-xs font-medium rounded-full bg-pink-100 text-pink-700 hover:bg-pink-200 transition-colors border border-pink-200"
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <TextareaField
-              label=""
-              id="patient-atcds-gynobstetrique"
-              value={formData.atcdsGynObstetrique}
-              onChange={handleInputChange("atcdsGynObstetrique")}
-              placeholder={t("patients.dossier.separateByLine")}
-            />
-          </div>
+          {/* Family History Section - Different content based on active tab */}
+          {atcdsActiveTab === "enfant" ? (
+            // Pediatric Family History
+            <div className="border border-blue-200 bg-blue-50 rounded-lg p-5 space-y-4">
+              <h4 className="font-semibold text-blue-900 mb-4">Antécédents Familiaux</h4>
 
-          {/* Family History Section */}
-          <div>
-            <label className="text-sm font-medium text-[#221b5b]">{t("patients.dossier.atcdsFamiliaux")}</label>
-            <div className="mt-2 mb-3">
-              <div className="flex flex-wrap gap-2">
-                {["Cancer", "Diabète", "HTA", "Cardiopathie", "AVC", "Asthme", "Emphysème", "Maladie mentale", "Épilepsie", "Hémophilie", "Drépanocytose", "Mucoviscidose", "Maladie d'Alzheimer", "Parkinson", "Polyarthrite", "Lupus", "Hérédité familiale", "Consanguinité", "Infertilité familiale", "Autres antécédents familiaux"].map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => {
-                      const currentText = formData.atcdsFamiliaux.trim();
-                      const newText = currentText ? `${currentText}, ${tag}` : tag;
-                      setFormData((prev) => ({ ...prev, atcdsFamiliaux: newText }));
-                    }}
-                    className="px-2.5 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors border border-purple-200"
-                  >
-                    {tag}
-                  </button>
-                ))}
+              {/* Father Section */}
+              <div className="bg-white border border-blue-200 rounded-lg p-4">
+                <h5 className="font-medium text-slate-800 text-sm mb-4 pb-3 border-b border-slate-200">Père</h5>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <InputField
+                    label="Âge actuel"
+                    id="father-age"
+                    placeholder="Ex: 45"
+                    value={formData.familyAtcds?.pere?.age || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        familyAtcds: {
+                          ...prev.familyAtcds,
+                          pere: {
+                            ...(prev.familyAtcds?.pere || {}),
+                            age: e.target.value,
+                          },
+                        },
+                      }))
+                    }
+                  />
+                  <InputField
+                    label="Profession"
+                    id="father-profession"
+                    placeholder="Ex: Comptable"
+                    value={formData.familyAtcds?.pere?.profession || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        familyAtcds: {
+                          ...prev.familyAtcds,
+                          pere: {
+                            ...(prev.familyAtcds?.pere || {}),
+                            profession: e.target.value,
+                          },
+                        },
+                      }))
+                    }
+                  />
+                  <InputField
+                    label="Pays d'origine"
+                    id="father-origin"
+                    placeholder="Ex: Maroc"
+                    value={formData.familyAtcds?.pere?.origin || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        familyAtcds: {
+                          ...prev.familyAtcds,
+                          pere: {
+                            ...(prev.familyAtcds?.pere || {}),
+                            origin: e.target.value,
+                          },
+                        },
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* Mother Section */}
+              <div className="bg-white border border-blue-200 rounded-lg p-4">
+                <h5 className="font-medium text-slate-800 text-sm mb-4 pb-3 border-b border-slate-200">Mère</h5>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <InputField
+                    label="Âge actuel"
+                    id="mother-age"
+                    placeholder="Ex: 43"
+                    value={formData.familyAtcds?.mere?.age || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        familyAtcds: {
+                          ...prev.familyAtcds,
+                          mere: {
+                            ...(prev.familyAtcds?.mere || {}),
+                            age: e.target.value,
+                          },
+                        },
+                      }))
+                    }
+                  />
+                  <InputField
+                    label="Profession"
+                    id="mother-profession"
+                    placeholder="Ex: Infirmière"
+                    value={formData.familyAtcds?.mere?.profession || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        familyAtcds: {
+                          ...prev.familyAtcds,
+                          mere: {
+                            ...(prev.familyAtcds?.mere || {}),
+                            profession: e.target.value,
+                          },
+                        },
+                      }))
+                    }
+                  />
+                  <InputField
+                    label="Pays d'origine"
+                    id="mother-origin"
+                    placeholder="Ex: France"
+                    value={formData.familyAtcds?.mere?.origin || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        familyAtcds: {
+                          ...prev.familyAtcds,
+                          mere: {
+                            ...(prev.familyAtcds?.mere || {}),
+                            origin: e.target.value,
+                          },
+                        },
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* Consanguinity & Antecedents Section */}
+              <div className="bg-white border border-blue-200 rounded-lg p-4 space-y-3">
+                <div>
+                  <label className="text-sm font-medium text-slate-700 block mb-3">Consanguinité</label>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          familyAtcds: {
+                            ...prev.familyAtcds,
+                            consanguinity: "yes",
+                          },
+                        }))
+                      }
+                      className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors border ${
+                        formData.familyAtcds?.consanguinity === "yes"
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : "bg-white text-slate-700 border-slate-300 hover:border-slate-400"
+                      }`}
+                    >
+                      Oui
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          familyAtcds: {
+                            ...prev.familyAtcds,
+                            consanguinity: "no",
+                          },
+                        }))
+                      }
+                      className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors border ${
+                        formData.familyAtcds?.consanguinity === "no"
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : "bg-white text-slate-700 border-slate-300 hover:border-slate-400"
+                      }`}
+                    >
+                      Non
+                    </button>
+                  </div>
+                </div>
+
+                {/* Degree field shown only if Yes is selected */}
+                {formData.familyAtcds?.consanguinity === "yes" && (
+                  <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 mt-3">
+                    <InputField
+                      label="Degré de consanguinité"
+                      id="consanguinity-degree"
+                      placeholder="Ex: Cousins au 2e degré, cousins germains, etc."
+                      value={formData.familyAtcds?.consanguinityDegree || ""}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          familyAtcds: {
+                            ...prev.familyAtcds,
+                            consanguinityDegree: e.target.value,
+                          },
+                        }))
+                      }
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Antecedents Personnels Row */}
+              <div className="bg-white border border-blue-200 rounded-lg p-4">
+                <h5 className="font-medium text-slate-800 text-sm mb-3">Antécédents Personnels (principales pathologies)</h5>
+                <TextareaField
+                  label=""
+                  id="parents-pathologies"
+                  placeholder="Ex: Père: HTA, Mère: diabète type 2, migraines"
+                  value={formData.familyAtcds?.pathologies || ""}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      familyAtcds: {
+                        ...prev.familyAtcds,
+                        pathologies: e.target.value,
+                      },
+                    }))
+                  }
+                  rows={2}
+                />
+              </div>
+
+              {/* Siblings Section */}
+              <div className="bg-white border border-blue-200 rounded-lg p-4 space-y-3">
+                <h5 className="font-medium text-slate-800 text-sm mb-3">Fratrie</h5>
+                <InputField
+                  label="Nombre de frères/sœurs"
+                  id="siblings-number"
+                  type="number"
+                  placeholder="Ex: 2"
+                  value={formData.familyAtcds?.siblingsCount || ""}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      familyAtcds: {
+                        ...prev.familyAtcds,
+                        siblingsCount: e.target.value,
+                      },
+                    }))
+                  }
+                />
+                <TextareaField
+                  label="Antécédents néonatals et principales pathologies"
+                  id="siblings-pathologies"
+                  placeholder="Ex: Sœur ainée: naissance normale, saine. Frère cadet: prématuré 35 SA, jaunisse traité, actuellement sain..."
+                  value={formData.familyAtcds?.siblingsInfo || ""}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      familyAtcds: {
+                        ...prev.familyAtcds,
+                        siblingsInfo: e.target.value,
+                      },
+                    }))
+                  }
+                  rows={3}
+                />
               </div>
             </div>
+          ) : (
+            // Adult Family History
+            <div>
+              <label className="text-sm font-medium text-[#221b5b]">{t("patients.dossier.atcdsFamiliaux")}</label>
+              <div className="mt-2 mb-3">
+                <div className="flex flex-wrap gap-2">
+                  {["Cancer", "Diabète", "HTA", "Cardiopathie", "AVC", "Asthme", "Emphysème", "Maladie mentale", "Épilepsie", "Hémophilie", "Drépanocytose", "Mucoviscidose", "Maladie d'Alzheimer", "Parkinson", "Polyarthrite", "Lupus", "Hérédité familiale", "Consanguinité", "Infertilité familiale", "Autres antécédents familiaux"].map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => {
+                        const currentText = formData.atcdsFamiliaux.trim();
+                        const newText = currentText ? `${currentText}, ${tag}` : tag;
+                        setFormData((prev) => ({ ...prev, atcdsFamiliaux: newText }));
+                      }}
+                      className="px-2.5 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors border border-purple-200"
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <TextareaField
+                label=""
+                id="patient-atcds-familiaux"
+                value={formData.atcdsFamiliaux}
+                onChange={handleInputChange("atcdsFamiliaux")}
+                placeholder={t("patients.dossier.separateByLine")}
+              />
+            </div>
+          )}
+
+          {/* Facteurs de Risque (FDRs) Section */}
+          <div className="border-t border-slate-200 pt-6 mt-6">
+            <h3 className="text-sm font-semibold text-slate-800 mb-4">Facteurs de Risque (FDRs)</h3>
+            <FDRTags
+              fdrs={formData.fdrs}
+              onToggle={(type: FDRType) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  fdrs: prev.fdrs.map((fdr) =>
+                    fdr.type === type ? { ...fdr, selected: !fdr.selected } : fdr
+                  ),
+                }));
+              }}
+            />
+
+            {/* Conditional fields for Tabagisme */}
+            {formData.fdrs.find((f) => f.type === "tabac" && f.selected) && (
+              <div className="border border-amber-200 bg-amber-50 rounded-lg p-4 space-y-4 mt-4">
+                <h4 className="font-semibold text-amber-900">Informations supplémentaires - Tabagisme</h4>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <InputField
+                    label="Durée d'exposition (années)"
+                    id="tabac-duration"
+                    type="number"
+                    value={formData.fdrs.find((f) => f.type === "tabac")?.tabac?.duréeExposition || ""}
+                    onChange={(e) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        fdrs: prev.fdrs.map((fdr) =>
+                          fdr.type === "tabac"
+                            ? { ...fdr, tabac: { ...fdr.tabac, duréeExposition: e.target.value } }
+                            : fdr
+                        ),
+                      }));
+                    }}
+                    placeholder="ex: 20"
+                  />
+                  <InputField
+                    label="Quantité en paquet-année"
+                    id="tabac-quantity"
+                    value={formData.fdrs.find((f) => f.type === "tabac")?.tabac?.quantitéPaquetAnnée || ""}
+                    onChange={(e) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        fdrs: prev.fdrs.map((fdr) =>
+                          fdr.type === "tabac"
+                            ? { ...fdr, tabac: { ...fdr.tabac, quantitéPaquetAnnée: e.target.value } }
+                            : fdr
+                        ),
+                      }));
+                    }}
+                    placeholder="ex: 30"
+                  />
+                </div>
+                <p className="text-xs text-amber-700 bg-white border border-amber-200 rounded p-2">
+                  <strong>Comment calculer:</strong> (nombre de cigarettes par jour ÷ 20) × années de consommation
+                </p>
+              </div>
+            )}
+
+            {/* Text area for other risk factors */}
             <TextareaField
-              label=""
-              id="patient-atcds-familiaux"
-              value={formData.atcdsFamiliaux}
-              onChange={handleInputChange("atcdsFamiliaux")}
-              placeholder={t("patients.dossier.separateByLine")}
+              label="Autres facteurs de risque"
+              id="patient-other-fdrs"
+              value={formData.otherFdrs}
+              onChange={handleInputChange("otherFdrs")}
+              placeholder="Documentez tout autre facteur de risque pertinent..."
+              rows={3}
             />
           </div>
 

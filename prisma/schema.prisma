@@ -87,6 +87,7 @@ model Patient {
   couvertureSociale     String?
   situationFamiliale    String?
   profession            String?
+  fdrs                  String?       @db.Text
   observations          Observation[]
   ordonnances           Ordonnance[]
   avis                  Avis[]

@@ -191,6 +191,7 @@ export async function POST(request: NextRequest) {
         profession: patientData.profession?.trim() || undefined,
         status: patientData.status?.trim() || undefined,
         nextContact: patientData.nextContact,
+        fdrs: patientData.fdrs || undefined,
       },
     });
 

@@ -1,0 +1,1241 @@
+{
+  "profiles": {
+    "enfant": {
+      "label": "Enfant",
+      "ageRange": "0-15 ans",
+      "exams": {
+        "Abdominal": {
+          "label": "Abdominal",
+          "sections": ["inspection", "palpation", "percussion", "auscultation", "toucher rectal"],
+          "content": {
+            "inspection": [
+              "Distension liquidienne",
+              "distension gazeuse",
+              "Cicatrices",
+              "Ecchymoses",
+              "Érythème",
+              "ictère",
+              "Mélanodermie",
+              "Circulation veineuse collatérale (CVC) abdominale",
+              "langue sabburale",
+              "foetor hépatique",
+              "angiome stellaire",
+              "érythrose palmaire",
+              "Hernie inguinale",
+              "Hernie crurale",
+              "Hernie ombilicale"
+            ],
+            "palpation": [
+              "Défense musculaire",
+              "Sensibilité épigastrique",
+              "Sensibilité péri-ombilicale",
+              "Sensibilité FID",
+              "Sensibilité FIG",
+              "Masse palpable",
+              "Hépatomégalie",
+              "splénomégalie",
+              "contracture abdominale",
+              "Signe de Giordano",
+              "signe de McBurney",
+              "signe de Murphy"
+            ],
+            "percussion": [
+              "Tympanisme",
+              "Matité",
+              "Ascite",
+              "Signe du glaçon",
+              "signe de Flot"
+            ],
+            "auscultation": [
+              "Bruits hydroaériques actifs",
+              "Bruits hydroaériques absents",
+              "souffles abdominaux"
+            ],
+            "toucher rectal": [
+              "Reflexe anale à la toux",
+              "marge et canal anal libres",
+              "prostate chaude et douloureuse",
+              "prostate augmentée de taille",
+              "cri de Douglas",
+              "rectorragies"
+            ]
+          }
+        },
+        "Cardiaque": {
+          "label": "Cardiaque",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "Cyanose",
+              "oedèmes périphériques",
+              "Turgescence jugulaire",
+              "Choc de pointe visible",
+              "Souffle systolique visible"
+            ],
+            "palpation": [
+              "Choc de pointe absent",
+              "Choc de pointe déplacé",
+              "Frémissement systolique",
+              "Harzer positif",
+              "Pouls radial symétrique",
+              "Pouls radial faible",
+              "Asymétrie des pouls",
+              "reflux hépato-jugulaire"
+            ],
+            "percussion": [
+              "Matité"
+            ],
+            "auscultation": [
+              "Souffle systolique",
+              "Souffle diastolique",
+              "Frottement péricardique",
+              "B1-B2 bien percus",
+              "éclat de B2",
+              "Galop protodiastolique (B3)",
+              "Galop télédiastolique (B4)",
+              "insuffisance aortique",
+              "rétrécissement aortique",
+              "Insuffisance mitrale",
+              "Rétrécissement mitral",
+              "signe de Carvalho positif",
+              "Intesité des souffles (cliassification de Levine)"
+            ]
+          }
+        },
+        "Pleuropulmonaire": {
+          "label": "Pleuropulmonaire",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "ampliation thoracique normale",
+              "ampliation thoracique augmentée",
+              "volet costal",
+              "Cyanose",
+              "Battement des ailes du nez",
+              "Tirage intercostal",
+              "Tirage sus-sternal",
+              "Asymétrie thoracique",
+              "Cicatrices",
+              "Scoliose",
+              "thorax en tonneau",
+              "signe de Hoover",
+              "signe de Campbell",
+              "circulation veineuse collatérale thoracique (CVC"
+            ],
+            "palpation": [
+              "Vibrations vocaux augmentés",
+              "Vibrations vocales abolis",
+              "Crépitations sous-cutanées",
+              "Sensibilité costale"
+            ],
+            "percussion": [
+              "Hypertympanisme",
+              "Matité"
+            ],
+            "auscultation": [
+              "Murmure vésiculaire normal",
+              "Murmure vésiculaire aboli",
+              "Crépitants fins",
+              "Crépitants grossiers",
+              "Sibilants",
+              "Wheezing",
+              "Frottement pleural"
+            ]
+          }
+        },
+        "Neurologique": {
+          "label": "Neurologique",
+          "sections": ["réactivité"," tonus et posture", "reflexes archaiques", "reflexes ostéotendineux","motricité spontannée", "sensibilité","nerfs craniens", "coordination et équilibre","développement neuromoteur"],
+          "content": {
+            "état général et réactivité": [
+    "Réactivité normale aux stimulations",
+    "Hyporéactivité",
+    "Hyperexcitabilité",
+    "Somnolence anormale",
+    "Cri normal",
+    "Cri aigu ou geignard",
+    "Contact oculaire présent",
+    "Absence de contact oculaire"
+            ],
+            "tonus et posture": [
+              "Tonus axial normal",
+              "Hypotonie axiale",
+              "Hypertonie axiale",
+              "Tonus des membres normal",
+              "Hypotonie périphérique",
+              "Hypertonie périphérique",
+              "Posture en grenouille",
+              "Opisthotonos",
+              "Asymétrie posturale"
+            ],
+            "motricité spontanée": [
+              "Motricité spontanée symétrique",
+              "Motricité spontanée diminuée",
+              "Mouvements asymétriques",
+              "Parésie d’un membre",
+              "Paralysie d’un membre",
+              "Tremulations du nourrisson",
+              "Myoclonies",
+              "Préférence d’utilisation d’un membre"
+            ],
+            "réflexes archaïques": [
+              "Réflexe de Moro présent",
+              "Réflexe de Moro absent",
+              "Réflexe de succion normal",
+              "Réflexe de succion faible",
+              "Réflexe de succion absent",
+              "Réflexe palmaire présent",
+              "Réflexe palmaire absent",
+              "Grasping plantaire présent",
+              "Grasping plantaire absent",
+              "Marche automatique présente",
+              "Marche automatique absente",
+              "Réflexe de recherche (rooting) présent",
+              "Réflexe de recherche absent"
+            ],
+            "réflexes ostéo-tendineux": [
+              "ROT normaux",
+              "ROT vifs",
+              "ROT diminués",
+              "ROT abolis",
+              "Clonus du pied",
+              "Signe de Babinski (extension)"
+            ],
+            "sensibilité": [
+              "Réaction normale à la douleur",
+              "Réaction diminuée à la douleur",
+              "Hyperréactivité à la douleur",
+              "Réaction normale au toucher",
+              "Réaction diminuée au toucher"
+            ],
+            "nerfs crâniens": [
+              "Fixation et poursuite oculaire normales",
+              "Absence de poursuite oculaire",
+              "Strabisme",
+              "Ptosis",
+              "Réflexe photomoteur présent",
+              "Réflexe photomoteur diminué",
+              "Succion efficace",
+              "Succion inefficace",
+              "Déglutition normale",
+              "Trouble de la déglutition",
+              "Symétrie faciale",
+              "Asymétrie faciale",
+              "Réaction aux sons présente",
+              "Réaction aux sons diminuée ou absente",
+              "Déviation de la langue"
+            ],
+            "développement neuro-moteur": [
+              "Tient bien la tête (selon âge)",
+              "Tient assis avec soutien",
+              "Tient assis sans soutien",
+              "Se retourne dos-ventre",
+              "Se retourne ventre-dos",
+              "Se met debout avec aide",
+              "Marche avec appui",
+              "Marche autonome",
+              "Retard des acquisitions motrices"
+            ],
+            "coordination et équilibre": [
+              "Préhension adaptée à l’âge",
+              "Atteinte imprécise des objets",
+              "Asymétrie de la préhension",
+              "Chutes fréquentes (enfant marcheur)",
+              "Marche instable",
+              "Ataxie",
+              "Hypotonie avec mauvaise tenue assise ou debout"
+            ]
+          }
+        },
+        "ORL": {
+          "label": "ORL",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "Pavillon normal",
+              "Otorrhée",
+              "Sécrétion cerumineuse",
+              "Membrane tympanique normale",
+              "Membrane tympanique opacifiée",
+              "Rhinorrhée",
+              "Obstruction nasale",
+              "Déviation septale",
+              "Polypes nasaux",
+              "Pharynx normal",
+              "Pharyngite",
+              "Amygdales hypertrophiées",
+              "Exsudat"
+            ],
+            "palpation": [
+              "Douleur du tragus",
+              "Adénopathie cervicale",
+              "Palpation thyroïde normale",
+              "Thyroïde augmentée"
+            ],
+            "percussion": [
+              "Pas d'anomalies"
+            ],
+            "auscultation": [
+              "Pas d'anomalies"
+            ]
+          }
+        },
+        "Ophtalmologique": {
+          "label": "Ophtalmologique",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "Acuité visuelle normale",
+              "Myopie",
+              "Hypermétropie",
+              "Astigmatisme",
+              "Ptose palpébrale",
+              "Exophtalmie",
+              "Ectropion",
+              "Entropion",
+              "Conjonctivite",
+              "Kératite",
+              "Iritis",
+              "Cataracte",
+              "Glaucome",
+              "Strabisme",
+              "Nystagmus"
+            ],
+            "palpation": [
+              "Palpation globulaire normale",
+              "Globe dur",
+              "Globe mou",
+              "Douleur palpébrale"
+            ],
+            "percussion": [
+              "Pas d'anomalies"
+            ],
+            "auscultation": [
+              "Pas d'anomalies"
+            ]
+          }
+        },
+        "Cutanéomuqueux": {
+          "label": "Cutanéomuqueux",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "Peau normale",
+              "Peau sèche",
+              "Peau grasse",
+              "Érythème",
+              "Pâleur",
+              "Ictère",
+              "Cyanose",
+              "Acné",
+              "Urticaire",
+              "Exanthème",
+              "Pétéchies",
+              "Ecchymoses",
+              "Macules",
+              "Papules",
+              "Vésicules",
+              "Pustules",
+              "Cicatrices",
+              "Cheveux normaux",
+              "Alopécie",
+              "Muqueuses pâles",
+              "Muqueuses congestives"
+            ],
+            "palpation": [
+              "Turgor cutané normal",
+              "Diminution du turgor",
+              "Pli cutané persistant",
+              "Oedèmes",
+              "Texture normale",
+              "Peau rêche"
+            ],
+            "percussion": [
+              "Pas d'anomalies"
+            ],
+            "auscultation": [
+              "Pas d'anomalies"
+            ]
+          }
+        },
+        "Ostéoarticulaire": {
+          "label": "Ostéoarticulaire",
+          "sections": ["inspection", "palpation", "percussion"],
+          "content": {
+            "inspection": [
+              "Alignement normal",
+              "Asymétrie articulaire",
+              "Gonflement articulaire",
+              "Érythème articulaire",
+              "Déformation",
+              "Perte d'amplitude",
+              "Attitude vicieuse",
+              "Raideur"
+            ],
+            "palpation": [
+              "Chaleur articulaire",
+              "Sensibilité articulaire",
+              "Amplitude normale",
+              "Amplitude diminuée",
+              "Craquement",
+              "Instabilité articulaire",
+              "Signe de ballottement"
+            ],
+            "percussion": [
+              "Douleur à la percussion"
+            ]
+          }
+        },
+        "Ganglionnaire": {
+          "label": "Ganglionnaire",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "Pas de ganglions visibles",
+              "Ganglions occipitaux",
+              "Ganglions cervicaux",
+              "Ganglions sus-claviculaires",
+              "Ganglions axillaires",
+              "Ganglions inguinaux"
+            ],
+            "palpation": [
+              "Pas de ganglions palpables",
+              "Ganglions mobiles",
+              "Ganglions fixes",
+              "Ganglions sensibles",
+              "Ganglions indolores",
+              "Ganglions de moins de 1 cm",
+              "Ganglions de 1-2 cm",
+              "Ganglions de plus de 2 cm"
+            ],
+            "percussion": [
+              "Pas d'anomalies"
+            ],
+            "auscultation": [
+              "Pas d'anomalies"
+            ]
+          }
+        }
+      }
+    },
+    "adulte": {
+      "label": "Adulte",
+      "ageRange": "16+ ans",
+      "exams": {
+        "Abdominal": {
+          "label": "Abdominal",
+          "sections": ["inspection", "palpation", "percussion", "auscultation", "toucher rectal"],
+          "content": {
+            "inspection": [
+              "Distension liquidienne",
+              "distension gazeuse",
+              "Cicatrices",
+              "Ecchymoses",
+              "Érythème",
+              "ictère",
+              "Mélanodermie",
+              "Circulation veineuse collatérale (CVC) abdominale",
+              "langue sabburale",
+              "foetor hépatique",
+              "angiome stellaire",
+              "érythrose palmaire",
+              "Hernie inguinale",
+              "Hernie crurale",
+              "Hernie ombilicale"
+            ],
+            "palpation": [
+              "Défense musculaire",
+              "Sensibilité épigastrique",
+              "Sensibilité péri-ombilicale",
+              "Sensibilité FID",
+              "Sensibilité FIG",
+              "Masse palpable",
+              "Hépatomégalie",
+              "splénomégalie",
+              "contracture abdominale",
+              "Signe de Giordano",
+              "signe de McBurney",
+              "signe de Murphy"
+            ],
+            "percussion": [
+              "Tympanisme",
+              "Matité",
+              "Ascite",
+              "Signe du glaçon",
+              "signe de Flot"
+            ],
+            "auscultation": [
+              "Bruits hydroaériques actifs",
+              "Bruits hydroaériques absents",
+              "souffles abdominaux"
+            ],
+            "toucher rectal": [
+              "Reflexe anale à la toux",
+              "marge et canal anal libres",
+              "prostate chaude et douloureuse",
+              "prostate augmentée de taille",
+              "cri de Douglas",
+              "rectorragies"
+            ]
+          }
+        },
+        "Cardiaque": {
+          "label": "Cardiaque",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "Cyanose",
+              "oedèmes périphériques",
+              "Turgescence jugulaire",
+              "Choc de pointe visible",
+              "Souffle systolique visible"
+            ],
+            "palpation": [
+              "Choc de pointe absent",
+              "Choc de pointe déplacé",
+              "Frémissement systolique",
+              "Harzer positif",
+              "Pouls radial symétrique",
+              "Pouls radial faible",
+              "Asymétrie des pouls",
+              "reflux hépato-jugulaire"
+            ],
+            "percussion": [
+              "Matité"
+            ],
+            "auscultation": [
+              "Souffle systolique",
+              "Souffle diastolique",
+              "Frottement péricardique",
+              "B1-B2 bien percus",
+              "éclat de B2",
+              "Galop protodiastolique (B3)",
+              "Galop télédiastolique (B4)",
+              "insuffisance aortique",
+              "rétrécissement aortique",
+              "Insuffisance mitrale",
+              "Rétrécissement mitral",
+              "signe de Carvalho positif",
+              "Intesité des souffles (cliassification de Levine)"
+            ]
+          }
+        },
+        "Pleuropulmonaire": {
+          "label": "Pleuropulmonaire",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "ampliation thoracique normale",
+              "ampliation thoracique augmentée",
+              "volet costal",
+              "Cyanose",
+              "Battement des ailes du nez",
+              "Tirage intercostal",
+              "Tirage sus-sternal",
+              "Asymétrie thoracique",
+              "Cicatrices",
+              "Scoliose",
+              "thorax en tonneau",
+              "signe de Hoover",
+              "signe de Campbell",
+              "circulation veineuse collatérale thoracique (CVC"
+            ],
+            "palpation": [
+              "Vibrations vocaux augmentés",
+              "Vibrations vocales abolis",
+              "Crépitations sous-cutanées",
+              "Sensibilité costale"
+            ],
+            "percussion": [
+              "Hypertympanisme",
+              "Matité"
+            ],
+            "auscultation": [
+              "Murmure vésiculaire normal",
+              "Murmure vésiculaire aboli",
+              "Crépitants fins",
+              "Crépitants grossiers",
+              "Sibilants",
+              "Wheezing",
+              "Frottement pleural"
+            ]
+          }
+        },
+        "Neurologique": {
+          "label": "Neurologique",
+          "sections": ["inspection globale"," force musculaire et tonus", "reflexes","Sensibilité", "nerfs craniens et voies centrales", "coordination et équilibre","fonctions supérieures"],
+          "content": {
+            "inspection globale": [
+              "tremblements de repos",
+              "tremblements d'action",
+              "tremeblements d'atittude (Barré & Mingazinni)"
+            ],
+            "force musculaire et tonus": [
+              "Parésie",
+              "Paralysie",
+             "0-Pas de contraction musculaire perceptible",
+            "1-Contraction perceptible à la palpation sans mouvement obtenu",
+            "2-Contraction musculaire si l'action de la pesanteur est annulée (faire le mouvement à l'horizontale)",
+            "3-Mouvement contre la pesanteur",
+            "4-Mouvement contre résistance",
+            "5-Force normale (effort maximal)"
+            ],
+            "reflexes": [
+              "Réflexe cutané plantaire normal",
+              "Réflexe cutané plantaire augmenté",
+              "Réflexe cutané plantaire diminué",
+              "Réflexe rotulien normal",
+              "Réflexe rotulien augmenté",
+              "Réflexe rotulien diminué",
+              "Réflexe achilléen normal",
+              "Réflexe achilléen augmenté",
+              "Réflexe achilléen diminué",
+              "Réflexe tricipital normal"
+            ],
+            "Sensibilité": [
+              "Sensibilité tactile normale",
+              "Sensibilité tactile diminuée",
+              "Sensibilité thermique normale",
+              "Sensibilité thermique diminuée",
+              "Sensibilité algique normale",
+              "Sensibilité algique diminuée",
+              "Sensibilité vibrationnelle normale",
+              "Sensibilité vibrationnelle diminuée",
+               "Proprioception normale",
+               "Proprioception diminuée"
+            ],
+            "nerfs craniens et voies centrales": [
+              "Pas d'anomalies",
+              "Anosmie",
+              "Trouble du champ visuel",
+              "Diplopie",
+              "Ptosis",
+              "Déficit oculomoteur",
+              "Hypoacousie",
+              "Paralysie faciale périphérique",
+              "Paralysie faciale centrale",
+              "Trouble de la déglutition",
+              "Dysarthrie",
+              "Déviation de la langue"
+            ],
+            "coordination et équilibre": [
+              "Pas d'anomalies",
+              "Ataxie cérébelleuse",
+              "Dysmétrie (épreuve doigt-nez)",
+              "Asynergie",
+              "Dysdiadochocinésie",
+              "Romberg positif",
+              "Marche instable"
+            ],
+            "fonctions supérieures": [
+             "Pas d'anomalies",
+            "Désorientation temporo-spatiale",
+            "Trouble de mémoire",
+            "Aphasie",
+            "Agnosie",
+            "Apraxie",
+            "Troubles exécutifs"
+            ]
+          }
+        },
+        "Cutanéomuqueux": {
+          "label": "Cutanéomuqueux",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "Peau sèche",
+              "Peau grasse",
+              "Érythème",
+              "Pâleur",
+              "Ictère",
+              "Cyanose",
+              "Acné",
+              "Urticaire",
+              "Exanthème",
+              "Pétéchies",
+              "Ecchymoses",
+              "Macules",
+              "Papules",
+              "Vésicules",
+              "Pustules",
+              "Croûtes",
+              "Ulcères",
+              "Cicatrices",
+              "Cheveux normaux",
+              "Alopécie",
+              "Pellicules",
+              "Muqueuses pâles",
+              "Muqueuses congestives",
+              "Muqueuses cyanosées"
+            ],
+            "palpation": [
+              "Turgor cutané normal",
+              "Diminution du turgor",
+              "Pli cutané persistant",
+              "Oedèmes",
+              "Texture normale",
+              "Peau rêche"
+            ],
+            "percussion": [
+              "Pas d'anomalies"
+            ],
+            "auscultation": [
+              "Pas d'anomalies"
+            ]
+          }
+        },
+        "Ostéoarticulaire": {
+          "label": "Ostéoarticulaire",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "Asymétrie articulaire",
+              "Gonflement articulaire",
+              "Érythème articulaire",
+              "Déformation",
+              "Perte d'amplitude",
+              "Attitude vicieuse",
+              "Raideur matinale",
+              "Gonarthrose",
+              "Hallux valgus"
+            ],
+            "palpation": [
+              "Chaleur articulaire",
+              "Sensibilité articulaire",
+              "Amplitude normale",
+              "Amplitude diminuée",
+              "Craquement",
+              "Instabilité articulaire",
+              "Signe de ballottement",
+              "Signe de Lachman",
+              "Drawer test"
+            ],
+            "percussion": [
+              "Douleur à la percussion"
+            ],
+            "auscultation": [
+              "Craquements"
+            ]
+          }
+        },
+        "Ganglionnaire": {
+          "label": "Ganglionnaire",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "Pas de ganglions visibles",
+              "Ganglions occipitaux",
+              "Ganglions cervicaux",
+              "Ganglions sus-claviculaires",
+              "Ganglions axillaires",
+              "Ganglions inguinaux",
+              "Ganglions épitrochléens"
+            ],
+            "palpation": [
+              "Pas de ganglions palpables",
+              "Ganglions mobiles",
+              "Ganglions fixes",
+              "Ganglions sensibles",
+              "Ganglions indolores",
+              "Ganglions de moins de 1 cm",
+              "Ganglions de 1-2 cm",
+              "Ganglions de plus de 2 cm"
+            ],
+            "percussion": [
+              "Pas d'anomalies"
+            ],
+            "auscultation": [
+              "Pas d'anomalies"
+            ]
+          }
+        },
+        "ORL": {
+          "label": "ORL",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "Pavillon normal",
+              "Otorrhée",
+              "Sécrétion cerumineuse",
+              "Membrane tympanique normale",
+              "Membrane tympanique opacifiée",
+              "Perforation tympanique",
+              "Rhinorrhée",
+              "Obstruction nasale",
+              "Déviation septale",
+              "Polypes nasaux",
+              "Muqueuse pâle",
+              "Muqueuse congestive",
+              "Pharynx normal",
+              "Pharyngite",
+              "Amygdales hypertrophiées",
+              "Exsudat",
+              "Larynx normal",
+              "Dysphonie",
+              "Stridor"
+            ],
+            "palpation": [
+              "Palpation du pavillon normale",
+              "Douleur du tragus",
+              "Adénopathie cervicale",
+              "Palpation thyroïde normale",
+              "Thyroïde augmentée"
+            ],
+            "percussion": [
+              "Pas d'anomalies"
+            ],
+            "auscultation": [
+              "Pas d'anomalies"
+            ]
+          }
+        },
+        "Ophtalmologique": {
+          "label": "Ophtalmologique",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "Acuité visuelle normale",
+              "Myopie",
+              "Hypermétropie",
+              "Astigmatisme",
+              "Presbyopie",
+              "Ptose palpébrale",
+              "Exophtalmie",
+              "Enophtalmie",
+              "Ectropion",
+              "Entropion",
+              "Conjonctivite",
+              "Kératite",
+              "Iritis",
+              "Cataracte",
+              "Glaucome",
+              "DMLA",
+              "Rétinopathie diabétique",
+              "Opacité médias",
+              "Nystagmus",
+              "Strabisme"
+            ],
+            "palpation": [
+              "Palpation globulaire normale",
+              "Globe dur",
+              "Globe mou",
+              "Douleur palpébrale"
+            ],
+            "percussion": [
+              "Pas d'anomalies"
+            ],
+            "auscultation": [
+              "Pas d'anomalies"
+            ]
+          }
+        },
+        "Vasculaire": {
+          "label": "Vasculaire",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "Teint normal",
+              "Pâleur",
+              "Cyanose",
+              "Varicosités",
+              "Varices",
+              "Oedèmes",
+              "Lipodermatosclérose",
+              "Ulcères veineux",
+              "Ulcères artériels",
+              "Claudication",
+              "Ischémie critique"
+            ],
+            "palpation": [
+              "Pouls carotidien normal",
+              "Pouls carotidien absent",
+              "Pouls fémoral normal",
+              "Pouls fémoral absent",
+              "Pouls poplité normal",
+              "Pouls poplité absent",
+              "Pouls dorsal du pied normal",
+              "Pouls dorsal du pied absent",
+              "Température normale",
+              "Extrémités froides",
+              "Claudication intermittente"
+            ],
+            "percussion": [
+              "Pas d'anomalies"
+            ],
+            "auscultation": [
+              "Pas de souffle",
+              "Souffle carotidien",
+              "Souffle fémoral",
+              "Souffle aortique"
+            ]
+          }
+        },
+        "Rheumatologie": {
+          "label": "Rheumatologie",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "Doigts normal",
+              "Doigts en fuseau",
+              "Doigts en salière",
+              "Doigts en hippocratisme",
+              "Mains en griffe",
+              "Déviation ulnaire",
+              "Nodules rhumatoïdes",
+              "Tuméfaction articulaire",
+              "Érythème articulaire",
+              "Raideur mains",
+              "Limitation amplitude"
+            ],
+            "palpation": [
+              "Articulations mobiles",
+              "Articulations rigides",
+              "Douleur articulaire",
+              "Chaleur articulaire",
+              "Gonflement articulaire",
+              "Crépitus"
+            ],
+            "percussion": [
+              "Douleur percussion"
+            ],
+            "auscultation": [
+              "Pas d'anomalies"
+            ]
+          }
+        },
+        "Endocrinologie": {
+          "label": "Endocrinologie",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "Constitution normale",
+              "Obésité",
+              "Maigreur",
+              "Struma",
+              "Goitre nodulaire",
+              "Acanthosis nigricans",
+              "Hirsutisme",
+              "Alopécie",
+              "Gynécomastie",
+              "Virilisation",
+              "Féminisation",
+              "Pilosité normale",
+              "Pilosité excessive"
+            ],
+            "palpation": [
+              "Thyroïde normale",
+              "Thyroïde augmentée",
+              "Nodule thyroïdien",
+              "Tachycardie",
+              "Bradycardie",
+              "Trémor"
+            ],
+            "percussion": [
+              "Pas d'anomalies"
+            ],
+            "auscultation": [
+              "Souffle thyroïdien",
+              "Pas de souffle"
+            ]
+          }
+        }
+      }
+    },
+    "enceinte": {
+      "label": "Enceinte",
+      "ageRange": "Femme enceinte",
+      "exams": {
+        "Abdominal": {
+          "label": "Abdominal",
+          "sections": ["inspection", "palpation", "percussion", "auscultation", "toucher rectal"],
+          "content": {
+            "inspection": [
+              "Distension liquidienne",
+              "distension gazeuse",
+              "Cicatrices",
+              "Ecchymoses",
+              "Érythème",
+              "ictère",
+              "Mélanodermie",
+              "Circulation veineuse collatérale (CVC) abdominale",
+              "langue sabburale",
+              "foetor hépatique",
+              "angiome stellaire",
+              "érythrose palmaire",
+              "Hernie inguinale",
+              "Hernie crurale",
+              "Hernie ombilicale"
+            ],
+            "palpation": [
+              "Défense musculaire",
+              "Sensibilité épigastrique",
+              "Sensibilité péri-ombilicale",
+              "Sensibilité FID",
+              "Sensibilité FIG",
+              "Masse palpable",
+              "Hépatomégalie",
+              "splénomégalie",
+              "contracture abdominale",
+              "Signe de Giordano",
+              "signe de McBurney",
+              "signe de Murphy"
+            ],
+            "percussion": [
+              "Tympanisme",
+              "Matité",
+              "Ascite",
+              "Signe du glaçon",
+              "signe de Flot"
+            ],
+            "auscultation": [
+              "Bruits hydroaériques actifs",
+              "Bruits hydroaériques absents",
+              "souffles abdominaux"
+            ],
+            "toucher rectal": [
+              "Reflexe anale à la toux",
+              "marge et canal anal libres",
+              "prostate chaude et douloureuse",
+              "prostate augmentée de taille",
+              "cri de Douglas",
+              "rectorragies"
+            ]
+          }
+        },
+        "Cardiaque": {
+          "label": "Cardiaque",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "Cyanose",
+              "oedèmes périphériques",
+              "Turgescence jugulaire",
+              "Choc de pointe visible",
+              "Souffle systolique visible"
+            ],
+            "palpation": [
+              "Choc de pointe absent",
+              "Choc de pointe déplacé",
+              "Frémissement systolique",
+              "Harzer positif",
+              "Pouls radial symétrique",
+              "Pouls radial faible",
+              "Asymétrie des pouls",
+              "reflux hépato-jugulaire"
+            ],
+            "percussion": [
+              "Matité"
+            ],
+            "auscultation": [
+              "Souffle systolique",
+              "Souffle diastolique",
+              "Frottement péricardique",
+              "B1-B2 bien percus",
+              "éclat de B2",
+              "Galop protodiastolique (B3)",
+              "Galop télédiastolique (B4)",
+              "insuffisance aortique",
+              "rétrécissement aortique",
+              "Insuffisance mitrale",
+              "Rétrécissement mitral",
+              "signe de Carvalho positif",
+              "Intesité des souffles (cliassification de Levine)"
+            ]
+          }
+        },
+        "Pleuropulmonaire": {
+          "label": "Pleuropulmonaire",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "ampliation thoracique normale",
+              "ampliation thoracique augmentée",
+              "volet costal",
+              "Cyanose",
+              "Battement des ailes du nez",
+              "Tirage intercostal",
+              "Tirage sus-sternal",
+              "Asymétrie thoracique",
+              "Cicatrices",
+              "Scoliose",
+              "thorax en tonneau",
+              "signe de Hoover",
+              "signe de Campbell",
+              "circulation veineuse collatérale thoracique (CVC"
+            ],
+            "palpation": [
+              "Vibrations vocaux augmentés",
+              "Vibrations vocales abolis",
+              "Crépitations sous-cutanées",
+              "Sensibilité costale"
+            ],
+            "percussion": [
+              "Hypertympanisme",
+              "Matité"
+            ],
+            "auscultation": [
+              "Murmure vésiculaire normal",
+              "Murmure vésiculaire aboli",
+              "Crépitants fins",
+              "Crépitants grossiers",
+              "Sibilants",
+              "Wheezing",
+              "Frottement pleural"
+            ]
+          }
+        },
+        "Neurologique": {
+          "label": "Neurologique",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "État de conscience normal",
+              "Somnolence",
+              "Tremor",
+              "Mouvements anormaux",
+              "Ptose palpébrale"
+            ],
+            "palpation": [
+              "Force musculaire normale",
+              "Parésie",
+              "Hypotonie",
+              "Hypertonie",
+              "Réflexes normaux",
+              "Réflexes augmentés",
+              "Réflexes diminués"
+            ],
+            "percussion": [
+              "Réflexe rotulien normal",
+              "Réflexe rotulien augmenté",
+              "Réflexe achilléen normal",
+              "Réflexe achilléen augmenté"
+            ],
+            "auscultation": [
+              "Pas d'anomalies"
+            ]
+          }
+        },
+        "Cutanéomuqueux": {
+          "label": "Cutanéomuqueux",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "Peau normale",
+              "Érythème",
+              "Pâleur",
+              "Ictère",
+              "Cyanose",
+              "Vergetures",
+              "Ecchymoses",
+              "Macules",
+              "Papules",
+              "Oedèmes",
+              "Muqueuses pâles",
+              "Muqueuses congestives"
+            ],
+            "palpation": [
+              "Turgor cutané normal",
+              "Diminution du turgor",
+              "Pli cutané persistant",
+              "Oedèmes des membres",
+              "Oedèmes du visage"
+            ],
+            "percussion": [
+              "Pas d'anomalies"
+            ],
+            "auscultation": [
+              "Pas d'anomalies"
+            ]
+          }
+        },
+        "Gynécologique": {
+          "label": "Gynécologique",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "Vulve normale",
+              "Vulvite",
+              "Ulcération",
+              "Varices vulvaires",
+              "Hyménal intact",
+              "Écoulement clair",
+              "Écoulement sanglant",
+              "Écoulement purulent",
+              "Muqueuse vaginale rose",
+              "Muqueuse vaginale pâle",
+              "Signes d'accouchement"
+            ],
+            "palpation": [
+              "Col fermé",
+              "Col efface",
+              "Col dilaté",
+              "Utérus antéversé",
+              "Utérus rétroversé",
+              "Utérus mobile",
+              "Utérus fixe",
+              "Membranes intactes",
+              "Membranes rompues"
+            ],
+            "percussion": [
+              "Pas d'anomalies"
+            ],
+            "auscultation": [
+              "Bruits du cœur fœtal",
+              "Absence de bruits fœtaux"
+            ]
+          }
+        },
+        "ORL": {
+          "label": "ORL",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "Pavillon normal",
+              "Rhinorrhée",
+              "Obstruction nasale",
+              "Muqueuse nasale congestive",
+              "Pharynx normal",
+              "Pharyngite"
+            ],
+            "palpation": [
+              "Adénopathie cervicale",
+              "Palpation thyroïde normale",
+              "Thyroïde augmentée"
+            ],
+            "percussion": [
+              "Pas d'anomalies"
+            ],
+            "auscultation": [
+              "Pas d'anomalies"
+            ]
+          }
+        },
+        "Cutanéoarticulaire": {
+          "label": "Cutanéoarticulaire",
+          "sections": ["inspection", "palpation", "percussion", "auscultation"],
+          "content": {
+            "inspection": [
+              "Asymétrie articulaire",
+              "Gonflement articulaire",
+              "Raideur matinale",
+              "Limite de mobilité"
+            ],
+            "palpation": [
+              "Sensibilité articulaire",
+              "Amplitude normale",
+              "Amplitude diminuée",
+              "Craquement",
+              "Douleur à la mobilisation"
+            ],
+            "percussion": [
+              "Douleur à la percussion"
+            ],
+            "auscultation": [
+              "Craquements"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

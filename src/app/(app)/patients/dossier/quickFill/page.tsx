@@ -23,657 +23,17 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Patient } from "@/data/patients/patients-data";
 import { getPatientByPid } from "@/lib/api/patients";
 import { QuillEditor } from "@/components/QuillEditor";
+import clinicalExamsData from "@/data/clinical-exams.json";
 
-// Comprehensive clinical exam structure with extensive exams
-const CLINICAL_EXAMS_DATA = {
+// Examen général only (remains hardcoded, not from JSON)
+const EXAMEN_GENERAL_DATA = {
   "Examen général": {
     sections: ["hemodynamique"],
     content: {},
   },
-  "Abdominal": {
-    sections: ["inspection", "palpation", "percussion", "auscultation"],
-    content: {
-      inspection: [
-        "Distension abdominale",
-        "Cicatrices",
-        "Ecchymoses",
-        "Érythème",
-        "Respiration abdominale",
-        "Veines visibles",
-        "Ondulations peristaltiques",
-        "Asymétrie",
-        "Hernies",
-      ],
-      palpation: [
-        "Défense musculaire",
-        "Rigidité",
-        "Sensibilité épigastrique",
-        "Sensibilité péri-ombilicale",
-        "Sensibilité FID",
-        "Sensibilité FIG",
-        "Masse palpable",
-        "Foie palpable",
-        "Rate palpable",
-        "Rein palpable",
-        "Signe de Giordano",
-      ],
-      percussion: [
-        "Tympanisme",
-        "Matité",
-        "Ascite",
-        "Signe du glaçon",
-      ],
-      auscultation: [
-        "Bruits intestinaux actifs",
-        "Bruits intestinaux diminués",
-        "Bruits intestinaux absents",
-        "Bruits métalliques",
-        "Frottements",
-      ],
-    },
-  },
-  "Cardiorespiratoire": {
-    sections: ["inspection", "palpation", "percussion", "auscultation"],
-    content: {
-      inspection: [
-        "Cyanose",
-        "Polypnée",
-        "Bradypnée",
-        "Tirage",
-        "Battement des ailes du nez",
-        "Respiration paradoxale",
-        "Veines jugulaires turgides",
-        "Oedèmes",
-        "Choc de pointe visible",
-      ],
-      palpation: [
-        "Choc de pointe dépacé",
-        "Frémissement systolique",
-        "Pouls radial faible",
-        "Pouls radial rapide",
-        "Pouls amplié",
-        "Asymétrie des pouls",
-        "Fremitus vocaux diminués",
-        "Fremitus vocaux augmentés",
-      ],
-      percussion: [
-        "Matité pulmonaire",
-        "Hypersonorité",
-        "Diminution des bruits de percussion",
-      ],
-      auscultation: [
-        "Bruit de Galop",
-        "Souffle systolique",
-        "Souffle diastolique",
-        "Frottement pleural",
-        "Râles crépitants",
-        "Râles sibilants",
-        "Diminution du murmure vésiculaire",
-        "Abolition du murmure vésiculaire",
-        "Wheezing",
-      ],
-    },
-  },
-  "Pleuropulmonaire": {
-    sections: ["inspection", "palpation", "percussion", "auscultation"],
-    content: {
-      inspection: [
-        "Cyanose",
-        "Battement des ailes du nez",
-        "Tirage intercostal",
-        "Tirage sus-sternal",
-        "Asymétrie thoracique",
-        "Cicatrices",
-        "Scoliose",
-        "Cyphose",
-      ],
-      palpation: [
-        "Fremitus vocaux augmentés",
-        "Fremitus vocaux diminués",
-        "Fremitus vocaux abolis",
-        "Crépitations sous-cutanées",
-        "Sensibilité costale",
-      ],
-      percussion: [
-        "Hypersonorité",
-        "Matité",
-        "Matité émoussée",
-        "Son creux",
-      ],
-      auscultation: [
-        "Murmure vésiculaire normal",
-        "Murmure vésiculaire diminué",
-        "Murmure vésiculaire aboli",
-        "Bronchite",
-        "Crépitants fins",
-        "Crépitants grossiers",
-        "Sibilants",
-        "Wheezing",
-        "Frottement pleural",
-      ],
-    },
-  },
-  "Neurologique": {
-    sections: ["inspection", "palpation", "percussion", "auscultation"],
-    content: {
-      inspection: [
-        "État de conscience normal",
-        "Somnolence",
-        "Stupeur",
-        "Coma",
-        "Tremor",
-        "Mouvements anormaux",
-        "Ptose palpébrale",
-        "Nystagmus",
-        "Strabisme",
-      ],
-      palpation: [
-        "Force musculaire normale",
-        "Parésie",
-        "Paralysie",
-        "Hypotonie",
-        "Hypertonie",
-        "Rigidité",
-        "Spasticité",
-        "Réflexes normaux",
-        "Réflexes augmentés",
-        "Réflexes diminués",
-        "Réflexes abolis",
-      ],
-      percussion: [
-        "Réflexe rotulien normal",
-        "Réflexe rotulien augmenté",
-        "Réflexe rotulien diminué",
-        "Réflexe achilléen normal",
-        "Réflexe achilléen augmenté",
-        "Réflexe achilléen diminué",
-        "Réflexe tricipital normal",
-        "Réflexe tricipital augmenté",
-        "Réflexe tricipital diminué",
-      ],
-      auscultation: [
-        "Pas d'anomalies",
-      ],
-    },
-  },
-  "Cutanéomuqueux": {
-    sections: ["inspection", "palpation", "percussion", "auscultation"],
-    content: {
-      inspection: [
-        "Peau sèche",
-        "Peau grasse",
-        "Érythème",
-        "Pâleur",
-        "Ictère",
-        "Cyanose",
-        "Acné",
-        "Urticaire",
-        "Exanthème",
-        "Pétéchies",
-        "Ecchymoses",
-        "Macules",
-        "Papules",
-        "Vésicules",
-        "Pustules",
-        "Croûtes",
-        "Ulcères",
-        "Cicatrices",
-        "Cheveux normaux",
-        "Alopécie",
-        "Pellicules",
-        "Muqueuses pâles",
-        "Muqueuses congestives",
-        "Muqueuses cyanosées",
-      ],
-      palpation: [
-        "Turgor cutané normal",
-        "Diminution du turgor",
-        "Pli cutané persistant",
-        "Oedèmes",
-        "Texture normale",
-        "Peau rêche",
-      ],
-      percussion: [
-        "Pas d'anomalies",
-      ],
-      auscultation: [
-        "Pas d'anomalies",
-      ],
-    },
-  },
-  "Ostéoarticulaire": {
-    sections: ["inspection", "palpation", "percussion", "auscultation"],
-    content: {
-      inspection: [
-        "Asymétrie articulaire",
-        "Gonflement articulaire",
-        "Érythème articulaire",
-        "Déformation",
-        "Perte d'amplitude",
-        "Attitude vicieuse",
-        "Raideur matinale",
-        "Gonarthrose",
-        "Hallux valgus",
-      ],
-      palpation: [
-        "Chaleur articulaire",
-        "Sensibilité articulaire",
-        "Amplitude normale",
-        "Amplitude diminuée",
-        "Craquement",
-        "Instabilité articulaire",
-        "Signe de ballottement",
-        "Signe de Lachman",
-        "Drawer test",
-      ],
-      percussion: [
-        "Douleur à la percussion",
-      ],
-      auscultation: [
-        "Craquements",
-      ],
-    },
-  },
-  "Ganglionnaire": {
-    sections: ["inspection", "palpation", "percussion", "auscultation"],
-    content: {
-      inspection: [
-        "Pas de ganglions visibles",
-        "Ganglions occipitaux",
-        "Ganglions cervicaux",
-        "Ganglions sus-claviculaires",
-        "Ganglions axillaires",
-        "Ganglions inguinaux",
-        "Ganglions épitrochléens",
-      ],
-      palpation: [
-        "Pas de ganglions palpables",
-        "Ganglions mobiles",
-        "Ganglions fixes",
-        "Ganglions sensibles",
-        "Ganglions indolores",
-        "Ganglions de moins de 1 cm",
-        "Ganglions de 1-2 cm",
-        "Ganglions de plus de 2 cm",
-      ],
-      percussion: [
-        "Pas d'anomalies",
-      ],
-      auscultation: [
-        "Pas d'anomalies",
-      ],
-    },
-  },
-  "Stomatologique": {
-    sections: ["inspection", "palpation", "percussion", "auscultation"],
-    content: {
-      inspection: [
-        "Lèvres normales",
-        "Lèvres sèches",
-        "Chéilite",
-        "Aphtes",
-        "Gencives saines",
-        "Gencives gonflées",
-        "Gencives saignantes",
-        "Tartre",
-        "Caries",
-        "Dents usées",
-        "Langue normale",
-        "Langue chargée",
-        "Macrogénie",
-        "Microgénie",
-        "Malocclusion",
-      ],
-      palpation: [
-        "Mobilité dentaire",
-        "Sensibilité dentaire",
-        "Haleine normale",
-        "Haleine fétide",
-      ],
-      percussion: [
-        "Douleur à la percussion",
-      ],
-      auscultation: [
-        "Pas d'anomalies",
-      ],
-    },
-  },
-  "Du nouveau-né": {
-    sections: ["inspection", "palpation", "percussion", "auscultation"],
-    content: {
-      inspection: [
-        "Maturation cutanée",
-        "Vernix caseosa",
-        "Lanugo",
-        "Caput succedaneum",
-        "Céphal-hématome",
-        "Molles ouvertes",
-        "Molles bombées",
-        "Sutures chevauchées",
-        "Strabisme",
-        "Cri normal",
-        "Cri faible",
-        "Icterus neonatorum",
-        "Desquamation cutanée",
-      ],
-      palpation: [
-        "Fontanelle antérieure souple",
-        "Fontanelle antérieure bombée",
-        "Fontanelle antérieure déprimée",
-        "Fontanelle postérieure palpable",
-        "Sutures chevauchées",
-        "Tonus musculaire normal",
-        "Hypotonie",
-        "Hypertonie",
-      ],
-      percussion: [
-        "Pas d'anomalies",
-      ],
-      auscultation: [
-        "Réflexe de Moro présent",
-        "Réflexe de succion présent",
-        "Réflexe de grasping présent",
-      ],
-    },
-  },
-  "Gynécologique": {
-    sections: ["inspection", "palpation", "percussion", "auscultation"],
-    content: {
-      inspection: [
-        "Vulve normale",
-        "Vulvite",
-        "Ulcération",
-        "Condylomes",
-        "Effacement vulvaire",
-        "Hyménal intact",
-        "Hyménal déchiré",
-        "Écoulement clair",
-        "Écoulement purulent",
-        "Écoulement sanglant",
-        "Muqueuse vaginale rose",
-        "Muqueuse vaginale pale",
-        "Muqueuse vaginale cyanosée",
-      ],
-      palpation: [
-        "Col fermé",
-        "Col efface",
-        "Col dilaté",
-        "Utérus antéversé",
-        "Utérus rétroversé",
-        "Utérus mobile",
-        "Utérus fixe",
-        "Ovaire palpable",
-        "Ovaire sensible",
-      ],
-      percussion: [
-        "Pas d'anomalies",
-      ],
-      auscultation: [
-        "Pas d'anomalies",
-      ],
-    },
-  },
-  "ORL (Oto-Rhino-Laryngologie)": {
-    sections: ["inspection", "palpation", "percussion", "auscultation"],
-    content: {
-      inspection: [
-        "Pavillon normal",
-        "Otorrhée",
-        "Sécrétion cerumineuse",
-        "Membrane tympanique normale",
-        "Membrane tympanique opacifiée",
-        "Perforation tympanique",
-        "Tympanogramme normal",
-        "Rhinorrhée",
-        "Obstruction nasale",
-        "Déviation septale",
-        "Polypes nasaux",
-        "Muqueuse pâle",
-        "Muqueuse congestive",
-        "Pharynx normal",
-        "Pharyngite",
-        "Amygdales hypertrophiées",
-        "Exsudat",
-        "Larynx normal",
-        "Dysphonie",
-        "Stridor",
-      ],
-      palpation: [
-        "Palpation du pavillon normale",
-        "Douleur du tragus",
-        "Adénopathie cervicale",
-        "Palpation thyroïde normale",
-        "Thyroïde augmentée",
-      ],
-      percussion: [
-        "Pas d'anomalies",
-      ],
-      auscultation: [
-        "Pas d'anomalies",
-      ],
-    },
-  },
-  "Ophtalmologique": {
-    sections: ["inspection", "palpation", "percussion", "auscultation"],
-    content: {
-      inspection: [
-        "Acuité visuelle normale",
-        "Myopie",
-        "Hypermétropie",
-        "Astigmatisme",
-        "Presbyopie",
-        "Ptose palpébrale",
-        "Exophtalmie",
-        "Enophtalmie",
-        "Ectropion",
-        "Entropion",
-        "Conjonctivite",
-        "Kératite",
-        "Iritis",
-        "Cataracte",
-        "Glaucome",
-        "DMLA",
-        "Rétinopathie diabétique",
-        "Opacité médias",
-        "Nystagmus",
-        "Strabisme",
-      ],
-      palpation: [
-        "Palpation globulaire normale",
-        "Globe dur",
-        "Globe mou",
-        "Douleur palpébrale",
-      ],
-      percussion: [
-        "Pas d'anomalies",
-      ],
-      auscultation: [
-        "Pas d'anomalies",
-      ],
-    },
-  },
-  "Endocrinologie": {
-    sections: ["inspection", "palpation", "percussion", "auscultation"],
-    content: {
-      inspection: [
-        "Constitution normale",
-        "Obésité",
-        "Maigreur",
-        "Struma",
-        "Goitre nodulaire",
-        "Acanthosis nigricans",
-        "Hirsutisme",
-        "Alopécie",
-        "Gynécomastie",
-        "Virilisation",
-        "Féminisation",
-        "Pilosité normale",
-        "Pilosité excessive",
-      ],
-      palpation: [
-        "Thyroïde normale",
-        "Thyroïde augmentée",
-        "Nodule thyroïdien",
-        "Tachycardie",
-        "Bradycardie",
-        "Trémor",
-      ],
-      percussion: [
-        "Pas d'anomalies",
-      ],
-      auscultation: [
-        "Souffle thyroïdien",
-        "Pas de souffle",
-      ],
-    },
-  },
-  "Vasculaire": {
-    sections: ["inspection", "palpation", "percussion", "auscultation"],
-    content: {
-      inspection: [
-        "Teint normal",
-        "Pâleur",
-        "Cyanose",
-        "Varicosités",
-        "Varices",
-        "Oedèmes",
-        "Lipodermatosclérose",
-        "Ulcères veineux",
-        "Ulcères artériels",
-        "Claudication",
-        "Ischémie critique",
-      ],
-      palpation: [
-        "Pouls carotidien normal",
-        "Pouls carotidien absent",
-        "Pouls fémoral normal",
-        "Pouls fémoral absent",
-        "Pouls poplité normal",
-        "Pouls poplité absent",
-        "Pouls dorsal du pied normal",
-        "Pouls dorsal du pied absent",
-        "Température normale",
-        "Extrémités froides",
-        "Claudication intermittente",
-      ],
-      percussion: [
-        "Pas d'anomalies",
-      ],
-      auscultation: [
-        "Pas de souffle",
-        "Souffle carotidien",
-        "Souffle fémoral",
-        "Souffle aortique",
-      ],
-    },
-  },
-  "Rheumatologie": {
-    sections: ["inspection", "palpation", "percussion", "auscultation"],
-    content: {
-      inspection: [
-        "Doigts normal",
-        "Doigts en fuseau",
-        "Doigts en salière",
-        "Doigts en hippocratisme",
-        "Mains en griffe",
-        "Déviation ulnaire",
-        "Nodules rhumatoïdes",
-        "Tuméfaction articulaire",
-        "Érythème articulaire",
-        "Raideur mains",
-        "Limitation amplitude",
-      ],
-      palpation: [
-        "Articulations mobiles",
-        "Articulations rigides",
-        "Douleur articulaire",
-        "Chaleur articulaire",
-        "Gonflement articulaire",
-        "Crépitus",
-      ],
-      percussion: [
-        "Douleur percussion",
-      ],
-      auscultation: [
-        "Pas d'anomalies",
-      ],
-    },
-  },
-  "Urologie": {
-    sections: ["inspection", "palpation", "percussion", "auscultation"],
-    content: {
-      inspection: [
-        "Méat urinaire normal",
-        "Écoulement urétral",
-        "Priapisme",
-        "Perte d'urine",
-        "Urine claire",
-        "Urine trouble",
-        "Hématurie",
-        "Pyurie",
-      ],
-      palpation: [
-        "Palpation testiculaire normale",
-        "Testicule augmenté",
-        "Nodule testiculaire",
-        "Douleur testiculaire",
-        "Palpation prostatique normale",
-        "Prostate augmentée",
-        "Prostate indurée",
-        "Douleur prostatique",
-      ],
-      percussion: [
-        "Angle costo-vertébral normal",
-        "Douleur angle costo-vertébral",
-      ],
-      auscultation: [
-        "Pas d'anomalies",
-      ],
-    },
-  },
-  "Dermatologie avancée": {
-    sections: ["inspection", "palpation", "percussion", "auscultation"],
-    content: {
-      inspection: [
-        "Lésions élémentaires",
-        "Macules",
-        "Papules",
-        "Nodules",
-        "Plaques",
-        "Vésicules",
-        "Bulles",
-        "Pustules",
-        "Croûtes",
-        "Écailles",
-        "Lichénification",
-        "Atrophie",
-        "Cicatrices",
-        "Lichen plan",
-        "Érysipèle",
-        "Impétigo",
-        "Herpès simplex",
-        "Zona",
-        "Psoriasis",
-        "Dermatite séborrhéique",
-      ],
-      palpation: [
-        "Surface lisse",
-        "Surface rugueuse",
-        "Infiltration",
-        "Ulcération",
-        "Suppuration",
-      ],
-      percussion: [
-        "Pas d'anomalies",
-      ],
-      auscultation: [
-        "Pas d'anomalies",
-      ],
-    },
-  },
 };
 
-type ExamKey = keyof typeof CLINICAL_EXAMS_DATA;
+type ExamKey = string;
 type HemodynamicsData = {
   fc: string;
   taSys: string;
@@ -684,8 +44,10 @@ type HemodynamicsData = {
   sao2: string;
   temperature: string;
   dextro: string;
+  bandelette: string;
   weight: string;
   height: string;
+  tourDeTaille: string;
   generalState: "conservée" | "altérée" | null;
   skinState: string[];
   additionalNotes: string;
@@ -757,8 +119,10 @@ export default function QuickFillPage() {
     sao2: "",
     temperature: "",
     dextro: "",
+    bandelette: "",
     weight: "",
     height: "",
+    tourDeTaille: "",
     generalState: null,
     skinState: [],
     additionalNotes: "",
@@ -768,6 +132,7 @@ export default function QuickFillPage() {
   const [observation, setObservation] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [profileType, setProfileType] = useState<'enfant' | 'adulte' | 'enceinte'>('adulte');
 
   // Paraclinique state
   const [paracliniques, setParacliniques] = useState<Array<{ bilan: string; valeur: string }>>([]);
@@ -779,13 +144,21 @@ export default function QuickFillPage() {
   const [showTreatmentForm, setShowTreatmentForm] = useState(false);
   const [treatmentForm, setTreatmentForm] = useState({ name: '', administration: 'VO', posologie: '', duree: '' });
 
+  // Get exams based on profile
+  const getCurrentProfileExams = () => {
+    const profile = clinicalExamsData.profiles[profileType as keyof typeof clinicalExamsData.profiles];
+    if (!profile) return {};
+    return profile.exams;
+  };
+
+  const currentProfileExams = useMemo(() => getCurrentProfileExams(), [profileType]);
+
   // Get sorted exam list (Examen général first, then alphabetical)
   const sortedExams = useMemo(() => {
-    const exams = Object.keys(CLINICAL_EXAMS_DATA);
-    const examenGeneral = exams.filter((e) => e === "Examen général");
-    const others = exams.filter((e) => e !== "Examen général").sort();
-    return [...examenGeneral, ...others];
-  }, []);
+    // Always include "Examen général" first (even though it's not in JSON), then JSON exams
+    const exams = Object.keys(currentProfileExams).sort();
+    return ["Examen général", ...exams];
+  }, [currentProfileExams]);
 
   // Initialize all accordion states
   useEffect(() => {
@@ -809,8 +182,10 @@ export default function QuickFillPage() {
         hemodynamicsData.sao2 !== "" ||
         hemodynamicsData.temperature !== "" ||
         hemodynamicsData.dextro !== "" ||
+        hemodynamicsData.bandelette !== "" ||
         hemodynamicsData.weight !== "" ||
         hemodynamicsData.height !== "" ||
+        hemodynamicsData.tourDeTaille !== "" ||
         hemodynamicsData.generalState !== null ||
         hemodynamicsData.skinState.length > 0 ||
         hemodynamicsData.additionalNotes !== ""
@@ -834,6 +209,21 @@ export default function QuickFillPage() {
     return sortedExams.some((exam) => isExamModified(exam));
   }, [sortedExams, examSelections, hemodynamicsData]);
 
+  // Calculate patient age
+  const getPatientAge = (): number => {
+    if (!patient?.birthDate) return patient?.age || 0;
+    const today = new Date();
+    const birthDate = new Date(patient.birthDate);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const patientAge = useMemo(() => getPatientAge(), [patient?.birthDate, patient?.age]);
+
   // Calculate IMC
   const imc = useMemo(() => {
     if (hemodynamicsData.weight && hemodynamicsData.height) {
@@ -845,6 +235,101 @@ export default function QuickFillPage() {
     }
     return "";
   }, [hemodynamicsData.weight, hemodynamicsData.height]);
+
+  // Pediatric reference data (simplified WHO reference)
+  const getPediatricWeightReference = (ageYears: number): { mean: number; stdDev: number } => {
+    const references: Record<number, { mean: number; stdDev: number }> = {
+      1: { mean: 9.5, stdDev: 1.1 },
+      2: { mean: 12.5, stdDev: 1.4 },
+      3: { mean: 14.5, stdDev: 1.6 },
+      4: { mean: 16.5, stdDev: 1.8 },
+      5: { mean: 18.5, stdDev: 2.0 },
+      6: { mean: 20.5, stdDev: 2.3 },
+      7: { mean: 22.5, stdDev: 2.6 },
+      8: { mean: 25.0, stdDev: 3.0 },
+      9: { mean: 27.5, stdDev: 3.5 },
+      10: { mean: 30.5, stdDev: 4.0 },
+      11: { mean: 33.5, stdDev: 4.5 },
+      12: { mean: 36.5, stdDev: 5.0 },
+      13: { mean: 40.0, stdDev: 5.5 },
+      14: { mean: 44.0, stdDev: 6.0 },
+      15: { mean: 49.0, stdDev: 6.5 },
+    };
+    return references[ageYears] || { mean: 25, stdDev: 3 };
+  };
+
+  const getPediatricHeightReference = (ageYears: number): { mean: number; stdDev: number } => {
+    const references: Record<number, { mean: number; stdDev: number }> = {
+      1: { mean: 75, stdDev: 3.5 },
+      2: { mean: 88, stdDev: 3.7 },
+      3: { mean: 97, stdDev: 3.8 },
+      4: { mean: 104, stdDev: 4.0 },
+      5: { mean: 110, stdDev: 4.2 },
+      6: { mean: 116, stdDev: 4.5 },
+      7: { mean: 122, stdDev: 4.7 },
+      8: { mean: 127, stdDev: 5.0 },
+      9: { mean: 132, stdDev: 5.2 },
+      10: { mean: 137, stdDev: 5.5 },
+      11: { mean: 142, stdDev: 5.8 },
+      12: { mean: 147, stdDev: 6.2 },
+      13: { mean: 152, stdDev: 6.5 },
+      14: { mean: 157, stdDev: 6.8 },
+      15: { mean: 161, stdDev: 6.9 },
+    };
+    return references[ageYears] || { mean: 110, stdDev: 5 };
+  };
+
+  const calculateZScore = (value: number, reference: { mean: number; stdDev: number }): number => {
+    return (value - reference.mean) / reference.stdDev;
+  };
+
+  const getWeightInterpretation = (): string => {
+    if (!hemodynamicsData.weight || patientAge >= 16) return "";
+    const weight = parseFloat(hemodynamicsData.weight);
+    if (!weight || weight <= 0) return "";
+
+    const ref = getPediatricWeightReference(Math.floor(patientAge));
+    const zScore = calculateZScore(weight, ref);
+
+    let status = "";
+    if (zScore < -2) {
+      status = "⚠️ Malnutrition modérée";
+    } else if (zScore < -1) {
+      status = "⚠️ Risque de malnutrition";
+    } else if (zScore <= 1) {
+      status = "✓ Normal";
+    } else if (zScore <= 2) {
+      status = "⚠️ Surpoids";
+    } else {
+      status = "⚠️ Obésité";
+    }
+
+    return `Z-score: ${zScore.toFixed(2)} - ${status}`;
+  };
+
+  const getHeightInterpretation = (): string => {
+    if (!hemodynamicsData.height || patientAge >= 16) return "";
+    const height = parseFloat(hemodynamicsData.height);
+    if (!height || height <= 0) return "";
+
+    const ref = getPediatricHeightReference(Math.floor(patientAge));
+    const zScore = calculateZScore(height, ref);
+
+    let status = "";
+    if (zScore < -2) {
+      status = "⚠️ Retard de croissance sévère";
+    } else if (zScore < -1) {
+      status = "⚠️ Retard de croissance";
+    } else if (zScore <= 1) {
+      status = "✓ Normal";
+    } else if (zScore <= 2) {
+      status = "✓ Croissance accélérée";
+    } else {
+      status = "✓ Très grand";
+    }
+
+    return `Z-score: ${zScore.toFixed(2)} - ${status}`;
+  };
 
   useEffect(() => {
     const loadPatient = async () => {
@@ -900,6 +385,13 @@ export default function QuickFillPage() {
             observations: result.data.observations,
           };
           setPatient(transformedPatient);
+
+          // Set profile based on patient age
+          if ((transformedPatient.age ?? 0) < 16) {
+            setProfileType('enfant');
+          } else {
+            setProfileType('adulte');
+          }
         }
       } catch (error) {
         console.error("Error loading patient:", error);
@@ -1547,37 +1039,46 @@ ${patient.motif}
             {t("patients.dossier.clinicalExams")}
           </h3>
 
-          {/* Tab Navigation */}
-          <div className="flex gap-2 border-b border-slate-200">
+          {/* Tab Navigation - Redesigned */}
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-1 flex gap-1 shadow-sm">
             <button
               onClick={() => setExamTabActive('clinique')}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition ${
+              className={`flex-1 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${
                 examTabActive === 'clinique'
-                  ? 'border-indigo-600 text-indigo-600'
-                  : 'border-transparent text-slate-600 hover:text-slate-800'
+                  ? 'bg-white text-indigo-600 shadow-sm border border-slate-200'
+                  : 'text-slate-600 hover:text-slate-800 hover:bg-white/50'
               }`}
             >
-              Clinique
+              <div className="flex items-center justify-center gap-2">
+                <span>📋</span>
+                <span>Clinique</span>
+              </div>
             </button>
             <button
               onClick={() => setExamTabActive('paraclinique')}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition ${
+              className={`flex-1 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${
                 examTabActive === 'paraclinique'
-                  ? 'border-indigo-600 text-indigo-600'
-                  : 'border-transparent text-slate-600 hover:text-slate-800'
+                  ? 'bg-white text-indigo-600 shadow-sm border border-slate-200'
+                  : 'text-slate-600 hover:text-slate-800 hover:bg-white/50'
               }`}
             >
-              Paraclinique
+              <div className="flex items-center justify-center gap-2">
+                <span>🔬</span>
+                <span>Paraclinique</span>
+              </div>
             </button>
             <button
               onClick={() => setExamTabActive('traitement')}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition ${
+              className={`flex-1 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${
                 examTabActive === 'traitement'
-                  ? 'border-indigo-600 text-indigo-600'
-                  : 'border-transparent text-slate-600 hover:text-slate-800'
+                  ? 'bg-white text-indigo-600 shadow-sm border border-slate-200'
+                  : 'text-slate-600 hover:text-slate-800 hover:bg-white/50'
               }`}
             >
-              Traitement
+              <div className="flex items-center justify-center gap-2">
+                <span>💊</span>
+                <span>Traitement</span>
+              </div>
             </button>
           </div>
 
@@ -1763,11 +1264,30 @@ ${patient.motif}
                           <div></div>
                         </div>
 
-                        {/* Row 4: Poids, Taille, IMC */}
+                        {/* Row 3b: Bandelette Urinaire */}
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="space-y-1 col-span-2">
+                            <label className="text-xs font-medium text-slate-600">
+                              Bandelette Urinaire
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="e.g., Normal, protéinurie+, hématurie..."
+                              value={hemodynamicsData.bandelette}
+                              onChange={(e) =>
+                                handleInputChange("bandelette", e.target.value)
+                              }
+                              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                            />
+                          </div>
+                          <div></div>
+                        </div>
+
+                        {/* Row 4: Poids, Taille, IMC/Tour de Taille */}
                         <div className="grid grid-cols-3 gap-3">
                           <div className="space-y-1">
                             <label className="text-xs font-medium text-slate-600">
-                              Poids
+                              Poids (kg)
                             </label>
                             <input
                               type="number"
@@ -1779,10 +1299,15 @@ ${patient.motif}
                               }
                               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                             />
+                            {patientAge < 16 && hemodynamicsData.weight && (
+                              <p className="text-xs text-slate-600 mt-1">
+                                {getWeightInterpretation()}
+                              </p>
+                            )}
                           </div>
                           <div className="space-y-1">
                             <label className="text-xs font-medium text-slate-600">
-                              Taille
+                              Taille (cm)
                             </label>
                             <input
                               type="number"
@@ -1793,16 +1318,55 @@ ${patient.motif}
                               }
                               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                             />
+                            {patientAge < 16 && hemodynamicsData.height && (
+                              <p className="text-xs text-slate-600 mt-1">
+                                {getHeightInterpretation()}
+                              </p>
+                            )}
                           </div>
                           <div className="space-y-1">
-                            <label className="text-xs font-medium text-slate-600">
-                              IMC
-                            </label>
-                            <div className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">
-                              {imc || "—"}
-                            </div>
+                            {patientAge >= 16 ? (
+                              <>
+                                <label className="text-xs font-medium text-slate-600">
+                                  IMC
+                                </label>
+                                <div className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">
+                                  {imc || "—"}
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <label className="text-xs font-medium text-slate-600">
+                                  IMC
+                                </label>
+                                <div className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">
+                                  {imc || "—"}
+                                </div>
+                              </>
+                            )}
                           </div>
                         </div>
+
+                        {/* Row 5: Tour de taille for adults */}
+                        {patientAge >= 16 && (
+                          <div className="grid grid-cols-3 gap-3">
+                            <div className="space-y-1 col-span-2">
+                              <label className="text-xs font-medium text-slate-600">
+                                Tour de Taille (cm)
+                              </label>
+                              <input
+                                type="number"
+                                placeholder="cm"
+                                value={hemodynamicsData.tourDeTaille}
+                                onChange={(e) =>
+                                  handleInputChange("tourDeTaille", e.target.value)
+                                }
+                                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                              />
+                            </div>
+                            <div></div>
+                          </div>
+                        )}
                       </div>
 
                       {/* État général */}
@@ -1878,9 +1442,9 @@ ${patient.motif}
                   {/* Other Exams - 4-part sections */}
                   {expandedAccordions[exam] && exam !== "Examen général" && (
                     <div className="px-4 py-4 bg-white border-t border-slate-200 space-y-4 max-h-96 overflow-y-auto">
-                      {CLINICAL_EXAMS_DATA[exam as ExamKey]?.sections?.map((section) => {
-                        const examContent = CLINICAL_EXAMS_DATA[exam as ExamKey]?.content;
-                        const signs = examContent ? (examContent[section as keyof typeof examContent] || []) : [];
+                      {((currentProfileExams as Record<string, any>)[exam])?.sections?.map((section: string) => {
+                        const examContent = ((currentProfileExams as Record<string, any>)[exam])?.content;
+                        const signs = examContent ? (examContent[section] || []) : [];
 
                         return (
                           <div key={section} className="space-y-2">

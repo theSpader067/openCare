@@ -114,7 +114,7 @@ export default function PatientsPage() {
   const [editPatient, setEditPatient] = useState<Patient | null>(null);
   const [editForm, setEditForm] = useState<Patient | null>(null);
   const [toDeletePatient, setToDeletePatient] = useState<Patient | null>(null);
-  const [patientsLoading, setPatientsLoading] = useState(false);
+  const [patientsLoading, setPatientsLoading] = useState(true);
   const [filters, setFilters] = useState({
     query: "",
     status: "all",
@@ -127,6 +127,7 @@ export default function PatientsPage() {
   useEffect(() => {
     const fetchPatients = async () => {
       try {
+        setPatientsLoading(true);
         const result = await getPatients();
         if (result.success && result.data) {
           // Transform API patient data to Patient type
@@ -136,7 +137,8 @@ export default function PatientsPage() {
         }
       } catch (error) {
         console.error("Error fetching patients:", error);
-
+      } finally {
+        setPatientsLoading(false);
       }
     };
 
@@ -507,6 +509,17 @@ export default function PatientsPage() {
           </div>
         </section>
 
+        {selectedPatient.motif && (
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-3">
+              {t("patients.dossier.motif")}
+            </p>
+            <p className="text-sm text-slate-700 leading-relaxed">
+              {selectedPatient.motif}
+            </p>
+          </section>
+        )}
+
         <div className="space-y-6">
           <HistorySection
             title={t("patients.section.medicalHistory")}
@@ -518,6 +531,16 @@ export default function PatientsPage() {
             tags={selectedPatient.histories.surgical}
             emptyLabel={t("patients.empty.noHistory")}
           />
+          {selectedPatient.atcdsFamiliaux && (
+            <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+              <h3 className="text-sm font-semibold text-slate-800 mb-3">
+                {t("patients.dossier.atcdsFamiliaux")}
+              </h3>
+              <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                {selectedPatient.atcdsFamiliaux}
+              </p>
+            </section>
+          )}
           <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <h3 className="text-sm font-semibold text-slate-800">
               {t("patients.section.otherInfo")}
@@ -535,9 +558,18 @@ export default function PatientsPage() {
                 <CalendarDays className="h-4 w-4 text-indigo-500" />
                 {t("patients.section.observations")}
               </div>
-              <span className="text-xs font-medium text-slate-500 bg-slate-50 px-2.5 py-1 rounded-full">
-                {sortedObservations.length} {t("patients.labels.entries")}
-              </span>
+              <div className="flex items-center gap-4">
+                <span className="text-xs font-medium text-slate-500 bg-slate-50 px-2.5 py-1 rounded-full">
+                  {sortedObservations.length} {t("patients.labels.entries")}
+                </span>
+                <button
+                  onClick={() => router.push(`/patients/dossier/quickFill?id=${selectedPatient.id}`)}
+                  className="text-sm text-slate-700 hover:text-indigo-600 hover:underline transition-colors flex items-center gap-1 group"
+                >
+                  Ajout rapide
+                  <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
+              </div>
             </header>
 
             {sortedObservations.length > 0 ? (
@@ -1091,14 +1123,11 @@ function TagGroup({
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
-      {tags.map((tag, index) => (
-        <span
-          key={tag}
-          className="px-3 py-1 text-xs font-semibold bg-sky-100 text-sky-700 border border-sky-200"
-        >
+    <div className="mt-3 space-y-2">
+      {tags.map((tag) => (
+        <p key={tag} className="text-sm text-slate-700">
           {tag}
-        </span>
+        </p>
       ))}
     </div>
   );

@@ -42,10 +42,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { patientId, examSelections, hemodynamicsData } = body;
+    const { patientId, profileKey, clinicalExams, examSelections, hemodynamicsData } = body;
     const paracliniques = body.paracliniques || [];
     const traitements = body.traitements || [];
 
+    console.log('[generateQFobservation] Received body:', JSON.stringify(body, null, 2));
+    console.log('[generateQFobservation] clinicalExams:', JSON.stringify(clinicalExams, null, 2));
+    console.log('[generateQFobservation] profileKey:', profileKey);
     console.log('DEBUG: paracliniques received:', JSON.stringify(paracliniques));
     console.log('DEBUG: traitements received:', JSON.stringify(traitements));
 
@@ -157,7 +160,48 @@ export async function POST(request: NextRequest) {
 
     // OTHER EXAMS - apparatus by apparatus, only modified ones
     const otherExamsText: string[] = [];
-    if (examSelections && Object.keys(examSelections).length > 0) {
+
+    // Handle new clinicalExams format from mobile app
+    if (clinicalExams && Object.keys(clinicalExams).length > 0) {
+      console.log('[generateQFobservation] Processing new clinicalExams format');
+      for (const [examId, examData] of Object.entries(clinicalExams)) {
+        const data = examData as any;
+        console.log(`[generateQFobservation] Processing exam ${examId}:`, data);
+
+        if (data && data.label) {
+          const examName = data.label;
+          const sections = data.sections || {};
+
+          let hasAnyFindings = false;
+          const examinationLines: string[] = [];
+
+          // Process each section
+          for (const [section, findings] of Object.entries(sections)) {
+            if (Array.isArray(findings) && (findings as any[]).length > 0) {
+              hasAnyFindings = true;
+              const findingsStr = (findings as string[]).join(", ");
+              examinationLines.push(`${section}: ${findingsStr}`);
+            }
+          }
+
+          // Add notes if present
+          if (data.notes && data.notes.trim()) {
+            hasAnyFindings = true;
+            examinationLines.push(`Notes: ${data.notes}`);
+          }
+
+          if (hasAnyFindings) {
+            otherExamsText.push(`### ${examName}`);
+            examinationLines.forEach(line => {
+              otherExamsText.push(line);
+            });
+          }
+        }
+      }
+    }
+    // Fallback to old examSelections format if clinicalExams not present
+    else if (examSelections && Object.keys(examSelections).length > 0) {
+      console.log('[generateQFobservation] Processing legacy examSelections format');
       for (const [examName, examData] of Object.entries(examSelections)) {
         const data = examData as any;
         if (data && examName !== "Examen général") {
@@ -250,9 +294,25 @@ export async function POST(request: NextRequest) {
     const examinationSummary: string[] = [];
 
     // Add hemodynamic findings if present
-    
-    // Add apparatus exam findings
-    if (examSelections && Object.keys(examSelections).length > 0) {
+
+    // Add apparatus exam findings from new clinicalExams format
+    if (clinicalExams && Object.keys(clinicalExams).length > 0) {
+      for (const [examId, examData] of Object.entries(clinicalExams)) {
+        const data = examData as any;
+        if (data && data.label) {
+          const examName = data.label;
+          const sections = data.sections || {};
+
+          for (const [section, findings] of Object.entries(sections)) {
+            if (Array.isArray(findings) && (findings as string[]).length > 0) {
+              examinationSummary.push(`${examName} - ${section}: ${(findings as string[]).join(", ")}`);
+            }
+          }
+        }
+      }
+    }
+    // Fallback to old examSelections format
+    else if (examSelections && Object.keys(examSelections).length > 0) {
       for (const [examName, examData] of Object.entries(examSelections)) {
         const data = examData as any;
         if (data && examName !== "Examen général") {

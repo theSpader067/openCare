@@ -1,13 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { verifyMobileToken } from "@/lib/mobile-auth";
-import sharp from "sharp";
 
 /**
  * Compress image to reduce file size for OCRSpace API (max 1MB)
  */
 async function compressImageForOCR(base64String: string): Promise<string> {
   try {
+    // Try to import sharp dynamically (optional dependency)
+    let sharp;
+    try {
+      sharp = (await import("sharp")).default;
+    } catch (importError) {
+      console.warn("[OCR_COMPRESS] Sharp not available, skipping compression");
+      return base64String;
+    }
+
     // Extract base64 data (remove data URI prefix if present)
     const base64Data = base64String.includes(",")
       ? base64String.split(",")[1]

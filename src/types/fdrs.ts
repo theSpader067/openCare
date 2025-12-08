@@ -117,6 +117,7 @@ export type PediatricATCDSData = {
   etatNaissance?: EtatNaissanceData;
   regimeNourisson?: RegimeNourrissonData;
   developpementPsychomotor?: DeveloppementPsychomotorData;
+  medicalHistory?: string;
 };
 
 export type ParentData = {

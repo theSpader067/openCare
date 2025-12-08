@@ -537,6 +537,7 @@
       "couvertureSociale": "Social Security Coverage",
       "situationFamiliale": "Family Situation",
       "profession": "Profession",
+      "niveauScolaire": "School Level",
       "observations": "Observations",
       "observationsDesc": "Record clinical observations.",
       "observationHistory": "Observation History ({{count}})",

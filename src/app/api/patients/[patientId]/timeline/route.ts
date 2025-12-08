@@ -97,68 +97,38 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    // Build timeline events
+    // Build timeline events - ONLY include: hospitalisations, analyses, ordonnances, and comptes-rendus
     const timelineEvents = [];
 
-    // Add hospitalization event (patient creation)
+    // Add hospitalization event (patient creation) - current admission
     timelineEvents.push({
       id: `hospitalization-${patient.id}`,
       type: "hospitalization",
       title: "Admission du patient",
       date: patient.createdAt.toISOString(),
       timestamp: patient.createdAt.toISOString(),
-      summary: `Patient admis au service ${patient.service || "non spécifié"}`,
+      summary: `Admission au service: ${patient.service || "non spécifié"}`,
       details: {
         fullName: `${patient.user.firstName || ""} ${patient.user.lastName || ""}`.trim() || "Non renseigné",
         username: patient.user.username || "Non renseigné",
         specialty: patient.user.specialty || "Non renseigné",
         hospital: patient.user.hospital || "Non renseigné",
+        service: patient.service || "Non renseigné",
       },
     });
-
-    // Add observations
-    for (const observation of patient.observations) {
-      timelineEvents.push({
-        id: `observation-${observation.id}`,
-        type: "observation",
-        title: "Observation médicale",
-        date: observation.createdAt.toISOString(),
-        timestamp: observation.createdAt.toISOString(),
-        summary: observation.text.substring(0, 150) + (observation.text.length > 150 ? "..." : ""),
-        details: {
-          text: observation.text,
-        },
-      });
-    }
 
     // Add ordonnances (prescriptions)
     for (const ordonnance of patient.ordonnances) {
       timelineEvents.push({
         id: `prescription-${ordonnance.id}`,
-        type: "prescription",
-        title: ordonnance.title,
+        type: "ordonnance",
+        title: ordonnance.title || "Ordonnance médicale",
         date: ordonnance.date?.toISOString() || ordonnance.createdAt.toISOString(),
         timestamp: ordonnance.date?.toISOString() || ordonnance.createdAt.toISOString(),
-        summary: ordonnance.renseignementClinique || "Ordonnance médicale",
+        summary: ordonnance.renseignementClinique || "Prescription médicale",
         details: {
           details: ordonnance.details || "Aucun détail disponible",
           renseignementClinique: ordonnance.renseignementClinique,
-        },
-      });
-    }
-
-    // Add imaging (rapports with category imagerie)
-    for (const rapport of patient.rapports) {
-      timelineEvents.push({
-        id: `imaging-${rapport.id}`,
-        type: "imaging",
-        title: rapport.title,
-        date: rapport.date?.toISOString() || rapport.createdAt.toISOString(),
-        timestamp: rapport.date?.toISOString() || rapport.createdAt.toISOString(),
-        summary: rapport.details?.substring(0, 150) + (rapport.details && rapport.details.length > 150 ? "..." : "") || "Examen d'imagerie",
-        details: {
-          interpretation: rapport.details || "Aucune interprétation disponible",
-          recommandations: rapport.recommandations,
         },
       });
     }
@@ -172,14 +142,31 @@ export async function GET(
 
       timelineEvents.push({
         id: `lab-${analyse.id}`,
-        type: "lab",
+        type: "analyse",
         title: analyse.title || "Analyses biologiques",
         date: analyse.createdAt.toISOString(),
         timestamp: analyse.createdAt.toISOString(),
-        summary: labEntriesSummary.substring(0, 150) + (labEntriesSummary.length > 150 ? "..." : "") || "Résultats d'analyses",
+        summary: labEntriesSummary.substring(0, 200) + (labEntriesSummary.length > 200 ? "..." : "") || "Résultats d'analyses",
         details: {
           labEntries: analyse.labEntries,
           interpretation: analyse.interpretation,
+        },
+      });
+    }
+
+    // Add comptes-rendus (all types, not just imagerie)
+    for (const rapport of patient.rapports) {
+      timelineEvents.push({
+        id: `compte-rendu-${rapport.id}`,
+        type: "compte-rendu",
+        title: rapport.title || "Compte-rendu",
+        date: rapport.date?.toISOString() || rapport.createdAt.toISOString(),
+        timestamp: rapport.date?.toISOString() || rapport.createdAt.toISOString(),
+        summary: rapport.details?.substring(0, 200) + (rapport.details && rapport.details.length > 200 ? "..." : "") || "Compte-rendu médical",
+        details: {
+          interpretation: rapport.details || "Aucun détail disponible",
+          recommandations: rapport.recommandations,
+          category: rapport.category,
         },
       });
     }

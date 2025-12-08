@@ -171,8 +171,8 @@ export const authConfig: AuthOptions = {
         if (dbUser) {
 
           // Add database fields to user object so JWT callback can access them
-          // Keep id as number for adapter, JWT callback will convert to string
-          user.id = dbUser.id as any
+          // Convert id to string to match JWT token format
+          user.id = dbUser.id.toString()
           ;(user as any).username = dbUser.username
           ;(user as any).emailVerified = dbUser.emailVerified
           ;(user as any).onboardingCompleted = dbUser.onboardingCompleted ?? false

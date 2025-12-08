@@ -10,114 +10,119 @@ import {
 } from "@/types/fdrs";
 
 /**
- * Format pediatric ATCDS data into a readable paragraph for storage
+ * Format pediatric ATCDS data into a comprehensive paragraph for storage in atcdsMedicaux field
+ * This consolidates: Grossesse, Accouchement, Nutrition, Développement, and Medical History
  */
 export function formatPediatricATCDSParagraph(
   data: PediatricATCDSData
 ): string {
   if (!data || Object.keys(data).length === 0) return "";
 
-  const paragraphs: string[] = [];
+  const sections: string[] = [];
 
-  // Grossesse, Accouchement, État à la naissance
+  // SECTION 1: GROSSESSE ET NAISSANCE
   if (data.grossesse || data.accouchement || data.etatNaissance) {
     const parts: string[] = [];
 
     if (data.grossesse) {
       const g = data.grossesse;
-      parts.push(
-        `Grossesse ${g.suivi === false ? "non suivi" : "suivi"}`
-      );
+      const grossesseText = g.suivi === false ? "non suivi" : "suivi";
+      parts.push(`Grossesse ${grossesseText}`);
       if (g.suivi && g.conditionsDeVie)
-        parts.push(`Conditions de vie: ${g.conditionsDeVie}`);
-      if (g.surveillance) parts.push(`Surveillance: ${g.surveillance}`);
+        parts.push(`conditions de vie: ${g.conditionsDeVie}`);
+      if (g.surveillance) parts.push(`surveillance: ${g.surveillance}`);
       if (g.examenesComplementaires)
-        parts.push(`Examens: ${g.examenesComplementaires}`);
-      if (g.traitements) parts.push(`Traitements: ${g.traitements}`);
+        parts.push(`examens: ${g.examenesComplementaires}`);
+      if (g.traitements) parts.push(`traitements: ${g.traitements}`);
     }
 
     if (data.accouchement) {
       const a = data.accouchement;
-      if (a.aTerme === true) parts.push("Accouchement à terme");
-      else if (a.aTerme === false) {
-        parts.push(
-          `Accouchement prématuré${a.semainesAmenorrhee ? ` (${a.semainesAmenorrhee} SA)` : ""}`
-        );
+      if (a.aTerme === true) {
+        parts.push("Accouchement à terme");
+      } else if (a.aTerme === false) {
+        const sa = a.semainesAmenorrhee ? ` à ${a.semainesAmenorrhee} SA` : "";
+        parts.push(`Accouchement prématuré${sa}`);
       }
       if (a.circonstances)
-        parts.push(`Circonstances: ${a.circonstances}`);
-      if (a.indication) parts.push(`Indication: ${a.indication}`);
+        parts.push(`circonstances: ${a.circonstances}`);
+      if (a.indication) parts.push(`indication: ${a.indication}`);
     }
 
     if (data.etatNaissance) {
       const e = data.etatNaissance;
-      const etat: string[] = [];
-      if (e.apgarMin) etat.push(`Apgar 1min: ${e.apgarMin}`);
-      if (e.apgarMax) etat.push(`Apgar 5min: ${e.apgarMax}`);
-      if (e.poids) etat.push(`Poids: ${e.poids}g`);
-      if (e.taille) etat.push(`Taille: ${e.taille}cm`);
-      if (e.perimetre) etat.push(`PC: ${e.perimetre}cm`);
-      if (etat.length > 0) parts.push(`État naissance: ${etat.join(", ")}`);
+      const etatDetails: string[] = [];
+      if (e.apgarMin) etatDetails.push(`Apgar 1min ${e.apgarMin}`);
+      if (e.apgarMax) etatDetails.push(`Apgar 5min ${e.apgarMax}`);
+      if (e.poids) etatDetails.push(`${e.poids}g`);
+      if (e.taille) etatDetails.push(`${e.taille}cm`);
+      if (e.perimetre) etatDetails.push(`PC ${e.perimetre}cm`);
+      if (etatDetails.length > 0) {
+        parts.push(`État à la naissance: ${etatDetails.join(", ")}`);
+      }
     }
 
-    if (parts.length > 0)
-      paragraphs.push(`GROSSESSE ET NAISSANCE: ${parts.join(". ")}.`);
+    if (parts.length > 0) {
+      sections.push(`GROSSESSE ET NAISSANCE: ${parts.join("; ")}`);
+    }
   }
 
-  // Régime du Nourrisson
+  // SECTION 2: RÉGIME DU NOURRISSON
   if (data.regimeNourisson) {
     const r = data.regimeNourisson;
     const parts: string[] = [];
 
     if (r.premierAlimentType) {
       if (r.premierAlimentType === "lait_mere") {
-        parts.push("Premier aliment: Lait maternel");
+        parts.push("Premier aliment: lait maternel");
         if (r.allaitement?.modalites)
-          parts.push(`Modalités: ${r.allaitement.modalites}`);
-        if (r.allaitement?.duree) parts.push(`Durée: ${r.allaitement.duree}`);
+          parts.push(`modalités: ${r.allaitement.modalites}`);
+        if (r.allaitement?.duree) parts.push(`durée: ${r.allaitement.duree}`);
       } else if (r.premierAlimentType === "preparation") {
-        parts.push("Premier aliment: Préparations pour nourrisson");
+        parts.push("Premier aliment: préparations pour nourrisson");
         if (r.preparation?.dateIntroductionProteines)
-          parts.push(`Protéines: ${r.preparation.dateIntroductionProteines}`);
+          parts.push(`introduction protéines: ${r.preparation.dateIntroductionProteines}`);
       }
     }
 
     if (r.regimeActuel) {
       const ra = r.regimeActuel;
       if (ra.typeLait) parts.push(`Lait actuel: ${ra.typeLait}`);
+
       const diversif: string[] = [];
-      if (ra.gluten) diversif.push(`Gluten ${ra.gluten}`);
-      if (ra.legumes) diversif.push(`Légumes ${ra.legumes}`);
-      if (ra.fruits) diversif.push(`Fruits ${ra.fruits}`);
-      if (ra.viandes) diversif.push(`Viandes ${ra.viandes}`);
+      if (ra.gluten) diversif.push(`gluten ${ra.gluten}`);
+      if (ra.legumes) diversif.push(`légumes ${ra.legumes}`);
+      if (ra.fruits) diversif.push(`fruits ${ra.fruits}`);
+      if (ra.viandes) diversif.push(`viandes ${ra.viandes}`);
       if (diversif.length > 0)
         parts.push(`Diversification: ${diversif.join(", ")}`);
 
       if (ra.repas) {
-        const rep: string[] = [];
-        if (ra.repas.nombre) rep.push(`${ra.repas.nombre}`);
-        if (ra.repas.horaires) rep.push(`${ra.repas.horaires}`);
-        if (ra.repas.duree) rep.push(`${ra.repas.duree}`);
-        if (ra.repas.volume) rep.push(`${ra.repas.volume}`);
-        if (rep.length > 0) parts.push(`Repas: ${rep.join(", ")}`);
+        const repasDetails: string[] = [];
+        if (ra.repas.nombre) repasDetails.push(`${ra.repas.nombre} repas`);
+        if (ra.repas.horaires) repasDetails.push(`${ra.repas.horaires}`);
+        if (ra.repas.duree) repasDetails.push(`durée ${ra.repas.duree}`);
+        if (ra.repas.volume) repasDetails.push(`${ra.repas.volume}`);
+        if (repasDetails.length > 0) parts.push(`Repas: ${repasDetails.join(", ")}`);
       }
     }
 
     if (r.complementRegime) {
       const c = r.complementRegime;
       const compl: string[] = [];
-      if (c.vitaminD?.nom) compl.push(`Vit D: ${c.vitaminD.nom} ${c.vitaminD.dose || ""}`);
-      if (c.vitaminK?.nom) compl.push(`Vit K: ${c.vitaminK.nom} ${c.vitaminK.dose || ""}`);
-      if (c.fluor?.nom) compl.push(`Fluor: ${c.fluor.nom} ${c.fluor.dose || ""}`);
-      if (c.fer?.nom) compl.push(`Fer: ${c.fer.nom} ${c.fer.dose || ""}`);
+      if (c.vitaminD?.nom) compl.push(`Vit D ${c.vitaminD.dose || c.vitaminD.nom}`);
+      if (c.vitaminK?.nom) compl.push(`Vit K ${c.vitaminK.dose || c.vitaminK.nom}`);
+      if (c.fluor?.nom) compl.push(`Fluor ${c.fluor.dose || c.fluor.nom}`);
+      if (c.fer?.nom) compl.push(`Fer ${c.fer.dose || c.fer.nom}`);
       if (compl.length > 0) parts.push(`Compléments: ${compl.join(", ")}`);
     }
 
-    if (parts.length > 0)
-      paragraphs.push(`RÉGIME NOURRISSON: ${parts.join(". ")}.`);
+    if (parts.length > 0) {
+      sections.push(`RÉGIME DU NOURRISSON: ${parts.join("; ")}`);
+    }
   }
 
-  // Développement Psychomoteur
+  // SECTION 3: DÉVELOPPEMENT PSYCHOMOTEUR
   if (data.developpementPsychomotor) {
     const d = data.developpementPsychomotor;
     const parts: string[] = [];
@@ -125,14 +130,14 @@ export function formatPediatricATCDSParagraph(
     if (d.deambulation?.ageMois)
       parts.push(`Marche: ${d.deambulation.ageMois} mois`);
     if (d.deambulation?.notes)
-      parts.push(`Notes déambulation: ${d.deambulation.notes}`);
+      parts.push(`remarques déambulation: ${d.deambulation.notes}`);
 
     if (d.langage?.premiersMotsAgeMois)
       parts.push(`Premiers mots: ${d.langage.premiersMotsAgeMois} mois`);
     if (d.langage?.phrasesAgeMois)
       parts.push(`Premières phrases: ${d.langage.phrasesAgeMois} mois`);
     if (d.langage?.notes)
-      parts.push(`Notes langage: ${d.langage.notes}`);
+      parts.push(`remarques langage: ${d.langage.notes}`);
 
     if (d.acquisitionsMotrices)
       parts.push(`Acquisitions motrices: ${d.acquisitionsMotrices}`);
@@ -142,13 +147,19 @@ export function formatPediatricATCDSParagraph(
       );
     if (d.comportement)
       parts.push(`Comportement: ${d.comportement}`);
-    if (d.notes) parts.push(`Notes générales: ${d.notes}`);
+    if (d.notes) parts.push(`Notes: ${d.notes}`);
 
-    if (parts.length > 0)
-      paragraphs.push(`DÉVELOPPEMENT PSYCHOMOTEUR: ${parts.join(". ")}.`);
+    if (parts.length > 0) {
+      sections.push(`DÉVELOPPEMENT PSYCHOMOTEUR: ${parts.join("; ")}`);
+    }
   }
 
-  return paragraphs.join(" ");
+  // SECTION 4: ANTÉCÉDENTS MÉDICAUX
+  if (data.medicalHistory) {
+    sections.push(`ANTÉCÉDENTS MÉDICAUX: ${data.medicalHistory}`);
+  }
+
+  return sections.join(". ");
 }
 
 /**
@@ -404,6 +415,12 @@ export function parsePediatricATCDSParagraph(
     if (Object.keys(dev).length > 0) data.developpementPsychomotor = dev;
   }
 
+  // Parse ATCDS MÉDICAUX section
+  const medicalMatch = paragraph.match(/ATCDS\s+MÉDICAUX:\s*([^.]+?)(?=\.|$)/i);
+  if (medicalMatch) {
+    data.medicalHistory = medicalMatch[1].trim();
+  }
+
   return data;
 }
 
@@ -510,7 +527,7 @@ export function ATCDSTabs({
   const setActiveTab = onActiveTabChange ? onActiveTabChange : setInternalActiveTab;
 
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(["grossesse", "regime", "developpement", "chirurgical"])
+    new Set(["grossesse", "regime", "developpement", "chirurgical", "medical"])
   );
 
   const toggleSection = (section: string) => {
@@ -714,7 +731,20 @@ export function ATCDSTabs({
             />
           </CollapsibleSection>
 
-          {/* Section 4: ATCDs Chirurgicaux Pédiatriques */}
+          {/* Section 4: ATCDs Médicaux Pédiatriques */}
+          <CollapsibleSection
+            title="ATCDs médicaux"
+            isExpanded={expandedSections.has("medical")}
+            onToggle={() => toggleSection("medical")}
+            icon="🏥"
+          >
+            <PediatricMedicalHistorySection
+              data={pediatricData}
+              onChange={handlePediatricChange}
+            />
+          </CollapsibleSection>
+
+          {/* Section 5: ATCDs Chirurgicaux Pédiatriques */}
           <CollapsibleSection
             title="ATCDs chirurgicaux pédiatriques"
             isExpanded={expandedSections.has("chirurgical")}
@@ -1935,6 +1965,74 @@ function PediatricSurgicalHistorySection({
           value={surgicalHistory}
           onChange={(e) => onSurgicalHistoryChange(e.target.value)}
           placeholder="Décrivez les interventions chirurgicales pédiatriques..."
+          rows={4}
+          className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm transition focus:border-[#7c3aed] focus:outline-none focus:ring-2 focus:ring-[#dcd0ff]"
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ==================== SECTION 5: ATCDs MÉDICAUX PÉDIATRIQUES ==================== */
+function PediatricMedicalHistorySection({
+  data,
+  onChange,
+}: {
+  data: PediatricATCDSData;
+  onChange: (data: PediatricATCDSData) => void;
+}) {
+  const medicalHistory = data.medicalHistory || "";
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="text-sm font-medium text-slate-800 block mb-3">
+          Antécédents médicaux pédiatriques
+        </label>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {[
+            "Prématurité",
+            "Hypotrophie",
+            "Ictère néonatal",
+            "Infections néonatales",
+            "Convulsions fébriles",
+            "Asthme",
+            "Dermatite atopique",
+            "Allergies alimentaires",
+            "Otites moyennes récurrentes",
+            "Gastroentérite",
+            "Pneumonie",
+            "Bronchiolite",
+            "Anémie",
+            "Malnutrition",
+            "Reflux gastro-œsophagien",
+            "Pathologie cardiaque congénitale",
+            "Pathologie rénale",
+            "Pathologie neurologique",
+            "Autres affections chroniques",
+          ].map((tag) => (
+            <button
+              key={tag}
+              type="button"
+              onClick={() => {
+                const currentText = medicalHistory.trim();
+                const newText = currentText
+                  ? `${currentText}, ${tag}`
+                  : tag;
+                onChange({ ...data, medicalHistory: newText });
+              }}
+              className="px-2.5 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors border border-blue-200"
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+        <textarea
+          value={medicalHistory}
+          onChange={(e) =>
+            onChange({ ...data, medicalHistory: e.target.value })
+          }
+          placeholder="Décrivez les antécédents médicaux pédiatriques (séparez par des lignes ou des virgules)"
           rows={4}
           className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm transition focus:border-[#7c3aed] focus:outline-none focus:ring-2 focus:ring-[#dcd0ff]"
         />

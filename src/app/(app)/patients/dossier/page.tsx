@@ -730,11 +730,11 @@ export default function PatientDossierPage() {
                 placeholder={t("patients.dossier.addressHabitat")}
               />
               <InputField
-                label={t("patients.dossier.profession")}
+                label={atcdsActiveTab === "enfant" ? t("patients.dossier.niveauScolaire") || "Niveau scolaire" : t("patients.dossier.profession")}
                 id="patient-profession"
                 value={formData.profession}
                 onChange={handleInputChange("profession")}
-                placeholder={t("patients.dossier.profession")}
+                placeholder={atcdsActiveTab === "enfant" ? t("patients.dossier.niveauScolaire") || "Niveau scolaire" : t("patients.dossier.profession")}
               />
             </div>
 

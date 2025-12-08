@@ -401,6 +401,7 @@
       "couvertureSociale": "Couverture sociale",
       "situationFamiliale": "Situation familiale",
       "profession": "Profession",
+      "niveauScolaire": "Niveau scolaire",
       "observations": "Observations",
       "observationsDesc": "Notez les observations cliniques.",
       "observationHistory": "Historique des observations ({{count}})",

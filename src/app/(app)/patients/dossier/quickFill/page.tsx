@@ -959,22 +959,22 @@ ${patient.motif}
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header with back button */}
-      <section className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <section className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+        <div className="flex items-start sm:items-center gap-3 sm:gap-4 w-full">
           <button
             onClick={() => router.back()}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition"
+            className="inline-flex flex-shrink-0 h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition"
             aria-label={t("common.buttons.back")}
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-900">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 truncate">
               {t("patients.dossier.quickFill")}
             </h1>
-            <p className="text-sm text-slate-500">
+            <p className="text-xs sm:text-sm text-slate-500 line-clamp-2">
               {t("patients.dossier.quickFillDesc")}
             </p>
           </div>
@@ -982,17 +982,17 @@ ${patient.motif}
       </section>
 
       {/* Patient Header Card */}
-      <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm">
         <div className="space-y-3">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#22d3ee] text-white shadow-lg">
-              <UserRound className="h-6 w-6" />
+          <div className="flex items-start gap-3 sm:gap-4">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#22d3ee] text-white shadow-lg">
+              <UserRound className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
-            <div className="flex-1">
-              <h2 className="text-lg font-semibold text-slate-900">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-base sm:text-lg font-semibold text-slate-900 truncate">
                 {patient.name}
               </h2>
-              <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-600">
+              <div className="mt-2 flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-slate-600">
                 <span>
                   <span className="font-medium text-slate-700">{patient.pid}</span>
                 </span>
@@ -1032,52 +1032,52 @@ ${patient.motif}
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column: Clinical Exams with Tabs */}
-        <div className="space-y-3 flex flex-col h-full">
+        <div className="space-y-3 flex flex-col h-full min-h-screen lg:min-h-auto">
           <h3 className="text-sm font-semibold text-slate-800 px-1">
             {t("patients.dossier.clinicalExams")}
           </h3>
 
           {/* Tab Navigation - Redesigned */}
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-1 flex gap-1 shadow-sm">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-1 flex gap-1 shadow-sm overflow-x-auto">
             <button
               onClick={() => setExamTabActive('clinique')}
-              className={`flex-1 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${
+              className={`flex-1 min-w-max md:min-w-0 px-3 md:px-4 py-2.5 text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 ${
                 examTabActive === 'clinique'
                   ? 'bg-white text-indigo-600 shadow-sm border border-slate-200'
                   : 'text-slate-600 hover:text-slate-800 hover:bg-white/50'
               }`}
             >
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex items-center justify-center gap-1 md:gap-2">
                 <span>📋</span>
-                <span>Clinique</span>
+                <span className="hidden sm:inline">Clinique</span>
               </div>
             </button>
             <button
               onClick={() => setExamTabActive('paraclinique')}
-              className={`flex-1 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${
+              className={`flex-1 min-w-max md:min-w-0 px-3 md:px-4 py-2.5 text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 ${
                 examTabActive === 'paraclinique'
                   ? 'bg-white text-indigo-600 shadow-sm border border-slate-200'
                   : 'text-slate-600 hover:text-slate-800 hover:bg-white/50'
               }`}
             >
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex items-center justify-center gap-1 md:gap-2">
                 <span>🔬</span>
-                <span>Paraclinique</span>
+                <span className="hidden sm:inline">Paraclinique</span>
               </div>
             </button>
             <button
               onClick={() => setExamTabActive('traitement')}
-              className={`flex-1 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${
+              className={`flex-1 min-w-max md:min-w-0 px-3 md:px-4 py-2.5 text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 ${
                 examTabActive === 'traitement'
                   ? 'bg-white text-indigo-600 shadow-sm border border-slate-200'
                   : 'text-slate-600 hover:text-slate-800 hover:bg-white/50'
               }`}
             >
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex items-center justify-center gap-1 md:gap-2">
                 <span>💊</span>
-                <span>Traitement</span>
+                <span className="hidden sm:inline">Traitement</span>
               </div>
             </button>
           </div>
@@ -1124,7 +1124,7 @@ ${patient.motif}
                           {t("patients.dossier.planHemodynamique")}
                         </h4>
                         {/* Row 1: FC, TA (PAS/PAD), TRC */}
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                           <div className="space-y-1">
                             <label className="text-xs font-medium text-slate-600">
                               FC
@@ -1181,7 +1181,7 @@ ${patient.motif}
                         </div>
 
                         {/* Row 2: GCS, FR, SaO2 */}
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                           <div className="space-y-1">
                             <label className="text-xs font-medium text-slate-600">
                               GCS
@@ -1231,7 +1231,7 @@ ${patient.motif}
                         </div>
 
                         {/* Row 3: T°, Dextro */}
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                           <div className="space-y-1">
                             <label className="text-xs font-medium text-slate-600">
                               T°
@@ -1265,7 +1265,7 @@ ${patient.motif}
                         </div>
 
                         {/* Row 3b: Bandelette Urinaire */}
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                           <div className="space-y-1 col-span-2">
                             <label className="text-xs font-medium text-slate-600">
                               Bandelette Urinaire
@@ -1284,7 +1284,7 @@ ${patient.motif}
                         </div>
 
                         {/* Row 4: Poids, Taille, IMC/Tour de Taille */}
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                           <div className="space-y-1">
                             <label className="text-xs font-medium text-slate-600">
                               Poids (kg)
@@ -1718,11 +1718,7 @@ ${patient.motif}
                         variant="primary"
                         size="sm"
                         onClick={() => {
-                          if (
-                            treatmentForm.name &&
-                            treatmentForm.posologie &&
-                            treatmentForm.duree
-                          ) {
+                          if (treatmentForm.name) {
                             setTraitements([...traitements, treatmentForm]);
                             setTreatmentForm({
                               name: '',
@@ -1809,12 +1805,12 @@ ${patient.motif}
         </div>
 
         {/* Right Column: Observation Preview */}
-        <div className="flex flex-col gap-3 h-full">
-          <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 h-full min-h-screen lg:min-h-auto">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
             <h3 className="text-sm font-semibold text-slate-800">
               {t("patients.dossier.observation")}
             </h3>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               {observation && isSaved && (
                 <Button
                   variant="outline"

@@ -175,7 +175,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    let { base64Image } = body;
+    let { base64Image, imageMimeType } = body;
 
     if (!base64Image) {
       return NextResponse.json(
@@ -184,9 +184,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const resolvedMimeType =
+      typeof imageMimeType === "string" && imageMimeType.includes("/")
+        ? imageMimeType
+        : "image/jpeg";
+    const resolvedFileType = resolvedMimeType.split("/")[1] || "jpeg";
+
     console.log("=== OCR REQUEST RECEIVED ===");
     console.log("Original base64 image length:", base64Image.length);
     console.log("Base64 first 100 chars:", base64Image.substring(0, 100));
+    console.log("Provided mime type:", resolvedMimeType);
 
     // Compress image if it's too large (OCRSpace has 1MB limit)
     const base64LengthMB = (base64Image.length * 0.75) / (1024 * 1024);
@@ -199,12 +206,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Format base64 image with data URI prefix as required by OCRSpace
-    const base64ImageWithPrefix = `data:image/jpeg;base64,${base64Image}`;
+    const base64ImageWithPrefix = `data:${resolvedMimeType};base64,${base64Image}`;
 
     console.log("Sending OCR request to OCRSpace API");
 
     // OCRSpace language codes: fre (French), eng (English), spa (Spanish), deu (German), etc.
-    const bodyString = `apikey=K82729097788957&base64image=${encodeURIComponent(base64ImageWithPrefix)}&language=fre&filetype=jpeg`;
+    const bodyString = `apikey=K82729097788957&base64image=${encodeURIComponent(
+      base64ImageWithPrefix
+    )}&language=fre&filetype=${encodeURIComponent(resolvedFileType)}`;
 
     // Call OCRSpace API with URL-encoded body (with timeout)
     const controller = new AbortController();

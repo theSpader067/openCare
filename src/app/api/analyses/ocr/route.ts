@@ -46,6 +46,36 @@ async function compressImageForOCR(base64String: string): Promise<string> {
   }
 }
 
+/**
+ * Convert any supported format (e.g., HEIC/PNG) into JPEG for compatibility
+ */
+async function convertImageToJPEG(base64String: string, mimeType: string): Promise<string> {
+  try {
+    let sharp;
+    try {
+      sharp = (await import("sharp")).default;
+    } catch (importError) {
+      console.warn("[OCR_CONVERT] Sharp not available, skipping format conversion");
+      return base64String;
+    }
+
+    const base64Data = base64String.includes(",")
+      ? base64String.split(",")[1]
+      : base64String;
+
+    const imageBuffer = Buffer.from(base64Data, "base64");
+    console.log("[OCR_CONVERT] Original mime:", mimeType, "| size:", imageBuffer.length);
+
+    const convertedBuffer = await sharp(imageBuffer).jpeg({ quality: 85 }).toBuffer();
+
+    console.log("[OCR_CONVERT] Converted to JPEG. New size:", convertedBuffer.length);
+    return convertedBuffer.toString("base64");
+  } catch (error) {
+    console.error("[OCR_CONVERT] Conversion failed:", error);
+    return base64String;
+  }
+}
+
 // Helper function to get userId from session or JWT token
 async function getUserId(request: NextRequest): Promise<number | null> {
   // Try mobile JWT authentication first
@@ -184,11 +214,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const resolvedMimeType =
+    let resolvedMimeType =
       typeof imageMimeType === "string" && imageMimeType.includes("/")
         ? imageMimeType
         : "image/jpeg";
-    const resolvedFileType = resolvedMimeType.split("/")[1] || "jpeg";
+    let resolvedFileType = resolvedMimeType.split("/")[1] || "jpeg";
+
+    if (resolvedMimeType !== "image/jpeg") {
+      console.log("[OCR] Non-JPEG detected, converting to JPEG...");
+      base64Image = await convertImageToJPEG(base64Image, resolvedMimeType);
+      resolvedMimeType = "image/jpeg";
+      resolvedFileType = "jpeg";
+    }
 
     console.log("=== OCR REQUEST RECEIVED ===");
     console.log("Original base64 image length:", base64Image.length);

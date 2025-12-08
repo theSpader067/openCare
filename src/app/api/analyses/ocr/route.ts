@@ -1,6 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { verifyMobileToken } from "@/lib/mobile-auth";
+import sharp from "sharp";
+
+/**
+ * Compress image to reduce file size for OCRSpace API (max 1MB)
+ */
+async function compressImageForOCR(base64String: string): Promise<string> {
+  try {
+    // Extract base64 data (remove data URI prefix if present)
+    const base64Data = base64String.includes(",")
+      ? base64String.split(",")[1]
+      : base64String;
+
+    // Convert to buffer
+    const imageBuffer = Buffer.from(base64Data, "base64");
+    console.log("[OCR_COMPRESS] Original size:", imageBuffer.length, "bytes");
+
+    // Compress using sharp
+    const compressedBuffer = await sharp(imageBuffer)
+      .withMetadata({}) // Remove metadata
+      .toFormat("jpeg", { quality: 70, progressive: true }) // JPEG with quality 70
+      .toBuffer();
+
+    console.log("[OCR_COMPRESS] Compressed size:", compressedBuffer.length, "bytes");
+    console.log(
+      "[OCR_COMPRESS] Reduction:",
+      ((1 - compressedBuffer.length / imageBuffer.length) * 100).toFixed(1) + "%"
+    );
+
+    // Convert back to base64
+    return compressedBuffer.toString("base64");
+  } catch (error) {
+    console.error("[OCR_COMPRESS] Compression failed:", error);
+    // Return original if compression fails
+    return base64String;
+  }
+}
 
 // Helper function to get userId from session or JWT token
 async function getUserId(request: NextRequest): Promise<number | null> {
@@ -131,7 +167,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { base64Image } = body;
+    let { base64Image } = body;
 
     if (!base64Image) {
       return NextResponse.json(
@@ -140,12 +176,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    console.log("=== OCR REQUEST RECEIVED ===");
+    console.log("Original base64 image length:", base64Image.length);
+    console.log("Base64 first 100 chars:", base64Image.substring(0, 100));
+
+    // Compress image if it's too large (OCRSpace has 1MB limit)
+    const base64LengthMB = (base64Image.length * 0.75) / (1024 * 1024);
+    console.log("Estimated base64 size (MB):", base64LengthMB.toFixed(2));
+
+    if (base64LengthMB > 0.8) {
+      console.log("Image too large, compressing before sending to OCRSpace...");
+      base64Image = await compressImageForOCR(base64Image);
+      console.log("Compressed base64 length:", base64Image.length);
+    }
+
     // Format base64 image with data URI prefix as required by OCRSpace
     const base64ImageWithPrefix = `data:image/jpeg;base64,${base64Image}`;
 
-    console.log("=== OCR REQUEST RECEIVED ===");
-    console.log("Base64 image length:", base64Image.length);
-    console.log("Base64 first 100 chars:", base64Image.substring(0, 100));
     console.log("Sending OCR request to OCRSpace API");
 
     // OCRSpace language codes: fre (French), eng (English), spa (Spanish), deu (German), etc.

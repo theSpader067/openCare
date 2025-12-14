@@ -56,6 +56,25 @@ adapter.getUserByAccount = async (account) => {
   }
 }
 
+// Override linkAccount to handle string to int conversion for userId
+const originalLinkAccount = adapter.linkAccount!
+adapter.linkAccount = async (account) => {
+  try {
+    // Convert userId string to integer
+    const userId = typeof account.userId === 'string' ? parseInt(account.userId, 10) : account.userId
+    const accountData = {
+      ...account,
+      userId: userId,
+    }
+    await prisma.account.create({
+      data: accountData as any,
+    })
+  } catch (error) {
+    console.error("Error in linkAccount:", error)
+    throw error
+  }
+}
+
 // Override createUser to set default values for OAuth users
 const originalCreateUser = adapter.createUser!
 adapter.createUser = async (data) => {

@@ -896,7 +896,8 @@
       "emailPlaceholder": "prenom.nom@chu.fr",
       "passwordLabel": "Mot de passe",
       "passwordPlaceholder": "••••••••",
-      "rememberMe": "Se souvenir de moi",
+      "showPassword": "Afficher le mot de passe",
+      "hidePassword": "Masquer le mot de passe",
       "forgotPassword": "Mot de passe oublié ?",
       "loginButton": "Se connecter",
       "loggingIn": "Connexion en cours...",
@@ -917,6 +918,37 @@
         "expired": "Le lien de vérification a expiré. Veuillez en demander un nouveau.",
         "unexpected": "Une erreur inattendue s'est produite. Veuillez réessayer."
       }
+    },
+    "forgotPassword": {
+      "title": "Mot de passe oublié ?",
+      "subtitle": "Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.",
+      "sendLink": "Envoyer le lien",
+      "sending": "Envoi en cours...",
+      "backToLogin": "Retour à la connexion",
+      "checkEmail": "Vérifiez votre email",
+      "emailSent": "Nous avons envoyé un lien de réinitialisation à",
+      "instructions": "Cliquez sur le lien dans l'email pour créer un nouveau mot de passe. Le lien expirera dans 1 heure.",
+      "noEmail": "Vous n'avez pas reçu l'email ? Vérifiez votre dossier indésirable ou essayez une autre adresse.",
+      "tryAnother": "Essayer une autre adresse",
+      "noAccount": "Vous n'avez pas de compte ?",
+      "error": "Une erreur s'est produite. Veuillez réessayer."
+    },
+    "resetPassword": {
+      "title": "Réinitialiser votre mot de passe",
+      "subtitle": "Entrez un nouveau mot de passe pour votre compte.",
+      "confirmPasswordLabel": "Confirmer le mot de passe",
+      "passwordMinLength": "Le mot de passe doit contenir au moins 8 caractères.",
+      "passwordMismatch": "Les mots de passe ne correspondent pas.",
+      "passwordRequirement": "Le mot de passe doit contenir au moins 8 caractères. Utilisez une combinaison de majuscules, minuscules et chiffres pour plus de sécurité.",
+      "resetButton": "Réinitialiser mon mot de passe",
+      "resetting": "Réinitialisation en cours...",
+      "invalidToken": "Le lien de réinitialisation est invalide ou a expiré.",
+      "tokenExpired": "Lien expiré",
+      "requestNewLink": "Demander un nouveau lien",
+      "success": "Mot de passe réinitialisé !",
+      "successMessage": "Votre mot de passe a été réinitialisé avec succès. Vous allez être redirigé vers la page de connexion.",
+      "redirecting": "Redirection en cours...",
+      "error": "Une erreur s'est produite. Veuillez réessayer."
     },
     "signup": {
       "title": "Rejoignez la communauté des praticiens connectés",

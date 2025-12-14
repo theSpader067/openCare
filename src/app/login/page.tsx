@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Mail, ShieldCheck, LogIn, CheckCircle } from "lucide-react";
+import { Mail, ShieldCheck, LogIn, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signIn } from "next-auth/react"
 import { getLoginRedirectUrl } from "@/lib/utils";
@@ -15,6 +15,7 @@ function LoginPageContent() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -161,27 +162,43 @@ function LoginPageContent() {
                   >
                     {t('auth.login.passwordLabel')}
                   </label>
-                  <input
-                    id="password"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    placeholder={t('auth.login.passwordPlaceholder')}
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                  />
+                  <div className="relative">
+                    <input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      required
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      placeholder={t('auth.login.passwordPlaceholder')}
+                      className="w-full rounded-xl border border-slate-200 px-4 py-3 pr-12 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors"
+                      title={showPassword ? t('auth.login.hidePassword') : t('auth.login.showPassword')}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between text-xs text-slate-500">
-                  <label className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
+                      checked={showPassword}
+                      onChange={(e) => setShowPassword(e.target.checked)}
                       className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                     />
-                    {t('auth.login.rememberMe')}
+                    {t('auth.login.showPassword')}
                   </label>
-                  <Link href="#" className="font-semibold text-indigo-600 hover:underline">
+                  <Link href="/forgot-password" className="font-semibold text-indigo-600 hover:underline">
                     {t('auth.login.forgotPassword')}
                   </Link>
                 </div>

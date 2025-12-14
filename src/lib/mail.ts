@@ -2,6 +2,7 @@ import nodemailer from "nodemailer"
 import { generateVerificationEmailHTML, generateVerificationEmailText } from "./email-templates/verification-email"
 import { generateSignupNotificationHTML, generateSignupNotificationText } from "./email-templates/signup-notification"
 import { generateVerificationCodeHTML, generateVerificationCodeText } from "./email-templates/verification-code"
+import { generatePasswordResetEmailHTML, generatePasswordResetEmailText } from "./email-templates/password-reset-email"
 
 export const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_SERVER_HOST,
@@ -112,4 +113,35 @@ export async function sendSignupNotificationToAdmin(userName: string, userEmail:
     console.error("[EMAIL] ✗ Failed to send signup notification to admin:", error)
     // Don't throw error - this is a notification and shouldn't block signup
   }
+}
+
+export async function sendPasswordResetEmail(email: string, token: string, userName: string, language: string = 'en') {
+  const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`
+
+  const htmlContent = generatePasswordResetEmailHTML({
+    userName,
+    resetUrl,
+    language,
+  })
+
+  const textContent = generatePasswordResetEmailText({
+    userName,
+    resetUrl,
+    language,
+  })
+
+  const subjects = {
+    en: "🔐 Reset your password - OpenCare",
+    fr: "🔐 Réinitialisez votre mot de passe - OpenCare"
+  }
+
+  const subject = subjects[language as 'en' | 'fr'] || subjects.en
+
+  await transporter.sendMail({
+    from: `"OpenCare" <${process.env.EMAIL_FROM || process.env.EMAIL_SERVER_USER}>`,
+    to: email,
+    subject,
+    html: htmlContent,
+    text: textContent,
+  })
 }

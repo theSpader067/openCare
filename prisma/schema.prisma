@@ -295,6 +295,17 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model PasswordResetToken {
+  identifier String   @id @default(cuid())
+  token      String   @unique
+  email      String
+  expires    DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([email])
+  @@index([expires])
+}
+
 model VerificationCode {
   id        Int       @id @default(autoincrement())
   email     String    @unique

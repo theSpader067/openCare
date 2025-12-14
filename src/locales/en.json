@@ -295,7 +295,8 @@
       "emailPlaceholder": "firstname.lastname@hospital.com",
       "passwordLabel": "Password",
       "passwordPlaceholder": "••••••••",
-      "rememberMe": "Remember me",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
       "forgotPassword": "Forgot password?",
       "loginButton": "Sign In",
       "loggingIn": "Signing in...",
@@ -316,6 +317,37 @@
         "expired": "Verification link has expired. Please request a new one.",
         "unexpected": "An unexpected error occurred. Please try again."
       }
+    },
+    "forgotPassword": {
+      "title": "Forgot your password?",
+      "subtitle": "Enter your email address and we'll send you a link to reset your password.",
+      "sendLink": "Send Reset Link",
+      "sending": "Sending...",
+      "backToLogin": "Back to login",
+      "checkEmail": "Check your email",
+      "emailSent": "We've sent a password reset link to",
+      "instructions": "Click the link in the email to create a new password. The link will expire in 1 hour.",
+      "noEmail": "Didn't receive the email? Check your spam folder or try a different email address.",
+      "tryAnother": "Try another email",
+      "noAccount": "Don't have an account?",
+      "error": "An error occurred. Please try again."
+    },
+    "resetPassword": {
+      "title": "Reset your password",
+      "subtitle": "Enter a new password for your account.",
+      "confirmPasswordLabel": "Confirm Password",
+      "passwordMinLength": "Password must be at least 8 characters long.",
+      "passwordMismatch": "Passwords do not match.",
+      "passwordRequirement": "Password must be at least 8 characters long. Use a combination of uppercase, lowercase, and numbers for better security.",
+      "resetButton": "Reset Password",
+      "resetting": "Resetting...",
+      "invalidToken": "The password reset link is invalid or has expired.",
+      "tokenExpired": "Link Expired",
+      "requestNewLink": "Request New Link",
+      "success": "Password reset successfully!",
+      "successMessage": "Your password has been reset successfully. You will be redirected to the login page.",
+      "redirecting": "Redirecting...",
+      "error": "An error occurred. Please try again."
     },
     "signup": {
       "title": "Join the connected practitioners community",

@@ -6,7 +6,30 @@ import type { TaskItem } from "@/types/tasks";
 import { taskServerAnalytics } from "@/lib/server-analytics";
 
 // Helper function to convert Prisma Task to TaskItem
-function convertTaskToTaskItem(task: any): TaskItem {
+async function convertTaskToTaskItem(task: any): Promise<TaskItem> {
+  let teams:any[] = [];
+
+  // Parse teamsData JSON and fetch team details if available
+  if (task.teamsData) {
+    try {
+      const teamIds = JSON.parse(task.teamsData);
+      if (Array.isArray(teamIds) && teamIds.length > 0) {
+        const teamRecords = await prisma.team.findMany({
+          where: {
+            id: { in: teamIds },
+          },
+          select: {
+            id: true,
+            name: true,
+          },
+        });
+        teams = teamRecords;
+      }
+    } catch (error) {
+      console.error("Error parsing teams data:", error);
+    }
+  }
+
   return {
     id: task.id.toString(),
     title: task.title,
@@ -17,6 +40,7 @@ function convertTaskToTaskItem(task: any): TaskItem {
     patientAge: task.patientAge || undefined,
     patientHistory: task.patientHistory || undefined,
     taskType: task.isPrivate ? "private" : "team",
+    teams: teams,
   };
 }
 
@@ -87,7 +111,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    const convertedTasks = tasks.map(convertTaskToTaskItem);
+    const convertedTasks = await Promise.all(tasks.map(convertTaskToTaskItem));
     return NextResponse.json({ success: true, data: convertedTasks });
   } catch (error) {
     console.error("Error fetching tasks:", error);
@@ -127,7 +151,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, isPrivate = false, patientId, patientName, patientAge, patientHistory } = body;
+    const { title, isPrivate = false, patientId, patientName, patientAge, patientHistory, teamIds = [] } = body;
 
     console.log("API received task data:", {
       title,
@@ -136,6 +160,9 @@ export async function POST(request: NextRequest) {
       patientName,
       patientAge,
       patientHistory,
+      teamIds,
+      teamIdsType: typeof teamIds,
+      teamIdsArray: Array.isArray(teamIds),
       fullBody: body
     });
 
@@ -154,28 +181,33 @@ export async function POST(request: NextRequest) {
       isComplete: false,
     };
 
+    // Store teams as JSON if provided
+    if (Array.isArray(teamIds) && teamIds.length > 0) {
+      taskData.teamsData = JSON.stringify(teamIds);
+    }
+
     // If an existing patient is selected, use patientId
     if (patientId) {
       taskData.patientId = parseInt(patientId);
-    } else {
-      // Otherwise, store patient name and history if provided
-      if (patientName) {
-        const trimmedName = String(patientName).trim();
-        if (trimmedName) {
-          taskData.patientName = trimmedName;
-        }
+    }
+
+    // Always store patient name and history if provided
+    if (patientName) {
+      const trimmedName = String(patientName).trim();
+      if (trimmedName) {
+        taskData.patientName = trimmedName;
       }
-      if (patientAge) {
-        const trimmedAge = String(patientAge).trim();
-        if (trimmedAge) {
-          taskData.patientAge = trimmedAge;
-        }
+    }
+    if (patientAge) {
+      const trimmedAge = String(patientAge).trim();
+      if (trimmedAge) {
+        taskData.patientAge = trimmedAge;
       }
-      if (patientHistory) {
-        const trimmedHistory = String(patientHistory).trim();
-        if (trimmedHistory) {
-          taskData.patientHistory = trimmedHistory;
-        }
+    }
+    if (patientHistory) {
+      const trimmedHistory = String(patientHistory).trim();
+      if (trimmedHistory) {
+        taskData.patientHistory = trimmedHistory;
       }
     }
 
@@ -195,9 +227,10 @@ export async function POST(request: NextRequest) {
       patientName: task.patientName || undefined,
     });
 
+    const convertedTask = await convertTaskToTaskItem(task);
     return NextResponse.json({
       success: true,
-      data: convertTaskToTaskItem(task)
+      data: convertedTask
     });
   } catch (error) {
     console.error("Error creating task:", error);

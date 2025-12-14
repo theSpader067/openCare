@@ -123,6 +123,7 @@ model Task {
   patientHistory  String?   @db.Text
   isPrivate       Boolean   @default(false)
   isComplete      Boolean   @default(false)
+  teamsData       String?   @db.Text
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 }

@@ -454,7 +454,7 @@ export default function TasksPage() {
     }
   };
 
-  const handleTaskAdd = async (formData: { titles: string[]; taskType?: "team" | "private"; patientId?: string | number; patientName?: string; patientAge?: string; patientHistory?: string }) => {
+  const handleTaskAdd = async (formData: { titles: string[]; taskType?: "team" | "private"; teamIds?: number[]; patientId?: string | number; patientName?: string; patientAge?: string; patientHistory?: string }) => {
     const createdTasks: TaskItem[] = [];
     try {
       // Create a task for each title
@@ -462,6 +462,7 @@ export default function TasksPage() {
         const result = await createTask({
           title: title.trim(),
           isPrivate: formData.taskType === "private",
+          teamIds: formData.teamIds || [],
           patientId: formData.patientId,
           patientName: formData.patientName,
           patientAge: formData.patientAge,

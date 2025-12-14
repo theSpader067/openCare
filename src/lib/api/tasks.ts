@@ -10,6 +10,7 @@ export async function createTask({
   patientName,
   patientAge,
   patientHistory,
+  teamIds = [],
 }: {
   title: string;
   isPrivate?: boolean;
@@ -17,6 +18,7 @@ export async function createTask({
   patientName?: string;
   patientAge?: string;
   patientHistory?: string;
+  teamIds?: number[];
 }): Promise<{ success: boolean; data?: TaskItem; error?: string }> {
   try {
     const response = await fetch("/api/tasks", {
@@ -24,7 +26,7 @@ export async function createTask({
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ title, isPrivate, patientId, patientName, patientAge, patientHistory }),
+      body: JSON.stringify({ title, isPrivate, patientId, patientName, patientAge, patientHistory, teamIds }),
     });
 
     const result = await response.json();

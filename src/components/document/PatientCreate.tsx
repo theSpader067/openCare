@@ -171,8 +171,12 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
               filteredPatients.map((patient) => (
                 <button
                   key={patient.id}
-                  onClick={() => onSelectPatient(patient)}
-                  className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition"
+                  type="button"
+                  onClick={() => {
+                    console.log("PatientCreate: Clicked patient", patient);
+                    onSelectPatient(patient);
+                  }}
+                  className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition cursor-pointer"
                 >
                   <p className="font-medium text-slate-900">
                     {patient.fullName} <span className="text-slate-400">({(patient as any).pid || patient.id})</span>

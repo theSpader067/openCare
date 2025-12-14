@@ -6,7 +6,30 @@ import type { TaskItem } from "@/types/tasks";
 import { taskServerAnalytics } from "@/lib/server-analytics";
 
 // Helper function to convert Prisma Task to TaskItem
-function convertTaskToTaskItem(task: any): TaskItem {
+async function convertTaskToTaskItem(task: any): Promise<TaskItem> {
+  let teams:any[] = [];
+
+  // Parse teamsData JSON and fetch team details if available
+  if (task.teamsData) {
+    try {
+      const teamIds = JSON.parse(task.teamsData);
+      if (Array.isArray(teamIds) && teamIds.length > 0) {
+        const teamRecords = await prisma.team.findMany({
+          where: {
+            id: { in: teamIds },
+          },
+          select: {
+            id: true,
+            name: true,
+          },
+        });
+        teams = teamRecords;
+      }
+    } catch (error) {
+      console.error("Error parsing teams data:", error);
+    }
+  }
+
   return {
     id: task.id.toString(),
     title: task.title,
@@ -17,6 +40,7 @@ function convertTaskToTaskItem(task: any): TaskItem {
     patientAge: task.patientAge || undefined,
     patientHistory: task.patientHistory || undefined,
     taskType: task.isPrivate ? "private" : "team",
+    teams: teams,
   };
 }
 
@@ -46,7 +70,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { titles, isPrivate = false, patientId, patientName, patientAge, patientHistory } = body;
+    const { titles, isPrivate = false, patientId, patientName, patientAge, patientHistory, teamIds = [] } = body;
 
     console.log("Batch task API received data:", {
       titles,
@@ -55,6 +79,7 @@ export async function POST(request: NextRequest) {
       patientName,
       patientAge,
       patientHistory,
+      teamIds,
     });
 
     // Validate titles array
@@ -82,28 +107,33 @@ export async function POST(request: NextRequest) {
       isComplete: false,
     };
 
+    // Store teams as JSON if provided
+    if (Array.isArray(teamIds) && teamIds.length > 0) {
+      baseTaskData.teamsData = JSON.stringify(teamIds);
+    }
+
     // If an existing patient is selected, use patientId
     if (patientId) {
       baseTaskData.patientId = parseInt(patientId);
-    } else {
-      // Otherwise, store patient name and history if provided
-      if (patientName) {
-        const trimmedName = String(patientName).trim();
-        if (trimmedName) {
-          baseTaskData.patientName = trimmedName;
-        }
+    }
+
+    // Always store patient name and history if provided
+    if (patientName) {
+      const trimmedName = String(patientName).trim();
+      if (trimmedName) {
+        baseTaskData.patientName = trimmedName;
       }
-      if (patientAge) {
-        const trimmedAge = String(patientAge).trim();
-        if (trimmedAge) {
-          baseTaskData.patientAge = trimmedAge;
-        }
+    }
+    if (patientAge) {
+      const trimmedAge = String(patientAge).trim();
+      if (trimmedAge) {
+        baseTaskData.patientAge = trimmedAge;
       }
-      if (patientHistory) {
-        const trimmedHistory = String(patientHistory).trim();
-        if (trimmedHistory) {
-          baseTaskData.patientHistory = trimmedHistory;
-        }
+    }
+    if (patientHistory) {
+      const trimmedHistory = String(patientHistory).trim();
+      if (trimmedHistory) {
+        baseTaskData.patientHistory = trimmedHistory;
       }
     }
 
@@ -132,7 +162,8 @@ export async function POST(request: NextRequest) {
         patientName: task.patientName || undefined,
       });
 
-      createdTasks.push(convertTaskToTaskItem(task));
+      const convertedTask = await convertTaskToTaskItem(task);
+      createdTasks.push(convertedTask);
     }
 
     console.log(`Successfully created ${createdTasks.length} tasks`);

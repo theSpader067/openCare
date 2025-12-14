@@ -4,6 +4,11 @@ export type ActivityType = "consultation" | "chirurgie" | "staff" | "tournee";
 export type ActivityStatus = "done" | "todo";
 export type TaskType = "team" | "private";
 
+export interface Team {
+  id: number;
+  name: string;
+}
+
 export interface TaskItem {
   id: string;
   title: string;
@@ -14,6 +19,7 @@ export interface TaskItem {
   patientAge?: string;
   patientHistory?: string;
   taskType?: TaskType;
+  teams?: Team[];
   participants?: User[];
 }
 

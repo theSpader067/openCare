@@ -5,7 +5,7 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 // Public routes that don't require authentication
-const PUBLIC_ROUTES = ["/", "/login", "/signup", "/verify-email", "/verify-email-pending"]
+const PUBLIC_ROUTES = ["/", "/login", "/signup", "/verify-email", "/verify-email-pending", "/forgot-password", "/reset-password"]
 
 export default withAuth(
   function middleware(req: NextRequest & { nextauth: { token: any } }) {

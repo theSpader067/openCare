@@ -10,6 +10,52 @@ const prisma = new PrismaClient()
 // Create adapter and customize for Google OAuth
 const adapter = PrismaAdapter(prisma)
 
+// Override getUser to handle string to int conversion
+const originalGetUser = adapter.getUser!
+adapter.getUser = async (id) => {
+  try {
+    const userId = typeof id === 'string' ? parseInt(id, 10) : id
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    })
+    if (!user) return null
+    return {
+      ...user,
+      id: user.id.toString(), // Convert number id to string for adapter
+      emailVerified: user.emailVerified ? new Date() : null,
+    } as any
+  } catch (error) {
+    console.error("Error in getUser:", error)
+    return null
+  }
+}
+
+// Override getUserByAccount to handle string to int conversion
+const originalGetUserByAccount = adapter.getUserByAccount!
+adapter.getUserByAccount = async (account) => {
+  try {
+    const accountRecord = await prisma.account.findUnique({
+      where: {
+        provider_providerAccountId: {
+          provider: account.provider,
+          providerAccountId: account.providerAccountId,
+        },
+      },
+      include: { user: true },
+    })
+    if (!accountRecord?.user) return null
+    const user = accountRecord.user
+    return {
+      ...user,
+      id: user.id.toString(), // Convert number id to string for adapter
+      emailVerified: user.emailVerified ? new Date() : null,
+    } as any
+  } catch (error) {
+    console.error("Error in getUserByAccount:", error)
+    return null
+  }
+}
+
 // Override createUser to set default values for OAuth users
 const originalCreateUser = adapter.createUser!
 adapter.createUser = async (data) => {

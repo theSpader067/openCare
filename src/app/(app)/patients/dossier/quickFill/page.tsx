@@ -815,13 +815,15 @@ ${patient.motif}
     try {
       const requestPayload = {
         patientId: patient?.id,
+        profileKey: profileType,
+        clinicalExams: {},
         examSelections,
         hemodynamicsData,
         paracliniques,
         traitements,
       };
 
-      console.log('DEBUG: Sending to API:', JSON.stringify(requestPayload));
+      console.log('DEBUG: Sending to API:', JSON.stringify(requestPayload, null, 2));
 
       const response = await fetch("/api/generateQFobservation", {
         method: "POST",
@@ -834,16 +836,26 @@ ${patient.motif}
       if (!response.ok) {
         const errorData = await response.json();
         console.error("Error generating observation:", errorData);
+        alert(`Error: ${errorData.error || 'Failed to generate observation'}`);
         setIsCreating(false);
         return;
       }
 
       const result = await response.json();
-      if (result.success && result.data.observation) {
+      console.log('DEBUG: API Response:', result);
+
+      if (result.success && result.data && result.data.observation) {
+        console.log('DEBUG: Setting observation:', result.data.observation.substring(0, 100));
         setObservation(result.data.observation);
+        // Don't set isSaved here - let user edit in Quill editor first
+        // isSaved will be set to true only after clicking Save button
+      } else {
+        console.error('DEBUG: Unexpected response format:', result);
+        alert('Observation generated but response format was unexpected');
       }
     } catch (error) {
       console.error("Error calling generateQFobservation API:", error);
+      alert(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsCreating(false);
     }
@@ -1034,7 +1046,7 @@ ${patient.motif}
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column: Clinical Exams with Tabs */}
-        <div className="space-y-3 flex flex-col h-full min-h-screen lg:min-h-auto">
+        <div className="space-y-3 flex flex-col h-full min-h-screen lg:min-h-auto overflow-x-hidden">
           <h3 className="text-sm font-semibold text-slate-800 px-1">
             {t("patients.dossier.clinicalExams")}
           </h3>
@@ -1180,8 +1192,12 @@ ${patient.motif}
                           </div>
                         </div>
 
-                        {/* Row 2: GCS, FR, SaO2 */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {/* Row 2: Plan Neurologique and Plan Respiratoire */}
+                        <div className="space-y-3">
+                          <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
+                            {t("patients.dossier.planNeurologique")}
+                          </h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                           <div className="space-y-1">
                             <label className="text-xs font-medium text-slate-600">
                               GCS
@@ -1229,9 +1245,14 @@ ${patient.motif}
                             />
                           </div>
                         </div>
+                        </div>
 
-                        {/* Row 3: T°, Dextro */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {/* Row 3: Plan Autre (T°, Dextro, BU) */}
+                        <div className="space-y-3">
+                          <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
+                            Autres paramètres
+                          </h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                           <div className="space-y-1">
                             <label className="text-xs font-medium text-slate-600">
                               T°
@@ -1368,6 +1389,7 @@ ${patient.motif}
                           </div>
                         )}
                       </div>
+                    </div>
 
                       {/* État général */}
                       <div className="space-y-2">
@@ -1449,10 +1471,11 @@ ${patient.motif}
                         return (
                           <div key={section} className="space-y-2">
                             <h5 className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                              {section === "inspection" && t("patients.dossier.inspection")}
-                              {section === "palpation" && t("patients.dossier.palpation")}
-                              {section === "percussion" && t("patients.dossier.percussion")}
-                              {section === "auscultation" && t("patients.dossier.auscultation")}
+                              {(() => {
+                                const translationKey = `patients.dossier.${section.toLowerCase().replace(/ /g, '')}`;
+                                const translatedName = t(translationKey, { defaultValue: section });
+                                return translatedName === translationKey ? section.charAt(0).toUpperCase() + section.slice(1) : translatedName;
+                              })()}
                             </h5>
                             <div className="flex flex-wrap gap-2">
                               {signs.map((sign: string) => {
@@ -1943,7 +1966,7 @@ ${patient.motif}
                 </div>
               </div>
             ) : (
-              <div className="w-full bg-white rounded-lg border border-slate-200 flex flex-col">
+              <div className="w-full h-full bg-white rounded-lg border border-slate-200 flex flex-col overflow-hidden">
                 <QuillEditor
                   value={observation || ""}
                   onChange={setObservation}

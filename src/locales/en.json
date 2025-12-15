@@ -128,6 +128,10 @@
       "insights": {
         "consultation": "Consultation Time",
         "complete": "Complete Observations"
+      },
+      "tabs": {
+        "apercu": "Overview",
+        "parcours": "Timeline"
       }
     },
     "editor": {
@@ -473,18 +477,24 @@
       "noObservations": "No observations recorded for this patient.",
       "noPatients": "No patients assigned",
       "noPatientsDesc": "Once patients are assigned to your service, they will appear here.",
-      "noHistory": "No history declared"
+      "noHistory": "No history declared",
+      "noTimeline": "No timeline events available"
     },
     "buttons": {
-      "exportReport": "Export a report",
       "newPatient": "New patient",
       "createPatient": "Create a patient",
       "carePathway": "Care Pathway",
       "visitFile": "Visit file",
+      "exportReport": "Download documents",
+      "observationType": "Observation type",
+      "reportType": "Report type",
+      "downloadObservations": "Download observations",
+      "downloadDocuments": "Download documents",
       "previous": "Previous",
       "next": "Next",
       "showMore": "Show more",
-      "importFromEMR": "Import from EMR"
+      "importFromEMR": "Import from EMR",
+      "addObservation": "Add observation"
     },
     "section": {
       "mainDiagnosis": "Main Diagnosis",
@@ -498,7 +508,15 @@
       "patientId": "Patient ID",
       "nextFollowUp": "Planned follow-up",
       "entries": "entries",
-      "analyzingFile": "Analyzing patient file..."
+      "analyzingFile": "Analyzing patient file...",
+      "loadingTimeline": "Loading timeline...",
+      "loadingFiles": "Loading files..."
+    },
+    "timeline": {
+      "hospitalization": "Hospitalization",
+      "analysis": "Analysis",
+      "ordonnance": "Prescription",
+      "rapport": "Report"
     },
     "table": {
       "headers": {
@@ -601,6 +619,7 @@
       "percussion": "Percussion",
       "auscultation": "Auscultation",
       "additionalSigns": "Additional Signs",
+      "loadingPatientData": "Loading patient data...",
       "exams": {
         "examenGeneral": "General Exam",
         "abdominal": "Abdominal",
@@ -631,9 +650,11 @@
       "to": "To",
       "reset": "Reset"
     },
-    "tabs": {
+    "tabs": {   
       "existing": "Existing",
-      "new": "New"
+      "new": "New",
+      "apercu": "Overview",
+      "timeline": "Timeline"
     },
     "create": {
       "searchPlaceholder": "Search for a patient...",

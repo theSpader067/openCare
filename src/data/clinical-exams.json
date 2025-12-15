@@ -145,7 +145,7 @@
         },
         "Neurologique": {
           "label": "Neurologique",
-          "sections": ["réactivité"," tonus et posture", "reflexes archaiques", "reflexes ostéotendineux","motricité spontannée", "sensibilité","nerfs craniens", "coordination et équilibre","développement neuromoteur"],
+          "sections": ["état général et réactivité", "tonus et posture", "réflexes archaïques", "réflexes ostéo-tendineux", "motricité spontanée", "sensibilité", "nerfs crâniens", "coordination et équilibre", "développement neuro-moteur"],
           "content": {
             "état général et réactivité": [
     "Réactivité normale aux stimulations",

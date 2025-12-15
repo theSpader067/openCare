@@ -13,6 +13,8 @@ import {
   X,
   Clock,
   ChevronRight,
+  ChevronDown,
+  Download,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +28,7 @@ import { ObservationTimeline } from "./observation-timeline";
 import { PatientFilters } from "./patient-filters";
 import { Patient } from "@/types/document";
 import { HistoryGroup, PatientStatus, PatientType } from "@/data/patients/patients-data";
+import { PatientPreviewWithTabs } from "./patient-preview-with-tabs";
 
 
 const uniqueStatuses:PatientStatus[] = ['Hospitalisé', 'Consultation', 'Suivi']
@@ -114,6 +117,7 @@ export default function PatientsPage() {
   const [editPatient, setEditPatient] = useState<Patient | null>(null);
   const [editForm, setEditForm] = useState<Patient | null>(null);
   const [toDeletePatient, setToDeletePatient] = useState<Patient | null>(null);
+  const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
   const [patientsLoading, setPatientsLoading] = useState(true);
   const [filters, setFilters] = useState({
     query: "",
@@ -197,7 +201,7 @@ export default function PatientsPage() {
       const query = filters.query.toLowerCase();
       result = result.filter(
         (patient) =>
-          patient.name.toLowerCase().includes(query) ||
+          patient.fullName.toLowerCase().includes(query) ||
           patient.id.toLowerCase().includes(query),
       );
     }
@@ -314,50 +318,99 @@ export default function PatientsPage() {
     }
   };
 
-  const renderPreviewContent = (variant: "desktop" | "mobile") => {
-    if (patientsLoading) {
-      return (
-        <div className="flex h-64 items-center justify-center">
-          <Spinner label={t("patients.labels.analyzingFile")} />
-        </div>
-      );
-    }
+  const handleExportObservationTypePDF = async () => {
+    try {
+      setExportDropdownOpen(false);
 
-    if (patientsData.length === 0) {
-      return (
-        <EmptyState
-          icon={UserRound}
-          title={t("patients.empty.noProfiles")}
-          description={t("patients.empty.noProfilesDesc")}
-          action={
-            variant === "desktop" ? (
-              <Button
-                variant="primary"
-                onClick={() => router.push("/patients/dossier?mode=create")}
-              >
-                {t("patients.buttons.createPatient")}
-              </Button>
-            ) : null
-          }
-        />
-      );
+      // Download the observation PDF file
+      const link = document.createElement('a');
+      link.href = '/Observation_Opencare.pdf';
+      link.download = 'Observation_Opencare.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error downloading observation PDF:', error);
+      alert('Error downloading observation PDF. Please try again.');
     }
+  };
 
+  const handleExportReportType = async () => {
+    if (!selectedPatient) return;
+
+    try {
+      setExportDropdownOpen(false);
+
+      // Fetch all observations for the patient
+      const response = await fetch(`/api/patients/${selectedPatient.id}/observations`);
+      if (!response.ok) {
+        alert('Failed to fetch observations');
+        return;
+      }
+
+      const data = await response.json();
+      const observations = data.data || [];
+
+      if (observations.length === 0) {
+        alert('No observations found for this patient');
+        return;
+      }
+
+      // Build HTML content from observations
+      const htmlContent = `
+        <h1>Observations Médicales</h1>
+        <p><strong>Patient:</strong> ${selectedPatient.fullName}</p>
+        <p><strong>ID:</strong> ${selectedPatient.id}</p>
+        <p><strong>Date:</strong> ${new Date().toLocaleDateString('fr-FR')}</p>
+        <hr />
+        ${observations.map((obs: any) => `
+          <div style="margin-top: 20px; padding: 10px; border: 1px solid #ddd;">
+            <p><strong>Date:</strong> ${new Date(obs.createdAt).toLocaleDateString('fr-FR')}</p>
+            <div>${obs.observation || 'No content'}</div>
+          </div>
+        `).join('')}
+      `;
+
+      // Send to PDF API
+      const pdfResponse = await fetch('/api/generatePDF', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          htmlContent: htmlContent,
+          filename: `Observations_${selectedPatient.fullName}_${new Date().toISOString().split('T')[0]}.pdf`,
+          patientId: selectedPatient.id,
+          observationCount: observations.length
+        })
+      });
+
+      if (!pdfResponse.ok) {
+        throw new Error('Failed to generate PDF');
+      }
+
+      const pdfBlob = await pdfResponse.blob();
+      const url = window.URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Observations_${selectedPatient.fullName}_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    }
+  };
+
+  const renderPatientHeader = () => {
     if (!selectedPatient) {
-      return (
-        <EmptyState
-          icon={UserRound}
-          title={t("patients.empty.selectPatient")}
-          description={t("patients.empty.selectPatientDesc")}
-        />
-      );
+      return null;
     }
 
     const statusBadgeClass = STATUS_BADGE_CLASSES[selectedPatient.status as PatientStatus];
 
     return (
-      <div className="flex flex-col gap-6 pb-6">
-        <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm">
+      <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-5">
             <div className="flex items-start justify-between gap-4">
               <div className="flex w-full gap-2">
@@ -367,7 +420,7 @@ export default function PatientsPage() {
               </div>
               <div className="flex flex-col gap-2">
               <h2 className="text-xl font-semibold text-slate-900">
-                    {selectedPatient.name}
+                    {selectedPatient.fullName}
                   </h2>
                   <span className="text-xs font-semibold text-slate-600">
                     {selectedPatient.pid}
@@ -388,6 +441,7 @@ export default function PatientsPage() {
               >
                 {t("patients.buttons.visitFile")}
               </Button>
+
             </div>
 
             </div>
@@ -426,21 +480,16 @@ export default function PatientsPage() {
               </div>
           </div>
         </section>
+    )
+  };
 
-        {/* Care Pathway Text Button */}
-        <div className="flex items-center justify-start">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              router.push(`/timeline?id=${selectedPatient.pid}`);
-            }}
-            className="text-sm text-indigo-600 font-medium hover:underline transition-all flex items-center gap-1 group"
-          >
-            {t("patients.buttons.carePathway")}
-            <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-          </button>
-        </div>
+  const renderPatientContent = () => {
+    if (!selectedPatient) {
+      return null;
+    }
 
+    return (
+      <div className="flex flex-col gap-6">
         <section className="rounded-3xl border border-slate-200/70 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-5">
             <div>
@@ -564,10 +613,10 @@ export default function PatientsPage() {
                 </span>
                 <button
                   onClick={() => router.push(`/patients/dossier/quickFill?id=${selectedPatient.id}`)}
-                  className="text-sm text-slate-700 hover:text-indigo-600 hover:underline transition-colors flex items-center gap-1 group"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-sm font-medium rounded-lg transition-colors"
                 >
                   Ajout rapide
-                  <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
             </header>
@@ -598,19 +647,25 @@ export default function PatientsPage() {
                           </span>
                         </div>
                         <div className="rounded-lg bg-slate-50 border border-slate-200 p-3">
-                            {observation.note.length > 150
-                              ? `${observation.note.includes("<") ? (
-                                <div
-                                  className="text-sm text-slate-700 leading-relaxed [&_p]:m-0 [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-lg [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_strong]:font-semibold [&_em]:italic [&_u]:underline"
-                                  dangerouslySetInnerHTML={{ __html: observation.note.substring(0,150) }}
-                                />
-                              ) : (
-                                <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
-                                  {observation.note.substring(0,150)}
+                            {observation.note.length > 150 ? (
+                              <>
+                                {observation.note.includes("<") ? (
+                                  <div
+                                    className="text-sm text-slate-700 leading-relaxed [&_p]:m-0 [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-lg [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_strong]:font-semibold [&_em]:italic [&_u]:underline"
+                                    dangerouslySetInnerHTML={{ __html: observation.note.substring(0, 150) }}
+                                  />
+                                ) : (
+                                  <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                                    {observation.note.substring(0, 150)}
+                                  </p>
+                                )}
+                                <p className="text-xs text-indigo-600 font-medium mt-2">
+                                  {t("patients.buttons.showMore")}
                                 </p>
-                              )}}...`
-                              :
-                                observation.note.includes("<") ? (
+                              </>
+                            ) : (
+                              <>
+                                {observation.note.includes("<") ? (
                                   <div
                                     className="text-sm text-slate-700 leading-relaxed [&_p]:m-0 [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-lg [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_strong]:font-semibold [&_em]:italic [&_u]:underline"
                                     dangerouslySetInnerHTML={{ __html: observation.note }}
@@ -620,12 +675,8 @@ export default function PatientsPage() {
                                     {observation.note}
                                   </p>
                                 )}
-
-                          {observation.note.length > 150 && (
-                            <p className="text-xs text-indigo-600 font-medium mt-2">
-                              {t("patients.buttons.showMore")}
-                            </p>
-                          )}
+                              </>
+                            )}
                         </div>
                       </div>
                     </div>
@@ -644,6 +695,55 @@ export default function PatientsPage() {
     );
   };
 
+  const renderPreviewContent = (variant: "desktop" | "mobile") => {
+    if (patientsLoading) {
+      return (
+        <div className="flex h-64 items-center justify-center">
+          <Spinner label={t("patients.labels.analyzingFile")} />
+        </div>
+      );
+    }
+
+    if (patientsData.length === 0) {
+      return (
+        <EmptyState
+          icon={UserRound}
+          title={t("patients.empty.noProfiles")}
+          description={t("patients.empty.noProfilesDesc")}
+          action={
+            variant === "desktop" ? (
+              <Button
+                variant="primary"
+                onClick={() => router.push("/patients/dossier?mode=create")}
+              >
+                {t("patients.buttons.createPatient")}
+              </Button>
+            ) : null
+          }
+        />
+      );
+    }
+
+    if (!selectedPatient) {
+      return (
+        <EmptyState
+          icon={UserRound}
+          title={t("patients.empty.selectPatient")}
+          description={t("patients.empty.selectPatientDesc")}
+        />
+      );
+    }
+
+    return (
+      <PatientPreviewWithTabs
+        selectedPatient={selectedPatient}
+        renderPatientHeader={renderPatientHeader}
+        renderPatientContent={renderPatientContent}
+        variant={variant}
+        t={t}
+      />
+    );
+  };
 
   return (
     <div className="space-y-6 pb-20 lg:pb-0">
@@ -657,10 +757,34 @@ export default function PatientsPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline">
-            <FileText className="mr-2 h-4 w-4" />
-           {t('patients.buttons.exportReport')}
-          </Button>
+          <div className="relative">
+            <Button
+              variant="outline"
+              onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
+              className="w-full sm:w-auto"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              {t('patients.buttons.exportReport')}
+              <ChevronDown className="h-4 w-4 ml-2" />
+            </Button>
+
+            {exportDropdownOpen && (
+              <div className="absolute left-0 right-0 sm:left-0 sm:right-auto mt-2 min-w-full sm:min-w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-10">
+                <button
+                  className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 rounded-t-lg border-b border-slate-100"
+                  onClick={() => handleExportObservationTypePDF()}
+                >
+                  {t("patients.buttons.observationType")}
+                </button>
+                <button
+                  className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 rounded-b-lg"
+                  onClick={() => handleExportReportType()}
+                >
+                  {t("patients.buttons.reportType")}
+                </button>
+              </div>
+            )}
+          </div>
           <Button
             variant="primary"
             onClick={() => router.push("/patients/dossier?mode=create")}
@@ -775,7 +899,7 @@ export default function PatientsPage() {
                         <td className="px-4 py-3">
                           <div className="flex flex-col gap-2">
                             <span className="font-medium text-slate-800">
-                              {patient.name}
+                              {patient.fullName}
                             </span>
                             <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                               <span>{patient.age} ans</span>
@@ -832,7 +956,7 @@ export default function PatientsPage() {
                                 event.stopPropagation();
                                 setToDeletePatient(patient);
                               }}
-                              aria-label={`Supprimer ${patient.name}`}
+                              aria-label={`Supprimer ${patient.fullName}`}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -897,7 +1021,7 @@ export default function PatientsPage() {
           setEditForm(null);
         }}
         title={
-          editPatient ? t("patients.modal.editPatient", { name: editPatient.name }) : undefined
+          editPatient ? t("patients.modal.editPatient", { name: editPatient.fullName }) : undefined
         }
         description={t("patients.modal.editDesc")}
         footer={
@@ -1059,7 +1183,7 @@ export default function PatientsPage() {
         onClose={() => setToDeletePatient(null)}
         title={
           toDeletePatient
-            ? t("patients.modal.deleteConfirm", { name: toDeletePatient.name })
+            ? t("patients.modal.deleteConfirm", { name: toDeletePatient.fullName })
             : t("patients.modal.deleteConfirmFallback")
         }
         description={t("patients.modal.deleteDesc")}
@@ -1080,7 +1204,7 @@ export default function PatientsPage() {
         {toDeletePatient ? (
           <div className="space-y-3 text-sm text-slate-600">
             <p>
-              {t("patients.modal.deleteMessage", { name: toDeletePatient.name, id: toDeletePatient.id })}
+              {t("patients.modal.deleteMessage", { name: toDeletePatient.fullName, id: toDeletePatient.id })}
             </p>
             <p>
               {t("patients.modal.deleteWarning")}

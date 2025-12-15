@@ -66,6 +66,16 @@ export function QuillEditor({ value, onChange, readOnly = false }: QuillEditorPr
     };
   }, []);
 
+  // Update content when value prop changes
+  useEffect(() => {
+    if (editorRef.current && value && isInitializedRef.current) {
+      const currentContent = editorRef.current.root.innerHTML;
+      if (currentContent !== value) {
+        editorRef.current.root.innerHTML = value;
+      }
+    }
+  }, [value]);
+
   return (
     <div className="w-full h-full flex flex-col">
       <style>{`

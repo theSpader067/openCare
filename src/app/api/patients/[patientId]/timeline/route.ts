@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
+import { authConfig } from "@/app/api/auth/[...nextauth]/route";
 import { verifyMobileToken } from "@/lib/mobile-auth";
 
 const prisma = new PrismaClient();
@@ -27,12 +28,16 @@ async function getUserId(request: NextRequest): Promise<number | null> {
   }
 
   // Fall back to NextAuth session (web)
-  const session = await getServerSession();
-  if (session?.user?.email) {
-    console.log('[timeline] NextAuth session found for:', session.user.email);
-    // For web sessions, we'd need to get the userId from the session
-    // This is a placeholder - adjust based on your actual session structure
-    return parseInt((session.user as any).id) || null;
+  const session = await getServerSession(authConfig);
+  if (session?.user) {
+    const userId = (session.user as any).id;
+    if (userId) {
+      console.log('[timeline] NextAuth session found for:', (session.user as any).email, 'userId:', userId);
+      const parsedId = typeof userId === 'string' ? parseInt(userId, 10) : userId;
+      if (!isNaN(parsedId)) {
+        return parsedId;
+      }
+    }
   }
 
   return null;
@@ -52,9 +57,15 @@ export async function GET(
     const { patientId } = await params;
     console.log('[timeline] Fetching timeline for patient:', patientId, 'by user:', userId);
 
-    // Get patient with creator info - patientId is the pid (string identifier)
+    // Parse patientId as numeric ID
+    const numericId = parseInt(patientId, 10);
+    if (isNaN(numericId)) {
+      console.log('[timeline] Invalid patient ID:', patientId);
+      return NextResponse.json({ error: "Invalid patient ID" }, { status: 400 });
+    }
+
     const patient = await prisma.patient.findUnique({
-      where: { pid: patientId },
+      where: { id: numericId },
       include: {
         user: {
           select: {
@@ -64,24 +75,6 @@ export async function GET(
             specialty: true,
             hospital: true,
           },
-        },
-        observations: {
-          orderBy: { createdAt: "desc" },
-        },
-        ordonnances: {
-          orderBy: { createdAt: "desc" },
-        },
-        rapports: {
-          where: {
-            category: "imagerie",
-          },
-          orderBy: { createdAt: "desc" },
-        },
-        analyses: {
-          include: {
-            labEntries: true,
-          },
-          orderBy: { createdAt: "desc" },
         },
       },
     });
@@ -117,8 +110,13 @@ export async function GET(
       },
     });
 
-    // Add ordonnances (prescriptions)
-    for (const ordonnance of patient.ordonnances) {
+    // Fetch ordonnances (prescriptions) from database
+    const ordonnances = await prisma.ordonnance.findMany({
+      where: { patientId: numericId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    for (const ordonnance of ordonnances) {
       timelineEvents.push({
         id: `prescription-${ordonnance.id}`,
         type: "ordonnance",
@@ -133,8 +131,14 @@ export async function GET(
       });
     }
 
-    // Add lab results (analyses)
-    for (const analyse of patient.analyses) {
+    // Fetch lab results (analyses) from database
+    const analyses = await prisma.analyse.findMany({
+      where: { patientId: numericId },
+      include: { labEntries: true },
+      orderBy: { createdAt: "desc" },
+    });
+
+    for (const analyse of analyses) {
       // Create a summary of lab entries
       const labEntriesSummary = analyse.labEntries
         .map((entry) => `${entry.name}: ${entry.value}`)
@@ -154,8 +158,13 @@ export async function GET(
       });
     }
 
-    // Add comptes-rendus (all types, not just imagerie)
-    for (const rapport of patient.rapports) {
+    // Fetch comptes-rendus (reports) from database
+    const rapports = await prisma.rapport.findMany({
+      where: { patientId: numericId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    for (const rapport of rapports) {
       timelineEvents.push({
         id: `compte-rendu-${rapport.id}`,
         type: "compte-rendu",
@@ -179,11 +188,9 @@ export async function GET(
     return NextResponse.json(
       {
         success: true,
-        data: {
-          patientId: patient.id,
-          patientName: patient.fullName,
-          events: timelineEvents,
-        },
+        patientId: patient.id,
+        patientName: patient.fullName,
+        events: timelineEvents,
       },
       { headers: corsHeaders }
     );

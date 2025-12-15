@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { verifyMobileToken } from "@/lib/mobile-auth";
-import { OpenAI } from "openai";
 
 // CORS headers for mobile app access
 const corsHeaders = {
@@ -29,6 +28,53 @@ async function getUserId(request: NextRequest): Promise<number | null> {
   }
 
   return null;
+}
+
+// Pediatric reference data (simplified WHO reference)
+function getPediatricWeightReference(ageYears: number): { mean: number; stdDev: number } {
+  const references: Record<number, { mean: number; stdDev: number }> = {
+    1: { mean: 9.5, stdDev: 1.1 },
+    2: { mean: 12.5, stdDev: 1.4 },
+    3: { mean: 14.5, stdDev: 1.6 },
+    4: { mean: 16.5, stdDev: 1.8 },
+    5: { mean: 18.5, stdDev: 2.0 },
+    6: { mean: 20.5, stdDev: 2.3 },
+    7: { mean: 22.5, stdDev: 2.6 },
+    8: { mean: 25.0, stdDev: 3.0 },
+    9: { mean: 27.5, stdDev: 3.5 },
+    10: { mean: 30.5, stdDev: 4.0 },
+    11: { mean: 33.5, stdDev: 4.5 },
+    12: { mean: 36.5, stdDev: 5.0 },
+    13: { mean: 40.0, stdDev: 5.5 },
+    14: { mean: 44.0, stdDev: 6.0 },
+    15: { mean: 49.0, stdDev: 6.5 },
+  };
+  return references[ageYears] || { mean: 25, stdDev: 3 };
+}
+
+function getPediatricHeightReference(ageYears: number): { mean: number; stdDev: number } {
+  const references: Record<number, { mean: number; stdDev: number }> = {
+    1: { mean: 75, stdDev: 3.5 },
+    2: { mean: 88, stdDev: 3.7 },
+    3: { mean: 97, stdDev: 3.8 },
+    4: { mean: 104, stdDev: 4.0 },
+    5: { mean: 110, stdDev: 4.2 },
+    6: { mean: 116, stdDev: 4.5 },
+    7: { mean: 122, stdDev: 4.7 },
+    8: { mean: 127, stdDev: 5.0 },
+    9: { mean: 132, stdDev: 5.2 },
+    10: { mean: 137, stdDev: 5.5 },
+    11: { mean: 142, stdDev: 5.8 },
+    12: { mean: 147, stdDev: 6.2 },
+    13: { mean: 152, stdDev: 6.5 },
+    14: { mean: 157, stdDev: 6.8 },
+    15: { mean: 161, stdDev: 6.9 },
+  };
+  return references[ageYears] || { mean: 110, stdDev: 5 };
+}
+
+function calculateZScore(value: number, reference: { mean: number; stdDev: number }): number {
+  return (value - reference.mean) / reference.stdDev;
 }
 
 export async function POST(request: NextRequest) {
@@ -78,10 +124,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Initialize OpenAI client
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+    // // Initialize OpenAI client
+    // const openai = new OpenAI({
+    //   apiKey: process.env.OPENAI_API_KEY,
+    // });
 
     // Prepare patient context for the prompt
     const calculateAge = (birthDate: Date | string): number => {
@@ -96,66 +142,112 @@ export async function POST(request: NextRequest) {
     };
 
     const age = patient.dateOfBirth ? calculateAge(patient.dateOfBirth) : 0;
+    const patientAge = age; // Use patientAge consistently throughout
+
+    // Calculate IMC
+    let imc = "";
+    if (hemodynamicsData?.weight && hemodynamicsData?.height) {
+      const weight = parseFloat(hemodynamicsData.weight);
+      const heightM = parseFloat(hemodynamicsData.height) / 100;
+      if (weight > 0 && heightM > 0) {
+        imc = (weight / (heightM * heightM)).toFixed(1);
+      }
+    }
 
     // Build examen clinique with strict structure
     let examineClinique = "";
 
-    // EXAMEN GÉNÉRAL - 6 specific lines
+    // EXAMEN GÉNÉRAL - specific detailed structure
     examineClinique += "### Examen général\n";
 
     // Line 1: Plan hémodynamique (FC, TA, TRC)
     const hemodynamiqueParts = [];
-    if (hemodynamicsData?.fc) hemodynamiqueParts.push(`FC: ${hemodynamicsData.fc}`);
-    if (hemodynamicsData?.taSys || hemodynamicsData?.taDias) {
-      hemodynamiqueParts.push(`TA: ${hemodynamicsData.taSys}/${hemodynamicsData.taDias}`);
+    if (hemodynamicsData?.fc) hemodynamiqueParts.push(`FC: ${hemodynamicsData.fc} (bpm)`);
+    if (hemodynamicsData?.taSys && hemodynamicsData?.taDias) {
+      hemodynamiqueParts.push(`TA: ${hemodynamicsData.taSys}/${hemodynamicsData.taDias} (mmHg)`);
     }
-    if (hemodynamicsData?.trc) hemodynamiqueParts.push(`TRC: ${hemodynamicsData.trc}`);
+    if (hemodynamicsData?.trc) hemodynamiqueParts.push(`TRC: ${hemodynamicsData.trc} (sec)`);
     if (hemodynamiqueParts.length > 0) {
-      examineClinique += `Plan hémodynamique: ${hemodynamiqueParts.join(", ")}\n`;
+      examineClinique += `#### Plan HD\n${hemodynamiqueParts.join(", ")}\n`;
     }
 
     // Line 2: Plan neurologique (GCS)
     if (hemodynamicsData?.gcs) {
-      examineClinique += `Plan neurologique: GCS ${hemodynamicsData.gcs}\n`;
+      examineClinique += `#### Plan neurologique\nGCS: ${hemodynamicsData.gcs}\n`;
     }
 
     // Line 3: Plan respiratoire (FR, SaO2)
     const respiratoryParts = [];
-    if (hemodynamicsData?.fr) respiratoryParts.push(`FR: ${hemodynamicsData.fr}`);
-    if (hemodynamicsData?.sao2) respiratoryParts.push(`SaO2: ${hemodynamicsData.sao2}%`);
+    if (hemodynamicsData?.sao2) respiratoryParts.push(`SaO2%: ${hemodynamicsData.sao2}`);
+    if (hemodynamicsData?.fr) respiratoryParts.push(`FR: ${hemodynamicsData.fr} (cpm)`);
     if (respiratoryParts.length > 0) {
-      examineClinique += `Plan respiratoire: ${respiratoryParts.join(", ")}\n`;
+      examineClinique += `#### Plan respiratoire\n${respiratoryParts.join(", ")}\n`;
     }
 
-    // Line 4: Taille et poids et IMC
+    // Line 4: Temperature, Dextro, and BU (Bandelette Urinaire)
+    const tempDextroBuParts = [];
+    if (hemodynamicsData?.temperature) tempDextroBuParts.push(`T°: ${hemodynamicsData.temperature} °C`);
+    if (hemodynamicsData?.dextro) tempDextroBuParts.push(`Dextro: ${hemodynamicsData.dextro} (g/l)`);
+    if (hemodynamicsData?.bandelette) tempDextroBuParts.push(`BU: ${hemodynamicsData.bandelette}`);
+    if (tempDextroBuParts.length > 0) {
+      examineClinique += `#### Autres paramètres\n${tempDextroBuParts.join(", ")}\n`;
+    }
+
+    // Line 5: Poids, Taille, IMC with Z-score for pediatric patients
     const anthropometryParts = [];
-    if (hemodynamicsData?.height) anthropometryParts.push(`Taille: ${hemodynamicsData.height} cm`);
-    if (hemodynamicsData?.weight) anthropometryParts.push(`Poids: ${hemodynamicsData.weight} kg`);
+    if (hemodynamicsData?.weight) {
+      let weightStr = `poids: ${hemodynamicsData.weight} kg`;
+      // Add Z-score or deviation standard for children < 16 years
+      if (patientAge < 16) {
+        const ref = getPediatricWeightReference(Math.floor(patientAge));
+        const zScore = calculateZScore(parseFloat(hemodynamicsData.weight), ref);
+        weightStr += ` (Z-score: ${zScore.toFixed(2)})`;
+      }
+      anthropometryParts.push(weightStr);
+    }
+    if (hemodynamicsData?.height) {
+      let heightStr = `taille: ${hemodynamicsData.height} cm`;
+      // Add Z-score or deviation standard for children < 16 years
+      if (patientAge < 16) {
+        const ref = getPediatricHeightReference(Math.floor(patientAge));
+        const zScore = calculateZScore(parseFloat(hemodynamicsData.height), ref);
+        heightStr += ` (Z-score: ${zScore.toFixed(2)})`;
+      }
+      anthropometryParts.push(heightStr);
+    }
+    if (imc) {
+      let imcStr = `IMC: ${imc}`;
+      // Add interpretation based on age
+      if (patientAge < 16) {
+        // Simplified interpretation for children
+        imcStr += " (à interpréter selon courbes de croissance)";
+      } else {
+        // Adult interpretation
+        const imcVal = parseFloat(imc);
+        if (imcVal < 18.5) imcStr += " (insuffisance pondérale)";
+        else if (imcVal < 25) imcStr += " (normal)";
+        else if (imcVal < 30) imcStr += " (surpoids)";
+        else imcStr += " (obésité)";
+      }
+      anthropometryParts.push(imcStr);
+    }
     if (anthropometryParts.length > 0) {
-      examineClinique += `${anthropometryParts.join(", ")}\n`;
+      examineClinique += `#### Anthropométrie\n${anthropometryParts.join(", ")}\n`;
     }
 
-    // Line 5: T° et dextro
-    const tempDextroParts = [];
-    if (hemodynamicsData?.temperature) tempDextroParts.push(`T°: ${hemodynamicsData.temperature}°C`);
-    if (hemodynamicsData?.dextro) tempDextroParts.push(`Dextro: ${hemodynamicsData.dextro} mg/dL`);
-    if (tempDextroParts.length > 0) {
-      examineClinique += `${tempDextroParts.join(", ")}\n`;
-    }
-
-    // Line 6: État cutanéomuqueux et autres observations
-    const cutaneousParts = [];
-    if (hemodynamicsData?.skinState && hemodynamicsData.skinState.length > 0) {
-      cutaneousParts.push(`État cutanéomuqueux: ${hemodynamicsData.skinState.join(", ")}`);
-    }
+    // Line 6: État général
     if (hemodynamicsData?.generalState) {
-      cutaneousParts.push(`État général: ${hemodynamicsData.generalState}`);
+      examineClinique += `#### État général\n${hemodynamicsData.generalState}\n`;
     }
-    if (hemodynamicsData?.additionalNotes) {
-      cutaneousParts.push(`${hemodynamicsData.additionalNotes}`);
+
+    // Line 7: État cutanéomuqueux
+    if (hemodynamicsData?.skinState && hemodynamicsData.skinState.length > 0) {
+      examineClinique += `#### État cutanéomuqueuse\n${hemodynamicsData.skinState.join(", ")}\n`;
     }
-    if (cutaneousParts.length > 0) {
-      examineClinique += `${cutaneousParts.join(", ")}\n`;
+
+    // Line 8: Signes supplémentaires if any
+    if (hemodynamicsData?.additionalNotes && hemodynamicsData.additionalNotes.trim()) {
+      examineClinique += `#### Signes supplémentaires\n${hemodynamicsData.additionalNotes}\n`;
     }
 
     // OTHER EXAMS - apparatus by apparatus, only modified ones
@@ -205,27 +297,35 @@ export async function POST(request: NextRequest) {
       for (const [examName, examData] of Object.entries(examSelections)) {
         const data = examData as any;
         if (data && examName !== "Examen général") {
-          const hasInspection = Array.isArray(data.inspection) && data.inspection.length > 0;
-          const hasPalpation = Array.isArray(data.palpation) && data.palpation.length > 0;
-          const hasPercussion = Array.isArray(data.percussion) && data.percussion.length > 0;
-          const hasAuscultation = Array.isArray(data.auscultation) && data.auscultation.length > 0;
+          // Collect all sections with selected signs (handle both standard and custom sections)
+          const sectionTexts: string[] = [];
+          let hasAnyContent = false;
+
+          for (const [sectionKey, sectionValue] of Object.entries(data)) {
+            if (sectionKey === "extraNotes") {
+              // Skip extraNotes here, handle separately below
+              continue;
+            }
+
+            if (Array.isArray(sectionValue) && sectionValue.length > 0) {
+              hasAnyContent = true;
+              // Capitalize section name properly
+              const sectionName = sectionKey.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+              sectionTexts.push(`${sectionName}: ${sectionValue.join(", ")}`);
+            }
+          }
+
           const hasExtraNotes = data.extraNotes && data.extraNotes.trim().length > 0;
 
-          if (hasInspection || hasPalpation || hasPercussion || hasAuscultation || hasExtraNotes) {
+          if (hasAnyContent || hasExtraNotes) {
             otherExamsText.push(`### ${examName}`);
 
-            if (hasInspection) {
-              otherExamsText.push(`Inspection: ${data.inspection.join(", ")}`);
+            // Add all section texts
+            for (const text of sectionTexts) {
+              otherExamsText.push(text);
             }
-            if (hasPalpation) {
-              otherExamsText.push(`Palpation: ${data.palpation.join(", ")}`);
-            }
-            if (hasPercussion) {
-              otherExamsText.push(`Percussion: ${data.percussion.join(", ")}`);
-            }
-            if (hasAuscultation) {
-              otherExamsText.push(`Auscultation: ${data.auscultation.join(", ")}`);
-            }
+
+            // Add extra notes if present
             if (hasExtraNotes) {
               otherExamsText.push(`${data.extraNotes}`);
             }
@@ -239,56 +339,92 @@ export async function POST(request: NextRequest) {
     }
 
     // Build Identité paragraph with STRICT format
-    let identiteText = `Il s'agit de ${patient.fullName} agé de ${age} ans`;
+    // Format: "il s'agit de [fullname], agé de [age in years or months if 0 years], originaire de [address origine] et Habitant a [adresse habitat] (or originaire et habitant) if same adresse for both, [profession], [situation familiale, but don't write it if age < 16years old], ayant comme couverture sociale [couverture] (or : sans couverture sociale if not specified)"
 
-    if (patient.situationFamiliale?.trim()) {
+    let identiteText = `Il s'agit de ${patient.fullName}, agé de ${age} ans`;
+
+    // Handle addresses
+    const addressOrigin = patient.addressOrigin?.trim() || "";
+    const addressHabitat = patient.addressHabitat?.trim() || "";
+
+    if (addressOrigin && addressHabitat) {
+      if (addressOrigin === addressHabitat) {
+        identiteText += `, originaire et habitant à ${addressOrigin}`;
+      } else {
+        identiteText += `, originaire de ${addressOrigin} et habitant à ${addressHabitat}`;
+      }
+    } else if (addressOrigin) {
+      identiteText += `, originaire de ${addressOrigin}`;
+    } else if (addressHabitat) {
+      identiteText += `, habitant à ${addressHabitat}`;
+    }
+
+    // Add profession if present
+    if (patient.profession?.trim()) {
+      identiteText += `, ${patient.profession}`;
+    }
+
+    // Add family situation only if age >= 16
+    if (age >= 16 && patient.situationFamiliale?.trim()) {
       identiteText += `, ${patient.situationFamiliale}`;
     }
 
-    const addressParts: string[] = [];
-    if (patient.addressOrigin?.trim()) {
-      addressParts.push(`originaire de ${patient.addressOrigin}`);
-    }
-    if (patient.addressHabitat?.trim()) {
-      addressParts.push(`habitant à ${patient.addressHabitat}`);
-    }
-    if (addressParts.length > 0) {
-      identiteText += `, ${addressParts.join(` et `)}`;
-    }
-
-    if (patient.profession?.trim()) {
-      identiteText += `, profession: ${patient.profession}`;
-    }
-
+    // Add social coverage
     if (patient.couvertureSociale?.trim()) {
       identiteText += `, ayant comme couverture sociale ${patient.couvertureSociale}`;
+    } else {
+      identiteText += `, sans couverture sociale`;
     }
 
     identiteText += ".";
 
-    // Build ATCDs list (only show non-empty ones)
+    // Build ATCDs list - each category as bold underlined title with content below
     const atcdsList: string[] = [];
+
     if (patient.atcdsMedical?.trim()) {
-      atcdsList.push(`<b>- Antécédents médicaux: </b> ${patient.atcdsMedical}`);
+      atcdsList.push(`<p><b><u>Antécédents médicaux</u></b></p>\n<p>${patient.atcdsMedical}</p>`);
     }
     if (patient.atcdsChirurgical?.trim()) {
-      atcdsList.push(`<b>- Antécédents chirurgicaux:</b> ${patient.atcdsChirurgical}`);
+      atcdsList.push(`<p><b><u>Antécédents chirurgicaux</u></b></p>\n<p>${patient.atcdsChirurgical}</p>`);
     }
     if (patient.atcdsFamiliaux?.trim()) {
-      atcdsList.push(`<b>- Antécédents familiaux:</b> ${patient.atcdsFamiliaux}`);
+      // Format family antecedents: Père and Mère each on their own line with spaces after colons and commas after each info
+      let formattedFamiliaux = patient.atcdsFamiliaux
+        .split('\n')
+        .map(line => {
+          const trimmed = line.trim();
+          if (!trimmed) return '';
+
+          // Add spacing after colons and ensure commas between pieces of info
+          let formatted = trimmed.replace(/:\s*/g, ' :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ');
+
+          // Ensure pieces of info are separated by commas if not already
+          if (formatted.includes('Âge') && !formatted.match(/,\s*Profession/)) {
+            formatted = formatted.replace(/(\d+)(?!\s*,)(?=\s*Profession)/g, '$1,');
+          }
+          if (formatted.includes('Profession') && !formatted.match(/,\s*Pays/)) {
+            formatted = formatted.replace(/(\w+)(?!\s*,)(?=\s*Pays)/g, '$1,');
+          }
+          if (formatted.includes('Pays') && !formatted.match(/,\s*Pathologies/)) {
+            formatted = formatted.replace(/(\w+)(?!\s*,)(?=\s*Pathologies)/g, '$1,');
+          }
+          if (formatted.includes('Pathologies') && !formatted.endsWith(',')) {
+            formatted = formatted + ',';
+          }
+          formatted = formatted + '\n';
+          return formatted;
+        })
+        .filter(line => line.length > 0)
+        .join('<br/>');
+      atcdsList.push(`<p><b><u>Antécédents familiaux</u></b></p>\n<p>${formattedFamiliaux}</p>`);
     }
     if (patient.atcdsExtra?.trim()) {
-      atcdsList.push(`<b>- Autres antécédents:</b> ${patient.atcdsExtra}`);
+      atcdsList.push(`<p><b><u>Autres antécédents</u></b></p>\n<p>${patient.atcdsExtra}</p>`);
     }
 
     const atcdsText = atcdsList.length > 0
-      ? atcdsList.join("\n")
-      : "Le patient ne rapporte pas d'antécédents notables.";
-
-    // Build ATCDs summary for conclusion
-    const atcdsConclusionText = atcdsList.length > 0
-      ? atcdsList.map(item => item.replace("- ", "").replace(": ", " ")).join(", ")
-      : "sans antécédents notables";
+      ? atcdsList.join("")
+      : "<p>Le patient ne rapporte pas d'antécédents notables.</p>";
 
     // Gather all examination findings for conclusion
     const examinationSummary: string[] = [];
@@ -336,11 +472,20 @@ export async function POST(request: NextRequest) {
       ? examinationSummary.join(", ")
       : "examen sans particularités";
 
-    // Build conclusion with examination findings
-    const conclusionText = `Il s'agit de ${patient.fullName} agé de ${age} ans, admis pour ${patient.motif || "consultation"}, \n <br/>Ayant comme ATCDs ${atcdsConclusionText}.\n<br/>Histoire de maladie remonte à _____________________.\n<br/>Chez qui l'examen clinique trouve ${examinationText}.`;
+    // Build Histoire de maladie with the specified template
+    // Template: "remonte à _________, par l'apparition de _____________, avec _______________, sans ________________. Le tout évoluant dans un contexte de _____________. Ce qui motivé le patient a consulter _________________."
+    const histoireMaladieText = `remonte à <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>, par l'apparition de <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>, avec <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>, sans <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>. Le tout évoluant dans un contexte de <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>. Ce qui a motivé le patient à consulter <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>.`;
 
-    // Wrap conclusion in p tag
-    const conclusionTextHtml = `<p>${conclusionText}</p>`;
+    // Build simplified conclusion - just provide fill-in templates
+    const conclusionText = `
+      <p>Il s'agit de <strong>${patient.fullName}</strong>, agé de <strong>${age} ans</strong>, admis pour <strong>${patient.motif || "consultation"}</strong>.</p>
+      <p>Ayant comme antécédents <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u></p>
+      <p>Chez qui l'histoire de maladie remonte à <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u></p>
+      <p>Chez qui l'examen clinique <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u></p>
+    `;
+
+    // Wrap conclusion (no additional p tag needed since it's already in the template)
+    const conclusionTextHtml = conclusionText;
 
     // Build complete observation as HTML
     const examinationHtml = examineClinique
@@ -349,6 +494,9 @@ export async function POST(request: NextRequest) {
       .map(line => {
         if (line.startsWith('### ')) {
           return `<h3>${line.replace('### ', '')}</h3>`;
+        }
+        if (line.startsWith('#### ')) {
+          return `<p><b><u>${line.replace('#### ', '')}</u></b></p>`;
         }
         return `<p>${line}</p>`;
       })
@@ -378,13 +526,13 @@ export async function POST(request: NextRequest) {
 <p>${identiteText}</p>
 
 <h2>Motif</h2>
-<p>${patient.motif || "Non spécifié"}</p>
+<p><strong>${patient.motif || "Non spécifié"}</strong></p>
 
 <h2>Antécédents</h2>
 ${atcdsText}
 
 <h2>Histoire de maladie</h2>
-<p>Histoire de maladie remonte à _____________________.</p>
+<p>${histoireMaladieText}</p>
 
 <h2>Examen Clinique</h2>
 ${examinationHtml}

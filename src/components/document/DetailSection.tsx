@@ -66,14 +66,12 @@ export function DetailSection<T extends DocumentItem>({
           </div>
         </CardHeader>
         {showScrollArea ? (
-          <ScrollArea className="flex-1">
-            <CardContent className="flex-1 overflow-y-auto px-6 py-6">
-              <div className="space-y-5">{createFormContent}</div>
-            </CardContent>
-          </ScrollArea>
+          <CardContent className="flex-1 overflow-hidden p-0">
+            {createFormContent}
+          </CardContent>
         ) : (
-          <CardContent className="flex-1 overflow-y-auto px-6 py-6">
-            <div className="space-y-5">{createFormContent}</div>
+          <CardContent className="flex-1 overflow-auto px-6 py-6">
+            {createFormContent}
           </CardContent>
         )}
         <div className="border-t border-slate-200/50 bg-gradient-to-b from-white/50 to-white/80 px-6 py-5 space-y-3 backdrop-blur-sm">

@@ -938,11 +938,7 @@
       "cancel": "Cancel",
       "save": "Save"
     },
-    "searchPlaceholder": "Search reports...",
-    "empty": {
-      "title": "No reports",
-      "description": "Create your first report to start documenting your interventions."
-    },
+    "searchPlaceholder": "Search reports...",    
     "forms": {
       "title": "Intervention title",
       "type": "Type of intervention",
@@ -968,7 +964,8 @@
       "interventionPlaceholder": "Course of intervention, observations, incidents…",
       "detailsPlaceholder": "Course of intervention, observations, incidents…",
       "postOpPlaceholder": "1. Recommendation 1\n2. Recommendation 2…",
-      "recommendationsPlaceholder": "1. Recommendation 1\n2. Recommendation 2…"
+      "recommendationsPlaceholder": "1. Recommendation 1\n2. Recommendation 2…",
+      "allOperatorsAdded": "All operators have been added"
     },
     "sections": {
       "mainSurgeon": "Main surgeon",
@@ -1025,10 +1022,7 @@
       "save": "Save"
     },
     "searchPlaceholder": "Search prescriptions...",
-    "empty": {
-      "noPrescriptions": "No prescriptions",
-      "createFirst": "Create your first prescription"
-    },
+    
     "forms": {
       "title": "Prescription title",
       "date": "Date",
@@ -1046,7 +1040,9 @@
       "patientAgeExample": "Ex: 65",
       "patientHistoryPlaceholder": "Medical history, allergies, current treatments...",
       "clinicalInfoPlaceholder": "Clinical context and relevant history...",
-      "prescriptionPlaceholder": "1. Medication A - dosage × frequency..."
+      "prescriptionPlaceholder": "1. Medication A - dosage × frequency...",
+      "remarquesConsignesPlaceholder": "Remarques/Consignes...",
+      "remarquesConsignes": "Remarques/Consignes..."
     },
     "sections": {
       "patientId": "Patient ID",

@@ -24,8 +24,7 @@
       "Bash(npm run lint:*)",
       "Bash(yes:*)",
       "Bash(node --version:*)",
-      "WebFetch(domain:ocr.space)",
-      "Bash(npx prisma migrate:*)"
+      "WebFetch(domain:ocr.space)"
     ],
     "deny": [],
     "ask": []

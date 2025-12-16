@@ -771,10 +771,6 @@
       "save": "Enregistrer"
     },
     "searchPlaceholder": "Rechercher des rapports...",
-    "empty": {
-      "title": "Aucun compte rendu",
-      "description": "Créez votre premier compte rendu pour commencer à documenter vos interventions."
-    },
     "forms": {
       "title": "Titre de l'intervention",
       "type": "Type d'intervention",
@@ -800,7 +796,8 @@
       "interventionPlaceholder": "Déroulement de l'intervention, observations, incidents…",
       "detailsPlaceholder": "Déroulement de l'intervention, observations, incidents…",
       "postOpPlaceholder": "1. Recommandation 1\n2. Recommandation 2…",
-      "recommendationsPlaceholder": "1. Recommandation 1\n2. Recommandation 2…"
+      "recommendationsPlaceholder": "1. Recommandation 1\n2. Recommandation 2…",
+      "allOperatorsAdded": "Tous les opérateurs ont été ajoutés"
     },
     "sections": {
       "mainSurgeon": "Chirurgien principal",
@@ -857,10 +854,6 @@
       "save": "Enregistrer"
     },
     "searchPlaceholder": "Rechercher une ordonnance...",
-    "empty": {
-      "noPrescriptions": "Aucune ordonnance",
-      "createFirst": "Créez votre première ordonnance"
-    },
     "forms": {
       "title": "Titre de l'ordonnance",
       "date": "Date",
@@ -878,7 +871,10 @@
       "patientAgeExample": "Ex: 65",
       "patientHistoryPlaceholder": "Historique médical, allergies, traitements actuels...",
       "clinicalInfoPlaceholder": "Contexte clinique et antécédents pertinents...",
-      "prescriptionPlaceholder": "1. Médicament A - dosage × fréquence..."
+      "prescriptionPlaceholder": "1. Médicament A - dosage × fréquence...",
+      "remarquesConsignesPlaceholder": "Remarques/Consignes...",
+      "remarquesConsignes": "Remarques/Consignes..."
+
     },
     "sections": {
       "patientId": "ID Patient",

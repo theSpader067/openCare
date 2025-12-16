@@ -9,9 +9,10 @@ type Ordonnance = {
   patientName?: string;
   patientAge?: string;
   patientHistory?: string;
-  clinicalInfo?: string;
+  remarquesConsignes?: string;
   prescriptionDetails?: string;
   isPrivate?: boolean;
+  teamsData?: string;
   createdBy?: string;
 };
 
@@ -25,9 +26,10 @@ export async function createOrdonnance({
   patientName,
   patientAge,
   patientHistory,
-  clinicalInfo,
+  remarquesConsignes,
   prescriptionDetails,
   isPrivate = false,
+  teamsData,
 }: {
   title: string;
   date?: string;
@@ -35,9 +37,10 @@ export async function createOrdonnance({
   patientName?: string;
   patientAge?: string;
   patientHistory?: string;
-  clinicalInfo: string;
+  remarquesConsignes: string;
   prescriptionDetails: string;
   isPrivate?: boolean;
+  teamsData?: string | any[];
 }): Promise<{ success: boolean; data?: Ordonnance; error?: string }> {
   try {
     const response = await fetch("/api/ordonnances", {
@@ -52,9 +55,10 @@ export async function createOrdonnance({
         patientName,
         patientAge,
         patientHistory,
-        clinicalInfo,
+        remarquesConsignes,
         prescriptionDetails,
         isPrivate,
+        teamsData,
       }),
     });
 
@@ -136,7 +140,7 @@ export async function updateOrdonnance({
   patientName,
   patientAge,
   patientHistory,
-  clinicalInfo,
+  remarquesConsignes,
   prescriptionDetails,
   isPrivate,
 }: {
@@ -147,7 +151,7 @@ export async function updateOrdonnance({
   patientName?: string;
   patientAge?: string;
   patientHistory?: string;
-  clinicalInfo?: string;
+  remarquesConsignes?: string;
   prescriptionDetails?: string;
   isPrivate?: boolean;
 }): Promise<{ success: boolean; data?: Ordonnance; error?: string }> {
@@ -164,7 +168,7 @@ export async function updateOrdonnance({
         patientName,
         patientAge,
         patientHistory,
-        clinicalInfo,
+        remarquesConsignes,
         prescriptionDetails,
         isPrivate,
       }),

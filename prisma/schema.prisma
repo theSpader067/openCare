@@ -52,6 +52,7 @@ model User {
   createdAnalyses Analyse[]
   rapportParticipations Rapport[] @relation("RapportParticipants")
   teamRequests TeamRequest[] @relation("TeamRequestSender")
+  createdOrdonnanceTemplates OrdonnanceTemplate[] @relation("OrdonnanceTemplateCreator")
 }
 
 model Observation {
@@ -163,21 +164,22 @@ model Notification {
 }
 
 model Ordonnance {
-  id                    Int       @id @default(autoincrement())
-  title                 String
-  date                  DateTime?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-  patientId             Int?
-  patient               Patient?  @relation(fields: [patientId], references: [id], onDelete: SetNull)
-  patientName           String?
-  patientAge            String?
-  patientHistory        String?
-  renseignementClinique String?   @db.Text
-  details               String?   @db.Text
-  creatorId             Int
-  creator               User      @relation("OrdonnanceCreator", fields: [creatorId], references: [id], onDelete: Cascade)
-  isPrivate             Boolean   @default(false)
+  id                  Int       @id @default(autoincrement())
+  title               String
+  date                DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  patientId           Int?
+  patient             Patient?  @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  patientName         String?
+  patientAge          String?
+  patientHistory      String?
+  details             String?   @db.Text
+  remarquesConsignes  String?   @db.Text
+  creatorId           Int
+  creator             User      @relation("OrdonnanceCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  isPrivate           Boolean   @default(false)
+  teamsData           String?   @db.Text
 }
 
 model Avis {
@@ -327,4 +329,16 @@ model Contact {
   message   String    @db.Text
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+}
+
+model OrdonnanceTemplate {
+  id                    Int       @id @default(autoincrement())
+  title                 String
+  class                 String
+  prescriptionDetails   String    @db.Text
+  prescriptionConsignes String?   @db.Text
+  creatorId             Int
+  creator               User      @relation("OrdonnanceTemplateCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 }

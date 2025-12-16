@@ -15,7 +15,7 @@ function convertOrdonnanceToJSON(ordonnance: any) {
     patientName: ordonnance.patientName,
     patientAge: ordonnance.patientAge,
     patientHistory: ordonnance.patientHistory,
-    clinicalInfo: ordonnance.renseignementClinique,
+    remarquesConsignes: ordonnance.remarquesConsignes,
     prescriptionDetails: ordonnance.details,
     isPrivate: ordonnance.isPrivate,
     createdBy: ordonnance.creator?.firstName || "Unknown",
@@ -123,7 +123,7 @@ export async function PUT(
       patientName,
       patientAge,
       patientHistory,
-      clinicalInfo,
+      remarquesConsignes,
       prescriptionDetails,
       isPrivate,
     } = body;
@@ -135,7 +135,7 @@ export async function PUT(
       patientName,
       patientAge,
       patientHistory,
-      clinicalInfo,
+      remarquesConsignes,
       prescriptionDetails,
       isPrivate,
     });
@@ -149,8 +149,8 @@ export async function PUT(
     if (date !== undefined) {
       updateData.date = date ? new Date(date) : null;
     }
-    if (clinicalInfo !== undefined) {
-      updateData.renseignementClinique = clinicalInfo.trim();
+    if (remarquesConsignes !== undefined) {
+      updateData.remarquesConsignes = remarquesConsignes.trim();
     }
     if (prescriptionDetails !== undefined) {
       updateData.details = prescriptionDetails.trim();

@@ -123,10 +123,10 @@ export async function GET(
         title: ordonnance.title || "Ordonnance médicale",
         date: ordonnance.date?.toISOString() || ordonnance.createdAt.toISOString(),
         timestamp: ordonnance.date?.toISOString() || ordonnance.createdAt.toISOString(),
-        summary: ordonnance.renseignementClinique || "Prescription médicale",
+        summary: ordonnance.remarquesConsignes || "Prescription médicale",
         details: {
           details: ordonnance.details || "Aucun détail disponible",
-          renseignementClinique: ordonnance.renseignementClinique,
+          remarquesConsignes: ordonnance.remarquesConsignes,
         },
       });
     }

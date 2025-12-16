@@ -34,9 +34,10 @@ function convertOrdonnanceToJSON(ordonnance: any) {
     patientName: ordonnance.patientName,
     patientAge: ordonnance.patientAge,
     patientHistory: ordonnance.patientHistory,
-    clinicalInfo: ordonnance.renseignementClinique,
+    remarquesConsignes: ordonnance.remarquesConsignes,
     prescriptionDetails: ordonnance.details,
     isPrivate: ordonnance.isPrivate,
+    teamsData: ordonnance.teamsData,
     createdBy: ordonnance.creator?.firstName || "Unknown",
   };
 }
@@ -131,9 +132,10 @@ export async function POST(request: NextRequest) {
       patientName,
       patientAge,
       patientHistory,
-      clinicalInfo,
+      remarquesConsignes,
       prescriptionDetails,
       isPrivate = false,
+      teamsData,
     } = body;
 
     console.log("API received ordonnance data:", {
@@ -143,7 +145,7 @@ export async function POST(request: NextRequest) {
       patientName,
       patientAge,
       patientHistory,
-      clinicalInfo,
+      remarquesConsignes,
       prescriptionDetails,
       isPrivate,
       fullBody: body,
@@ -169,14 +171,7 @@ export async function POST(request: NextRequest) {
       String(patientId).trim() !== "" &&
       !isNaN(parseInt(String(patientId)));
 
-    if (!hasExistingPatientId && (!clinicalInfo || !clinicalInfo.trim())) {
-      return NextResponse.json(
-        { success: false, error: "Clinical information cannot be empty when creating a new patient" },
-        { status: 400 }
-      );
-    }
-
-    const clinicalInfoValue = clinicalInfo?.trim() || null;
+    const remarquesConsignesValue = remarquesConsignes?.trim() || null;
 
     // Build the data object for ordonnance creation
     const ordonnanceData: any = {
@@ -184,8 +179,9 @@ export async function POST(request: NextRequest) {
       date: date ? new Date(date) : null,
       creatorId: (userId),
       isPrivate: isPrivate,
-      renseignementClinique: clinicalInfoValue,
+      remarquesConsignes: remarquesConsignesValue,
       details: prescriptionDetails.trim(),
+      teamsData: teamsData ? (typeof teamsData === 'string' ? teamsData : JSON.stringify(teamsData)) : null,
     };
 
     // If an existing patient is selected, use patientId

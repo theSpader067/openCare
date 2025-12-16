@@ -161,7 +161,9 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
     [],
   );
 
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
+  if (status === 'unauthenticated') return null;
+  if (status === 'loading') return null;
   if (!session) return null;
 
   return (

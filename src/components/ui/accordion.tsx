@@ -140,7 +140,7 @@ export const AccordionContent = React.forwardRef<
       ref={ref}
       className={cn(
         "overflow-hidden transition-all duration-200",
-        isOpen ? "max-h-96" : "max-h-0"
+        isOpen ? "max-h-screen" : "max-h-0"
       )}
       {...props}
     >

@@ -646,67 +646,44 @@ export default function OrdonnancesPage() {
 
   const detailViewContent = activeOrdonnance ? (
     <>
-      {/* Enhanced Header Section */}
-      <div className="space-y-4">
-        {/* Top Action Bar */}
-        <div className="flex items-center justify-between gap-3 pb-4 border-b border-slate-200">
+      {/* Header Section */}
+      <div className="space-y-3 pb-4 border-b border-slate-200">
+        <div className="flex items-center justify-between gap-4">
           <div className="flex-1">
-            <p className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-2">
-              Ordonnance
-            </p>
-            <h2 className="text-3xl font-bold text-slate-900">
+            <h2 className="text-2xl font-semibold text-slate-900">
               {activeOrdonnance.title}
             </h2>
           </div>
           <button
             onClick={handleExportPDF}
-            className="flex items-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-300 hover:from-indigo-100 hover:to-blue-100 transition-all duration-200 whitespace-nowrap shadow-sm hover:shadow-md"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 border border-slate-300 hover:bg-slate-200 transition-colors whitespace-nowrap"
             title="Exporter en PDF"
           >
-            <Download className="h-5 w-5 text-indigo-600" />
-            <span className="text-sm font-bold text-indigo-700">PDF</span>
+            <Download className="h-4 w-4 text-slate-700" />
+            <span className="text-sm font-medium text-slate-700">PDF</span>
           </button>
         </div>
 
-        {/* Metadata Pills */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-300">
-            <Calendar className="h-4 w-4 text-slate-600" />
-            <span className="text-xs font-semibold text-slate-700">
-              {formatDate(activeOrdonnance.date)}
-            </span>
+        {/* Metadata Row */}
+        <div className="flex flex-wrap items-center gap-4 text-sm">
+          <div className="text-slate-600">
+            <span className="font-medium">Date:</span> {formatDate(activeOrdonnance.date)}
           </div>
 
           {activeOrdonnance.isPrivate ? (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-100 border border-red-300">
-              <Lock className="h-4 w-4 text-red-600" />
-              <span className="text-xs font-bold text-red-700">Privée</span>
-            </div>
+            <div className="text-red-700 font-medium">Privée</div>
           ) : (
             <>
               {activeOrdonnance.teamsData && (() => {
                 try {
                   const teams = JSON.parse(activeOrdonnance.teamsData);
                   return teams.map((team: Team) => (
-                    <div
-                      key={team.id}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100 border border-blue-300"
-                    >
-                      <Users className="h-4 w-4 text-blue-600" />
-                      <span className="text-xs font-bold text-blue-700">
-                        {team.name}
-                      </span>
+                    <div key={team.id} className="text-blue-700 font-medium">
+                      {team.name}
                     </div>
                   ));
                 } catch {
-                  return (
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100 border border-blue-300">
-                      <Users className="h-4 w-4 text-blue-600" />
-                      <span className="text-xs font-bold text-blue-700">
-                        Équipe
-                      </span>
-                    </div>
-                  );
+                  return <div className="text-blue-700 font-medium">Équipe</div>;
                 }
               })()}
             </>
@@ -714,90 +691,40 @@ export default function OrdonnancesPage() {
         </div>
       </div>
 
-      {/* Patient Info Card */}
+      {/* Patient Info */}
       {activeOrdonnance.patient && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <section className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 via-indigo-50 to-blue-50 p-5 shadow-sm">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 rounded-lg bg-indigo-100">
-                <User className="h-5 w-5 text-indigo-600" />
-              </div>
-              <header className="text-xs font-bold uppercase tracking-widest text-indigo-700">
-                Patient
-              </header>
+        <div className="space-y-3 pb-4 border-b border-slate-200">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div>
+              <p className="text-xs text-slate-600 font-medium mb-1">Nom du patient</p>
+              <p className="text-sm font-semibold text-slate-900">{activeOrdonnance.patient.fullName}</p>
             </div>
-            <div className="space-y-3">
+            <div>
+              <p className="text-xs text-slate-600 font-medium mb-1">Âge</p>
+              <p className="text-sm font-semibold text-slate-900">
+                {activeOrdonnance.patient?.dateOfBirth
+                  ? `${calculateAge(activeOrdonnance.patient.dateOfBirth)} ans`
+                  : "N/A"}
+              </p>
+            </div>
+            {activeOrdonnance.patientId && (
               <div>
-                <p className="text-xs text-indigo-600 font-semibold uppercase tracking-wide mb-1">
-                  Nom complet
-                </p>
-                <p className="text-lg font-bold text-slate-900">
-                  {activeOrdonnance.patient.fullName}
-                </p>
+                <p className="text-xs text-slate-600 font-medium mb-1">ID Patient</p>
+                <p className="text-sm font-semibold text-slate-900">#{activeOrdonnance.patientId}</p>
               </div>
-              <div className="flex items-center gap-4 pt-2 border-t border-indigo-100">
-                <div>
-                  <p className="text-xs text-indigo-600 font-semibold uppercase tracking-wide mb-1">
-                    Âge
-                  </p>
-                  <p className="text-sm font-bold text-slate-800">
-                    {activeOrdonnance.patient?.dateOfBirth
-                      ? `${calculateAge(activeOrdonnance.patient.dateOfBirth)} ans`
-                      : `${(activeOrdonnance.patient as any).age} ans` || "N/A"}
-                  </p>
-                </div>
-                {activeOrdonnance.patientId && (
-                  <div>
-                    <p className="text-xs text-indigo-600 font-semibold uppercase tracking-wide mb-1">
-                      ID Patient
-                    </p>
-                    <p className="text-sm font-mono font-bold text-indigo-700">
-                      #{activeOrdonnance.patientId}
-                    </p>
-                  </div>
-                )}
-              </div>
+            )}
+            <div>
+              <p className="text-xs text-slate-600 font-medium mb-1">Créé par</p>
+              <p className="text-sm font-semibold text-slate-900">{activeOrdonnance.createdBy}</p>
             </div>
-          </section>
-
-          {/* Metadata Card */}
-          <section className="rounded-2xl border border-slate-300 bg-gradient-to-br from-slate-50 to-slate-100 p-5 shadow-sm">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 rounded-lg bg-slate-200">
-                <Pill className="h-5 w-5 text-slate-700" />
-              </div>
-              <header className="text-xs font-bold uppercase tracking-widest text-slate-700">
-                Détails
-              </header>
-            </div>
-            <div className="space-y-3">
-              <div>
-                <p className="text-xs text-slate-600 font-semibold uppercase tracking-wide mb-1">
-                  Créé par
-                </p>
-                <p className="text-sm font-bold text-slate-900">
-                  {activeOrdonnance.createdBy}
-                </p>
-              </div>
-              <div className="pt-2 border-t border-slate-200">
-                <p className="text-xs text-slate-600 font-semibold uppercase tracking-wide mb-2">
-                  Créé le
-                </p>
-                <p className="text-xs font-mono text-slate-700">
-                  {new Date(activeOrdonnance.createdAt).toLocaleString("fr-FR")}
-                </p>
-              </div>
-            </div>
-          </section>
+          </div>
         </div>
       )}
 
       {/* Prescription Details Section */}
-      <section className="space-y-2">
-        <header className="text-xs font-bold uppercase tracking-widest text-slate-700">
-          Détails de la prescription
-        </header>
-        <p className="text-sm leading-relaxed text-slate-800 whitespace-pre-wrap border-l-4 border-indigo-500 pl-4 py-2">
+      <section className="space-y-2 pb-4 border-b border-slate-200">
+        <header className="text-sm font-semibold text-slate-900">Détails de la prescription</header>
+        <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
           {activeOrdonnance.prescriptionDetails || "N/A"}
         </p>
       </section>
@@ -805,10 +732,8 @@ export default function OrdonnancesPage() {
       {/* Remarques/Consignes Section */}
       {activeOrdonnance.remarquesConsignes && (
         <section className="space-y-2">
-          <header className="text-xs font-bold uppercase tracking-widest text-slate-700">
-            Remarques & Consignes
-          </header>
-          <p className="text-sm leading-relaxed text-slate-800 whitespace-pre-wrap border-l-4 border-amber-500 pl-4 py-2">
+          <header className="text-sm font-semibold text-slate-900">Remarques & Consignes</header>
+          <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
             {activeOrdonnance.remarquesConsignes || "N/A"}
           </p>
         </section>
@@ -818,77 +743,72 @@ export default function OrdonnancesPage() {
 
   const renderListItemContent = (item: DocumentItem) => {
     const ordonnance = item as Ordonnance;
+    const patientAge = ordonnance.patient?.dateOfBirth
+      ? calculateAge(ordonnance.patient.dateOfBirth)
+      : null;
+
     return (
       <div className="space-y-3">
-        {/* Title and Metadata Row */}
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="space-y-1 flex-1">
-            <p className="text-sm font-bold text-slate-900 line-clamp-1">
+        {/* Title and Date Row */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-slate-900 line-clamp-1">
               {ordonnance.title}
             </p>
-            <p className="text-xs text-slate-500 font-medium">
+            <p className="text-xs text-slate-500 mt-0.5">
               Par {ordonnance.createdBy}
             </p>
           </div>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-300 flex-shrink-0">
-            <Calendar className="h-3.5 w-3.5 text-slate-600" />
-            <span className="text-xs font-semibold text-slate-700">
-              {formatDate(ordonnance.date)}
-            </span>
-          </div>
+          <p className="text-xs text-slate-600 flex-shrink-0 whitespace-nowrap">
+            {formatDate(ordonnance.date)}
+          </p>
         </div>
 
-        {/* Patient Card */}
+        {/* Patient Info */}
         {ordonnance.patient && (
-          <div className="rounded-lg border border-indigo-200 bg-gradient-to-r from-indigo-50 to-blue-50 px-3 py-2.5">
+          <div className="border border-slate-200 rounded px-3 py-2">
             <div className="flex items-center justify-between gap-2">
-              <div>
-                <p className="text-xs font-bold text-indigo-700 uppercase tracking-wide mb-0.5">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold text-slate-900">
                   {ordonnance.patient.fullName}
                 </p>
-                <p className="text-xs text-indigo-600 font-semibold">
-                  {(ordonnance.patient as any).age} ans
+                <p className="text-xs text-slate-600 mt-0.5">
+                  {patientAge !== null ? `${patientAge} ans` : "Âge inconnu"}
                 </p>
               </div>
-              <div className="px-2.5 py-1 rounded-lg bg-indigo-100 text-center">
-                <p className="text-xs font-bold text-indigo-700">
-                  {ordonnance.patientId ? `#${ordonnance.patientId}` : "N/A"}
-                </p>
-              </div>
+              {ordonnance.patientId && (
+                <p className="text-xs text-slate-600 flex-shrink-0">#{ordonnance.patientId}</p>
+              )}
             </div>
           </div>
         )}
 
         {/* Prescription Preview */}
         <div className="space-y-1">
-          <p className="text-xs font-bold text-slate-600 uppercase tracking-wide">
-            Prescription
-          </p>
-          <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
+          <p className="text-xs font-medium text-slate-600">Prescription:</p>
+          <p className="text-xs text-slate-700 leading-relaxed line-clamp-2">
             {ordonnance.prescriptionDetails || "Aucun détail"}
           </p>
         </div>
 
-        {/* Privacy/Team Badge */}
+        {/* Privacy/Team Badges */}
         {(ordonnance.isPrivate || ordonnance.teamsData) && (
-          <div className="flex items-center gap-1.5 pt-1">
+          <div className="flex flex-wrap items-center gap-1.5 pt-1">
             {ordonnance.isPrivate ? (
-              <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-red-100 border border-red-300">
-                <Lock className="h-3 w-3 text-red-600" />
-                <span className="text-xs font-bold text-red-700">Privée</span>
-              </div>
+              <span className="inline-flex items-center text-xs font-medium text-red-700 bg-red-50 px-2 py-1 rounded border border-red-200">
+                Privée
+              </span>
             ) : (
               ordonnance.teamsData && (() => {
                 try {
                   const teams = JSON.parse(ordonnance.teamsData);
                   return teams.slice(0, 2).map((team: Team) => (
-                    <div
+                    <span
                       key={team.id}
-                      className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 border border-blue-300"
+                      className="inline-flex text-xs font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded border border-blue-200"
                     >
-                      <Users className="h-3 w-3 text-blue-600" />
-                      <span className="text-xs font-bold text-blue-700">{team.name}</span>
-                    </div>
+                      {team.name}
+                    </span>
                   ));
                 } catch {
                   return null;

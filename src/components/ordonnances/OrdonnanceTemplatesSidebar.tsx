@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 import {
   Accordion,
@@ -8,10 +8,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import {
-  ordonnanceTemplates,
-  type OrdonnanceTemplate,
-} from "@/data/ordonnances/ordonnance-templates";
+import type { OrdonnanceTemplate } from "@/data/ordonnances/ordonnance-templates";
 
 interface OrdonnanceTemplatesSidebarProps {
   onSelectTemplate: (template: OrdonnanceTemplate) => void;
@@ -19,13 +16,31 @@ interface OrdonnanceTemplatesSidebarProps {
   refreshTrigger?: number;
 }
 
-interface UserTemplate {
+interface BackendTemplate {
   id: number;
   title: string;
   class: string;
   prescriptionDetails: string;
   prescriptionConsignes: string | null;
+  creatorId: number;
 }
+
+interface TemplateCategory {
+  id: string;
+  name: string;
+  templates: OrdonnanceTemplate[];
+}
+
+const CATEGORY_NAMES: Record<string, string> = {
+  supplementation: "Supplémentation",
+  antibiotiques: "Antibiotiques",
+  "gastro-enterologie": "Gastro-entérologie",
+  cardiologie: "Cardiologie",
+  neprologie: "Néphrologie",
+  endocrinologie: "Endocrinologie",
+  dermatologie: "Dermatologie",
+  pneumologie: "Pneumologie",
+};
 
 export function OrdonnanceTemplatesSidebar({
   onSelectTemplate,
@@ -34,27 +49,70 @@ export function OrdonnanceTemplatesSidebar({
 }: OrdonnanceTemplatesSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
-  const [userTemplates, setUserTemplates] = useState<UserTemplate[]>([]);
+  const [allTemplates, setAllTemplates] = useState<BackendTemplate[]>([]);
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
 
   useEffect(() => {
-    const fetchUserTemplates = async () => {
+    const fetchAllTemplates = async () => {
       try {
         setIsLoadingTemplates(true);
         const response = await fetch("/api/ordonnance-templates");
         if (response.ok) {
           const templates = await response.json();
-          setUserTemplates(templates);
+          setAllTemplates(templates);
         }
       } catch (error) {
-        console.error("Failed to fetch user templates:", error);
+        console.error("Failed to fetch templates:", error);
       } finally {
         setIsLoadingTemplates(false);
       }
     };
 
-    fetchUserTemplates();
+    fetchAllTemplates();
   }, [refreshTrigger]);
+
+  // Organize templates by class
+  const categorizedTemplates = useMemo(() => {
+    const categories: TemplateCategory[] = [];
+    const categoryMap = new Map<string, OrdonnanceTemplate[]>();
+
+    // Group templates by class
+    allTemplates.forEach((template) => {
+      if (!categoryMap.has(template.class)) {
+        categoryMap.set(template.class, []);
+      }
+      categoryMap.get(template.class)!.push({
+        id: `backend-${template.id}`,
+        name: template.title,
+        prescriptionDetails: template.prescriptionDetails,
+        remarquesConsignes: template.prescriptionConsignes || "",
+      });
+    });
+
+    // Convert map to array of categories, ordered by known categories
+    Object.entries(CATEGORY_NAMES).forEach(([classId, name]) => {
+      if (categoryMap.has(classId)) {
+        categories.push({
+          id: classId,
+          name,
+          templates: categoryMap.get(classId) || [],
+        });
+      }
+    });
+
+    // Add any custom categories not in the predefined list
+    categoryMap.forEach((templates, classId) => {
+      if (!CATEGORY_NAMES[classId]) {
+        categories.push({
+          id: classId,
+          name: classId.charAt(0).toUpperCase() + classId.slice(1),
+          templates,
+        });
+      }
+    });
+
+    return categories;
+  }, [allTemplates]);
 
   const handleSelectTemplate = (template: OrdonnanceTemplate) => {
     setSelectedTemplateId(template.id);
@@ -120,115 +178,64 @@ export function OrdonnanceTemplatesSidebar({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
-          <Accordion type="single" collapsible className="w-full px-1 py-2">
-            {/* Built-in Templates */}
-            {ordonnanceTemplates.map((category) => (
-              <AccordionItem
-                key={category.id}
-                value={category.id}
-                className="border-b border-slate-100 last:border-b-0 mb-1"
-              >
-                <AccordionTrigger className="
-                  text-xs font-bold text-slate-800
-                  hover:text-indigo-700 hover:bg-indigo-50
-                  px-3 py-2.5 transition-all duration-200
-                  rounded-md mx-1 hover:no-underline
-                  data-[state=open]:bg-indigo-50 data-[state=open]:text-indigo-700
-                ">
-                  <span className="text-left">{category.name}</span>
-                </AccordionTrigger>
-                <AccordionContent className="pt-2 pb-2 px-2">
-                  <div className="space-y-1">
-                    {category.templates.map((template) => {
-                      const isActive = selectedTemplateId === template.id;
-                      return (
-                        <button
-                          key={template.id}
-                          onClick={() => handleSelectTemplate(template)}
-                          className={`
-                            w-full text-left px-3 py-2 rounded-md text-xs
-                            transition-all duration-200 truncate font-medium
-                            ${isActive
-                              ? "bg-indigo-100 text-indigo-900 border border-indigo-300 shadow-sm"
-                              : "text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-transparent"
-                            }
-                          `}
-                          title={template.name}
-                        >
-                          <div className="flex items-center gap-2">
-                            {isActive && (
-                              <div className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
-                            )}
-                            <span className="truncate">{template.name}</span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-
-            {/* User Templates */}
-            {userTemplates.length > 0 && (
-              <AccordionItem
-                key="user-templates"
-                value="user-templates"
-                className="border-b border-slate-100 mb-1"
-              >
-                <AccordionTrigger className="
-                  text-xs font-bold text-slate-800
-                  hover:text-indigo-700 hover:bg-indigo-50
-                  px-3 py-2.5 transition-all duration-200
-                  rounded-md mx-1 hover:no-underline
-                  data-[state=open]:bg-indigo-50 data-[state=open]:text-indigo-700
-                ">
-                  <span className="text-left">Mes modèles</span>
-                </AccordionTrigger>
-                <AccordionContent className="pt-2 pb-2 px-2">
-                  <div className="space-y-1">
-                    {userTemplates.map((template) => {
-                      const templateId = `user-template-${template.id}`;
-                      const isActive = selectedTemplateId === templateId;
-                      return (
-                        <button
-                          key={templateId}
-                          onClick={() => {
-                            setSelectedTemplateId(templateId);
-                            onSelectTemplate({
-                              id: templateId,
-                              name: template.title,
-                              prescriptionDetails: template.prescriptionDetails,
-                              remarquesConsignes: template.prescriptionConsignes || "",
-                            } as OrdonnanceTemplate);
-                            if (window.innerWidth < 1024) {
-                              setIsOpen(false);
-                            }
-                          }}
-                          className={`
-                            w-full text-left px-3 py-2 rounded-md text-xs
-                            transition-all duration-200 truncate font-medium
-                            ${isActive
-                              ? "bg-indigo-100 text-indigo-900 border border-indigo-300 shadow-sm"
-                              : "text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-transparent"
-                            }
-                          `}
-                          title={template.title}
-                        >
-                          <div className="flex items-center gap-2">
-                            {isActive && (
-                              <div className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
-                            )}
-                            <span className="truncate">{template.title}</span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            )}
-          </Accordion>
+          {isLoadingTemplates ? (
+            <div className="flex items-center justify-center py-8">
+              <p className="text-xs text-slate-500">Chargement des modèles...</p>
+            </div>
+          ) : categorizedTemplates.length === 0 ? (
+            <div className="flex items-center justify-center py-8">
+              <p className="text-xs text-slate-500">Aucun modèle disponible</p>
+            </div>
+          ) : (
+            <Accordion type="single" collapsible className="w-full px-1 py-2">
+              {categorizedTemplates.map((category) => (
+                <AccordionItem
+                  key={category.id}
+                  value={category.id}
+                  className="border-b border-slate-100 last:border-b-0 mb-1"
+                >
+                  <AccordionTrigger className="
+                    text-xs font-bold text-slate-800
+                    hover:text-indigo-700 hover:bg-indigo-50
+                    px-3 py-2.5 transition-all duration-200
+                    rounded-md mx-1 hover:no-underline
+                    data-[state=open]:bg-indigo-50 data-[state=open]:text-indigo-700
+                  ">
+                    <span className="text-left">{category.name}</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-2 pb-2 px-2">
+                    <div className="space-y-1">
+                      {category.templates.map((template) => {
+                        const isActive = selectedTemplateId === template.id;
+                        return (
+                          <button
+                            key={template.id}
+                            onClick={() => handleSelectTemplate(template)}
+                            className={`
+                              w-full text-left px-3 py-2 rounded-md text-xs
+                              transition-all duration-200 truncate font-medium
+                              ${isActive
+                                ? "bg-indigo-100 text-indigo-900 border border-indigo-300 shadow-sm"
+                                : "text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-transparent"
+                              }
+                            `}
+                            title={template.name}
+                          >
+                            <div className="flex items-center gap-2">
+                              {isActive && (
+                                <div className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
+                              )}
+                              <span className="truncate">{template.name}</span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          )}
         </div>
 
         {/* Footer hint */}

@@ -4,34 +4,14 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getSession();
-
-    if (!session?.user?.email) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
-    }
-
-    // Get all templates created by the user
+    // Get all templates (both system and user-created)
+    // No authentication required to view templates
     const templates = await prisma.ordonnanceTemplate.findMany({
-      where: {
-        creatorId: user.id,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: [
+        // System templates (creatorId 34) first, then user templates by creation date
+        { creatorId: "asc" },
+        { createdAt: "desc" },
+      ],
     });
 
     return NextResponse.json(templates);

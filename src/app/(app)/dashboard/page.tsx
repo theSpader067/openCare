@@ -73,6 +73,7 @@ import {
 import { getPatients } from "@/lib/api/patients";
 import { useSession } from "next-auth/react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { IBM_Plex_Sans } from "next/font/google";
 
 
 type ActivityStatus = "done" | "todo";
@@ -150,6 +151,11 @@ const startOfDay = (date: Date) => {
 };
 
 
+const plex = IBM_Plex_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
 const patientStatusOptions: PatientItem["status"][] = [
   "Pré-op",
   "Post-op",
@@ -158,6 +164,14 @@ const patientStatusOptions: PatientItem["status"][] = [
 ];
 
 const labStatusOptions: PatientItem["labs"]["status"][] = ["pending", "completed", "na"];
+
+const panelBaseClass =
+  "rounded-[10px] border border-slate-200/80 bg-white shadow-[0px_18px_45px_rgba(15,23,42,0.04)]";
+
+const fieldLabelClass = "text-sm font-semibold text-slate-800";
+
+const fieldInputClass =
+  "w-full rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-800 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] focus:border-slate-900/40 focus:ring-1 focus:ring-slate-900/20 focus:outline-none";
 
 
 export default function DashboardPage() {
@@ -251,6 +265,7 @@ export default function DashboardPage() {
           // Transform API patient data to PatientItem format
           const transformedPatients: PatientItem[] = result.data.map((patient: any) => ({
             id: String(patient.id),
+            pid: patient.pid || String(patient.id),
             name: patient.name,
             service: patient.service || "",
             diagnosis: patient.diagnosis?.label || "",
@@ -573,8 +588,10 @@ export default function DashboardPage() {
       return;
     }
 
+    const generatedId = `PAT-${Date.now()}`;
     const newPatient: PatientItem = {
-      id: `PAT-${Date.now()}`,
+      id: generatedId,
+      pid: generatedId,
       name: patientForm.name.trim(),
       service: patientForm.service.trim(),
       diagnosis: patientForm.diagnosis.trim(),
@@ -624,8 +641,8 @@ export default function DashboardPage() {
     cardClassName?: string,
     contentClassName?: string,
   ) => (
-    <Card className={cn("border-none bg-white/90", cardClassName)}>
-      <CardContent className={cn("pt-4 px-4", contentClassName)}>
+    <Card className={cn(panelBaseClass, cardClassName)}>
+      <CardContent className={cn("px-5 pt-5", contentClassName)}>
         <Calendar
           selected={selectedDateObj}
           onSelect={handleSelectDate}
@@ -649,50 +666,54 @@ export default function DashboardPage() {
         ? "text-emerald-600"
         : stat.trend === "down"
         ? "text-rose-600"
-        : stat.theme.accent;
+        : "text-slate-500";
     const isEmpty = stat.value === "0" || stat.value.trim() === "";
 
     return (
       <Card
         key={options?.key ?? stat.label}
-        className={cn("border-none", stat.theme.card, options?.className)}
+        className={cn(
+          panelBaseClass,
+          "overflow-hidden transition-transform duration-200 hover:-translate-y-0.5",
+          stat.theme.card,
+          options?.className,
+        )}
       >
-        <CardHeader className="flex flex-row items-start justify-between pb-3">
-          <div className="space-y-1">
-            <CardDescription className="text-xs uppercase tracking-wide text-slate-500">
-              {stat.label}
-            </CardDescription>
-            <CardTitle
-              className={cn(
-                "text-3xl font-semibold",
-                isEmpty ? "text-slate-400" : stat.theme.text,
-              )}
-            >
-              {isEmpty ? "—" : stat.value}
-            </CardTitle>
-            <p className={cn("text-sm", trendColor)}>
-              {isEmpty ? "Pas de données pour cette période" : stat.variation}
+        <div className={cn("h-1 w-full bg-gradient-to-r", stat.theme.bar || "from-slate-200 via-transparent")}
+        />
+        <CardHeader className="flex flex-col gap-5 pb-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-4">
+              <span
+                className={cn(
+                  "flex h-11 w-11 items-center justify-center rounded-2xl",
+                  stat.theme.icon,
+                )}
+              >
+                <Icon className="h-5 w-5" />
+              </span>
+              <div className="space-y-1">
+                <CardDescription className="text-[0.7rem] uppercase tracking-[0.35em] text-slate-500">
+                  {stat.label}
+                </CardDescription>
+                <CardTitle
+                  className={cn(
+                    "text-3xl font-semibold tracking-tight",
+                    isEmpty ? "text-slate-400" : stat.theme.text,
+                  )}
+                >
+                  {isEmpty ? "—" : stat.value}
+                </CardTitle>
+              </div>
+            </div>
+            <p className={cn("text-sm font-semibold", trendColor)}>
+              {isEmpty ? "—" : stat.variation}
             </p>
           </div>
-          <span
-            className={cn(
-              "flex h-11 w-11 items-center justify-center rounded-2xl shadow-inner",
-              stat.theme.icon,
-            )}
-          >
-            <Icon className="h-5 w-5" />
-          </span>
         </CardHeader>
-        <CardContent className="pt-0">
-          <p
-            className={cn(
-              "text-sm",
-              isEmpty ? "text-slate-400" : "text-slate-600",
-            )}
-          >
-            {isEmpty
-              ? ""
-              : stat.hint}
+        <CardContent className="border-t border-dashed border-slate-200/70 pt-3">
+          <p className="text-xs text-slate-500">
+            {isEmpty ? t('dashboard.dashboardPage.noDataForPeriod') : stat.hint}
           </p>
         </CardContent>
       </Card>
@@ -700,16 +721,29 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto pb-20 lg:pb-0 overflow-x-hidden">
+    <div
+      className={cn(
+        plex.className,
+        "relative flex h-full flex-col overflow-x-hidden overflow-y-auto bg-[#f8f9fb] pb-20 text-[#111322] lg:pb-0",
+      )}
+    >
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white via-[#f8f9fb] to-[#eef1f5]" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-white/60 backdrop-blur" />
+      <div aria-hidden="true" className="pointer-events-none absolute -top-20 right-8 h-64 w-64 rounded-full bg-gradient-to-br from-[#c7d2fe] via-[#e0e7ff] to-transparent opacity-40 blur-3xl" />
+      <div aria-hidden="true" className="pointer-events-none absolute -bottom-10 left-10 h-56 w-56 rounded-full bg-gradient-to-br from-[#fbcfe8] via-transparent to-transparent opacity-40 blur-3xl" />
+      <div className="relative z-10 flex h-full flex-col">
       <section className="shrink-0 hidden lg:flex">
         {!hasStats ? (
-          <Card className="border-dashed border-slate-200 bg-white/70 p-6 text-center text-sm text-slate-500">
+          <Card
+            className={cn(
+              panelBaseClass,
+              "border-dashed border-2 border-slate-200 bg-white p-6 text-center text-sm text-slate-500",
+            )}
+          >
             {t('dashboard.dashboardPage.noDataForPeriod')}
           </Card>
         ) : (
-          <div className="relative -mx-4 mt-1 pb-4 sm:-mx-6 sm:px-6">
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-white via-white/70 to-transparent z-10" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white via-white/70 to-transparent z-10" />
+          <div className="mt-2 w-full pb-4">
             <div
               className="no-scrollbar overflow-x-auto pb-1 pl-1 pr-4 snap-x snap-mandatory"
               onPointerDown={handleStatsInteractionStart}
@@ -727,7 +761,7 @@ export default function DashboardPage() {
             >
               <div
                 className={cn(
-                  "dashboard-marquee-track flex w-max gap-4 pb-0",
+                  "dashboard-marquee-track flex w-max gap-5 pb-0",
                   isStatsInteracting && "dashboard-marquee-track--paused",
                 )}
                 style={
@@ -743,7 +777,7 @@ export default function DashboardPage() {
                   renderStatCard(stat, {
                     key: `${stat.label}-${index}`,
                     className:
-                      "min-w-[15rem] max-w-[15rem] snap-start sm:min-w-[18rem] sm:max-w-[18rem]",
+                      "min-w-[17rem] max-w-[17rem] snap-start sm:min-w-[18rem] sm:max-w-[18rem]",
                   }),
                 )}
               </div>
@@ -753,9 +787,9 @@ export default function DashboardPage() {
       </section>
 
       <div className="mt-6 flex-1 min-h-0 lg:w-full">
-        <div className="grid h-full min-h-0 grid-cols-1 gap-6 xl:grid-cols-4">
+        <div className="grid h-full min-h-0 grid-cols-1 gap-7 xl:grid-cols-4">
           <div className="hidden h-full min-h-0 flex-col gap-6 xl:flex">
-            {renderCalendarCard()}
+            {renderCalendarCard(undefined, "pt-3")}
             <TasksSection
               ref={tasksSectionRef}
               title={t('dashboard.dashboardPage.dailyInstructions')}
@@ -766,9 +800,12 @@ export default function DashboardPage() {
               onTaskDelete={handleTaskDelete}
               patients={mockPatients}
               favoriteTasks={mockFavoriteTasks}
-              cardClassName="flex min-h-0 flex-1 flex-col border-none bg-white/90 min-h-[500px]"
+              cardClassName={cn(
+                panelBaseClass,
+                "flex min-h-0 flex-1 flex-col min-h-[500px]",
+              )}
               headerClassName="flex flex-wrap items-center justify-between gap-3 pb-4"
-              contentClassName="flex-1 min-h-0 overflow-hidden pt-0"
+              contentClassName="max-h-[22rem] overflow-y-auto pt-0"
               enableSwipeActions={true}
             />
           </div>
@@ -830,7 +867,7 @@ export default function DashboardPage() {
           />
           </div>
 
-          <Card className="flex h-full flex-col border-none bg-white/90 hidden xl:block h-[100%]">
+          <Card className={cn(panelBaseClass, "hidden h-full flex-col xl:flex")}>
             <CardHeader className="flex flex-wrap items-center justify-between gap-3 pb-4">
               <div>
                 <CardTitle>{t('dashboard.dashboardPage.servicePatients')}</CardTitle>
@@ -854,15 +891,15 @@ export default function DashboardPage() {
               ) : (
                 <div className="h-full min-h-0 overflow-y-auto overflow-x-auto">
                   <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
-                    <thead className="sticky top-0 z-10 bg-white/90 backdrop-blur">
+                    <thead className="sticky top-0 z-10 bg-white/95 backdrop-blur">
                       <tr>
-                        <th className="px-4 py-3 font-semibold text-slate-500">
+                        <th className="px-4 py-3 text-xs font-semibold tracking-[0.2em] text-slate-500 uppercase">
                           {t('dashboard.dashboardPage.patientTablePatient')}
                         </th>
-                        <th className="px-4 py-3 font-semibold text-slate-500">
+                        <th className="px-4 py-3 text-xs font-semibold tracking-[0.2em] text-slate-500 uppercase">
                           {t('dashboard.dashboardPage.patientTableDiagnosis')}
                         </th>
-                        <th className="px-4 py-3 font-semibold text-slate-500">
+                        <th className="px-4 py-3 text-xs font-semibold tracking-[0.2em] text-slate-500 uppercase">
                           {t('dashboard.dashboardPage.patientTableStatus')}
                         </th>
                       </tr>
@@ -871,21 +908,24 @@ export default function DashboardPage() {
                       {servicePatients.map((patient) => (
                         <tr
                           key={patient.id}
-                          className="hover:bg-slate-50/70"
+                          className="hover:bg-slate-50/60"
                         >
                           <td className="px-4 py-3">
                             <div className="flex flex-col">
-                              <span className="font-semibold text-slate-800">
+                              <span className="text-sm font-semibold text-[#111322]">
                                 {patient.name}
+                              </span>
+                              <span className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                                {patient.pid ?? patient.id}
                               </span>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-sm text-slate-600">
+                          <td className="px-4 py-3 text-sm text-slate-500">
                             {patient.diagnosis}
                           </td>
                           <td className="px-4 py-3">
                             <span
-                              className="px-3 py-1 text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200"
+                              className="rounded-full border border-slate-200/80 bg-white px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-slate-600"
                             >
                               {patientStatusMeta[patient.status].label}
                             </span>
@@ -906,35 +946,36 @@ export default function DashboardPage() {
         <button
           type="button"
           onClick={() => setIsMobileToolkitOpen(true)}
-          className="fixed bottom-24 right-5 z-40 flex items-center gap-2 rounded-full bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#22d3ee] px-4 py-3 text-sm font-semibold text-white shadow-xl shadow-indigo-200/60 transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-indigo-200/70 xl:hidden"
+          className="fixed bottom-24 right-5 z-40 flex items-center gap-2 rounded-full border border-slate-900/15 bg-[#111322] px-5 py-3 text-sm font-semibold text-white shadow-[0px_25px_55px_rgba(15,15,15,0.45)] transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-slate-900/30 xl:hidden"
         >
-          <ListChecks className="h-4 w-4" />
+          <ListChecks className="h-4 w-4 text-white" />
           {t('dashboard.dashboardPage.mobileToolkitButton')}
         </button>
       ) : null}
       <div
         className={cn(
-          "fixed inset-0 z-40 bg-slate-900/20 backdrop-blur-[2px] transition-opacity duration-300 xl:hidden",
+          "fixed inset-0 z-40 bg-[#0f1117]/40 backdrop-blur-sm transition-opacity duration-300 xl:hidden",
           isMobileToolkitOpen ? "opacity-100" : "pointer-events-none opacity-0",
         )}
         onClick={() => setIsMobileToolkitOpen(false)}
       />
       <div
         className={cn(
-          "fixed inset-x-4 bottom-4 top-20 z-50 flex flex-col rounded-3xl border border-violet-200/60 bg-white/95 shadow-2xl shadow-indigo-200/60 transition-transform duration-300 xl:hidden",
+          panelBaseClass,
+          "fixed inset-x-4 bottom-4 top-20 z-50 flex flex-col rounded-[10px] transition-transform duration-300 xl:hidden",
           isMobileToolkitOpen
             ? "translate-y-0"
             : "pointer-events-none translate-y-[120%]",
         )}
       >
-        <div className="flex flex-shrink-0 items-center justify-between gap-4 border-b border-violet-100/70 px-4 py-3">
-          <div className="flex items-center gap-2 text-sm font-semibold text-[#352f72]">
-            <ListChecks className="h-4 w-4 text-indigo-500" />
+        <div className="flex flex-shrink-0 items-center justify-between gap-4 border-b border-slate-200/80 px-4 py-3">
+          <div className="flex items-center gap-2 text-sm font-semibold text-[#111322]">
+            <ListChecks className="h-4 w-4 text-[#111322]" />
             {t('dashboard.dashboardPage.quickTools')}
           </div>
           <button
             type="button"
-            className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
+            className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
             onClick={() => setIsMobileToolkitOpen(false)}
             aria-label={t('dashboard.dashboardPage.closePanel')}
           >
@@ -944,8 +985,8 @@ export default function DashboardPage() {
         <div className="min-w-0 flex-1 overflow-y-auto px-4 py-4">
           <div className="space-y-4">
             {renderCalendarCard(
-              "border border-slate-200/70 bg-white/95 shadow-md shadow-indigo-100/50",
-              "pt-0",
+              "shadow-[0px_25px_60px_rgba(15,15,15,0.05)]",
+              "pt-2",
             )}
             <TasksSection
               ref={tasksSectionRef}
@@ -957,9 +998,9 @@ export default function DashboardPage() {
               onTaskDelete={handleTaskDelete}
               patients={mockPatients}
               favoriteTasks={mockFavoriteTasks}
-              cardClassName="border border-slate-200/70 bg-white/95 shadow-md shadow-indigo-100/50 min-h-0"
+              cardClassName={cn(panelBaseClass, "min-h-0")}
               headerClassName="flex flex-wrap items-center justify-between gap-3 pb-4"
-              contentClassName="max-h-72 overflow-y-auto"
+              contentClassName="max-h-[18rem] overflow-y-auto"
               enableSwipeActions={true}
             />
           </div>
@@ -990,7 +1031,7 @@ export default function DashboardPage() {
       >
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <label className="text-sm font-semibold text-[#1f184f]">{t('dashboard.dashboardPage.fullName')}</label>
+            <label className={fieldLabelClass}>{t('dashboard.dashboardPage.fullName')}</label>
             <input
               value={patientForm.name}
               onChange={(event) =>
@@ -1000,12 +1041,12 @@ export default function DashboardPage() {
                 }))
               }
               placeholder={t('dashboard.dashboardPage.fullNamePlaceholder')}
-              className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
+              className={fieldInputClass}
             />
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">{t('dashboard.dashboardPage.service')}</label>
+              <label className={fieldLabelClass}>{t('dashboard.dashboardPage.service')}</label>
               <input
                 value={patientForm.service}
                 onChange={(event) =>
@@ -1015,11 +1056,11 @@ export default function DashboardPage() {
                   }))
                 }
                 placeholder={t('dashboard.dashboardPage.servicePlaceholder')}
-                className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
+                className={fieldInputClass}
               />
             </div>
             <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">{t('dashboard.dashboardPage.diagnosis')}</label>
+              <label className={fieldLabelClass}>{t('dashboard.dashboardPage.diagnosis')}</label>
               <input
                 value={patientForm.diagnosis}
                 onChange={(event) =>
@@ -1029,13 +1070,13 @@ export default function DashboardPage() {
                   }))
                 }
                 placeholder={t('dashboard.dashboardPage.diagnosisPlaceholder')}
-                className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
+                className={fieldInputClass}
               />
             </div>
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">{t('dashboard.dashboardPage.status')}</label>
+              <label className={fieldLabelClass}>{t('dashboard.dashboardPage.status')}</label>
               <select
                 value={patientForm.status}
                 onChange={(event) =>
@@ -1044,7 +1085,7 @@ export default function DashboardPage() {
                     status: event.target.value as PatientItem["status"],
                   }))
                 }
-                className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
+                className={fieldInputClass}
               >
                 {patientStatusOptions.map((option) => (
                   <option key={option} value={option}>
@@ -1054,7 +1095,7 @@ export default function DashboardPage() {
               </select>
             </div>
             <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">{t('dashboard.dashboardPage.labStatus')}</label>
+              <label className={fieldLabelClass}>{t('dashboard.dashboardPage.labStatus')}</label>
               <select
                 value={patientForm.labsStatus}
                 onChange={(event) =>
@@ -1063,7 +1104,7 @@ export default function DashboardPage() {
                     labsStatus: event.target.value as PatientItem["labs"]["status"],
                   }))
                 }
-                className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
+                className={fieldInputClass}
               >
                 {labStatusOptions.map((option) => (
                   <option key={option} value={option}>
@@ -1073,7 +1114,7 @@ export default function DashboardPage() {
               </select>
             </div>
             <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#1f184f]">{t('dashboard.dashboardPage.labStatus')}</label>
+              <label className={fieldLabelClass}>{t('dashboard.dashboardPage.labStatus')}</label>
               <select
                 value={patientForm.labsStatus}
                 onChange={(event) =>
@@ -1082,7 +1123,7 @@ export default function DashboardPage() {
                     labsStatus: event.target.value as PatientItem["labs"]["status"],
                   }))
                 }
-                className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
+                className={fieldInputClass}
               >
                 {labStatusOptions.map((option) => (
                   <option key={option} value={option}>
@@ -1093,7 +1134,7 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="grid gap-2">
-            <label className="text-sm font-semibold text-[#1f184f]">
+            <label className={fieldLabelClass}>
               {t('dashboard.dashboardPage.labNote')}
             </label>
             <input
@@ -1105,11 +1146,12 @@ export default function DashboardPage() {
                 }))
               }
               placeholder={t('dashboard.dashboardPage.labNotePlaceholder')}
-              className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
+              className={fieldInputClass}
             />
           </div>
         </div>
       </Modal>
+      </div>
     </div>
   );
 }

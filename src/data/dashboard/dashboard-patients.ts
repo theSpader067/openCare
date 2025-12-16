@@ -1,5 +1,6 @@
 export interface PatientItem {
   id: string;
+  pid?: string;
   name: string;
   service: string;
   diagnosis: string;

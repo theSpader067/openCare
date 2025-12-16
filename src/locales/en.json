@@ -1098,7 +1098,8 @@
       "viewAll": "View all",
       "myProfile": "My profile",
       "logout": "Logout",
-      "openNavMenu": "Open navigation menu"
+      "openNavMenu": "Open navigation menu",
+      "language": "Language"
     },
     "sidebar": {
       "dashboard": "Dashboard",

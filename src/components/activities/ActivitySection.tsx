@@ -74,6 +74,11 @@ const getCreatorDisplay = (creator: any): string => {
   return creator.username || (creator.firstName && creator.lastName ? `${creator.firstName} ${creator.lastName}` : creator.email);
 };
 
+const formLabelClass = "text-sm font-semibold text-[#111322]";
+
+const formInputClass =
+  "w-full rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm text-[#111322] shadow-[inset_0_1px_2px_rgba(15,15,15,0.05)] focus:border-slate-900 focus:ring-1 focus:ring-slate-900/15 focus:outline-none";
+
 export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionProps>(
   function ActivitySection({
     selectedDate,
@@ -153,14 +158,19 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
 
   return (
     <>
-      <Card className="flex min-h-0 flex-1 flex-col border-none bg-white/90">
-        <CardHeader className="flex flex-wrap items-center justify-between gap-3 pb-4">
+      <Card className="flex min-h-0 flex-1 flex-col rounded-[10px] border border-slate-200/80 bg-white shadow-[0px_18px_45px_rgba(15,23,42,0.04)]">
+        <CardHeader className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/70 pb-5">
           <div>
             <CardTitle>{t('dashboard.activities.title')}</CardTitle>
-            <CardDescription>{selectedDateLabel}</CardDescription>
+            <CardDescription className="text-xs uppercase tracking-[0.2em] text-slate-500">
+              {selectedDateLabel}
+            </CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="muted" className="bg-indigo-100 text-indigo-800">
+            <Badge
+              variant="muted"
+              className="rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-xs font-medium uppercase tracking-[0.15em] text-slate-700"
+            >
               {activitiesCount} {t('dashboard.activities.activitiesCount')}
               {activitiesCount !== 1 && '(s)'}
             </Badge>
@@ -177,8 +187,8 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
         <CardContent className="flex-1 min-h-0 overflow-hidden pt-0">
           {isLoading ? (
             <div className="flex h-full items-center justify-center">
-              <div className="text-center space-y-2">
-                <div className="h-8 w-8 rounded-full border-4 border-indigo-100 border-t-indigo-600 animate-spin mx-auto" />
+              <div className="space-y-2 text-center">
+                <div className="mx-auto h-8 w-8 rounded-full border-4 border-slate-200 border-t-slate-900 animate-spin" />
                 <p className="text-sm text-slate-500">{t('dashboard.activities.loading')}</p>
               </div>
             </div>
@@ -214,10 +224,10 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
                     >
                       <div
                         className={cn(
-                          "relative flex flex-col gap-4 rounded-2xl border bg-white/80 p-4 shadow-sm sm:flex-row sm:items-start sm:justify-between transition-transform duration-300 ease-out",
+                          "relative flex flex-col gap-4 rounded-[10px] border border-slate-200 bg-white p-5 shadow-[0px_12px_35px_rgba(15,23,42,0.04)] transition-all duration-200 sm:flex-row sm:items-start sm:justify-between",
                           done
-                            ? "border-emerald-200 bg-emerald-50/80"
-                            : "border-transparent hover:-translate-y-[1px] hover:border-slate-200"
+                            ? "border-slate-300 bg-slate-50 text-slate-500"
+                            : "hover:-translate-y-1 hover:border-slate-300"
                         )}
                         style={{
                           transform: swipedActivityId === activity.id ? "translateX(-96px)" : "translateX(0)",
@@ -227,7 +237,7 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
                         <div className="absolute top-3 right-3">
                           <button
                             onClick={() => setOpenMenuId(openMenuId === activity.id ? null : activity.id)}
-                            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-slate-100 transition"
+                            className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-900"
                             type="button"
                             title="Menu"
                           >
@@ -236,13 +246,13 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
 
                           {/* Dropdown menu */}
                           {openMenuId === activity.id && (
-                            <div className="absolute right-0 top-10 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50">
+                            <div className="absolute right-0 top-10 z-50 mt-1 w-48 rounded-2xl border border-slate-200/80 bg-white shadow-[0px_20px_45px_rgba(15,23,42,0.08)]">
                               <button
                                 onClick={() => {
                                   onDeleteClick(activity);
                                   setOpenMenuId(null);
                                 }}
-                                className="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-lg flex items-center gap-2 first:rounded-t-lg last:rounded-b-lg"
+                                className="flex w-full items-center gap-2 rounded-xl px-4 py-2 text-left text-sm text-rose-600 transition hover:bg-rose-50"
                                 type="button"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -254,13 +264,13 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
                         <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
                           <button
                             onClick={() => onToggleClick(activity.id)}
-                            className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl transition hover:opacity-80"
+                            className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[10px] border border-slate-200 bg-slate-50 transition hover:-translate-y-1"
                             type="button"
                           >
                             <span
                               className={cn(
-                                "flex h-full w-full items-center justify-center rounded-2xl shadow-inner",
-                                meta.badgeClass
+                                "flex h-full w-full items-center justify-center rounded-2xl text-white",
+                                meta.badgeClass,
                               )}
                             >
                               <Icon className="h-5 w-5" />
@@ -271,24 +281,24 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
                               <div className="space-y-1">
                                 <h3
                                   className={cn(
-                                    "text-sm font-semibold text-[#1f184f]",
+                                    "text-sm font-semibold text-[#111322]",
                                     done && "line-through opacity-70"
                                   )}
                                 >
                                   {activity.title}
                                 </h3>
-                                <p className="text-xs text-[#5f5aa5]">
+                                <p className="text-xs text-slate-500">
                                   {activity.description}
                                 </p>
                               </div>
                               <Badge
                                 variant="muted"
-                                className="self-start bg-[#f1f0ff] text-[#4338ca] mr-6"
+                                className="mr-6 self-start rounded-full border border-slate-200 bg-white px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-slate-600"
                               >
                                 {activity.time}
                               </Badge>
                             </div>
-                            <div className="flex flex-wrap items-center gap-3 text-xs text-[#6f66c4]">
+                            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
                               {activity.location ? (
                                 <span className="flex items-center gap-1">
                                   <MapPin className="h-3.5 w-3.5" />
@@ -313,7 +323,7 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
                               ) : null}
                             </div>
                             {activity.participants && activity.participants.length > 0 ? (
-                              <div className="flex flex-wrap items-start gap-3 text-xs text-[#6f66c4] pt-2 border-t border-slate-200">
+                              <div className="flex flex-wrap items-start gap-3 border-t border-slate-200/70 pt-2 text-xs text-slate-500">
                                 <span className="flex items-center gap-1 basis-full sm:basis-auto">
                                   <UsersIcon className="h-3.5 w-3.5 flex-shrink-0" />
                                   <span className="font-medium">{t('dashboard.activities.participants')} ({activity.participants.length}):</span>
@@ -332,20 +342,20 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
                         className={cn(
                           "absolute right-2 top-1/2 -translate-y-1/2 flex gap-2 transition-all duration-300 ease-out",
                           swipedActivityId === activity.id
-                            ? "opacity-100 pointer-events-auto"
-                            : "opacity-0 pointer-events-none"
+                            ? "pointer-events-auto opacity-100"
+                            : "pointer-events-none opacity-0"
                         )}
                       >
                         <button
                           onClick={() => onEditClick(activity)}
-                          className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-md"
+                          className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:-translate-y-0.5"
                           type="button"
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => onDeleteClick(activity)}
-                          className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-600 text-white hover:bg-rose-700 transition shadow-md"
+                          className="flex h-9 w-9 items-center justify-center rounded-full border border-rose-100 bg-white text-rose-600 transition hover:-translate-y-0.5"
                           type="button"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -445,7 +455,7 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
         }
       >
         {activityToDelete ? (
-          <p className="text-sm text-[#5f5aa5]">
+          <p className="text-sm text-slate-500">
             {t('dashboard.activities.deleteActivityConfirm').replace('{{title}}', activityToDelete.title)}
           </p>
         ) : null}
@@ -466,7 +476,7 @@ function ActivityFormContent({ form, setForm }: ActivityFormContentProps) {
   return (
     <div className="space-y-4">
       <div className="grid gap-2">
-        <label className="text-sm font-semibold text-[#1f184f]">
+        <label className={formLabelClass}>
           {t('dashboard.activities.formLabels.title')}
         </label>
         <input
@@ -475,11 +485,11 @@ function ActivityFormContent({ form, setForm }: ActivityFormContentProps) {
             setForm({ ...form, title: e.target.value })
           }
           placeholder={t('dashboard.activities.formLabels.titleExample')}
-          className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
+          className={formInputClass}
         />
       </div>
       <div className="grid gap-2">
-        <label className="text-sm font-semibold text-[#1f184f]">
+        <label className={formLabelClass}>
           {t('dashboard.activities.formLabels.description')}
         </label>
         <textarea
@@ -492,12 +502,12 @@ function ActivityFormContent({ form, setForm }: ActivityFormContentProps) {
             })
           }
           placeholder={t('dashboard.activities.formLabels.descriptionExample')}
-          className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
+          className={cn(formInputClass, "min-h-[90px]")}
         />
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
         <div className="grid gap-2">
-          <label className="text-sm font-semibold text-[#1f184f]">
+          <label className={formLabelClass}>
             {t('dashboard.activities.formLabels.activityDay')}
           </label>
           <input
@@ -509,11 +519,11 @@ function ActivityFormContent({ form, setForm }: ActivityFormContentProps) {
                 activityDay: new Date(e.target.value),
               })
             }
-            className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
+            className={formInputClass}
           />
         </div>
         <div className="grid gap-2">
-          <label className="text-sm font-semibold text-[#1f184f]">
+          <label className={formLabelClass}>
             {t('dashboard.activities.formLabels.time')}
           </label>
           <input
@@ -522,13 +532,13 @@ function ActivityFormContent({ form, setForm }: ActivityFormContentProps) {
             onChange={(e) =>
               setForm({ ...form, time: e.target.value })
             }
-            className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
+            className={formInputClass}
           />
         </div>
       </div>
       <div className="grid gap-2">
-        <label className="text-sm font-semibold text-[#1f184f]">
-          {t('dashboard.activities.formLabels.type')}
+        <label className={formLabelClass}>
+          {t('dashboard.activities.formLabels.activityType')}
         </label>
         <select
           value={form.type}
@@ -538,17 +548,18 @@ function ActivityFormContent({ form, setForm }: ActivityFormContentProps) {
               type: e.target.value as ActivityType,
             })
           }
-          className="w-full rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
+          className={formInputClass}
         >
-          <option value="consultation">{t('dashboard.activities.activityTypes.consultation')}</option>
-          <option value="chirurgie">{t('dashboard.activities.activityTypes.operatingRoom')}</option>
-          <option value="staff">{t('dashboard.activities.activityTypes.staffMeeting')}</option>
-          <option value="tournee">{t('dashboard.activities.activityTypes.tour')}</option>
+          {Object.entries(activityTypeMeta).map(([value, meta]) => (
+            <option key={value} value={value}>
+              {meta.label}
+            </option>
+          ))}
         </select>
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
         <div className="grid gap-2">
-          <label className="text-sm font-semibold text-[#1f184f]">
+          <label className={formLabelClass}>
             {t('dashboard.activities.formLabels.location')}
           </label>
           <input
@@ -557,11 +568,11 @@ function ActivityFormContent({ form, setForm }: ActivityFormContentProps) {
               setForm({ ...form, location: e.target.value })
             }
             placeholder={t('dashboard.activities.formLabels.locationExample')}
-            className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
+            className={formInputClass}
           />
         </div>
         <div className="grid gap-2">
-          <label className="text-sm font-semibold text-[#1f184f]">
+          <label className={formLabelClass}>
             {t('dashboard.activities.formLabels.team')}
           </label>
           <input
@@ -570,7 +581,7 @@ function ActivityFormContent({ form, setForm }: ActivityFormContentProps) {
               setForm({ ...form, team: e.target.value })
             }
             placeholder={t('dashboard.activities.formLabels.teamExample')}
-            className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm text-[#1f184f] shadow-inner focus:border-[#7c3aed] focus:outline-none"
+            className={formInputClass}
           />
         </div>
       </div>

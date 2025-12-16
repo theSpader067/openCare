@@ -25,6 +25,8 @@ import {
   Edit2,
   Trash2,
   MoreVertical,
+  Users,
+  Building2,
 } from "lucide-react";
 import {
   pendingJoinRequests,
@@ -217,6 +219,11 @@ export default function ProfilePage() {
   const [profileError, setProfileError] = useState<string | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const tabItems: { id: "personal" | "equipes"; label: string }[] = [
+    { id: "personal", label: t("profile.tabs.personal") },
+    { id: "equipes", label: t("profile.tabs.teams") },
+  ];
 
   // Fetch user profile data and teams
   useEffect(() => {
@@ -614,14 +621,94 @@ export default function ProfilePage() {
 
   if (isLoadingProfile) {
     return (
-      <div className="space-y-6 pb-20 lg:pb-0">
-        <Card className="border-none bg-gradient-to-r from-indigo-50 to-blue-50 shadow-md">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-center h-20">
-              <Loader className="h-6 w-6 text-indigo-600 animate-spin" />
+      <div className="space-y-4 pb-20 lg:pb-0">
+        {/* Header Skeleton */}
+        <Card className="border border-slate-200 bg-white shadow-sm rounded-[10px]">
+          <CardContent className="p-4 pt-6 space-y-3">
+            {/* Avatar and Info Row */}
+            <div className="flex items-center gap-3">
+              <div className="h-14 w-14 rounded-[10px] bg-slate-200 animate-pulse"></div>
+              <div className="space-y-2 flex-1">
+                <div className="h-5 bg-slate-200 rounded-[10px] w-48 animate-pulse"></div>
+                <div className="h-4 bg-slate-200 rounded-[10px] w-32 animate-pulse"></div>
+              </div>
+            </div>
+            {/* Metrics Row */}
+            <div className="grid grid-cols-3 gap-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center gap-2 rounded-[10px] border border-slate-200 bg-slate-50 p-2.5">
+                  <div className="h-8 w-8 rounded-[10px] bg-slate-200 animate-pulse flex-shrink-0"></div>
+                  <div className="flex-1 space-y-1">
+                    <div className="h-3 bg-slate-200 rounded-[10px] w-12 animate-pulse"></div>
+                    <div className="h-4 bg-slate-200 rounded-[10px] w-8 animate-pulse"></div>
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
+
+        {/* Tabs Skeleton */}
+        <div className="flex gap-2">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="h-9 bg-slate-200 rounded-[10px] w-24 animate-pulse"
+            ></div>
+          ))}
+        </div>
+
+        {/* Main Content Skeleton */}
+        <div className="grid gap-4 lg:grid-cols-[3fr_1fr]">
+          {/* Personal Info Card Skeleton */}
+          <Card className="border border-slate-200 bg-white shadow-sm rounded-[10px]">
+            <CardHeader className="pb-3 border-b border-slate-100">
+              <div className="space-y-2">
+                <div className="h-6 bg-slate-200 rounded-[10px] w-40 animate-pulse"></div>
+                <div className="h-4 bg-slate-200 rounded-[10px] w-56 animate-pulse"></div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-4">
+              {/* 2-column grid skeleton */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="flex flex-col space-y-2">
+                    <div className="h-4 bg-slate-200 rounded-[10px] w-24 animate-pulse"></div>
+                    <div className="h-10 bg-slate-200 rounded-[10px] animate-pulse"></div>
+                  </div>
+                ))}
+              </div>
+              {/* Full width fields */}
+              {[1, 2].map((i) => (
+                <div key={i} className="flex flex-col space-y-2 md:col-span-2">
+                  <div className="h-4 bg-slate-200 rounded-[10px] w-20 animate-pulse"></div>
+                  <div className="h-20 bg-slate-200 rounded-[10px] animate-pulse"></div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Preferences Sidebar Skeleton */}
+          <Card className="border border-slate-200 bg-white shadow-sm rounded-[10px] h-fit">
+            <CardHeader className="pb-3 border-b border-slate-100">
+              <div className="space-y-2">
+                <div className="h-6 bg-slate-200 rounded-[10px] w-32 animate-pulse"></div>
+                <div className="h-4 bg-slate-200 rounded-[10px] w-40 animate-pulse"></div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3 pt-4">
+              {[1, 2].map((i) => (
+                <div key={i} className="flex items-center justify-between gap-3 rounded-[10px] border border-slate-200 p-3">
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-slate-200 rounded-[10px] w-32 animate-pulse"></div>
+                    <div className="h-3 bg-slate-200 rounded-[10px] w-24 animate-pulse"></div>
+                  </div>
+                  <div className="h-6 w-11 bg-slate-200 rounded-full animate-pulse flex-shrink-0"></div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -651,1110 +738,758 @@ export default function ProfilePage() {
     );
   }
 
-  return (
-    <div className="space-y-6 pb-20 lg:pb-0">
-      {/* Profile Header Card */}
-      <Card className="border-none bg-gradient-to-r from-indigo-50 to-blue-50 shadow-md">
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            {/* Avatar */}
-            <div className="flex items-center justify-center h-20 w-20 rounded-full bg-gradient-to-br from-indigo-600 to-blue-600 text-white flex-shrink-0">
-              <span className="text-2xl font-semibold">{personalInfo.avatar}</span>
-            </div>
+  const highlightMetrics = [
+    {
+      label: t("profile.tabs.teams"),
+      value: userTeams.length.toString().padStart(2, "0"),
+      helper: t("profile.sections.myTeams", { count: userTeams.length }),
+      icon: Users,
+    },
+    {
+      label: t("profile.labels.specialty"),
+      value: personalInfo.specialty || "—",
+      helper: personalInfo.year || t("profile.labels.yearStatus"),
+      icon: Briefcase,
+    },
+    {
+      label: t("profile.labels.hospital"),
+      value: personalInfo.hospital || "—",
+      helper: personalInfo.address || t("profile.labels.address"),
+      icon: Building2,
+    },
+  ];
 
-            {/* User Info */}
-            <div className="flex-1">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
-                <div>
-                  <h1 className="text-2xl font-semibold text-slate-900">
+  const inputBaseClasses =
+    "px-4 py-2 rounded-[10px] border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 disabled:bg-slate-50 disabled:text-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 transition";
+
+  const contactRows = [
+    { icon: Mail, label: t("profile.labels.email"), value: personalInfo.email || "—" },
+    { icon: Phone, label: t("profile.labels.phone"), value: personalInfo.phone || "—" },
+    { icon: MapPin, label: t("profile.labels.hospital"), value: personalInfo.hospital || "—" },
+  ];
+
+  return (
+    <div className="relative pb-16 lg:pb-0">
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-48 bg-gradient-to-b from-indigo-50 via-white to-transparent" />
+      <div className="space-y-4">
+        <Card className="border border-slate-200 bg-white shadow-sm rounded-[10px]">
+          <CardContent className="p-4 pt-6 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-14 w-14 items-center justify-center rounded-[10px] bg-slate-900 text-xl font-semibold text-white">
+                {personalInfo.avatar}
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-lg font-semibold text-slate-900">
                     {personalInfo.firstName} {personalInfo.lastName}
                   </h1>
-                  <p className="text-sm text-slate-600">{personalInfo.username}</p>
+                  <Badge
+                    variant={personalInfo.profileVisible ? "success" : "muted"}
+                    className="px-2 py-0.5 text-[10px] font-semibold"
+                  >
+                    {personalInfo.profileVisible
+                      ? t("profile.labels.profileVisibility")
+                      : t("profile.labels.profileVisibilityDesc")}
+                  </Badge>
                 </div>
-              </div>
-              <div className="flex flex-wrap gap-4 text-sm text-slate-600">
-                <div className="flex items-center gap-1">
-                  <Briefcase className="h-4 w-4 text-indigo-600" />
-                  {personalInfo.specialty}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Mail className="h-4 w-4 text-indigo-600" />
-                  {personalInfo.email}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Stethoscope className="h-4 w-4 text-indigo-600" />
-                  {personalInfo.year}
-                </div>
+                <p className="text-xs text-slate-500">@{personalInfo.username}</p>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-slate-200">
-        <button
-          onClick={() => setActiveTab("personal")}
-          className={cn(
-            "px-4 py-3 text-sm font-medium border-b-2 transition",
-            activeTab === "personal"
-              ? "border-indigo-600 text-indigo-600"
-              : "border-transparent text-slate-600 hover:text-slate-800"
+            <div className="grid grid-cols-3 gap-2">
+              {highlightMetrics.map((metric) => {
+                const Icon = metric.icon;
+                return (
+                  <div
+                    key={metric.label}
+                    className="flex items-center gap-2 rounded-[10px] border border-slate-200 bg-slate-50/60 px-2.5 py-2 text-xs"
+                  >
+                    <div className="rounded-[10px] bg-white p-1.5 text-slate-600">
+                      <Icon className="h-3.5 w-3.5" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                        {metric.label}
+                      </p>
+                      <p className="font-semibold text-slate-900">{metric.value}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex flex-wrap items-center gap-1 rounded-[10px] border border-slate-200 bg-white p-1">
+            {tabItems.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "rounded-[10px] px-3 py-1.5 text-sm font-medium transition",
+                  activeTab === tab.id
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-500 hover:text-slate-900"
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          {isSavingProfile && (
+            <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
+              <Loader className="h-3 w-3 animate-spin" />
+              {t("profile.buttons.saving")}
+            </div>
           )}
-        >
-          {t("profile.tabs.personal")}
-        </button>
-        <button
-          onClick={() => setActiveTab("equipes")}
-          className={cn(
-            "px-4 py-3 text-sm font-medium border-b-2 transition",
-            activeTab === "equipes"
-              ? "border-indigo-600 text-indigo-600"
-              : "border-transparent text-slate-600 hover:text-slate-800"
-          )}
-        >
-          {t("profile.tabs.teams")}
-        </button>
-        {/* <button
-          onClick={() => setActiveTab("statistiques")}
-          className={cn(
-            "px-4 py-3 text-sm font-medium border-b-2 transition",
-            activeTab === "statistiques"
-              ? "border-indigo-600 text-indigo-600"
-              : "border-transparent text-slate-600 hover:text-slate-800"
-          )}
-        >
-          {t("profile.tabs.statistics")}
-        </button> */}
-      </div>
+        </div>
 
       {/* Personal Tab */}
       {activeTab === "personal" && (
-        <div className="space-y-6">
+        <div className="space-y-3">
           {profileError && (
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700">
+            <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50/80 p-3 text-red-700">
               <AlertCircle className="h-5 w-5 flex-shrink-0" />
               <p className="text-sm">{profileError}</p>
             </div>
           )}
           {saveSuccess && (
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 animate-in fade-in">
+            <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50/80 p-3 text-emerald-700">
               <Check className="h-5 w-5 flex-shrink-0" />
               <p className="text-sm font-medium">{t("profile.messages.profileUpdatedSuccess")}</p>
             </div>
           )}
-          <Card className="border-none bg-white/90">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>{t("profile.sections.personalInfo")}</CardTitle>
-                <CardDescription>
-                  {t("profile.sections.personalInfoDesc")}
-                </CardDescription>
-              </div>
-              <Button
-                variant={isEditing ? "ghost" : "primary"}
-                onClick={() => (isEditing ? handleSavePersonal() : setIsEditing(true))}
-                disabled={isSavingProfile}
-              >
-                {isSavingProfile ? (
-                  <>
-                    <Loader className="mr-2 h-4 w-4 animate-spin" />
-                    {t("profile.buttons.saving")}
-                  </>
-                ) : isEditing ? (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    {t("profile.buttons.save")}
-                  </>
-                ) : (
-                  t("profile.buttons.edit")
-                )}
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="grid gap-2">
-                  <label className="text-sm font-semibold text-slate-700">{t("profile.labels.firstName")}</label>
-                  <input
-                    disabled={!isEditing}
-                    value={personalInfo.firstName}
-                    onChange={(e) =>
-                      setPersonalInfo({ ...personalInfo, firstName: e.target.value })
-                    }
-                    className="px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 disabled:bg-slate-50 disabled:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-sm font-semibold text-slate-700">{t("profile.labels.lastName")}</label>
-                  <input
-                    disabled={!isEditing}
-                    value={personalInfo.lastName}
-                    onChange={(e) =>
-                      setPersonalInfo({ ...personalInfo, lastName: e.target.value })
-                    }
-                    className="px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 disabled:bg-slate-50 disabled:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                  />
-                </div>
-              </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="grid gap-2">
-                  <label className="text-sm font-semibold text-slate-700">{t("profile.labels.email")}</label>
-                  <input
-                    disabled={!isEditing}
-                    type="email"
-                    value={personalInfo.email}
-                    onChange={(e) =>
-                      setPersonalInfo({ ...personalInfo, email: e.target.value })
-                    }
-                    className="px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 disabled:bg-slate-50 disabled:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-sm font-semibold text-slate-700">{t("profile.labels.phone")}</label>
-                  <input
-                    disabled={!isEditing}
-                    type="tel"
-                    value={personalInfo.phone}
-                    onChange={(e) =>
-                      setPersonalInfo({ ...personalInfo, phone: e.target.value })
-                    }
-                    className="px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 disabled:bg-slate-50 disabled:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="grid gap-2">
-                  <label className="text-sm font-semibold text-slate-700">{t("profile.labels.specialty")}</label>
-                  <input
-                    disabled={!isEditing}
-                    value={personalInfo.specialty}
-                    onChange={(e) =>
-                      setPersonalInfo({ ...personalInfo, specialty: e.target.value })
-                    }
-                    className="px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 disabled:bg-slate-50 disabled:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-sm font-semibold text-slate-700">{t("profile.labels.hospital")}</label>
-                  <input
-                    disabled={!isEditing}
-                    value={personalInfo.hospital}
-                    onChange={(e) =>
-                      setPersonalInfo({ ...personalInfo, hospital: e.target.value })
-                    }
-                    className="px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 disabled:bg-slate-50 disabled:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-sm font-semibold text-slate-700">{t("profile.labels.yearStatus")}</label>
-                  <select
-                    disabled={!isEditing}
-                    value={personalInfo.year}
-                    onChange={(e) =>
-                      setPersonalInfo({ ...personalInfo, year: e.target.value })
-                    }
-                    className="px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 disabled:bg-slate-50 disabled:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                  >
-                    <option value="">{t("profile.placeholders.selectStatus")}</option>
-                    {statuses.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-1">
-                <div className="grid gap-2">
-                  <label className="text-sm font-semibold text-slate-700">{t("profile.labels.address")}</label>
-                  <input
-                    disabled={!isEditing}
-                    value={personalInfo.address}
-                    onChange={(e) =>
-                      setPersonalInfo({ ...personalInfo, address: e.target.value })
-                    }
-                    className="px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 disabled:bg-slate-50 disabled:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <label className="text-sm font-semibold text-slate-700">{t("profile.labels.bio")}</label>
-                <textarea
-                  disabled={!isEditing}
-                  value={personalInfo.bio}
-                  onChange={(e) =>
-                    setPersonalInfo({ ...personalInfo, bio: e.target.value })
-                  }
-                  rows={4}
-                  className="px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 disabled:bg-slate-50 disabled:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Settings Section */}
-          <Card className="border-none bg-white/90">
-            <CardHeader>
-              <CardTitle>{t("profile.sections.preferences")}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200">
+          <div className="grid gap-4 xl:grid-cols-[2fr_1fr]">
+            <Card className="border border-slate-200 bg-white shadow-sm rounded-[10px]">
+              <CardHeader className="flex flex-col gap-2 border-b border-slate-100 pb-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="font-medium text-slate-900">{t("profile.labels.emailNotifications")}</p>
-                  <p className="text-sm text-slate-600">{t("profile.labels.emailNotificationsDesc")}</p>
+                  <CardTitle>{t("profile.sections.personalInfo")}</CardTitle>
+                  <CardDescription>{t("profile.sections.personalInfoDesc")}</CardDescription>
                 </div>
-                <input
-                  type="checkbox"
-                  checked={personalInfo.notifyByEmail}
-                  onChange={(e) =>
-                    setPersonalInfo({
-                      ...personalInfo,
-                      notifyByEmail: e.target.checked,
-                    })
-                  }
-                  disabled={!isEditing}
-                  className="w-4 h-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200">
-                <div>
-                  <p className="font-medium text-slate-900">{t("profile.labels.pushNotifications")}</p>
-                  <p className="text-sm text-slate-600">{t("profile.labels.pushNotificationsDesc")}</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={personalInfo.notifyByPush}
-                  onChange={(e) =>
-                    setPersonalInfo({
-                      ...personalInfo,
-                      notifyByPush: e.target.checked,
-                    })
-                  }
-                  disabled={!isEditing}
-                  className="w-4 h-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200">
-                <div>
-                  <p className="font-medium text-slate-900">{t("profile.labels.profileVisibility")}</p>
-                  <p className="text-sm text-slate-600">{t("profile.labels.profileVisibilityDesc")}</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={personalInfo.profileVisible}
-                  onChange={(e) =>
-                    setPersonalInfo({
-                      ...personalInfo,
-                      profileVisible: e.target.checked,
-                    })
-                  }
-                  disabled={!isEditing}
-                  className="w-4 h-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Équipes Tab */}
-      {activeTab === "equipes" && (
-        <div className="space-y-6">
-          {/* Two-column layout: Search on right, Teams on left (on XL screens) */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            {/* My Teams - Left side on XL, Full width on smaller screens */}
-            <div className="xl:order-2">
-              {userTeams.length > 0 ? (
-                <div className="space-y-4">
-                  {/* Header */}
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-bold text-slate-900">{t("profile.sections.myTeams", { count: userTeams.length })}</h2>
-                  </div>
-
-                  {/* Teams List */}
-                  <div className="space-y-4 mb-4">
-                    {userTeams.map((team, idx) => {
-                      const colors = [
-                        { bg: "from-indigo-600 to-indigo-700", light: "bg-indigo-100", text: "text-indigo-900" },
-                        { bg: "from-purple-600 to-purple-700", light: "bg-purple-100", text: "text-purple-900" },
-                        { bg: "from-blue-600 to-blue-700", light: "bg-blue-100", text: "text-blue-900" },
-                        { bg: "from-violet-600 to-violet-700", light: "bg-violet-100", text: "text-violet-900" },
-                      ];
-                      const colorScheme = colors[idx % colors.length];
-                      const adminCount = team.teamMembers?.filter((m: any) => m.role === "Admin").length || 0;
-                      const isAdmin = team.adminId === (session?.user as any).id;
-                      return (
-                        <div
-                          key={team.id}
-                          className="border border-slate-200 rounded-xl overflow-hidden hover:border-slate-300 hover:shadow-lg transition-all duration-200 bg-white"
-                        >
-                          {/* Header with Info */}
-                          <div className={`bg-gradient-to-r ${colorScheme.bg} px-5 py-4 flex items-start justify-between gap-4`}>
-                            <div className="flex items-start gap-4 min-w-0 flex-1">
-                              <div className={`h-12 w-12 rounded-lg bg-white/20 flex items-center justify-center text-white font-bold text-lg flex-shrink-0`}>
-                                {team.name.charAt(0).toUpperCase()}
-                              </div>
-                              <div className="min-w-0 flex-1 my-auto">
-                                <h1 className="text-white font-semibold my-auto text-2xl">{team.name}</h1>
-                                {(team.hospital || team.service) && (
-                                  <div className="flex items-center gap-2 mt-1.5 text-xs text-white/70">
-                                    {team.hospital && <span>{team.hospital}</span>}
-                                    {team.hospital && team.service && <span>•</span>}
-                                    {team.service && <span>{team.service}</span>}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Menu Button - Only visible if user is admin */}
-                            {isAdmin && (
-                              <div className="relative">
-                                <button
-                                  onClick={() => setOpenMenuTeamId(openMenuTeamId === team.id ? null : team.id)}
-                                  className="flex-shrink-0 p-2 rounded-lg bg-white/20 text-white hover:bg-white/30 transition hover:cursor-pointer"
-                                >
-                                  <MoreVertical className="h-5 w-5" />
-                                </button>
-
-                                {/* Dropdown Menu */}
-                                {openMenuTeamId === team.id && (
-                                  <div className="absolute right-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden">
-                                    <button
-                                      onClick={() => {
-                                        setEditingTeamId(team.id);
-                                        setEditTeamName(team.name);
-                                        setEditTeamHospital(team.hospital || "");
-                                        setEditTeamService(team.service || "");
-                                        setSelectedMembers(new Set(team.teamMembers?.map((m: any) => m.id) || []));
-                                        setIsEditTeamOpen(true);
-                                        setTeamUpdateError(null);
-                                        setOpenMenuTeamId(null);
-                                      }}
-                                      className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition"
-                                    >
-                                      <Edit2 className="h-4 w-4" />
-                                      {t("profile.buttons.editTeam")}
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        setDeletingTeamId(team.id);
-                                        setIsDeleteTeamOpen(true);
-                                        setTeamDeleteError(null);
-                                        setOpenMenuTeamId(null);
-                                      }}
-                                      className="w-full text-left px-4 py-2.5 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2 transition border-t border-slate-200"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                      {t("profile.buttons.deleteTeam")}
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Members Section */}
-                          <div className="px-5 py-4 bg-slate-50/50 border-t border-slate-200">
-                            <div className="space-y-3">
-                              {team.teamMembers && team.teamMembers.length > 0 ? (
-                                team.teamMembers.map((member: any) => (
-                                  <div key={member.id} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-100">
-                                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-slate-400 to-slate-600 text-white flex items-center justify-center font-semibold text-xs flex-shrink-0">
-                                      {member.avatar}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-sm font-medium text-slate-900 truncate">{member.name}</p>
-                                      <div className="flex items-center gap-2 text-xs text-slate-600">
-                                        <span>{member.specialty}</span>
-                                        {member.role === "Admin" && (
-                                          <Badge className="bg-indigo-100 text-indigo-700 h-fit text-xs">Admin</Badge>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))
-                              ) : (
-                                <p className="text-xs text-slate-500 text-center py-2">{t("profile.messages.noMembers")}</p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-12 text-slate-500">
-                  <p className="text-sm">{t("profile.messages.noTeams")}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Search Component - Right side on XL, Full width on smaller screens */}
-            <div className="xl:order-1">
-              <Card className="border-none bg-white/90 sticky top-20">
-                <CardHeader className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle>{t("profile.sections.searchTeams")}</CardTitle>
-                    <CardDescription>{t("profile.sections.searchTeamsDesc")}</CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                  {/* Pending Requests Button */}
-                  {joinRequests.length > 0 && (
-                    <div className="relative">
-                      <button
-                        onClick={() => setIsPendingRequestsOpen(!isPendingRequestsOpen)}
-                        className="relative p-2 rounded-lg border border-slate-200 hover:bg-amber-50 text-amber-600 transition"
-                        title={t("profile.labels.pendingRequests", { count: joinRequests.length })}
-                      >
-                        <Clock className="h-5 w-5" />
-                        {joinRequests.length > 0 && (
-                          <span className="absolute top-0 right-0 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
-                            {joinRequests.length}
-                          </span>
-                        )}
-                      </button>
-
-                      {/* Pending Requests Dropdown */}
-                      {isPendingRequestsOpen && (
-                        <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden">
-
-                          {/* Requests List */}
-                          <div className="max-h-96 overflow-y-auto">
-                            {joinRequests.map((request) => (
-                              <div key={request.id} className="border-b border-slate-100 last:border-b-0 p-4 hover:bg-slate-50 transition">
-                                {/* Header with avatar and name */}
-                                <div className="flex items-start gap-3 mb-3">
-                                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-semibold flex-shrink-0">
-                                    {request.residentAvatar}
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-semibold text-slate-900 truncate">{request.residentName}</p>
-                                    <p className="text-xs text-slate-600 truncate">{request.specialty} → {request.teamName}</p>
-                                  </div>
-                                </div>
-
-                                {/* Action Buttons */}
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() => handleAcceptRequest(request.id)}
-                                    disabled={processingRequestId === request.id}
-                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                    title={t("profile.buttons.accept")}
-                                  >
-                                    {processingRequestId === request.id ? (
-                                      <div className="h-4 w-4 rounded-full border-2 border-emerald-300 border-t-emerald-700 animate-spin" />
-                                    ) : (
-                                      <Check className="h-4 w-4" />
-                                    )}
-                                    {processingRequestId === request.id ? "..." : t("profile.buttons.accept")}
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeclineRequest(request.id)}
-                                    disabled={processingRequestId === request.id}
-                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                    title={t("profile.buttons.decline")}
-                                  >
-                                    {processingRequestId === request.id ? (
-                                      <div className="h-4 w-4 rounded-full border-2 border-red-300 border-t-red-700 animate-spin" />
-                                    ) : (
-                                      <X className="h-4 w-4" />
-                                    )}
-                                    {processingRequestId === request.id ? "..." : t("profile.buttons.decline")}
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Quick Create Team Button */}
-                  <button
-                    onClick={() => {
-                      setIsCreateTeamOpen(true);
-                      setTeamCreationError(null);
-                    }}
-                    className="p-2 rounded-lg border border-slate-200 hover:bg-indigo-50 text-indigo-600 transition"
-                    title={t("profile.buttons.quickCreate")}
-                  >
-                    <Plus className="h-5 w-5" />
-                  </button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Search Input with Button */}
-                <div className="flex gap-2">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder={t("profile.placeholders.searchTeams")}
-                      value={searchTeams}
-                      onChange={(e) => setSearchTeams(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          handleSearchTeams();
-                        }
-                      }}
-                      className="w-full pl-10 pr-4 py-2 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                    />
-                  </div>
-                  <button
-                    onClick={handleSearchTeams}
-                    disabled={isSearching || !searchTeams.trim()}
-                    className="flex-shrink-0 p-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition"
-                    title={t("profile.buttons.search")}
-                  >
-                    {isSearching ? (
-                      <Loader className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <Search className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-
-                {/* Search Error */}
-                {searchError && (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-                    <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium text-red-900">{t("profile.errors.searchTitle")}</p>
-                      <p className="text-sm text-red-700">{searchError}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Loading Skeletons */}
-                {isSearching && (
-                  <div className="space-y-4">
-                    {[1, 2].map((i) => (
-                      <div
-                        key={i}
-                        className="rounded-2xl border border-slate-200 p-4 bg-slate-50 animate-pulse"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1 space-y-3">
-                            <div className="h-5 bg-slate-200 rounded w-40"></div>
-                            <div className="h-4 bg-slate-200 rounded w-full"></div>
-                            <div className="h-3 bg-slate-200 rounded w-24"></div>
-                          </div>
-                          <div className="h-8 bg-slate-200 rounded w-24 flex-shrink-0"></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Search Results */}
-                {hasSearched && !isSearching && (
-                  <div className="space-y-4">
-                    {searchResults.length > 0 ? (
-                      searchResults.map((team) => (
-                        <div
-                          key={team.id}
-                          className="rounded-2xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition overflow-hidden"
-                        >
-                          <div className="p-4 flex items-start justify-between">
-                            <div>
-                              <p className="font-medium text-slate-900">{team.name}</p>
-                              <p className="text-sm text-slate-600">{team.description}</p>
-                              <p className="text-xs text-slate-500 mt-2">{team.members} {t("profile.labels.members")}</p>
-                            </div>
-                            {sentRequests.has(team.id) ? (
-                              <Badge className="bg-amber-100 text-amber-700 border-amber-200 h-fit flex-shrink-0">
-                                <Check className="h-3 w-3 mr-1" />
-                                {t("profile.labels.sent")}
-                              </Badge>
-                            ) : (
-                              <Button
-                                variant="primary"
-                                size="sm"
-                                onClick={() => handleJoinTeam(team.id)}
-                                disabled={joiningTeamId === team.id}
-                                className="h-8 flex-shrink-0"
-                              >
-                                {joiningTeamId === team.id ? (
-                                  <>
-                                    <Loader className="h-3 w-3 mr-1 animate-spin" />
-                                    {t("profile.buttons.sending")}
-                                  </>
-                                ) : (
-                                  <>
-                                    <Plus className="h-3 w-3 mr-1" />
-                                    {t("profile.buttons.join")}
-                                  </>
-                                )}
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-12 text-slate-500">
-                        <Search className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                        <p className="font-medium text-slate-900 mb-1">{t("profile.messages.noTeamsFound")}</p>
-                        <p className="text-sm">{t("profile.messages.noTeamsFoundDesc")}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Initial State */}
-                {!hasSearched && (
-                  <div className="text-center py-12 text-slate-500">
-                    <Search className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                    <p className="font-medium text-slate-900 mb-1">{t("profile.messages.searchTeams")}</p>
-                    <p className="text-sm">{t("profile.messages.searchTeamsDesc")}</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-            </div>
-          </div>
-
-          {/* Create Team Modal */}
-          {isCreateTeamOpen && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-              <Card className="w-full max-w-md border-none shadow-xl">
-                <CardHeader className="relative">
-                  <CardTitle>{t("profile.modals.createTeamTitle")}</CardTitle>
-                  <button
-                    onClick={() => {
-                      setIsCreateTeamOpen(false);
-                      setSelectedTeamName("");
-                      setSelectedHospital("");
-                      setSelectedService("");
-                      setTeamCreated(false);
-                    }}
-                    className="absolute top-4 right-4 p-1 hover:bg-slate-100 rounded-lg transition"
-                  >
-                    <X className="h-5 w-5 text-slate-500" />
-                  </button>
-                </CardHeader>
-
-                <CardContent className="space-y-4">
-                  {/* Error State */}
-                  {teamCreationError && (
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700">
-                      <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                      <p className="text-sm">{teamCreationError}</p>
-                    </div>
-                  )}
-
-                  {/* Loading State */}
-                  {isCreatingTeam && (
-                    <div className="flex flex-col items-center justify-center py-8 gap-3">
-                      <Loader className="h-8 w-8 text-indigo-600 animate-spin" />
-                      <p className="text-sm text-slate-600 font-medium">{t("profile.messages.creatingTeam")}</p>
-                    </div>
-                  )}
-
-                  {/* Success State */}
-                  {teamCreated && !isCreatingTeam && (
-                    <div className="flex flex-col items-center justify-center py-8 gap-3">
-                      <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center">
-                        <Check className="h-6 w-6 text-emerald-600" />
-                      </div>
-                      <p className="text-sm text-slate-600 font-medium">{t("profile.messages.teamCreatedSuccess")}</p>
-                    </div>
-                  )}
-
-                  {/* Form State */}
-                  {!isCreatingTeam && !teamCreated && (
-                    <>
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">{t("profile.labels.teamName")}</label>
-                        <input
-                          type="text"
-                          value={selectedTeamName}
-                          onChange={(e) => setSelectedTeamName(e.target.value)}
-                          placeholder={t("profile.placeholders.teamNameExample")}
-                          className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">{t("profile.labels.hospital")}</label>
-                        <input
-                          value={selectedHospital}
-                          placeholder={t("profile.placeholders.hospital")}
-                          onChange={(e) => setSelectedHospital(e.target.value)}
-                          className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">{t("profile.labels.service")}</label>
-                        <select
-                          value={selectedService}
-                          onChange={(e) => setSelectedService(e.target.value)}
-                          className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                        >
-                          <option value="">{t("profile.placeholders.selectService")}</option>
-                          {services.map((service) => (
-                            <option key={service.id} value={service.name}>
-                              {service.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="flex gap-3 pt-4">
-                        <Button
-                          variant="ghost"
-                          onClick={() => {
-                            setIsCreateTeamOpen(false);
-                            setSelectedTeamName("");
-                            setSelectedHospital("");
-                            setSelectedService("");
-                          }}
-                          className="flex-1"
-                        >
-                          {t("common.buttons.cancel")}
-                        </Button>
-                        <Button
-                          variant="primary"
-                          onClick={handleCreateTeam}
-                          disabled={!selectedTeamName || !selectedHospital || !selectedService || isCreatingTeam}
-                          className="flex-1"
-                        >
-                          {isCreatingTeam ? (
-                            <>
-                              <Loader className="mr-2 h-4 w-4 animate-spin" />
-                              {t("profile.messages.creating")}
-                            </>
-                          ) : (
-                            t("profile.buttons.createTeam")
-                          )}
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Edit Team Modal */}
-          {isEditTeamOpen && editingTeamId && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-              <Card className="w-full max-w-2xl border-none shadow-xl max-h-[90vh] overflow-y-auto">
-                <CardHeader className="relative">
-                  <CardTitle>{t("profile.modals.editTeamTitle")}</CardTitle>
-                  <button
-                    onClick={() => {
-                      setIsEditTeamOpen(false);
-                      setEditingTeamId(null);
-                      setEditTeamName("");
-                      setEditTeamHospital("");
-                      setEditTeamService("");
-                      setSelectedMembers(new Set());
-                    }}
-                    className="absolute top-4 right-4 p-1 hover:bg-slate-100 rounded-lg transition"
-                  >
-                    <X className="h-5 w-5 text-slate-500" />
-                  </button>
-                </CardHeader>
-
-                <CardContent className="space-y-6">
-                  {/* Error State */}
-                  {teamUpdateError && (
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700">
-                      <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                      <p className="text-sm">{teamUpdateError}</p>
-                    </div>
-                  )}
-
-                  {/* Team Details Section */}
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">{t("profile.sections.teamDetails")}</h3>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700">{t("profile.labels.teamName")}</label>
-                      <input
-                        type="text"
-                        value={editTeamName}
-                        onChange={(e) => setEditTeamName(e.target.value)}
-                        placeholder={t("profile.placeholders.teamNameExample")}
-                        className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">{t("profile.labels.hospital")}</label>
-                        <input
-                          value={editTeamHospital}
-                          placeholder={t("profile.placeholders.hospitalName")}
-                          onChange={(e) => setEditTeamHospital(e.target.value)}
-                          className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">{t("profile.labels.service")}</label>
-                        <input
-                          value={editTeamService}
-                          placeholder={t("profile.placeholders.serviceName")}
-                          onChange={(e) => setEditTeamService(e.target.value)}
-                          className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Members Section */}
-                  <div className="space-y-4">
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <p className="text-xs text-blue-800">
-                        {t("profile.messages.memberWarning")}
-                      </p>
-                    </div>
-
-                    <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">{t("profile.sections.members")}</h3>
-
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {userTeams.find(t => t.id === editingTeamId)?.teamMembers?.map((member: any) => (
-                        <div
-                          key={member.id}
-                          className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedMembers.has(member.id)}
-                            onChange={(e) => {
-                              const newSelected = new Set(selectedMembers);
-                              if (e.target.checked) {
-                                newSelected.add(member.id);
-                              } else {
-                                newSelected.delete(member.id);
-                              }
-                              setSelectedMembers(newSelected);
-                            }}
-                            className="h-4 w-4 rounded cursor-pointer"
-                          />
-
-                          {/* Member Info */}
-                          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
-                            {member.avatar}
-                          </div>
-
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-900">{member.name}</p>
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
-                                member.role === "Admin"
-                                  ? "bg-amber-100 text-amber-800"
-                                  : "bg-blue-100 text-blue-800"
-                              }`}>
-                                {member.role === "Admin" ? t("profile.labels.admin") : t("profile.labels.member")}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Will be deleted indicator */}
-                          {!selectedMembers.has(member.id) && (
-                            <div className="flex-shrink-0 px-2 py-1 rounded bg-red-50 border border-red-200">
-                              <p className="text-xs text-red-700 font-semibold">{t("profile.labels.toDelete")}</p>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-3 pt-4 border-t border-slate-200">
+                <div className="flex items-center gap-2">
+                  {isEditing && (
                     <Button
                       variant="ghost"
                       onClick={() => {
-                        setIsEditTeamOpen(false);
-                        setEditingTeamId(null);
-                        setEditTeamName("");
-                        setEditTeamHospital("");
-                        setEditTeamService("");
-                        setSelectedMembers(new Set());
+                        if (originalPersonalInfo) {
+                          setPersonalInfo(originalPersonalInfo);
+                        }
+                        setIsEditing(false);
                       }}
-                      className="flex-1"
                     >
                       {t("common.buttons.cancel")}
                     </Button>
-                    <Button
-                      variant="primary"
-                      onClick={async () => {
-                        if (!editingTeamId) return;
-
-                        setIsUpdatingTeam(true);
-                        setTeamUpdateError(null);
-
-                        try {
-                          const response = await fetch(`/api/teams/${editingTeamId}`, {
-                            method: "PUT",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                              name: editTeamName,
-                              hospital: editTeamHospital,
-                              service: editTeamService,
-                              members: Array.from(selectedMembers),
-                            }),
-                          });
-
-                          if (!response.ok) {
-                            throw new Error(t("profile.errors.updateTeam"));
-                          }
-
-                          // Refresh teams list
-                          const teamsResponse = await fetch("/api/teams");
-                          if (teamsResponse.ok) {
-                            const data = await teamsResponse.json();
-                            const transformedTeams = (data.teams || []).map((team: any) => ({
-                              id: team.id.toString(),
-                              name: team.name,
-                              members: team.members?.length || 0,
-                              joined: true,
-                              adminId: team.adminId?.toString(),
-                              hospital: team.hospital,
-                              service: team.service,
-                              description: team.service ? `Service: ${team.service}` : (team.hospital ? `Hôpital: ${team.hospital}` : "Équipe"),
-                              teamMembers: team.members?.map((member: any) => {
-                                const firstName = member.firstName?.trim() || "";
-                                const lastName = member.lastName?.trim() || "";
-                                const username = member.username?.trim() || "";
-                                const displayName = (firstName && lastName) ? `${firstName} ${lastName}` : username || "N/A";
-                                const avatarInitials = `${firstName[0] || ""}${lastName[0] || ""}`.toUpperCase() || username[0]?.toUpperCase() || "?";
-                                return {
-                                  id: member.id.toString(),
-                                  name: displayName,
-                                  avatar: avatarInitials,
-                                  role: team.adminId === member.id ? "Admin" : "Membre",
-                                  specialty: member.specialty || "",
-                                };
-                              }),
-                            }));
-                            setUserTeams(transformedTeams);
-                          }
-
-                          setIsEditTeamOpen(false);
-                          setEditingTeamId(null);
-                        } catch (error) {
-                          console.error("Error updating team:", error);
-                          setTeamUpdateError(t("profile.errors.updateTeamError"));
-                        } finally {
-                          setIsUpdatingTeam(false);
-                        }
-                      }}
-                      disabled={!editTeamName || isUpdatingTeam}
-                      className="flex-1"
-                    >
-                      {isUpdatingTeam ? (
-                        <>
-                          <Loader className="mr-2 h-4 w-4 animate-spin" />
-                          {t("profile.buttons.modifying")}
-                        </>
-                      ) : (
-                        t("profile.buttons.saveChanges")
-                      )}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Delete Team Confirmation Modal */}
-          {isDeleteTeamOpen && deletingTeamId && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-              <Card className="w-full max-w-md border-none shadow-xl">
-                <CardHeader>
-                  <CardTitle>{t("profile.modals.deleteTeamTitle")}</CardTitle>
-                </CardHeader>
-
-                <CardContent className="space-y-4">
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-red-50 border border-red-200">
-                    <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-red-800">
-                      {t("profile.messages.deleteWarning")}
-                    </p>
-                  </div>
-
-                  {teamDeleteError && (
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700">
-                      <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                      <p className="text-sm">{teamDeleteError}</p>
-                    </div>
                   )}
-
-                  <p className="text-sm text-slate-700">
-                    {t("profile.messages.deleteConfirm")} <span className="font-semibold">"{userTeams.find(t => t.id === deletingTeamId)?.name}"</span>?
-                  </p>
-                </CardContent>
-
-                <div className="flex gap-3 px-6 py-4 border-t border-slate-200 bg-slate-50">
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      setIsDeleteTeamOpen(false);
-                      setDeletingTeamId(null);
-                      setTeamDeleteError(null);
-                    }}
-                    disabled={isDeletingTeam}
-                    className="flex-1"
-                  >
-                    {t("common.buttons.cancel")}
-                  </Button>
                   <Button
                     variant="primary"
-                    onClick={async () => {
-                      if (!deletingTeamId) return;
-
-                      setIsDeletingTeam(true);
-                      setTeamDeleteError(null);
-
-                      try {
-                        const response = await fetch(`/api/teams/${deletingTeamId}`, {
-                          method: "DELETE",
-                        });
-
-                        if (!response.ok) {
-                          throw new Error(t("profile.errors.deleteTeam"));
-                        }
-
-                        // Remove team from list
-                        setUserTeams(userTeams.filter(t => t.id !== deletingTeamId));
-                        setIsDeleteTeamOpen(false);
-                        setDeletingTeamId(null);
-                      } catch (error) {
-                        console.error("Error deleting team:", error);
-                        setTeamDeleteError(t("profile.errors.deleteTeamError"));
-                      } finally {
-                        setIsDeletingTeam(false);
-                      }
-                    }}
-                    disabled={isDeletingTeam}
-                    className="flex-1 bg-red-600 hover:bg-red-700"
+                    onClick={() => (isEditing ? handleSavePersonal() : setIsEditing(true))}
+                    disabled={isSavingProfile}
                   >
-                    {isDeletingTeam ? (
+                    {isSavingProfile ? (
                       <>
                         <Loader className="mr-2 h-4 w-4 animate-spin" />
-                        {t("profile.buttons.deleting")}
+                        {t("profile.buttons.saving")}
+                      </>
+                    ) : isEditing ? (
+                      <>
+                        <Save className="mr-2 h-4 w-4" />
+                        {t("profile.buttons.save")}
                       </>
                     ) : (
-                      t("profile.buttons.delete")
+                      t("profile.buttons.edit")
                     )}
                   </Button>
                 </div>
-              </Card>
+              </CardHeader>
+              <CardContent className="space-y-4 pt-4">
+                {/* Mobile: 1 column, Tablet: 2 columns, Desktop: 2 columns */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* First Name */}
+                  <div className="flex flex-col space-y-1.5">
+                    <label className="text-sm font-medium text-slate-700">
+                      {t("profile.labels.firstName")}
+                    </label>
+                    <input
+                      disabled={!isEditing}
+                      value={personalInfo.firstName}
+                      onChange={(e) =>
+                        setPersonalInfo({ ...personalInfo, firstName: e.target.value })
+                      }
+                      className={inputBaseClasses}
+                    />
+                  </div>
+
+                  {/* Last Name */}
+                  <div className="flex flex-col space-y-1.5">
+                    <label className="text-sm font-medium text-slate-700">
+                      {t("profile.labels.lastName")}
+                    </label>
+                    <input
+                      disabled={!isEditing}
+                      value={personalInfo.lastName}
+                      onChange={(e) =>
+                        setPersonalInfo({ ...personalInfo, lastName: e.target.value })
+                      }
+                      className={inputBaseClasses}
+                    />
+                  </div>
+
+                  {/* Email */}
+                  <div className="flex flex-col space-y-1.5">
+                    <label className="text-sm font-medium text-slate-700">
+                      {t("profile.labels.email")}
+                    </label>
+                    <input
+                      disabled={!isEditing}
+                      type="email"
+                      value={personalInfo.email}
+                      onChange={(e) =>
+                        setPersonalInfo({ ...personalInfo, email: e.target.value })
+                      }
+                      className={inputBaseClasses}
+                    />
+                  </div>
+
+                  {/* Phone */}
+                  <div className="flex flex-col space-y-1.5">
+                    <label className="text-sm font-medium text-slate-700">
+                      {t("profile.labels.phone")}
+                    </label>
+                    <input
+                      disabled={!isEditing}
+                      type="tel"
+                      value={personalInfo.phone}
+                      onChange={(e) =>
+                        setPersonalInfo({ ...personalInfo, phone: e.target.value })
+                      }
+                      className={inputBaseClasses}
+                    />
+                  </div>
+
+                  {/* Specialty */}
+                  <div className="flex flex-col space-y-1.5">
+                    <label className="text-sm font-medium text-slate-700">
+                      {t("profile.labels.specialty")}
+                    </label>
+                    <input
+                      disabled={!isEditing}
+                      value={personalInfo.specialty}
+                      onChange={(e) =>
+                        setPersonalInfo({ ...personalInfo, specialty: e.target.value })
+                      }
+                      className={inputBaseClasses}
+                    />
+                  </div>
+
+                  {/* Hospital */}
+                  <div className="flex flex-col space-y-1.5">
+                    <label className="text-sm font-medium text-slate-700">
+                      {t("profile.labels.hospital")}
+                    </label>
+                    <input
+                      disabled={!isEditing}
+                      value={personalInfo.hospital}
+                      onChange={(e) =>
+                        setPersonalInfo({ ...personalInfo, hospital: e.target.value })
+                      }
+                      className={inputBaseClasses}
+                    />
+                  </div>
+
+                  {/* Year Status */}
+                  <div className="flex flex-col space-y-1.5">
+                    <label className="text-sm font-medium text-slate-700">
+                      {t("profile.labels.yearStatus")}
+                    </label>
+                    <select
+                      disabled={!isEditing}
+                      value={personalInfo.year}
+                      onChange={(e) =>
+                        setPersonalInfo({ ...personalInfo, year: e.target.value })
+                      }
+                      className={cn(inputBaseClasses, "pr-10")}
+                    >
+                      <option value="">{t("profile.placeholders.selectStatus")}</option>
+                      {statuses.map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Address - Full Width */}
+                  <div className="flex flex-col space-y-1.5 md:col-span-2">
+                    <label className="text-sm font-medium text-slate-700">
+                      {t("profile.labels.address")}
+                    </label>
+                    <input
+                      disabled={!isEditing}
+                      value={personalInfo.address}
+                      onChange={(e) =>
+                        setPersonalInfo({ ...personalInfo, address: e.target.value })
+                      }
+                      className={inputBaseClasses}
+                    />
+                  </div>
+
+                  {/* Bio - Full Width */}
+                  <div className="flex flex-col space-y-1.5 md:col-span-2">
+                    <label className="text-sm font-medium text-slate-700">
+                      {t("profile.labels.bio")}
+                    </label>
+                    <textarea
+                      disabled={!isEditing}
+                      value={personalInfo.bio}
+                      onChange={(e) =>
+                        setPersonalInfo({ ...personalInfo, bio: e.target.value })
+                      }
+                      rows={3}
+                      className={cn(inputBaseClasses, "min-h-[90px] resize-none leading-relaxed")}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border border-slate-200 bg-white shadow-sm rounded-[10px]">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">{t("profile.sections.preferences")}</CardTitle>
+                <CardDescription>{t("profile.labels.profileVisibilityDesc")}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="rounded-[10px] border border-slate-200">
+                  {contactRows.map((row, index) => {
+                    const Icon = row.icon;
+                    return (
+                      <div
+                        key={row.label}
+                        className={cn(
+                          "flex items-center justify-between gap-3 px-3 py-2 text-sm",
+                          index !== contactRows.length - 1 && "border-b border-slate-200"
+                        )}
+                      >
+                        <div className="flex items-center gap-2 font-medium text-slate-700">
+                          <Icon className="h-4 w-4 text-slate-500" />
+                          {row.label}
+                        </div>
+                        <span className="text-slate-500">{row.value}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="space-y-3">
+                  {[
+                    {
+                      title: t("profile.labels.emailNotifications"),
+                      description: t("profile.labels.emailNotificationsDesc"),
+                      value: personalInfo.notifyByEmail,
+                      onChange: (checked: boolean) =>
+                        setPersonalInfo({ ...personalInfo, notifyByEmail: checked }),
+                    },
+                    {
+                      title: t("profile.labels.pushNotifications"),
+                      description: t("profile.labels.pushNotificationsDesc"),
+                      value: personalInfo.notifyByPush,
+                      onChange: (checked: boolean) =>
+                        setPersonalInfo({ ...personalInfo, notifyByPush: checked }),
+                    },
+                    {
+                      title: t("profile.labels.profileVisibility"),
+                      description: t("profile.labels.profileVisibilityDesc"),
+                      value: personalInfo.profileVisible,
+                      onChange: (checked: boolean) =>
+                        setPersonalInfo({ ...personalInfo, profileVisible: checked }),
+                    },
+                  ].map((pref) => (
+                    <div
+                      key={pref.title}
+                      className="flex items-center justify-between gap-4 rounded-[10px] border border-slate-200 px-3 py-2"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">{pref.title}</p>
+                        <p className="text-xs text-slate-500">{pref.description}</p>
+                      </div>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={pref.value}
+                        disabled={!isEditing}
+                        onClick={() => isEditing && pref.onChange(!pref.value)}
+                        className={cn(
+                          "relative inline-flex h-6 w-11 items-center rounded-full border transition focus:outline-none focus-visible:ring-1 focus-visible:ring-indigo-200",
+                          pref.value ? "border-indigo-600 bg-indigo-600" : "border-slate-300 bg-slate-200",
+                          !isEditing && "cursor-not-allowed opacity-60"
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "inline-block h-4 w-4 transform rounded-full bg-white shadow transition",
+                            pref.value ? "translate-x-5" : "translate-x-1"
+                          )}
+                        />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
+
+
+{/* Équipes Tab */}
+{activeTab === "equipes" && (
+  <div className="space-y-4">
+    <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
+      <Card className="border border-slate-200 bg-white shadow-sm rounded-[10px]">
+        <CardHeader className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-3">
+          <div>
+            <CardTitle>{t("profile.sections.myTeams", { count: userTeams.length })}</CardTitle>
+            <CardDescription>{t("profile.sections.searchTeamsDesc")}</CardDescription>
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-1 text-xs font-semibold text-slate-600">
+            <Users className="h-4 w-4" />
+            {userTeams.length} {t("profile.labels.members")}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-2.5 pt-3">
+          {userTeams.length > 0 ? (
+            userTeams.map((team) => {
+              const isAdmin = team.adminId === (session?.user as any)?.id;
+              return (
+                <div
+                  key={team.id}
+                  className="rounded-[10px] border border-slate-200 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
+                >
+                  <div className="flex flex-col gap-3 border-b border-slate-200 bg-slate-50 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-indigo-600 text-sm font-semibold text-white">
+                        {team.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-semibold text-slate-900">{team.name}</h3>
+                        <div className="mt-0.5 flex flex-wrap gap-2 text-xs text-slate-600">
+                          {team.hospital && (
+                            <span className="inline-flex items-center gap-1">
+                              <Building2 className="h-3 w-3" />
+                              {team.hospital}
+                            </span>
+                          )}
+                          {team.service && (
+                            <span className="inline-flex items-center gap-1">
+                              <Briefcase className="h-3 w-3" />
+                              {team.service}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {isAdmin && (
+                      <div className="relative">
+                        <button
+                          onClick={() => setOpenMenuTeamId(openMenuTeamId === team.id ? null : team.id)}
+                          className="rounded-[10px] border border-slate-200 bg-white/80 p-2 text-slate-500 shadow-sm transition hover:bg-white"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </button>
+                        {openMenuTeamId === team.id && (
+                                <div className="absolute right-0 mt-2 w-44 rounded-[10px] border border-slate-200 bg-white p-1 shadow-xl z-50">
+                            <button
+                              onClick={() => {
+                                setEditingTeamId(team.id);
+                                setEditTeamName(team.name);
+                                setEditTeamHospital(team.hospital || "");
+                                setEditTeamService(team.service || "");
+                                setSelectedMembers(new Set(team.teamMembers?.map((m: any) => m.id) || []));
+                                setIsEditTeamOpen(true);
+                                setTeamUpdateError(null);
+                                setOpenMenuTeamId(null);
+                              }}
+                              className="flex w-full items-center gap-2 rounded-[10px] px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                              {t("profile.buttons.editTeam")}
+                            </button>
+                            <button
+                              onClick={() => {
+                                setDeletingTeamId(team.id);
+                                setIsDeleteTeamOpen(true);
+                                setTeamDeleteError(null);
+                                setOpenMenuTeamId(null);
+                              }}
+                              className="flex w-full items-center gap-2 rounded-[10px] px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              {t("profile.buttons.deleteTeam")}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2 bg-white px-3 py-2.5">
+                    {team.teamMembers && team.teamMembers.length > 0 ? (
+                      team.teamMembers.map((member: any) => (
+                        <div
+                          key={member.id}
+                          className="flex items-center justify-between gap-3 rounded-[10px] border border-slate-200 p-2"
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600">
+                              {member.avatar}
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-slate-900">{member.name}</p>
+                              {member.specialty && (
+                                <p className="text-[11px] text-slate-500">{member.specialty}</p>
+                              )}
+                            </div>
+                          </div>
+                          {member.role && (
+                            <Badge
+                              variant={member.role === "Admin" ? "warning" : "muted"}
+                              className="text-[10px]"
+                            >
+                              {member.role === "Admin"
+                                ? t("profile.labels.admin")
+                                : t("profile.labels.member")}
+                            </Badge>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="py-2 text-center text-xs text-slate-500">
+                        {t("profile.messages.noMembers")}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center text-slate-500">
+              <p className="text-sm">{t("profile.messages.noTeams")}</p>
             </div>
           )}
-        </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border border-slate-200 bg-white shadow-sm rounded-[10px] lg:sticky lg:top-24">
+        <CardHeader className="border-b border-slate-100 pb-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle>{t("profile.sections.searchTeams")}</CardTitle>
+              <CardDescription>{t("profile.sections.searchTeamsDesc")}</CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              {joinRequests.length > 0 && (
+                <div className="relative">
+                  <button
+                    onClick={() => setIsPendingRequestsOpen(!isPendingRequestsOpen)}
+                    className="relative inline-flex items-center gap-2 rounded-[10px] border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-700"
+                    title={t("profile.labels.pendingRequests", { count: joinRequests.length })}
+                  >
+                    <Clock className="h-4 w-4" />
+                    {joinRequests.length}
+                  </button>
+                  {isPendingRequestsOpen && (
+                    <div className="absolute right-0 mt-2 w-80 rounded-[10px] border border-slate-200 bg-white p-3 shadow-2xl z-50">
+                      <div className="max-h-96 space-y-2 overflow-y-auto">
+                        {joinRequests.map((request) => (
+                          <div key={request.id} className="rounded-[10px] border border-slate-200 p-2.5">
+                            <div className="mb-2 flex items-start gap-2">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-xs font-semibold text-white">
+                                {request.residentAvatar}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-semibold text-slate-900">{request.residentName}</p>
+                                <p className="truncate text-[11px] text-slate-500">
+                                  {request.specialty} → {request.teamName}
+                                </p>
+                              </div>
+                            </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleAcceptRequest(request.id)}
+                        disabled={processingRequestId === request.id}
+                        className="flex-1 rounded-[10px] bg-emerald-100 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                                {processingRequestId === request.id ? (
+                                  <div className="mx-auto h-3 w-3 rounded-full border-2 border-emerald-300 border-t-emerald-700 animate-spin" />
+                                ) : (
+                                  <div className="flex items-center justify-center gap-1">
+                                    <Check className="h-3 w-3" />
+                                    {t("profile.buttons.accept")}
+                                  </div>
+                                )}
+                              </button>
+                      <button
+                        onClick={() => handleDeclineRequest(request.id)}
+                        disabled={processingRequestId === request.id}
+                        className="flex-1 rounded-[10px] bg-red-100 px-2.5 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                                {processingRequestId === request.id ? (
+                                  <div className="mx-auto h-3 w-3 rounded-full border-2 border-red-300 border-t-red-700 animate-spin" />
+                                ) : (
+                                  <div className="flex items-center justify-center gap-1">
+                                    <X className="h-3 w-3" />
+                                    {t("profile.buttons.decline")}
+                                  </div>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setIsCreateTeamOpen(true);
+                  setTeamCreationError(null);
+                }}
+                className="gap-2 text-indigo-600 hover:bg-indigo-50"
+              >
+                <Plus className="h-4 w-4" />
+                {t("profile.buttons.createTeam")}
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3 pt-3">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder={t("profile.placeholders.searchTeams")}
+                value={searchTeams}
+                onChange={(e) => setSearchTeams(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSearchTeams();
+                  }
+                }}
+                className={cn(inputBaseClasses, "pl-10")}
+              />
+            </div>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleSearchTeams}
+              disabled={isSearching || !searchTeams.trim()}
+              className="h-10 w-10 px-0"
+            >
+              {isSearching ? (
+                <Loader className="h-4 w-4 animate-spin" />
+              ) : (
+                <Search className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+
+          {searchError && (
+            <div className="flex items-start gap-3 rounded-[10px] border border-red-200 bg-red-50/80 p-3">
+              <AlertCircle className="h-5 w-5 text-red-600" />
+              <div>
+                <p className="font-medium text-red-900">{t("profile.errors.searchTitle")}</p>
+                <p className="text-sm text-red-700">{searchError}</p>
+              </div>
+            </div>
+          )}
+
+          {isSearching && (
+            <div className="space-y-2">
+              {[1, 2].map((i) => (
+                <div key={i} className="rounded-[10px] border border-slate-200 bg-slate-50 p-3">
+                  <div className="flex animate-pulse items-center justify-between gap-4">
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 rounded bg-slate-200" />
+                      <div className="h-3 rounded bg-slate-200" />
+                      <div className="h-3 rounded bg-slate-200" />
+                    </div>
+                    <div className="h-7 w-20 rounded bg-slate-200" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {hasSearched && !isSearching && (
+            <div className="space-y-2">
+              {searchResults.length > 0 ? (
+                searchResults.map((team) => (
+                      <div
+                        key={team.id}
+                        className="rounded-[10px] border border-slate-200 px-3 py-2.5 shadow-sm transition hover:border-indigo-300 hover:shadow-lg"
+                      >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">{team.name}</p>
+                        <p className="text-xs text-slate-500">{team.description}</p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {team.members} {t("profile.labels.members")}
+                        </p>
+                      </div>
+                      {sentRequests.has(team.id) ? (
+                        <Badge variant="warning" className="flex items-center gap-1 text-xs whitespace-nowrap">
+                          <Check className="h-3 w-3" />
+                          {t("profile.labels.sent")}
+                        </Badge>
+                      ) : (
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleJoinTeam(team.id)}
+                          disabled={joiningTeamId === team.id}
+                          className="gap-1 whitespace-nowrap"
+                        >
+                          {joiningTeamId === team.id ? (
+                            <Loader className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Plus className="h-3 w-3" />
+                          )}
+                          <span className="text-xs font-semibold">
+                            {joiningTeamId === team.id
+                              ? t("profile.buttons.sending")
+                              : t("profile.buttons.join")}
+                          </span>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                      <div className="rounded-[10px] border border-dashed border-slate-200 p-4 text-center text-slate-500">
+                  <Search className="mx-auto mb-2 h-8 w-8 text-slate-300" />
+                  <p className="text-xs font-medium text-slate-900">{t("profile.messages.noTeamsFound")}</p>
+                  <p className="text-xs">{t("profile.messages.noTeamsFoundDesc")}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {!hasSearched && !isSearching && (
+                  <div className="rounded-[10px] border border-dashed border-slate-200 p-4 text-center text-slate-500">
+              <Search className="mx-auto mb-2 h-8 w-8 text-slate-300" />
+              <p className="text-xs font-medium text-slate-900">{t("profile.messages.searchTeams")}</p>
+              <p className="text-xs">{t("profile.messages.searchTeamsDesc")}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+    </div>
       )}
 
       {/* Statistiques Tab */}
@@ -1888,5 +1623,413 @@ export default function ProfilePage() {
         </div>
       )}
     </div>
+
+    {/* Create Team Modal */}
+    {isCreateTeamOpen && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm">
+        <Card className="w-full max-w-md border border-slate-200 bg-white shadow-2xl rounded-[10px]">
+          <CardHeader className="relative space-y-1">
+            <CardTitle>{t("profile.modals.createTeamTitle")}</CardTitle>
+            <CardDescription>{t("profile.sections.searchTeamsDesc")}</CardDescription>
+            <button
+              onClick={() => {
+                setIsCreateTeamOpen(false);
+                setSelectedTeamName("");
+                setSelectedHospital("");
+                setSelectedService("");
+                setTeamCreated(false);
+              }}
+              className="absolute right-4 top-4 rounded-[10px] p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {teamCreationError && (
+              <div className="flex items-center gap-3 rounded-[10px] border border-red-200 bg-red-50/80 p-3 text-sm text-red-700">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                {teamCreationError}
+              </div>
+            )}
+
+            {isCreatingTeam && (
+              <div className="flex flex-col items-center gap-2 py-4 text-sm text-slate-600">
+                <Loader className="h-5 w-5 text-indigo-600" />
+                {t("profile.messages.creatingTeam")}
+              </div>
+            )}
+
+            {teamCreated && !isCreatingTeam && (
+              <div className="flex flex-col items-center gap-2 py-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                  <Check className="h-5 w-5" />
+                </div>
+                <p className="text-sm text-slate-600">{t("profile.messages.teamCreatedSuccess")}</p>
+              </div>
+            )}
+
+            {!isCreatingTeam && !teamCreated && (
+              <>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-700">
+                    {t("profile.labels.teamName")}
+                  </label>
+                  <input
+                    type="text"
+                    value={selectedTeamName}
+                    onChange={(e) => setSelectedTeamName(e.target.value)}
+                    placeholder={t("profile.placeholders.teamNameExample")}
+                    className={inputBaseClasses}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-700">
+                    {t("profile.labels.hospital")}
+                  </label>
+                  <input
+                    value={selectedHospital}
+                    placeholder={t("profile.placeholders.hospital")}
+                    onChange={(e) => setSelectedHospital(e.target.value)}
+                    className={inputBaseClasses}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-700">
+                    {t("profile.labels.service")}
+                  </label>
+                  <select
+                    value={selectedService}
+                    onChange={(e) => setSelectedService(e.target.value)}
+                    className={cn(inputBaseClasses, "pr-10")}
+                  >
+                    <option value="">{t("profile.placeholders.selectService")}</option>
+                    {services.map((service) => (
+                      <option key={service.id} value={service.name}>
+                        {service.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    variant="ghost"
+                    className="flex-1"
+                    onClick={() => {
+                      setIsCreateTeamOpen(false);
+                      setSelectedTeamName("");
+                      setSelectedHospital("");
+                      setSelectedService("");
+                    }}
+                  >
+                    {t("common.buttons.cancel")}
+                  </Button>
+                  <Button
+                    variant="primary"
+                    className="flex-1"
+                    onClick={handleCreateTeam}
+                    disabled={!selectedTeamName || !selectedHospital || !selectedService || isCreatingTeam}
+                  >
+                    {isCreatingTeam ? (
+                      <Loader className="h-4 w-4 animate-spin" />
+                    ) : (
+                      t("profile.buttons.createTeam")
+                    )}
+                  </Button>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    )}
+
+    {/* Edit Team Modal */}
+    {isEditTeamOpen && editingTeamId && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm">
+        <Card className="w-full max-w-3xl border border-slate-200 bg-white shadow-2xl rounded-[10px]">
+          <CardHeader className="relative pb-3">
+            <CardTitle>{t("profile.modals.editTeamTitle")}</CardTitle>
+            <button
+              onClick={() => {
+                setIsEditTeamOpen(false);
+                setEditingTeamId(null);
+                setEditTeamName("");
+                setEditTeamHospital("");
+                setEditTeamService("");
+                setSelectedMembers(new Set());
+              }}
+              className="absolute right-4 top-4 rounded-[10px] p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {teamUpdateError && (
+              <div className="flex items-center gap-3 rounded-[10px] border border-red-200 bg-red-50/80 p-3 text-sm text-red-700">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                {teamUpdateError}
+              </div>
+            )}
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-700">
+                  {t("profile.labels.teamName")}
+                </label>
+                <input
+                  value={editTeamName}
+                  onChange={(e) => setEditTeamName(e.target.value)}
+                  className={inputBaseClasses}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-700">
+                  {t("profile.labels.hospital")}
+                </label>
+                <input
+                  value={editTeamHospital}
+                  onChange={(e) => setEditTeamHospital(e.target.value)}
+                  className={inputBaseClasses}
+                />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <label className="text-sm font-medium text-slate-700">
+                  {t("profile.labels.service")}
+                </label>
+                <input
+                  value={editTeamService}
+                  onChange={(e) => setEditTeamService(e.target.value)}
+                  className={inputBaseClasses}
+                />
+              </div>
+            </div>
+
+            <div className="rounded-[10px] border border-amber-100 bg-amber-50/80 p-3 text-xs text-amber-800">
+              {t("profile.messages.memberWarning")}
+            </div>
+
+            <div className="max-h-64 space-y-2 overflow-y-auto rounded-[10px] border border-slate-200 p-3">
+              {userTeams
+                .find((t) => t.id === editingTeamId)
+                ?.teamMembers?.map((member: any) => (
+                  <div
+                    key={member.id}
+                    className="flex items-center gap-2 rounded-[10px] border border-slate-100 p-2"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedMembers.has(member.id)}
+                      onChange={(e) => {
+                        const next = new Set(selectedMembers);
+                        if (e.target.checked) {
+                          next.add(member.id);
+                        } else {
+                          next.delete(member.id);
+                        }
+                        setSelectedMembers(next);
+                      }}
+                      className="h-4 w-4 rounded"
+                    />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600">
+                      {member.avatar}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-slate-900">{member.name}</p>
+                      <p className="text-[11px] text-slate-500">
+                        {member.role === "Admin"
+                          ? t("profile.labels.admin")
+                          : t("profile.labels.member")}
+                      </p>
+                    </div>
+                    {!selectedMembers.has(member.id) && (
+                      <span className="rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-700 whitespace-nowrap">
+                        {t("profile.labels.toDelete")}
+                      </span>
+                    )}
+                  </div>
+                ))}
+            </div>
+
+            <div className="flex gap-2 border-t border-slate-100 pt-3">
+              <Button
+                variant="ghost"
+                className="flex-1"
+                onClick={() => {
+                  setIsEditTeamOpen(false);
+                  setEditingTeamId(null);
+                  setEditTeamName("");
+                  setEditTeamHospital("");
+                  setEditTeamService("");
+                  setSelectedMembers(new Set());
+                }}
+              >
+                {t("common.buttons.cancel")}
+              </Button>
+              <Button
+                variant="primary"
+                className="flex-1"
+                onClick={async () => {
+                  if (!editingTeamId) return;
+                  setIsUpdatingTeam(true);
+                  setTeamUpdateError(null);
+
+                  try {
+                    const response = await fetch(`/api/teams/${editingTeamId}`, {
+                      method: "PUT",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        name: editTeamName,
+                        hospital: editTeamHospital,
+                        service: editTeamService,
+                        members: Array.from(selectedMembers),
+                      }),
+                    });
+
+                    if (!response.ok) {
+                      throw new Error(t("profile.errors.updateTeam"));
+                    }
+
+                    const teamsResponse = await fetch("/api/teams");
+                    if (teamsResponse.ok) {
+                      const data = await teamsResponse.json();
+                      const transformedTeams = (data.teams || []).map((team: any) => ({
+                        id: team.id.toString(),
+                        name: team.name,
+                        members: team.members?.length || 0,
+                        joined: true,
+                        adminId: team.adminId?.toString(),
+                        hospital: team.hospital,
+                        service: team.service,
+                        description: team.service
+                          ? `Service: ${team.service}`
+                          : team.hospital
+                            ? `Hôpital: ${team.hospital}`
+                            : "Équipe",
+                        teamMembers: team.members?.map((member: any) => {
+                          const firstName = member.firstName?.trim() || "";
+                          const lastName = member.lastName?.trim() || "";
+                          const username = member.username?.trim() || "";
+                          const displayName = firstName && lastName ? `${firstName} ${lastName}` : username || "N/A";
+                          const avatarInitials =
+                            `${firstName[0] || ""}${lastName[0] || ""}`.toUpperCase() || username[0]?.toUpperCase() || "?";
+                          return {
+                            id: member.id.toString(),
+                            name: displayName,
+                            avatar: avatarInitials,
+                            role: team.adminId === member.id ? "Admin" : "Membre",
+                            specialty: member.specialty || "",
+                          };
+                        }),
+                      }));
+                      setUserTeams(transformedTeams);
+                    }
+
+                    setIsEditTeamOpen(false);
+                    setEditingTeamId(null);
+                  } catch (error) {
+                    console.error("Error updating team:", error);
+                    setTeamUpdateError(t("profile.errors.updateTeamError"));
+                  } finally {
+                    setIsUpdatingTeam(false);
+                  }
+                }}
+                disabled={!editTeamName || isUpdatingTeam}
+              >
+                {isUpdatingTeam ? (
+                  <>
+                    <Loader className="mr-2 h-4 w-4 animate-spin" />
+                    {t("profile.buttons.modifying")}
+                  </>
+                ) : (
+                  t("profile.buttons.saveChanges")
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )}
+
+    {/* Delete Team Modal */}
+    {isDeleteTeamOpen && deletingTeamId && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm">
+        <Card className="w-full max-w-md border border-slate-200 bg-white shadow-2xl rounded-[10px]">
+          <CardHeader className="pb-3">
+            <CardTitle>{t("profile.modals.deleteTeamTitle")}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-start gap-3 rounded-[10px] border border-red-200 bg-red-50/80 p-3 text-sm text-red-700">
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              {t("profile.messages.deleteWarning")}
+            </div>
+            {teamDeleteError && (
+              <div className="flex items-center gap-3 rounded-[10px] border border-red-200 bg-red-50/80 p-3 text-sm text-red-700">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                {teamDeleteError}
+              </div>
+            )}
+            <p className="text-sm text-slate-700">
+              {t("profile.messages.deleteConfirm")} <span className="font-semibold">&ldquo;{userTeams.find((t) => t.id === deletingTeamId)?.name}&rdquo;</span>?
+            </p>
+          </CardContent>
+          <div className="flex gap-2 border-t border-slate-100 bg-slate-50 px-6 py-3">
+            <Button
+              variant="ghost"
+              className="flex-1"
+              onClick={() => {
+                setIsDeleteTeamOpen(false);
+                setDeletingTeamId(null);
+                setTeamDeleteError(null);
+              }}
+              disabled={isDeletingTeam}
+            >
+              {t("common.buttons.cancel")}
+            </Button>
+            <Button
+              variant="primary"
+              className="flex-1 bg-red-600 hover:bg-red-700"
+              onClick={async () => {
+                if (!deletingTeamId) return;
+                setIsDeletingTeam(true);
+                setTeamDeleteError(null);
+
+                try {
+                  const response = await fetch(`/api/teams/${deletingTeamId}`, {
+                    method: "DELETE",
+                  });
+
+                  if (!response.ok) {
+                    throw new Error(t("profile.errors.deleteTeam"));
+                  }
+
+                  setUserTeams(userTeams.filter((team) => team.id !== deletingTeamId));
+                  setIsDeleteTeamOpen(false);
+                  setDeletingTeamId(null);
+                } catch (error) {
+                  console.error("Error deleting team:", error);
+                  setTeamDeleteError(t("profile.errors.deleteTeamError"));
+                } finally {
+                  setIsDeletingTeam(false);
+                }
+              }}
+              disabled={isDeletingTeam}
+            >
+              {isDeletingTeam ? (
+                <>
+                  <Loader className="mr-2 h-4 w-4 animate-spin" />
+                  {t("profile.buttons.deleting")}
+                </>
+              ) : (
+                t("profile.buttons.delete")
+              )}
+            </Button>
+          </div>
+        </Card>
+      </div>
+    )}
+  </div>
   );
 }

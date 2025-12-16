@@ -11,6 +11,7 @@ interface StatTheme {
   icon: string;
   accent: string;
   text: string;
+  bar: string;
 }
 
 export interface Stat {
@@ -31,10 +32,11 @@ export const statsSummaryConfig = [
     hintKey: "dashboard.stats.syncData",
     icon: UsersRound,
     theme: {
-      card: "bg-gradient-to-br from-[#e0f2ff] via-[#ecf3ff] to-white",
-      icon: "bg-white text-[#0f62fe]",
-      accent: "text-[#0f62fe]",
-      text: "text-[#09356f]",
+      card: "",
+      icon: "bg-[#e7ecfb] text-[#1d3a8a]",
+      accent: "text-[#1d3a8a]",
+      text: "text-[#0f172a]",
+      bar: "from-[#d4defb] via-transparent",
     },
   },
   {
@@ -42,10 +44,11 @@ export const statsSummaryConfig = [
     hintKey: "dashboard.stats.syncData",
     icon: HeartPulse,
     theme: {
-      card: "bg-gradient-to-br from-[#fee2f2] via-[#fff1f7] to-white",
-      icon: "bg-white text-[#d61f69]",
-      accent: "text-[#d61f69]",
-      text: "text-[#8a1547]",
+      card: "",
+      icon: "bg-[#fdecec] text-[#912026]",
+      accent: "text-[#912026]",
+      text: "text-[#111827]",
+      bar: "from-[#fcdcdc] via-transparent",
     },
   },
   {
@@ -53,10 +56,11 @@ export const statsSummaryConfig = [
     hintKey: "dashboard.stats.syncData",
     icon: ClipboardList,
     theme: {
-      card: "bg-gradient-to-br from-[#f7f3ff] via-[#f1f5ff] to-white",
-      icon: "bg-white text-[#7c3aed]",
-      accent: "text-[#7c3aed]",
-      text: "text-[#43338b]",
+      card: "",
+      icon: "bg-[#f2ecfd] text-[#5b21b6]",
+      accent: "text-[#5b21b6]",
+      text: "text-[#0f172a]",
+      bar: "from-[#e8d9fb] via-transparent",
     },
   },
   {
@@ -64,10 +68,11 @@ export const statsSummaryConfig = [
     hintKey: "dashboard.stats.syncData",
     icon: Activity,
     theme: {
-      card: "bg-gradient-to-br from-[#dcfce7] via-[#f1fff5] to-white",
-      icon: "bg-white text-[#059669]",
-      accent: "text-[#059669]",
-      text: "text-[#0f5132]",
+      card: "",
+      icon: "bg-[#e5f6f1] text-[#0f766e]",
+      accent: "text-[#0f766e]",
+      text: "text-[#0f172a]",
+      bar: "from-[#cfeee5] via-transparent",
     },
   },
 ];

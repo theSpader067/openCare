@@ -142,11 +142,12 @@ export function OrdonnanceTemplatesSidebar({
 
           /* Desktop: flex layout */
           lg:static lg:border-r lg:w-64 lg:shadow-sm
+          ${isOpen ? "lg:w-64" : "lg:w-0 lg:border-r-0"}
 
           /* Mobile: fixed overlay */
           fixed left-0 top-0 h-screen z-40 w-64
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
-          lg:translate-x-0
+          lg:translate-x-0 lg:relative lg:left-0 lg:top-0 lg:h-auto
         `}
       >
         {/* Header */}

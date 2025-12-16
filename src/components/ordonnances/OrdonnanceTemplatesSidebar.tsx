@@ -177,7 +177,7 @@ export function OrdonnanceTemplatesSidebar({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-scroll">
           {isLoadingTemplates ? (
             <div className="flex items-center justify-center py-8">
               <p className="text-xs text-slate-500">Chargement des modèles...</p>
@@ -204,7 +204,7 @@ export function OrdonnanceTemplatesSidebar({
                     <span className="text-left">{category.name}</span>
                   </AccordionTrigger>
                   <AccordionContent className="pt-2 pb-2 px-2">
-                    <div className="space-y-1">
+                    <div className="space-y-1 max-h-[180px] overflow-y-scroll">
                       {category.templates.map((template) => {
                         const isActive = selectedTemplateId === template.id;
                         return (

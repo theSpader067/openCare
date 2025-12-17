@@ -46,7 +46,7 @@ export async function GET(
     const p = await prisma.patient.findUnique({
       where: { id:parseInt(patientId) },
       include: {
-        observations: {
+        Observation: {
           orderBy: { createdAt: 'desc' },
         },
       },
@@ -88,7 +88,7 @@ export async function GET(
       couvertureSociale: p.couvertureSociale || undefined,
       situationFamiliale: p.situationFamiliale || undefined,
       profession: p.profession || undefined,
-      observations: p.observations.map((obs:any) => ({
+      observations: p.Observation.map((obs:any) => ({
         id: String(obs.id),
         timestamp: obs.createdAt.toISOString(),
         note: obs.text,
@@ -100,7 +100,7 @@ export async function GET(
       data: parsedPatient,
     });
   } catch (error) {
-    console.error("Error fetching patient:", error);
+    console.error("Error fetching Patient:", error);
     return NextResponse.json(
       {
         success: false,
@@ -223,7 +223,7 @@ export async function PUT(
       data: updatedPatient,
     });
   } catch (error) {
-    console.error("Error updating patient:", error);
+    console.error("Error updating Patient:", error);
     return NextResponse.json(
       {
         success: false,
@@ -293,7 +293,7 @@ export async function DELETE(
       data: { id: patientIdNum, message: "Patient deleted successfully" },
     });
   } catch (error) {
-    console.error("Error deleting patient:", error);
+    console.error("Error deleting Patient:", error);
     return NextResponse.json(
       {
         success: false,

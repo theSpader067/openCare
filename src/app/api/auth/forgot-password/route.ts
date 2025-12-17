@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
     // Save token to database
     await prisma.passwordResetToken.create({
       data: {
+        identifier: email.toLowerCase(),
         token,
         email: email.toLowerCase(),
         expires: expiresAt,

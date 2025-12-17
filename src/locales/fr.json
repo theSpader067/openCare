@@ -1118,7 +1118,8 @@
       "Messages": "Avis",
       "patients": "Patients",
       "create": "Créer",
-      "tasks": "Tâches"
+      "tasks": "Tâches",
+      "opinion": "Avis"
     },
     "mobileSidebar": {
       "closeMenu": "Fermer le menu"
@@ -1188,7 +1189,8 @@
         "location": "Lieu",
         "locationExample": "Ex. Bloc 5, Secteur 3",
         "team": "Équipe",
-        "teamExample": "Ex. Dr. Benali, IDE Claire"
+        "teamExample": "Ex. Dr. Benali, IDE Claire",
+        "activityType": "Type d'activité"
       },
       "activityTypes": {
         "consultation": "Consultation",

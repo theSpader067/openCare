@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
       // Fetch observations for all patients belonging to current user
       observations = await prisma.observation.findMany({
         where: {
-          patient: {
+          Patient: {
             userId: userId,
           },
         },
@@ -153,6 +153,7 @@ export async function POST(request: NextRequest) {
       data: {
         text: text.trim(),
         patientId: patient.id,
+        updatedAt: new Date(),
       },
     });
 

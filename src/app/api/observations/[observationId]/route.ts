@@ -58,7 +58,7 @@ export async function GET(
     // Fetch observation
     const observation = await prisma.observation.findUnique({
       where: { id: observationId },
-      include: { patient: true },
+      include: { Patient: true },
     });
 
     if (!observation) {
@@ -69,7 +69,7 @@ export async function GET(
     }
 
     // Verify authorization - observation must belong to a patient owned by current user
-    if (observation.patient.userId !== userId) {
+    if (observation.Patient.userId !== userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 403 }
@@ -129,7 +129,7 @@ export async function PUT(
     // Fetch observation with patient info
     const observation = await prisma.observation.findUnique({
       where: { id: observationId },
-      include: { patient: true },
+      include: { Patient: true },
     });
 
     if (!observation) {
@@ -140,7 +140,7 @@ export async function PUT(
     }
 
     // Verify authorization - observation must belong to a patient owned by current user
-    if (observation.patient.userId !== userId) {
+    if (observation.Patient.userId !== userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 403 }
@@ -198,7 +198,7 @@ export async function DELETE(
     // Fetch observation with patient info
     const observation = await prisma.observation.findUnique({
       where: { id: observationId },
-      include: { patient: true },
+      include: { Patient: true },
     });
 
     if (!observation) {
@@ -209,7 +209,7 @@ export async function DELETE(
     }
 
     // Verify authorization - observation must belong to a patient owned by current user
-    if (observation.patient.userId !== userId) {
+    if (observation.Patient.userId !== userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 403 }

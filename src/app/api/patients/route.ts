@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
       },
       orderBy: { createdAt: "desc" },
       include: {
-        observations: {
+        Observation: {
           orderBy: { createdAt: "desc" },
         },
       },
@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
         couvertureSociale: p.couvertureSociale || undefined,
         situationFamiliale: p.situationFamiliale || undefined,
         profession: p.profession || undefined,
-        observations: p.observations.map((obs:any) => ({
+        observations: p.Observation.map((obs:any) => ({
           id: String(obs.id),
           timestamp: obs.createdAt.toISOString(),
           note: obs.text,
@@ -192,6 +192,7 @@ export async function POST(request: NextRequest) {
         status: patientData.status?.trim() || undefined,
         nextContact: patientData.nextContact,
         fdrs: patientData.fdrs || undefined,
+        updatedAt: new Date(),
       },
     });
 
@@ -212,6 +213,7 @@ export async function POST(request: NextRequest) {
         data: {
           text: initialObservation.trim(),
           patientId: patient.id,
+          updatedAt: new Date(),
         },
       });
     }
@@ -221,7 +223,7 @@ export async function POST(request: NextRequest) {
       data: patient,
     });
   } catch (error) {
-    console.error("Error creating patient:", error);
+    console.error("Error creating Patient:", error);
     return NextResponse.json(
       {
         success: false,

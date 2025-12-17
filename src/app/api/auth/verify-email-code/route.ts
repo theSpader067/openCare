@@ -93,13 +93,13 @@ export async function POST(req: Request) {
       { expiresIn: "30d" }
     )
 
-    console.log(`[VERIFY_CODE] Email verified for user: ${email}`)
+    console.log(`[VERIFY_CODE] Email verified for User: ${email}`)
 
     return NextResponse.json({
       success: true,
       message: "Email verified successfully",
       token,
-      user: {
+      User: {
         id: user.id,
         email: user.email,
         username: user.username,

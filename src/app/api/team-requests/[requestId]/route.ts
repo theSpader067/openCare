@@ -37,7 +37,7 @@ export async function PUT(
     const teamRequest = await prisma.teamRequest.findUnique({
       where: { id: requestId },
       include: {
-        team: {
+        Team: {
           select: {
             adminId: true,
           },
@@ -53,7 +53,7 @@ export async function PUT(
     }
 
     // Verify user is admin of the team
-    if (teamRequest.team.adminId !== userId) {
+    if (teamRequest.Team.adminId !== userId) {
       return NextResponse.json(
         { error: "Only team admin can accept requests" },
         { status: 403 }
@@ -65,7 +65,7 @@ export async function PUT(
       where: { id: requestId },
       data: { accepted: true },
       include: {
-        sender: {
+        User: {
           select: {
             id: true,
             firstName: true,
@@ -74,7 +74,7 @@ export async function PUT(
             year: true,
           },
         },
-        team: {
+        Team: {
           select: {
             id: true,
             name: true,
@@ -98,12 +98,12 @@ export async function PUT(
         message: "Request accepted",
         request: {
           id: updatedRequest.id.toString(),
-          residentId: updatedRequest.sender.id.toString(),
-          residentName: `${updatedRequest.sender.firstName || ""} ${updatedRequest.sender.lastName || ""}`.trim(),
-          specialty: updatedRequest.sender.specialty || "",
-          year: updatedRequest.sender.year || "",
-          teamId: updatedRequest.team.id.toString(),
-          teamName: updatedRequest.team.name,
+          residentId: updatedRequest.User.id.toString(),
+          residentName: `${updatedRequest.User.firstName || ""} ${updatedRequest.User.lastName || ""}`.trim(),
+          specialty: updatedRequest.User.specialty || "",
+          year: updatedRequest.User.year || "",
+          teamId: updatedRequest.Team.id.toString(),
+          teamName: updatedRequest.Team.name,
           accepted: updatedRequest.accepted,
         },
       },
@@ -135,7 +135,7 @@ export async function DELETE(
     const teamRequest = await prisma.teamRequest.findUnique({
       where: { id: requestId },
       include: {
-        team: {
+        Team: {
           select: {
             adminId: true,
           },
@@ -151,7 +151,7 @@ export async function DELETE(
     }
 
     // Verify user is admin of the team
-    if (teamRequest.team.adminId !== userId) {
+    if (teamRequest.Team.adminId !== userId) {
       return NextResponse.json(
         { error: "Only team admin can decline requests" },
         { status: 403 }

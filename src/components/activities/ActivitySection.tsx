@@ -184,7 +184,7 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="flex-1 min-h-0 overflow-hidden pt-0">
+        <CardContent className="flex-1 min-h-0 overflow-hidden pt-6">
           {isLoading ? (
             <div className="flex h-full items-center justify-center">
               <div className="space-y-2 text-center">

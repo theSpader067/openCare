@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useSession } from "next-auth/react";
-import { Calendar, FilePlus, Stethoscope, User, X, Plus, MoreVertical, Trash2 } from "lucide-react";
+import { Calendar, FilePlus, Stethoscope, User, X, Plus, MoreVertical, Trash2, Download } from "lucide-react";
+import { pdf } from "@react-pdf/renderer";
+import { CompteRenduPDF } from "@/components/pdf/CompteRenduPDF";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataListLayout } from "@/components/document/DataListLayout";
@@ -185,6 +187,7 @@ export default function ComptesRendusPage() {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [teammates, setTeammates] = useState<TeamMember[]>([]);
   const [accessiblePatients, setAccessiblePatients] = useState<Patient[]>([]);
+  const [currentUser, setCurrentUser] = useState<TeamMember | null>(null);
 
   // Load comptes-rendus from API on mount
   useEffect(() => {
@@ -225,6 +228,42 @@ export default function ComptesRendusPage() {
 
     loadOperations();
   }, []);
+
+  // Load current user information
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      try {
+        const response = await fetch("/api/user", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            const user = result.data;
+            const firstName = user.firstName?.trim() || "";
+            const lastName = user.lastName?.trim() || "";
+            const username = user.username?.trim() || "";
+            const userName = (firstName && lastName) ? `${firstName} ${lastName}` : username;
+
+            setCurrentUser({
+              id: String(user.id),
+              name: userName,
+              role: user.specialty || "Équipe médicale",
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error loading current user:", error);
+      }
+    };
+
+    if (session?.user?.email) {
+      loadCurrentUser();
+    }
+  }, [session?.user?.email]);
 
   // Load teammates from teams API
   useEffect(() => {
@@ -321,27 +360,31 @@ export default function ComptesRendusPage() {
 
   // Helper to get current user as an operator
   const getCurrentUserOperator = (): Operator | null => {
+    // First, use the fetched current user if available (has real database ID)
+    if (currentUser) {
+      return currentUser;
+    }
+
     if (!session?.user) return null;
+
+    // Fallback to session user
     const user = session.user as any;
     return {
-      id: String(user.id || user.username || `user-${Date.now()}`),
+      id: String(user.id || `user-${Date.now()}`),
       name: `${user.firstName || user.name || ""}`.trim() || user.username || "Vous",
       role: user.specialty || "Équipe médicale",
     };
   };
 
-  // Add current user to surgical team when session is loaded
+  // Add current user to surgical team when current user is loaded
   useEffect(() => {
-    if (session?.user && createForm.operators.length === 0) {
-      const currentUser = getCurrentUserOperator();
-      if (currentUser) {
-        setCreateForm((prev) => ({
-          ...prev,
-          operators: [currentUser],
-        }));
-      }
+    if (currentUser && createForm.operators.length === 0) {
+      setCreateForm((prev) => ({
+        ...prev,
+        operators: [currentUser],
+      }));
     }
-  }, [(session?.user as any)?.id]);
+  }, [currentUser?.id]);
 
   const userOperations = useMemo(() => {
     return operations.filter((op) => op.createdBy === "Vous");
@@ -432,13 +475,12 @@ export default function ComptesRendusPage() {
   const handleOpenCreate = () => {
     setIsCreateMode(true);
     setActiveOperationId(null);
-    const currentUserOperator = getCurrentUserOperator();
     setCreateForm({
       title: "",
       type: "",
       date: new Date().toISOString().split("T")[0],
       duration: "",
-      operators: currentUserOperator ? [currentUserOperator] : [],
+      operators: currentUser ? [currentUser] : [],
       patient: null,
       patientSource: null,
       patientName: "",
@@ -568,6 +610,12 @@ export default function ComptesRendusPage() {
       // Prepare operator IDs (all operators including the current user)
       const operatorIds = createForm.operators.map((op) => parseInt(op.id) || op.id);
 
+      console.log("===== SUBMITTING FORM DEBUG =====");
+      console.log("createForm.operators:", createForm.operators);
+      console.log("operatorIds about to send:", operatorIds);
+      console.log("operatorIds types:", operatorIds.map((id) => typeof id));
+      console.log("=================================");
+
       // Prepare participant IDs (residents added to the surgical team, excluding current user)
       const currentUserOp = getCurrentUserOperator();
       const participantIds = createForm.operators
@@ -600,17 +648,24 @@ export default function ComptesRendusPage() {
           createdBy: "Vous",
         };
 
+        console.log("===== NEW OPERATION DEBUG =====");
+        console.log("newOperation.operators:", newOperation.operators);
+        console.log("newOperation.participants:", newOperation.participants);
+        console.log("================================");
+
         setOperations((prev) => [newOperation, ...prev]);
         setIsCreateMode(false);
         closeMobilePanel();
         setActiveOperationId(newOperation.id);
-        const currentUserOperator = getCurrentUserOperator();
+
+        // Reset form with current user as operator
+        const currentUserForReset = getCurrentUserOperator();
         setCreateForm({
           title: "",
           type: "",
           date: new Date().toISOString().split("T")[0],
           duration: "",
-          operators: currentUserOperator ? [currentUserOperator] : [],
+          operators: currentUserForReset ? [currentUserForReset] : [],
           patient: null,
           patientSource: null,
           patientName: "",
@@ -654,6 +709,51 @@ export default function ComptesRendusPage() {
     } finally {
       setIsDeleting(false);
       setOpenMenuId(null);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (!activeOperation) return;
+
+    try {
+      const patientName = activeOperation.patient?.fullName || activeOperation.patientName || "N/A";
+      const patientDateOfBirth = activeOperation.patient?.dateOfBirth || null;
+      const patientAge = activeOperation.patient?.age || activeOperation.patientAge;
+
+      const pdfDocument = (
+        <CompteRenduPDF
+          title={activeOperation.title}
+          type={activeOperation.type}
+          date={activeOperation.date}
+          formattedDate={formatDate(activeOperation.date)}
+          patientName={patientName}
+          patientAge={patientAge}
+          patientDateOfBirth={patientDateOfBirth}
+          duration={String(activeOperation.duration || "0")}
+          createdBy={activeOperation.createdBy}
+          operators={activeOperation.operators}
+          details={activeOperation.details || "N/A"}
+          postNotes={activeOperation.postNotes || "N/A"}
+        />
+      );
+
+      const filename = `compte-rendu-${activeOperation.title.replace(/\s+/g, '-').toLowerCase()}-${new Date().getTime()}.pdf`;
+
+      try {
+        const blob = await pdf(pdfDocument).toBlob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error("Error generating PDF blob:", error);
+      }
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
     }
   };
 
@@ -995,11 +1095,21 @@ export default function ComptesRendusPage() {
     </div>
   );
 
+  // Debug logging for active operation
+  useEffect(() => {
+    if (activeOperation) {
+      console.log("===== ACTIVE OPERATION DEBUG =====");
+      console.log("activeOperation.operators:", activeOperation.operators);
+      console.log("activeOperation.operators length:", activeOperation.operators?.length);
+      console.log("===================================");
+    }
+  }, [activeOperation?.id]);
+
   const detailViewContent = activeOperation ? (
     <>
       {/* Header with Type/Surgeon and Date */}
       <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-200">
-        <div className="flex-1">
+        <div>
           <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
             Chirurgien principal
           </p>
@@ -1007,7 +1117,7 @@ export default function ComptesRendusPage() {
             {activeOperation.createdBy}
           </p>
         </div>
-        <div className="text-right flex-1">
+        <div className="text-center flex-1">
           <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
             Date
           </p>
@@ -1015,6 +1125,14 @@ export default function ComptesRendusPage() {
             {formatDate(activeOperation.date)}
           </p>
         </div>
+        <button
+          onClick={handleExportPDF}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 border border-slate-300 hover:bg-slate-200 transition-colors whitespace-nowrap"
+          title="Exporter en PDF"
+        >
+          <Download className="h-4 w-4 text-slate-700" />
+          <span className="text-sm font-medium text-slate-700">PDF</span>
+        </button>
       </div>
 
       {/* Title and Type */}

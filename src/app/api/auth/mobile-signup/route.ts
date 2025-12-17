@@ -74,6 +74,7 @@ export async function POST(req: Request) {
         username,
         emailVerified: false, // Will be verified after code entry
         language: "en",
+        updatedAt: new Date(),
       },
     })
 
@@ -130,7 +131,7 @@ export async function POST(req: Request) {
     // Return user data and token
     return NextResponse.json(
       {
-        user: {
+        User: {
           id: user.id,
           email: user.email,
           username: user.username,

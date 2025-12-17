@@ -43,17 +43,30 @@ function convertRapportToJSON(rapport: any) {
     }
   }
 
+  // Build operators from participants if available, otherwise parse from CSV
+  let operators = rapport.participants?.map((p: any) => ({
+    id: p.id.toString(),
+    name: `${p.firstName || ""} ${p.lastName || ""}`.trim() || p.username || "Unknown",
+    role: p.specialty || "Medical Staff",
+  })) || [];
+
+  // Fallback: parse operatorsCsv if participants is empty
+  if (operators.length === 0 && rapport.operators) {
+    operators = rapport.operators.split(";").map((name: string, idx: number) => ({
+      id: `operator-${idx}`,
+      name: name.trim(),
+      role: "Medical Staff",
+    }));
+  }
+
   return {
     id: rapport.id.toString(),
     title: rapport.title,
     type: rapport.category,
     date: interventionDate,
     duration: parseInt(rapport.duration || "0"),
-    operators: rapport.participants?.map((p: any) => ({
-      id: p.id.toString(),
-      name: `${p.firstName || ""} ${p.lastName || ""}`.trim() || p.username || "Unknown",
-      role: p.specialty || "Medical Staff",
-    })) || [],
+    operatorsCsv: rapport.operators || "",
+    operators,
     participants: participantsList,
     details: rapport.details || "",
     postNotes: rapport.recommandations || "",
@@ -61,6 +74,7 @@ function convertRapportToJSON(rapport: any) {
       id: rapport.patient.id.toString(),
       fullName: rapport.patient.fullName,
       pid: rapport.patient.pid,
+      dateOfBirth: rapport.patient.dateOfBirth ? rapport.patient.dateOfBirth.toISOString() : null,
       age: rapport.patient.dateOfBirth ? Math.floor((Date.now() - new Date(rapport.patient.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : undefined,
       histoire: rapport.patient.atcdsMedical || "",
     } : null,
@@ -136,6 +150,18 @@ export async function GET(request: NextRequest) {
     });
 
     const convertedRapports = rapports.map(convertRapportToJSON);
+    console.log("===== GET RAPPORTS DEBUG =====");
+    console.log("Total rapports:", convertedRapports.length);
+    convertedRapports.forEach((r, i) => {
+      console.log(`Rapport ${i}:`, {
+        id: r.id,
+        title: r.title,
+        operatorsCsv: r.operatorsCsv,
+        operatorsLength: r.operators?.length,
+        operatorsData: r.operators,
+      });
+    });
+    console.log("==============================");
     return NextResponse.json({ success: true, data: convertedRapports });
   } catch (error) {
     console.error("Error fetching rapports:", error);
@@ -205,6 +231,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Parse operator IDs and fetch operator names
+    const validOperatorIds = operatorIds
+      .map((id: any) => {
+        const parsed = parseInt(String(id));
+        return !isNaN(parsed) ? parsed : null;
+      })
+      .filter((id: number | null) => id !== null) as number[];
+
+    // Fetch operator user data to get their names
+    let operatorNames: string[] = [];
+    if (validOperatorIds.length > 0) {
+      const operatorUsers = await prisma.user.findMany({
+        where: { id: { in: validOperatorIds } },
+        select: { id: true, firstName: true, lastName: true, username: true },
+      });
+      operatorNames = operatorUsers.map((user) => {
+        const fullName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
+        return fullName || user.username || "Unknown";
+      });
+    }
+
+    const operatorsCsv = operatorNames.length > 0 ? operatorNames.join(";") : "";
+
+    console.log("===== OPERATORS DEBUG =====");
+    console.log("operatorIds received:", operatorIds);
+    console.log("validOperatorIds:", validOperatorIds);
+    console.log("operatorNames:", operatorNames);
+    console.log("operatorsCsv:", operatorsCsv);
+    console.log("===========================");
+
     // Participants are now optional (users can have rapports without resident participants)
     // Just ensure they are valid if provided
     const validParticipantIds = participantIds
@@ -222,6 +278,7 @@ export async function POST(request: NextRequest) {
       duration: String(duration),
       details: details.trim(),
       recommandations: postNotes.trim(),
+      operators: operatorsCsv,
       creatorId: (userId),
     };
 
@@ -256,6 +313,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log("===== BEFORE RAPPORT CREATE =====");
+    console.log("Will connect participants with IDs:", validOperatorIds);
+    console.log("Participants config:", validOperatorIds.length > 0 ? { connect: validOperatorIds.map((id) => ({ id })) } : "SKIPPED - no operators");
+    console.log("=================================");
+
     const rapport = await prisma.rapport.create({
       data: {
         title: rapportData.title,
@@ -264,18 +326,19 @@ export async function POST(request: NextRequest) {
         duration: rapportData.duration,
         details: rapportData.details,
         recommandations: rapportData.recommandations,
-        ...(patientConnect && { patient: patientConnect }),
+        operators: rapportData.operators,
+        ...(patientConnect && { Patient: patientConnect }),
         ...(rapportData.patientName && { patientName: rapportData.patientName }),
         ...(rapportData.patientAge !== undefined && { patientAge: rapportData.patientAge }),
         ...(rapportData.patientHistory !== undefined && { patientHistory: rapportData.patientHistory }),
-        creator: {
+        User: {
           connect: {
             id: rapportData.creatorId,
           },
         },
-        ...(validParticipantIds.length > 0 && {
+        ...(validOperatorIds.length > 0 && {
           participants: {
-            connect: validParticipantIds.map((id) => ({ id })),
+            connect: validOperatorIds.map((id) => ({ id })),
           },
         }),
       },
@@ -300,6 +363,32 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    console.log("===== RAPPORT CREATED DEBUG =====");
+    console.log("rapport.operators:", rapport.operators);
+    console.log("rapport.participants:", rapport.participants);
+    console.log("participants count:", rapport.participants?.length ?? 0);
+    console.log("====================================");
+
+    // If participants are still empty but we had operators, do a fresh query to verify
+    if (validOperatorIds.length > 0 && (!rapport.participants || rapport.participants.length === 0)) {
+      console.log("===== VERIFICATION QUERY =====");
+      const verifyRapport = await prisma.rapport.findUnique({
+        where: { id: rapport.id },
+        include: {
+          participants: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              specialty: true,
+            },
+          },
+        },
+      });
+      console.log("Verification - participants from fresh query:", verifyRapport?.participants);
+      console.log("=============================");
+    }
+
     // Track compte-rendu creation event
     await compteRenduServerAnalytics.trackCompteRenduCreated({
       id: rapport.id,
@@ -310,9 +399,16 @@ export async function POST(request: NextRequest) {
       patientName: rapport.patientName ?? undefined,
     });
 
+    const convertedData = convertRapportToJSON(rapport);
+    console.log("===== CONVERTED JSON DEBUG =====");
+    console.log("operatorsCsv:", convertedData.operatorsCsv);
+    console.log("operators:", convertedData.operators);
+    console.log("participants:", convertedData.participants);
+    console.log("==================================");
+
     return NextResponse.json({
       success: true,
-      data: convertRapportToJSON(rapport),
+      data: convertedData,
     });
 
 

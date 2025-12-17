@@ -5,7 +5,6 @@ import { DesktopSidebar } from "@/components/layout/sidebar";
 import { MobileSidebar } from "@/components/layout/mobile-sidebar";
 import { AppHeader } from "@/components/layout/header";
 import { MobileNav } from "@/components/layout/mobile-nav";
-import Providers from "../provider";
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 
@@ -20,18 +19,28 @@ export default function ApplicationLayout({
 
   const { status } = useSession()
   const router = useRouter()
+  
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login')
     }
   }, [status, router])
 
-
+  // Show loading state instead of blank screen
+  if (status === 'loading') {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-violet-50 to-indigo-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-violet-200 border-t-violet-600"></div>
+          <p className="text-sm text-gray-600">Chargement...</p>
+        </div>
+      </div>
+    )
+  }
 
   if (status === 'unauthenticated') return null // avoid rendering UI before redirect
 
   return (
-    <Providers>
     <div className="h-screen overflow-hidden">
       <MobileSidebar open={sidebarOpen} onClose={handleClose} />
 
@@ -50,6 +59,5 @@ export default function ApplicationLayout({
 
       <MobileNav />
     </div>
-    </Providers>
   );
 }

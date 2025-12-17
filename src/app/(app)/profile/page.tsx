@@ -507,7 +507,10 @@ export default function ProfilePage() {
   };
 
   const handleCreateTeam = async () => {
-    if (!selectedTeamName || !selectedHospital || !selectedService) return;
+    if (!selectedTeamName) {
+      setTeamCreationError("Team name is required");
+      return;
+    }
 
     try {
       setIsCreatingTeam(true);
@@ -520,14 +523,22 @@ export default function ProfilePage() {
         },
         body: JSON.stringify({
           name: selectedTeamName,
-          hospital: selectedHospital,
-          service: selectedService,
+          hospital: selectedHospital || null,
+          service: selectedService || null,
         }),
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || t("profile.errors.createTeam"));
+        let errorMessage = t("profile.errors.createTeam");
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          console.error("Failed to parse error response:", e);
+        }
+        setTeamCreationError(errorMessage);
+        setIsCreatingTeam(false);
+        return;
       }
 
       const data = await response.json();
@@ -1626,11 +1637,11 @@ export default function ProfilePage() {
 
     {/* Create Team Modal */}
     {isCreateTeamOpen && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm">
-        <Card className="w-full max-w-md border border-slate-200 bg-white shadow-2xl rounded-[10px]">
-          <CardHeader className="relative space-y-1">
-            <CardTitle>{t("profile.modals.createTeamTitle")}</CardTitle>
-            <CardDescription>{t("profile.sections.searchTeamsDesc")}</CardDescription>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4">
+        <div className="w-full max-w-md rounded-lg bg-white shadow-2xl">
+          <div className="relative border-b border-slate-200 p-6">
+            <h2 className="text-lg font-semibold text-slate-900">{t("profile.modals.createTeamTitle")}</h2>
+            <p className="mt-1 text-sm text-slate-500">{t("profile.sections.searchTeamsDesc")}</p>
             <button
               onClick={() => {
                 setIsCreateTeamOpen(false);
@@ -1639,39 +1650,40 @@ export default function ProfilePage() {
                 setSelectedService("");
                 setTeamCreated(false);
               }}
-              className="absolute right-4 top-4 rounded-[10px] p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              className="absolute right-4 top-4 rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
             </button>
-          </CardHeader>
-          <CardContent className="space-y-3">
+          </div>
+
+          <div className="p-6">
             {teamCreationError && (
-              <div className="flex items-center gap-3 rounded-[10px] border border-red-200 bg-red-50/80 p-3 text-sm text-red-700">
-                <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                {teamCreationError}
+              <div className="mb-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                <span>{teamCreationError}</span>
               </div>
             )}
 
             {isCreatingTeam && (
-              <div className="flex flex-col items-center gap-2 py-4 text-sm text-slate-600">
-                <Loader className="h-5 w-5 text-indigo-600" />
-                {t("profile.messages.creatingTeam")}
+              <div className="flex flex-col items-center justify-center py-8">
+                <Loader className="h-5 w-5 animate-spin text-indigo-600 mb-2" />
+                <p className="text-sm text-slate-600">{t("profile.messages.creatingTeam")}</p>
               </div>
             )}
 
             {teamCreated && !isCreatingTeam && (
-              <div className="flex flex-col items-center gap-2 py-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                  <Check className="h-5 w-5" />
+              <div className="flex flex-col items-center justify-center py-8">
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                  <Check className="h-6 w-6" />
                 </div>
-                <p className="text-sm text-slate-600">{t("profile.messages.teamCreatedSuccess")}</p>
+                <p className="text-sm font-medium text-slate-900">{t("profile.messages.teamCreatedSuccess")}</p>
               </div>
             )}
 
             {!isCreatingTeam && !teamCreated && (
-              <>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-700">
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     {t("profile.labels.teamName")}
                   </label>
                   <input
@@ -1683,8 +1695,8 @@ export default function ProfilePage() {
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-700">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     {t("profile.labels.hospital")}
                   </label>
                   <input
@@ -1695,8 +1707,8 @@ export default function ProfilePage() {
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-700">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     {t("profile.labels.service")}
                   </label>
                   <select
@@ -1713,10 +1725,9 @@ export default function ProfilePage() {
                   </select>
                 </div>
 
-                <div className="flex gap-2 pt-2">
+                <div className="grid grid-cols-2 gap-3 pt-2">
                   <Button
                     variant="ghost"
-                    className="flex-1"
                     onClick={() => {
                       setIsCreateTeamOpen(false);
                       setSelectedTeamName("");
@@ -1728,9 +1739,8 @@ export default function ProfilePage() {
                   </Button>
                   <Button
                     variant="primary"
-                    className="flex-1"
                     onClick={handleCreateTeam}
-                    disabled={!selectedTeamName || !selectedHospital || !selectedService || isCreatingTeam}
+                    disabled={!selectedTeamName || isCreatingTeam}
                   >
                     {isCreatingTeam ? (
                       <Loader className="h-4 w-4 animate-spin" />
@@ -1739,10 +1749,10 @@ export default function ProfilePage() {
                     )}
                   </Button>
                 </div>
-              </>
+              </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     )}
 

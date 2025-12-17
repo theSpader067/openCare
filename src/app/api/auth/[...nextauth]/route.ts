@@ -41,10 +41,10 @@ adapter.getUserByAccount = async (account) => {
           providerAccountId: account.providerAccountId,
         },
       },
-      include: { user: true },
+      include: { User: true },
     })
-    if (!accountRecord?.user) return null
-    const user = accountRecord.user
+    if (!accountRecord?.User) return null
+    const user = accountRecord.User
     return {
       ...user,
       id: user.id.toString(), // Convert number id to string for adapter
@@ -90,10 +90,11 @@ adapter.createUser = async (data) => {
       image: data.image,
       emailVerified: true, // OAuth users are auto-verified
       onboardingCompleted: false, // New users need onboarding
+      updatedAt: new Date(),
     } as any,
   })
 
-  console.log("Created user:", user.email, "emailVerified:", user.emailVerified, "onboardingCompleted:", user.onboardingCompleted)
+  console.log("Created User:", user.email, "emailVerified:", user.emailVerified, "onboardingCompleted:", user.onboardingCompleted)
 
   // Return in format expected by adapter
   // Keep id as a number for PrismaAdapter to create Account records correctly

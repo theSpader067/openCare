@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
         email,
         specialty,
         message,
+        updatedAt: new Date(),
       },
     });
 

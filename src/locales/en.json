@@ -1188,7 +1188,8 @@
         "location": "Location",
         "locationExample": "Ex. Block 5, Sector 3",
         "team": "Team",
-        "teamExample": "Ex. Dr. Benali, Nurse Claire"
+        "teamExample": "Ex. Dr. Benali, Nurse Claire",
+        "activityType": "Activity type"
       },
       "activityTypes": {
         "consultation": "Consultation",

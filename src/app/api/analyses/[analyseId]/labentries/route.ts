@@ -66,8 +66,8 @@ export async function PATCH(
         where: { id: analyseId },
         data: { status },
         include: {
-          labEntries: true,
-          patient: {
+          LabEntry: true,
+          Patient: {
             select: {
               id: true,
               fullName: true,
@@ -80,7 +80,7 @@ export async function PATCH(
 
     return NextResponse.json({
       data: updatedEntries,
-      analyse: updatedAnalyse,
+      Analyse: updatedAnalyse,
       message: "Lab entries updated successfully",
     });
   } catch (error) {

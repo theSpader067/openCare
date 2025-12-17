@@ -31,13 +31,13 @@ export async function GET(req: NextRequest) {
     // Fetch pending team requests for teams where user is admin
     const teamRequests = await prisma.teamRequest.findMany({
       where: {
-        team: {
+        Team: {
           adminId: userId,
         },
         accepted: false,
       },
       include: {
-        sender: {
+        User: {
           select: {
             id: true,
             firstName: true,
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
             year: true,
           },
         },
-        team: {
+        Team: {
           select: {
             id: true,
             name: true,
@@ -60,21 +60,21 @@ export async function GET(req: NextRequest) {
 
     // Transform response to match frontend expectations
     const transformedRequests = teamRequests.map((req) => {
-      const senderFirstName = req.sender.firstName || "";
-      const senderLastName = req.sender.lastName || "";
+      const senderFirstName = req.User.firstName || "";
+      const senderLastName = req.User.lastName || "";
       const senderInitials = `${senderFirstName[0] || ""}${senderLastName[0] || ""}`.toUpperCase();
       const senderName = `${senderFirstName} ${senderLastName}`.trim();
 
       return {
         id: req.id.toString(),
-        residentId: req.sender.id.toString(),
+        residentId: req.User.id.toString(),
         residentName: senderName,
         residentAvatar: senderInitials,
-        residentRole: req.sender.year || "Demande",
-        specialty: req.sender.specialty || "",
-        year: req.sender.year || "",
-        teamId: req.team.id.toString(),
-        teamName: req.team.name,
+        residentRole: req.User.year || "Demande",
+        specialty: req.User.specialty || "",
+        year: req.User.year || "",
+        teamId: req.Team.id.toString(),
+        teamName: req.Team.name,
         requestDate: req.createdAt.toISOString().split("T")[0],
       };
     });

@@ -38,7 +38,8 @@ export async function POST(req: Request) {
         firstName: firstName || displayName.split(' ')[0],
         lastName: lastName || displayName.split(' ')[1] || '',
         emailVerified: false,
-        language: language || 'en'
+        language: language || 'en',
+        updatedAt: new Date(),
       },
     })
 
@@ -69,7 +70,7 @@ export async function POST(req: Request) {
       const expires = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24h
 
       await prisma.verificationToken.create({
-        data: { token, userId: user.id, expires },
+        data: { identifier: token, token, userId: user.id, expires },
       })
 
       // Send verification email to user

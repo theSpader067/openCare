@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     if (!userId) {
       console.log("[TASKS_API] No JWT token, checking session...");
       const session = await getSession();
-      console.log("[TASKS_API] Session check result, has user:", !!session?.user);
+      console.log("[TASKS_API] Session check result, has User:", !!session?.user);
 
       if (!session?.user) {
         console.log("[TASKS_API] No session and no JWT token - returning 401");
@@ -214,7 +214,10 @@ export async function POST(request: NextRequest) {
     console.log("Prisma creating task with data:", taskData);
 
     const task = await prisma.task.create({
-      data: taskData,
+      data: {
+        ...taskData,
+        updatedAt: new Date(),
+      },
     });
 
     // Track task creation event

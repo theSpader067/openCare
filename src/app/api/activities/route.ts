@@ -17,13 +17,13 @@ function convertActivityToActivityItem(activity: any): ActivityItem {
     status: "todo", // Default status, can be enhanced later
     createdAt: activity.createdAt,
     activityDay: activity.activityDay,
-    participants:activity.équipe.split(','),
-    creator: activity.creator ? {
-      id: activity.creator.id,
-      firstName: activity.creator.firstName,
-      lastName: activity.creator.lastName,
-      email: activity.creator.email,
-      username: activity.creator.username,
+    participants:activity.quipe ? activity.quipe.split(',') : [],
+    creator: activity.User ? {
+      id: activity.User.id,
+      firstName: activity.User.firstName,
+      lastName: activity.User.lastName,
+      email: activity.User.email,
+      username: activity.User.username,
     } : undefined,
   }
   return result;
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "desc" },
       where: { creatorId: parseInt(userId) },
       include: {
-        creator: {
+        User: {
           select: {
             id: true,
             firstName: true,
@@ -116,11 +116,12 @@ export async function POST(request: NextRequest) {
         horaire: time,
         place: location,
         activityDay: activityDay ? new Date(activityDay) : undefined,
-        équipe: équipe || undefined,
+        quipe: équipe || undefined,
         creatorId: parseInt(userId),
+        updatedAt: new Date(),
       },
       include: {
-        creator: {
+        User: {
           select: {
             id: true,
             firstName: true,
@@ -139,7 +140,7 @@ export async function POST(request: NextRequest) {
       category: activity.category || '',
       creatorId: activity.creatorId,
       place: activity.place || '',
-      équipe: activity.équipe || '',
+      équipe: activity.quipe || '',
     });
 
     return NextResponse.json({

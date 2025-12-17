@@ -115,18 +115,24 @@ export async function POST(req: NextRequest) {
     const userId = await getUserId(req);
 
     if (!userId) {
+      console.error("[TEAMS POST] Unauthorized - no userId");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    console.log("[TEAMS POST] Creating team for userId:", userId);
     const { name, hospital, service } = await req.json();
+    console.log("[TEAMS POST] Received data:", { name, hospital, service });
 
     // Validate input
     if (!name || !name.trim()) {
+      console.error("[TEAMS POST] Team name is empty");
       return NextResponse.json(
         { error: "Team name is required" },
         { status: 400 }
       );
     }
+
+    console.log("[TEAMS POST] Creating team with data:", { name: name.trim(), hospital, service, adminId: userId });
 
     // Create team with current user as admin and only member
     const team = await prisma.team.create({
@@ -135,35 +141,36 @@ export async function POST(req: NextRequest) {
         hospital: hospital || null,
         service: service || null,
         adminId: userId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
         members: {
           connect: [{ id: userId }],
         },
       },
       include: {
-        admin: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            specialty: true,
-          },
-        },
         members: {
           select: {
             id: true,
             firstName: true,
             lastName: true,
+            username: true,
             specialty: true,
           },
         },
       },
     });
 
+    console.log("[TEAMS POST] Team created successfully:", team.id);
     return NextResponse.json({ team }, { status: 201 });
   } catch (error) {
-    console.error("Error creating team:", error);
+    console.error("[TEAMS POST] Error creating team:", error);
+    if (error instanceof Error) {
+      console.error("[TEAMS POST] Error message:", error.message);
+      console.error("[TEAMS POST] Error stack:", error.stack);
+    }
+    // Don't expose error message to client - log it but return generic error
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Failed to create team" },
       { status: 500 }
     );
   }

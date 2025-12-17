@@ -86,9 +86,10 @@ export async function POST(req: NextRequest) {
       data: {
         senderId: userId,
         teamId: parsedTeamId,
+        updatedAt: new Date(),
       },
       include: {
-        sender: {
+        User: {
           select: {
             id: true,
             firstName: true,
@@ -97,7 +98,7 @@ export async function POST(req: NextRequest) {
             year: true,
           },
         },
-        team: {
+        Team: {
           select: {
             id: true,
             name: true,
@@ -107,8 +108,8 @@ export async function POST(req: NextRequest) {
     });
 
     // Transform response
-    const senderFirstName = teamRequest.sender.firstName || "";
-    const senderLastName = teamRequest.sender.lastName || "";
+    const senderFirstName = teamRequest.User.firstName || "";
+    const senderLastName = teamRequest.User.lastName || "";
     const senderInitials = `${senderFirstName[0] || ""}${senderLastName[0] || ""}`.toUpperCase();
     const senderName = `${senderFirstName} ${senderLastName}`.trim();
 
@@ -120,10 +121,10 @@ export async function POST(req: NextRequest) {
           residentName: senderName,
           residentAvatar: senderInitials,
           residentRole: "Demande",
-          specialty: teamRequest.sender.specialty || "",
-          year: teamRequest.sender.year || "",
+          specialty: teamRequest.User.specialty || "",
+          year: teamRequest.User.year || "",
           teamId: teamRequest.teamId.toString(),
-          teamName: teamRequest.team.name,
+          teamName: teamRequest.Team.name,
           requestDate: teamRequest.createdAt.toISOString().split("T")[0],
         },
       },

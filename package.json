@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "capture-screenshots": "node capture-screenshots.js"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
@@ -45,6 +46,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.57.0",
     "@tailwindcss/postcss": "^4",
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^20",
@@ -53,6 +55,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
+    "playwright": "^1.57.0",
     "prisma": "^6.19.0",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",

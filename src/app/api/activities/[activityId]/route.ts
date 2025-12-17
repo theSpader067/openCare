@@ -13,16 +13,16 @@ function convertActivityToActivityItem(activity: any): ActivityItem {
     description: activity.details || "",
     time: activity.horaire || "",
     location: activity.place,
-    team: activity.équipe || undefined,
+    team: activity.quipe || undefined,
     status: "todo",
     createdAt: activity.createdAt,
     activityDay: activity.activityDay,
-    creator: activity.creator ? {
-      id: activity.creator.id,
-      firstName: activity.creator.firstName,
-      lastName: activity.creator.lastName,
-      email: activity.creator.email,
-      username: activity.creator.username,
+    creator: activity.User ? {
+      id: activity.User.id,
+      firstName: activity.User.firstName,
+      lastName: activity.User.lastName,
+      email: activity.User.email,
+      username: activity.User.username,
     } : undefined,
   };
 }
@@ -53,7 +53,7 @@ export async function GET(
     const activity = await prisma.activity.findUnique({
       where: { id: activityId },
       include: {
-        creator: {
+        User: {
           select: {
             id: true,
             firstName: true,
@@ -137,7 +137,7 @@ export async function PUT(
         ...(team !== undefined && { équipe: team || null }),
       },
       include: {
-        creator: {
+        User: {
           select: {
             id: true,
             firstName: true,

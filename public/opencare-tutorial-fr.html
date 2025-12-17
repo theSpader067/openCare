@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guide Tutoriel OpenCare</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            line-height: 1.6;
+            color: #1d184f;
+            background: white;
+            padding: 40px 50px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* ========== TITLE PAGE ========== */
+        .title-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            page-break-after: always;
+            text-align: center;
+        }
+
+        .logo-container {
+            margin-bottom: 60px;
+        }
+
+        .logo {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 40px;
+            background: linear-gradient(135deg, #7c3aed 0%, #6366f1 50%, #4f46e5 100%);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 120px;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 20px 60px rgba(124, 58, 237, 0.3);
+            letter-spacing: -5px;
+        }
+
+        .logo-text {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tagline {
+            font-size: 24px;
+            color: #5f5aa5;
+            margin-bottom: 80px;
+            font-weight: 500;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: #888;
+            margin-bottom: 40px;
+        }
+
+        /* ========== TABLE OF CONTENTS ========== */
+        .toc-page {
+            page-break-after: always;
+            margin-top: 80px;
+        }
+
+        .toc-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 40px;
+            color: #1d184f;
+            border-bottom: 3px solid #7c3aed;
+            padding-bottom: 15px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin: 15px 0;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .toc-list li:before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+            border-radius: 50%;
+            margin-right: 15px;
+        }
+
+        .toc-list li a {
+            color: #1d184f;
+            text-decoration: none;
+            flex: 1;
+        }
+
+        /* ========== SECTION PAGES ========== */
+        .section {
+            page-break-after: always;
+            margin-top: 60px;
+            padding-bottom: 40px;
+        }
+
+        .section:last-child {
+            page-break-after: avoid;
+        }
+
+        .section-number {
+            font-size: 14px;
+            color: #7c3aed;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .section-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1d184f;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+            border-radius: 10px;
+            color: white;
+            font-size: 24px;
+        }
+
+        .divider {
+            height: 3px;
+            background: linear-gradient(90deg, #7c3aed 0%, #4f46e5 100%);
+            width: 100px;
+            margin-bottom: 25px;
+        }
+
+        .section-intro {
+            font-size: 16px;
+            color: #444;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            max-width: 100%;
+        }
+
+        /* ========== FEATURE CONTENT ========== */
+        .feature-grid {
+            display: grid;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .feature-item {
+            border-left: 4px solid #7c3aed;
+            padding-left: 20px;
+        }
+
+        .feature-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1d184f;
+            margin-bottom: 8px;
+        }
+
+        .feature-description {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.7;
+        }
+
+        /* ========== SCREENSHOT AREA ========== */
+        .screenshot-container {
+            background: #f5f3ff;
+            border: 2px dashed #e5ddf7;
+            border-radius: 12px;
+            padding: 40px;
+            margin: 30px 0;
+            text-align: center;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #999;
+        }
+
+        .screenshot-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .screenshot-label {
+            font-size: 12px;
+            color: #7c3aed;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        /* ========== KEY BENEFITS ========== */
+        .benefits-section {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(79, 70, 229, 0.05) 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+
+        .benefits-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #7c3aed;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .benefits-list {
+            list-style: none;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .benefits-list li {
+            font-size: 13px;
+            color: #555;
+            padding: 8px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .benefits-list li:before {
+            content: '✓';
+            color: #7c3aed;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        /* ========== STEP-BY-STEP ========== */
+        .steps-container {
+            margin: 30px 0;
+        }
+
+        .step {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1d184f;
+            margin-bottom: 5px;
+        }
+
+        .step-description {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* ========== HIGHLIGHTS ========== */
+        .highlight-box {
+            background: linear-gradient(135deg, #7c3aed 0%, #6366f1 50%, #4f46e5 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .highlight-box strong {
+            font-weight: 700;
+        }
+
+        /* ========== FOOTER ========== */
+        .footer {
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        /* ========== PAGE NUMBERING ========== */
+        @media print {
+            body {
+                padding: 40px;
+            }
+
+            .page-break {
+                page-break-after: always;
+            }
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            body {
+                padding: 20px 25px;
+            }
+
+            .logo {
+                width: 150px;
+                height: 150px;
+                font-size: 90px;
+            }
+
+            .logo-text {
+                font-size: 36px;
+            }
+
+            .tagline {
+                font-size: 18px;
+            }
+
+            .section-title {
+                font-size: 24px;
+            }
+
+            .benefits-list {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ========== COLOR VARIANTS ========== */
+        .color-rose { border-left-color: #f43f5e; }
+        .color-sky { border-left-color: #0ea5e9; }
+        .color-emerald { border-left-color: #10b981; }
+        .color-amber { border-left-color: #f59e0b; }
+    </style>
+</head>
+<body>
+
+<!-- ========== TITLE PAGE ========== -->
+<div class="title-page">
+    <div class="logo-container">
+        <div class="logo">OC</div>
+        <div class="logo-text">OpenCare</div>
+        <div class="tagline">Plateforme Clinique SaaS</div>
+    </div>
+    <p class="subtitle">Votre Plateforme Complète de Coordination des Soins de Santé</p>
+    <p style="color: #999; font-size: 14px; margin-top: 100px;">Guide Complet du Tutoriel Utilisateur</p>
+</div>
+
+<!-- ========== TABLE OF CONTENTS ========== -->
+<div class="toc-page">
+    <h1 class="toc-title">Table des Matières</h1>
+
+    <ul class="toc-list">
+        <li><a href="#intro">1. Premiers Pas</a></li>
+        <li><a href="#dashboard">2. Aperçu du Tableau de Bord</a></li>
+        <li><a href="#patients">3. Gestion des Patients</a></li>
+        <li><a href="#documents">4. Documents Médicaux</a></li>
+        <li><a href="#analyses">5. Analyses et Tests de Laboratoire</a></li>
+        <li><a href="#avis">6. Avis Médicaux</a></li>
+        <li><a href="#comptes-rendus">7. Rapports Cliniques</a></li>
+        <li><a href="#ordonnances">8. Ordonnances</a></li>
+        <li><a href="#tasks">9. Gestion des Tâches</a></li>
+        <li><a href="#activities">10. Activités et Planification</a></li>
+        <li><a href="#timeline">11. Chronologie et Observations</a></li>
+        <li><a href="#team">12. Collaboration d'Équipe</a></li>
+        <li><a href="#notifications">13. Notifications</a></li>
+        <li><a href="#profile">14. Profil et Paramètres</a></li>
+        <li><a href="#tips">15. Conseils et Bonnes Pratiques</a></li>
+    </ul>
+</div>
+
+<!-- ========== SECTION 1: GETTING STARTED ========== -->
+<div class="section" id="intro">
+    <div class="section-number">Section 01</div>
+    <div class="section-title">
+        <div class="section-icon">🚀</div>
+        Premiers Pas
+    </div>
+    <div class="divider"></div>
+
+    <p class="section-intro">
+        Bienvenue sur OpenCare ! Cette section vous guide à travers la connexion et la configuration initiale de votre compte. En quelques minutes, vous serez prêt à commencer à gérer vos patients et vos flux de travail cliniques.
+    </p>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Étape 1 : Accéder à OpenCare</h3>
+    <div class="steps-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <div class="step-title">Accédez à la Page de Connexion</div>
+                <div class="step-description">Ouvrez votre navigateur Web et allez à votre instance OpenCare. Vous verrez la page de connexion avec les champs d'email et de mot de passe.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <div class="step-title">Entrez Vos Identifiants</div>
+                <div class="step-description">Tapez votre adresse e-mail et votre mot de passe. Si vous n'avez pas encore de compte, cliquez sur "S'inscrire" pour en créer un.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <div class="step-title">Complétez l'Intégration</div>
+                <div class="step-description">À votre première connexion, vous serez guidé à travers un processus d'intégration rapide pour configurer vos informations de profil et préférences.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="screenshot-container">
+        <div>
+            <div class="screenshot-label">Capture d'écran de la page de connexion</div>
+            <img src="/tutorial-screenshots/01-login.png" alt="Page de connexion OpenCare" style="max-width: 100%; height: auto; border-radius: 8px;" />
+        </div>
+    </div>
+
+    <div class="benefits-section">
+        <div class="benefits-title">Ce que Vous Allez Configurer</div>
+        <ul class="benefits-list">
+            <li>Votre profil professionnel (nom, spécialité)</li>
+            <li>Informations de l'hôpital/clinique</li>
+            <li>Préférences de notification</li>
+            <li>Préférence de langue (Anglais ou Français)</li>
+        </ul>
+    </div>
+
+    <div class="highlight-box">
+        <strong>💡 Conseil :</strong> Vous pouvez toujours modifier vos paramètres de profil plus tard à partir du menu Profil dans la navigation supérieure.
+    </div>
+</div>
+
+<!-- ========== SECTION 2: DASHBOARD ========== -->
+<div class="section" id="dashboard">
+    <div class="section-number">Section 02</div>
+    <div class="section-title">
+        <div class="section-icon">📊</div>
+        Aperçu du Tableau de Bord
+    </div>
+    <div class="divider"></div>
+
+    <p class="section-intro">
+        Le Tableau de Bord est votre centre de contrôle. En un coup d'œil, vous pouvez voir vos tâches, les activités à venir, les statistiques des patients et les éléments de travail en attente. Il est conçu pour vous donner tout ce que vous devez savoir en quelques secondes.
+    </p>
+
+    <div class="screenshot-container">
+        <div>
+            <div class="screenshot-label">Vue Principale du Tableau de Bord</div>
+            <img src="/tutorial-screenshots/02-dashboard.png" alt="Tableau de bord OpenCare" style="max-width: 100%; height: auto; border-radius: 8px;" />
+        </div>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Composants Clés du Tableau de Bord</h3>
+    <div class="feature-grid">
+        <div class="feature-item">
+            <div class="feature-title">Statistiques Récapitulatives</div>
+            <div class="feature-description">En haut du tableau de bord, vous verrez les métriques clés : nombre total de patients, tâches en attente, analyses attendant les résultats et activités à venir. Elles se mettent à jour en temps réel.</div>
+        </div>
+        <div class="feature-item color-rose">
+            <div class="feature-title">Section des Tâches d'Aujourd'hui</div>
+            <div class="feature-description">Une liste ciblée de tâches à faire aujourd'hui. Cliquez sur n'importe quelle tâche pour afficher les détails, mettre à jour le statut ou l'assigner aux membres de l'équipe. Les tâches prioritaires apparaissent en premier.</div>
+        </div>
+        <div class="feature-item color-sky">
+            <div class="feature-title">Activités et Calendrier</div>
+            <div class="feature-description">Voir vos activités programmées et rendez-vous. La vue rapide montre les événements à venir pour la prochaine semaine, avec des options pour ajouter de nouvelles activités.</div>
+        </div>
+        <div class="feature-item color-emerald">
+            <div class="feature-title">Aperçu des Patients</div>
+            <div class="feature-description">Cartes de patients affichant l'activité récente, l'état actuel (consultation, hospitalisé, suivi), et des boutons d'action rapide pour afficher les dossiers complets.</div>
+        </div>
+    </div>
+
+    <div class="benefits-section">
+        <div class="benefits-title">Avantages du Tableau de Bord</div>
+        <ul class="benefits-list">
+            <li>Mises à jour d'état en temps réel</li>
+            <li>Accès en un clic au travail en attente</li>
+            <li>Indicateurs de statut codés par couleur</li>
+            <li>Recherche rapide de patients</li>
+            <li>Priorisation intelligente des tâches</li>
+            <li>Calendrier d'activités visuels</li>
+        </ul>
+    </div>
+
+    <div class="highlight-box">
+        <strong>🎯 Conseil de Flux de Travail :</strong> Commencez votre journée en examinant le tableau de bord. Complétez d'abord les tâches hautement prioritaires, puis traitez les analyses en attente et les suivis de patients.
+    </div>
+</div>
+
+<!-- ========== SECTION 3: PATIENT MANAGEMENT ========== -->
+<div class="section" id="patients">
+    <div class="section-number">Section 03</div>
+    <div class="section-title">
+        <div class="section-icon">👥</div>
+        Gestion des Patients
+    </div>
+    <div class="divider"></div>
+
+    <p class="section-intro">
+        Gérez toutes les informations de vos patients au même endroit. Des données démographiques aux dossiers médicaux complets, OpenCare garde tout organisé et accessible. Créez de nouveaux patients, mettez à jour les dossiers et suivez les informations de santé importantes sans effort.
+    </p>
+
+    <div class="screenshot-container">
+        <div>
+            <div class="screenshot-label">Vue de la Liste des Patients</div>
+            <img src="/tutorial-screenshots/03-patients-list.png" alt="Liste des Patients OpenCare" style="max-width: 100%; height: auto; border-radius: 8px;" />
+        </div>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Créer un Nouveau Patient</h3>
+    <div class="steps-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <div class="step-title">Accédez aux Patients</div>
+                <div class="step-description">Cliquez sur "Patients" dans la barre latérale gauche pour afficher votre liste de patients.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <div class="step-title">Créer un Nouveau Patient</div>
+                <div class="step-description">Cliquez sur le bouton "+" ou "Créer un Patient" en haut de la page.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <div class="step-title">Remplissez les Informations du Patient</div>
+                <div class="step-description">Entrez les informations de base : nom, date de naissance, sexe, coordonnées et détails d'assurance.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <div class="step-title">Ajoutez l'Historique Médical</div>
+                <div class="step-description">Documentez les conditions médicales passées, chirurgies, allergies, médicaments actuels et facteurs de risque.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+                <div class="step-title">Enregistrer et Continuer</div>
+                <div class="step-description">Cliquez sur "Enregistrer" pour créer le dossier du patient. Vous pouvez ajouter plus de détails à tout moment.</div>
+            </div>
+        </div>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Caractéristiques du Dossier du Patient</h3>
+    <div class="feature-grid">
+        <div class="feature-item">
+            <div class="feature-title">Informations Démographiques et Contact</div>
+            <div class="feature-description">Stockez et gérez toutes les informations personnelles du patient, y compris les coordonnées, les informations d'assurance et les contacts d'urgence.</div>
+        </div>
+        <div class="feature-item color-rose">
+            <div class="feature-title">Historique Médical (ATCDS)</div>
+            <div class="feature-description">Organisez l'historique médical en catégories : antécédents chirurgicaux, conditions médicales, antécédents gynécologiques et antécédents familiaux. Facile à scanner et mettre à jour.</div>
+        </div>
+        <div class="feature-item color-sky">
+            <div class="feature-title">Facteurs de Risque (FDRs)</div>
+            <div class="feature-description">Suivez les facteurs de risque importants : consommation de tabac, consommation d'alcool, hypertension, diabète et dyslipidémie. Documentez la gravité et l'état actuel.</div>
+        </div>
+        <div class="feature-item color-emerald">
+            <div class="feature-title">Statut Actuel</div>
+            <div class="feature-description">Marquez le statut du patient comme hospitalisé, en consultation ou en suivi. Codé par couleur pour une identification visuelle rapide.</div>
+        </div>
+    </div>
+
+    <div class="highlight-box">
+        <strong>📋 Important :</strong> Maintenez les dossiers des patients à jour à chaque visite. Ajoutez des observations et des notes à la chronologie pour la continuité des soins.
+    </div>
+</div>
+
+<!-- ========== SECTION 4: MEDICAL DOCUMENTS ========== -->
+<div class="section" id="documents">
+    <div class="section-number">Section 04</div>
+    <div class="section-title">
+        <div class="section-icon">📄</div>
+        Documents Médicaux
+    </div>
+    <div class="divider"></div>
+
+    <p class="section-intro">
+        OpenCare organise les documents médicaux en quatre catégories principales, chacune servant un objectif spécifique dans votre flux de travail clinique. Apprenez à créer, gérer et accéder à chaque type de document.
+    </p>
+
+    <div class="highlight-box">
+        <strong>📌 Types de Documents :</strong> Analyses (Labo et Imagerie), Avis (Avis Médicaux), Comptes-rendus (Rapports Cliniques), et Ordonnances (Prescriptions).
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Navigation des Documents</h3>
+    <p style="color: #666; margin-bottom: 15px;">Tous les types de documents sont accessibles depuis la barre latérale gauche sous "Documents" avec des filtres rapides et des capacités de recherche.</p>
+
+    <div class="feature-grid">
+        <div class="feature-item">
+            <div class="feature-title">Filtrage Intelligent</div>
+            <div class="feature-description">Filtrez les documents par statut (en cours, terminé, urgent), catégorie, patient ou plage de dates. Enregistrez vos filtres préférés pour un accès rapide.</div>
+        </div>
+        <div class="feature-item color-rose">
+            <div class="feature-title">Suivi du Statut</div>
+            <div class="feature-description">Les badges de statut visuels affichent l'état du document en un coup d'œil : En cours, Terminée, Urgent. Mettez à jour le statut au fur et à mesure que vous travaillez.</div>
+        </div>
+        <div class="feature-item color-sky">
+            <div class="feature-title">Actions Rapides</div>
+            <div class="feature-description">Survolez n'importe quel document pour les actions rapides : afficher, éditer, assigner, partager avec les membres de l'équipe ou générer un PDF.</div>
+        </div>
+        <div class="feature-item color-emerald">
+            <div class="feature-title">Recherche et Lookup</div>
+            <div class="feature-description">Recherche puissante dans tous les documents par nom de patient, type de document, contenu ou date. Trouvez ce que vous cherchez en secondes.</div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== SECTION 5: LAB TESTS & ANALYSES ========== -->
+<div class="section" id="analyses">
+    <div class="section-number">Section 05</div>
+    <div class="section-title">
+        <div class="section-icon">🔬</div>
+        Analyses et Tests de Laboratoire
+    </div>
+    <div class="divider"></div>
+
+    <p class="section-intro">
+        Gérez les tests de laboratoire, les demandes d'imagerie et les résultats de pathologie. Commandez des tests, suivez les résultats et utilisez notre technologie OCR intégrée pour extraire les données des rapports physiques. Tout reste organisé par patient et en ordre chronologique.
+    </p>
+
+    <div class="screenshot-container">
+        <div>
+            <div class="screenshot-label">Liste des Analyses et Scanner OCR</div>
+            <img src="/tutorial-screenshots/03-patients-list.png" alt="Liste des Patients OpenCare" style="max-width: 100%; height: auto; border-radius: 8px;" />
+        </div>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Catégories d'Analyses</h3>
+    <div class="feature-grid">
+        <div class="feature-item">
+            <div class="feature-title">Bilan (Tests de Laboratoire)</div>
+            <div class="feature-description">Tests sanguins, analyse d'urine et autres tests de laboratoire. Suivez les résultats, comparez les tendances et ajoutez des notes cliniques.</div>
+        </div>
+        <div class="feature-item color-rose">
+            <div class="feature-title">Imagerie (Imagerie Médicale)</div>
+            <div class="feature-description">Radiographies, tomodensitométrie, IRM, échographies et autres études d'imagerie. Stockez les rapports et les images avec les interprétations.</div>
+        </div>
+        <div class="feature-item color-sky">
+            <div class="feature-title">Anapath (Pathologie)</div>
+            <div class="feature-description">Échantillons de tissu, biopsies et analyses pathologiques. Conservez les rapports de pathologie détaillés liés aux patients.</div>
+        </div>
+        <div class="feature-item color-emerald">
+            <div class="feature-title">Autres (Autres)</div>
+            <div class="feature-description">Tous les autres tests ou analyses spécialisés qui ne rentrent pas dans les catégories ci-dessus.</div>
+        </div>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Utilisation du Scanner OCR</h3>
+    <p style="color: #666; margin-bottom: 15px;">Extrayez automatiquement le texte et les données des rapports médicaux physiques en utilisant notre technologie OCR intelligente :</p>
+    <div class="steps-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <div class="step-title">Ouvrir le Scanner</div>
+                <div class="step-description">Cliquez sur l'icône appareil photo/OCR dans la section Analyses pour ouvrir la fenêtre du scanner.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <div class="step-title">Télécharger un Document Médical</div>
+                <div class="step-description">Prenez une photo ou téléchargez une image du rapport médical (supporte JPG, PNG, PDF).</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <div class="step-title">Traitement Automatique</div>
+                <div class="step-description">OpenCare compresse automatiquement l'image (réduction de 80%+) et extrait tout le texte en utilisant OCR.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <div class="step-title">Réviser et Enregistrer</div>
+                <div class="step-description">Vérifiez le texte extrait, apportez des corrections si nécessaire, ajoutez des notes cliniques, puis enregistrez au dossier du patient.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="benefits-section">
+        <div class="benefits-title">Avantages de l'OCR</div>
+        <ul class="benefits-list">
+            <li>Économise du temps de saisie manuelle</li>
+            <li>Réduit les erreurs de saisie de données</li>
+            <li>Compression automatique des images</li>
+            <li>Texte searchable dans les dossiers</li>
+            <li>Organisé chronologiquement</li>
+            <li>Facile à partager avec l'équipe</li>
+        </ul>
+    </div>
+
+    <div class="highlight-box">
+        <strong>⚡ Gain de Temps :</strong> La fonction OCR peut vous économiser 5-10 minutes par rapport à la dactylographie manuelle des rapports.
+    </div>
+</div>
+
+<!-- ========== SECTION 6-15: CONTINUING SECTIONS ========== -->
+
+<!-- ========== SECTION 6: MEDICAL OPINIONS ========== -->
+<div class="section" id="avis">
+    <div class="section-number">Section 06</div>
+    <div class="section-title">
+        <div class="section-icon">💬</div>
+        Avis Médicaux
+    </div>
+    <div class="divider"></div>
+
+    <p class="section-intro">
+        Demandez et gérez les consultations spécialisées et les avis médicaux. Suivez les demandes de consultation, stockez les commentaires des spécialistes et maintenez un historique complet des consultations pour chaque patient.
+    </p>
+
+    <div class="screenshot-container">
+        <div>
+            <div class="screenshot-label">Interface des Avis Médicaux</div>
+            <img src="/tutorial-screenshots/03-patients-list.png" alt="Liste des Patients OpenCare" style="max-width: 100%; height: auto; border-radius: 8px;" />
+        </div>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Créer une Demande de Consultation</h3>
+    <div class="steps-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <div class="step-title">Sélectionnez le Patient</div>
+                <div class="step-description">Accédez à la section Avis et cliquez sur "Demander un Nouvel Avis" ou sélectionnez un patient.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <div class="step-title">Choisissez le Spécialiste</div>
+                <div class="step-description">Sélectionnez le type de spécialiste (cardiologie, neurologie, etc.) ou le membre de l'équipe à consulter.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <div class="step-title">Décrivez la Question Clinique</div>
+                <div class="step-description">Écrivez la raison de la consultation, l'historique clinique pertinent et les questions spécifiques pour le spécialiste.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <div class="step-title">Joignez les Documents Pertinents</div>
+                <div class="step-description">Joignez les résultats de laboratoire, l'imagerie ou d'autres résultats de tests pertinents pour soutenir la demande de consultation.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+                <div class="step-title">Envoyer et Suivre</div>
+                <div class="step-description">Soumettez la demande. Suivez le statut et recevez des notifications lorsque l'avis est reçu.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="feature-grid">
+        <div class="feature-item">
+            <div class="feature-title">Suivi des Consultations</div>
+            <div class="feature-description">Consultez toutes les demandes de consultation actives et leur statut actuel. Sachez quand les avis sont dus et lesquels sont en attente.</div>
+        </div>
+        <div class="feature-item color-rose">
+            <div class="feature-title">Gestion des Réponses</div>
+            <div class="feature-description">Lorsque les spécialistes répondent, consultez leur avis directement dans le système. Conservez toutes les consultations au même endroit.</div>
+        </div>
+        <div class="feature-item color-sky">
+            <div class="feature-title">Intégration à la Chronologie des Patients</div>
+            <div class="feature-description">Toutes les demandes de consultation et réponses apparaissent dans la chronologie du patient pour une continuité complète des soins.</div>
+        </div>
+        <div class="feature-item color-emerald">
+            <div class="feature-title">Collaboration d'Équipe</div>
+            <div class="feature-description">Partagez les demandes de consultation avec les membres de l'équipe et obtenez des commentaires internes avant d'envoyer aux spécialistes.</div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== SECTION 7: CLINICAL REPORTS ========== -->
+<div class="section" id="comptes-rendus">
+    <div class="section-number">Section 07</div>
+    <div class="section-title">
+        <div class="section-icon">📑</div>
+        Rapports Cliniques
+    </div>
+    <div class="divider"></div>
+
+    <p class="section-intro">
+        Générez des rapports cliniques complets résumant les rencontres avec les patients, les résultats des tests, les diagnostics et les plans de traitement. Exportez en PDF pour la distribution aux patients et autres prestataires de soins de santé.
+    </p>
+
+    <div class="screenshot-container">
+        <div>
+            <div class="screenshot-label">Éditeur et Aperçu des Rapports Cliniques</div>
+            <img src="/tutorial-screenshots/03-patients-list.png" alt="Liste des Patients OpenCare" style="max-width: 100%; height: auto; border-radius: 8px;" />
+        </div>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Créer un Rapport Clinique</h3>
+    <div class="steps-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <div class="step-title">Accéder aux Rapports Cliniques</div>
+                <div class="step-description">Allez à Documents → section Comptes-rendus dans la navigation.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <div class="step-title">Créer un Nouveau Rapport</div>
+                <div class="step-description">Cliquez sur "Créer un Rapport" et sélectionnez le patient pour lequel ce rapport est destiné.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <div class="step-title">Remplissez les Sections du Rapport</div>
+                <div class="step-description">Complétez les sections : motif principal, historique de la maladie actuelle, examen physique, évaluation et plan.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <div class="step-title">Lier les Résultats des Tests</div>
+                <div class="step-description">Liez automatiquement les résultats de laboratoire pertinents, l'imagerie et les résultats des analyses du dossier du patient.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+                <div class="step-title">Générer un PDF</div>
+                <div class="step-description">Passez en revue le rapport, formatez selon les besoins, puis générez un PDF professionnel pour impression ou distribution numérique.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="feature-grid">
+        <div class="feature-item">
+            <div class="feature-title">Formatage Professionnel</div>
+            <div class="feature-description">Les rapports sont automatiquement formatés avec votre en-tête d'hôpital, la date, les informations du patient et les lignes de signature du prestataire.</div>
+        </div>
+        <div class="feature-item color-rose">
+            <div class="feature-title">Support de Modèles</div>
+            <div class="feature-description">Choisissez parmi des modèles pré-construits pour les types de rencontres courants ou créez des modèles personnalisés pour votre spécialité.</div>
+        </div>
+        <div class="feature-item color-sky">
+            <div class="feature-title">Liaison Dynamique de Contenu</div>
+            <div class="feature-description">Tirez automatiquement les résultats de tests récents, les diagnostics et les médicaments du dossier du patient.</div>
+        </div>
+        <div class="feature-item color-emerald">
+            <div class="feature-title">Contrôle de Version</div>
+            <div class="feature-description">Suivez les versions des rapports et les modifications. Consultez l'historique de tous les rapports cliniques pour un patient.</div>
+        </div>
+    </div>
+
+    <div class="highlight-box">
+        <strong>📤 Partage :</strong> Après création d'un rapport, vous pouvez le partager avec les patients par e-mail, l'imprimer ou le télécharger en PDF pour vos dossiers.
+    </div>
+</div>
+
+<!-- ========== SECTION 8: PRESCRIPTIONS ========== -->
+<div class="section" id="ordonnances">
+    <div class="section-number">Section 08</div>
+    <div class="section-title">
+        <div class="section-icon">💊</div>
+        Ordonnances
+    </div>
+    <div class="divider"></div>
+
+    <p class="section-intro">
+        Créez, gérez et délivrez les ordonnances directement depuis le dossier du patient. Utilisez les modèles d'ordonnances pour accélérer les prescriptions courantes et générez des ordonnances PDF officielles pour la distribution à la pharmacie.
+    </p>
+
+    <div class="screenshot-container">
+        <div>
+            <div class="screenshot-label">Éditeur d'Ordonnances avec Modèles</div>
+            <img src="/tutorial-screenshots/03-patients-list.png" alt="Liste des Patients OpenCare" style="max-width: 100%; height: auto; border-radius: 8px;" />
+        </div>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Rédiger une Ordonnance</h3>
+    <div class="steps-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <div class="step-title">Accédez aux Ordonnances</div>
+                <div class="step-description">Allez à Documents → Ordonnances dans la navigation principale.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <div class="step-title">Créer une Nouvelle Ordonnance</div>
+                <div class="step-description">Cliquez sur "Nouvelle Ordonnance" et sélectionnez le patient.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <div class="step-title">Ajouter des Médicaments</div>
+                <div class="step-description">Recherchez des médicaments, ajoutez le dosage, la fréquence, la durée et les instructions spéciales. Ajoutez autant que nécessaire.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <div class="step-title">Ajouter des Notes</div>
+                <div class="step-description">Incluez les instructions spéciales, les notes de la pharmacie ou les points de counseling des patients.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+                <div class="step-title">Signer et Générer un PDF</div>
+                <div class="step-description">Passez en revue l'ordonnance, signez numériquement et générez un PDF officiel. Partagez avec le patient ou imprimez pour la pharmacie.</div>
+            </div>
+        </div>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Modèles d'Ordonnances</h3>
+    <p style="color: #666; margin-bottom: 15px;">Économisez du temps avec les modèles d'ordonnances pour les régimes médicamenteux courants :</p>
+
+    <div class="feature-grid">
+        <div class="feature-item">
+            <div class="feature-title">Créer des Modèles Personnalisés</div>
+            <div class="feature-description">Enregistrez vos combinaisons de médicaments fréquemment utilisées en tant que modèles. Les modèles apparaissent dans une barre latérale pour un accès rapide.</div>
+        </div>
+        <div class="feature-item color-rose">
+            <div class="feature-title">Prescription en Un Clic</div>
+            <div class="feature-description">Cliquez sur un modèle pour remplir instantanément une ordonnance avec vos médicaments et dosages standards.</div>
+        </div>
+        <div class="feature-item color-sky">
+            <div class="feature-title">Gestion des Modèles</div>
+            <div class="feature-description">Modifiez, dupliquez ou supprimez les modèles au fur et à mesure de l'évolution de votre pratique. Marquez les favoris pour un accès rapide.</div>
+        </div>
+        <div class="feature-item color-emerald">
+            <div class="feature-title">Modèles de Spécialité</div>
+            <div class="feature-description">Partagez les modèles avec les membres de l'équipe. Différents modèles pour différentes conditions ou populations de patients.</div>
+        </div>
+    </div>
+
+    <div class="highlight-box">
+        <strong>⏱️ Amélioration de l'Efficacité :</strong> Créer des modèles d'ordonnances peut vous économiser 2-3 minutes par ordonnance, ce qui s'ajoute considérablement au cours de votre journée clinique.
+    </div>
+</div>
+
+<!-- ========== SECTION 9: TASK MANAGEMENT ========== -->
+<div class="section" id="tasks">
+    <div class="section-number">Section 09</div>
+    <div class="section-title">
+        <div class="section-icon">✓</div>
+        Gestion des Tâches
+    </div>
+    <div class="divider"></div>
+
+    <p class="section-intro">
+        Restez organisé avec les fonctionnalités de gestion des tâches. Créez des éléments d'action, assignez-les aux membres de l'équipe, définissez les priorités et les dates d'échéance, et suivez la réalisation. Intégrez les tâches aux dossiers des patients pour un contexte.
+    </p>
+
+    <div class="screenshot-container">
+        <div>
+            <div class="screenshot-label">Liste des Tâches et Modal de Création</div>
+            <img src="/tutorial-screenshots/03-patients-list.png" alt="Liste des Patients OpenCare" style="max-width: 100%; height: auto; border-radius: 8px;" />
+        </div>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Créer une Tâche</h3>
+    <div class="steps-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <div class="step-title">Ouvrir la Section Tâches</div>
+                <div class="step-description">Cliquez sur "Tâches" dans la barre latérale gauche ou le tableau de bord.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <div class="step-title">Créer une Nouvelle Tâche</div>
+                <div class="step-description">Cliquez sur le bouton "Nouvelle Tâche" et entrez le titre et la description de la tâche.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <div class="step-title">Définir la Priorité et la Date d'Échéance</div>
+                <div class="step-description">Marquez comme priorité haute, moyenne ou basse. Définissez une date d'échéance pour la responsabilité.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <div class="step-title">Assigner des Membres de l'Équipe</div>
+                <div class="step-description">Assignez à vous-même, à un collègue ou laissez non assigné pour la prise en charge par l'équipe.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+                <div class="step-title">Lier au Patient</div>
+                <div class="step-description">Optionnel : Liez la tâche à un patient spécifique pour le contexte et le suivi.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="feature-grid">
+        <div class="feature-item">
+            <div class="feature-title">Gestion des Priorités</div>
+            <div class="feature-description">Organisez par niveaux de priorité. Les tâches hautement prioritaires apparaissent en premier et sur votre tableau de bord pour une attention immédiate.</div>
+        </div>
+        <div class="feature-item color-rose">
+            <div class="feature-title">Suivi de la Date d'Échéance</div>
+            <div class="feature-description">N'oubliez jamais les délais. Les tâches en retard sont mises en évidence et vous recevrez des rappels à l'approche des dates d'échéance.</div>
+        </div>
+        <div class="feature-item color-sky">
+            <div class="feature-title">Assignment d'Équipe</div>
+            <div class="feature-description">Déléguez les tâches aux membres de l'équipe. Les personnes assignées reçoivent des notifications et peuvent suivre leur charge de travail.</div>
+        </div>
+        <div class="feature-item color-emerald">
+            <div class="feature-title">Modèles de Tâches</div>
+            <div class="feature-description">Créez des tâches modèles pour les flux de travail récurrents. Marquez les tâches comme favoris pour une création rapide.</div>
+        </div>
+    </div>
+
+    <div class="highlight-box">
+        <strong>💡 Flux de Travail d'Équipe :</strong> Utilisez les tâches pour assigner les suivis après les visites de patients, les ajustements de médicaments, les examens de résultats de tests et la création de documents pour maintenir chacun responsable.
+    </div>
+</div>
+
+<!-- ========== SECTION 10: ACTIVITIES ========== -->
+<div class="section" id="activities">
+    <div class="section-number">Section 10</div>
+    <div class="section-title">
+        <div class="section-icon">📅</div>
+        Activités et Planification
+    </div>
+    <div class="divider"></div>
+
+    <p class="section-intro">
+        Programmez les rendez-vous, les consultations et les visites de suivi. Consultez votre calendrier, gérez la disponibilité et recevez des rappels pour les activités à venir. Intégrez avec les dossiers des patients pour un flux de travail transparent.
+    </p>
+
+    <div class="screenshot-container">
+        <div>
+            <div class="screenshot-label">Vue du Calendrier et des Activités</div>
+            <img src="/tutorial-screenshots/03-patients-list.png" alt="Liste des Patients OpenCare" style="max-width: 100%; height: auto; border-radius: 8px;" />
+        </div>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Programmer une Activité</h3>
+    <div class="steps-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <div class="step-title">Accédez aux Activités</div>
+                <div class="step-description">Cliquez sur "Activités" dans la barre latérale gauche pour afficher votre calendrier.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <div class="step-title">Créer une Nouvelle Activité</div>
+                <div class="step-description">Cliquez sur une zone de date/heure ou utilisez le bouton "Nouvelle Activité" pour créer un événement.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <div class="step-title">Ajouter les Détails</div>
+                <div class="step-description">Entrez le type d'activité (consultation, suivi, etc.), le titre, les heures de début/fin et l'emplacement.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <div class="step-title">Lier le Patient</div>
+                <div class="step-description">Sélectionnez le(s) patient(s) impliqué(s) dans cette activité ou ce rendez-vous.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+                <div class="step-title">Définir les Rappels</div>
+                <div class="step-description">Choisissez quand vous souhaitez recevoir des rappels (15 min, 1 heure, 1 jour avant).</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="feature-grid">
+        <div class="feature-item">
+            <div class="feature-title">Vue du Calendrier</div>
+            <div class="feature-description">Consultez votre emploi du temps complet en un coup d'œil. Les vues mois, semaine et jour sont disponibles pour une planification flexible.</div>
+        </div>
+        <div class="feature-item color-rose">
+            <div class="feature-title">Types d'Activités</div>
+            <div class="feature-description">Catégorisez les activités : consultation, suivi, procédure, réunion d'équipe ou types personnalisés pour votre pratique.</div>
+        </div>
+        <div class="feature-item color-sky">
+            <div class="feature-title">Liaison des Patients</div>
+            <div class="feature-description">Chaque activité se connecte aux dossiers des patients. Consultez l'historique des rendez-vous et les visites à venir pour chaque patient.</div>
+        </div>
+        <div class="feature-item color-emerald">
+            <div class="feature-title">Rappels Intelligents</div>
+            <div class="feature-description">Les rappels automatisés vous gardent sur la bonne voie. N'oubliez jamais un rendez-vous ou une date importante.</div>
+        </div>
+    </div>
+
+    <div class="highlight-box">
+        <strong>⏰ Conseil Pro :</strong> Consultez vos activités chaque matin à partir du tableau de bord. Les activités codées par couleur vous aident à identifier rapidement les types d'activités et les priorités.
+    </div>
+</div>
+
+<!-- ========== SECTION 11: TIMELINE ========== -->
+<div class="section" id="timeline">
+    <div class="section-number">Section 11</div>
+    <div class="section-title">
+        <div class="section-icon">📈</div>
+        Chronologie et Observations du Patient
+    </div>
+    <div class="divider"></div>
+
+    <p class="section-intro">
+        Suivez le parcours complet du patient avec une chronologie chronologique de toutes les interactions, observations, résultats de tests et événements cliniques. Ajoutez rapidement des observations et maintenez des notes de visite détaillées pour la continuité des soins.
+    </p>
+
+    <div class="screenshot-container">
+        <div>
+            <div class="screenshot-label">Vue de la Chronologie des Patients</div>
+            <img src="/tutorial-screenshots/03-patients-list.png" alt="Liste des Patients OpenCare" style="max-width: 100%; height: auto; border-radius: 8px;" />
+        </div>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Comprendre la Chronologie</h3>
+    <p style="color: #666; margin-bottom: 15px;">La chronologie du patient est un enregistrement chronologique de tout ce qui concerne un patient :</p>
+
+    <div class="feature-grid">
+        <div class="feature-item">
+            <div class="feature-title">Historique Complet du Patient</div>
+            <div class="feature-description">Chaque visite, test, observation, consultation et document apparaît sur la chronologie en ordre chronologique.</div>
+        </div>
+        <div class="feature-item color-rose">
+            <div class="feature-title">Observations Rapides</div>
+            <div class="feature-description">Ajoutez des notes pendant ou après les visites de patients. Les observations apparaissent immédiatement sur la chronologie.</div>
+        </div>
+        <div class="feature-item color-sky">
+            <div class="feature-title">Indicateurs de Statut Visuels</div>
+            <div class="feature-description">Les événements codés par couleur montrent ce qui s'est passé : consultations, résultats de tests, prescriptions, imagerie, rapports.</div>
+        </div>
+        <div class="feature-item color-emerald">
+            <div class="feature-title">Analyse des Tendances</div>
+            <div class="feature-description">Consultez les modèles de soins des patients. Examinez comment les conditions ont évolué et les réponses au traitement au fil du temps.</div>
+        </div>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Ajouter des Observations de Patients</h3>
+    <div class="steps-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <div class="step-title">Ouvrir le Dossier du Patient</div>
+                <div class="step-description">Accédez à Patients, trouvez le patient et cliquez pour afficher leur dossier complet.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <div class="step-title">Ajouter une Observation</div>
+                <div class="step-description">Cliquez sur "Ajouter une Observation" ou le bouton "+" sur la chronologie.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <div class="step-title">Documenter les Détails de la Visite</div>
+                <div class="step-description">Entrez la date, les signes vitaux, le motif principal, l'historique, les résultats de l'examen physique et l'évaluation.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <div class="step-title">Créer un Remplissage Rapide</div>
+                <div class="step-description">Utilisez le formulaire Quick Fill pour une saisie d'observation plus rapide avec des champs pré-remplis.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+                <div class="step-title">Enregistrer à la Chronologie</div>
+                <div class="step-description">Enregistrez l'observation et elle apparaît immédiatement sur la chronologie du patient pour référence.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="highlight-box">
+        <strong>📋 Continuité des Soins :</strong> Avant chaque visite de patient, consultez leur chronologie pour rester informé de leur parcours médical et des développements récents dans leurs soins.
+    </div>
+</div>
+
+<!-- ========== SECTION 12: TEAM ========== -->
+<div class="section" id="team">
+    <div class="section-number">Section 12</div>
+    <div class="section-title">
+        <div class="section-icon">👨‍⚕️</div>
+        Collaboration d'Équipe
+    </div>
+    <div class="divider"></div>
+
+    <p class="section-intro">
+        Travaillez en toute transparence avec votre équipe de soins de santé. Invitez les membres de l'équipe, gérez les autorisations, partagez les dossiers des patients et collaborez sur les décisions cliniques. OpenCare facilite la communication et la coordination dans votre pratique.
+    </p>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Notions de Base de la Gestion d'Équipe</h3>
+    <div class="feature-grid">
+        <div class="feature-item">
+            <div class="feature-title">Inviter des Membres de l'Équipe</div>
+            <div class="feature-description">Invitez les médecins, infirmières et personnel à votre équipe. Ils reçoivent des invitations par e-mail et peuvent rejoindre directement.</div>
+        </div>
+        <div class="feature-item color-rose">
+            <div class="feature-title">Gérer les Autorisations</div>
+            <div class="feature-description">Contrôlez ce que chaque membre de l'équipe peut voir et faire. Les rôles différents ont des niveaux d'accès différents.</div>
+        </div>
+        <div class="feature-item color-sky">
+            <div class="feature-title">Partager les Dossiers des Patients</div>
+            <div class="feature-description">Accordez aux membres de l'équipe l'accès aux patients spécifiques ou aux groupes de patients. Facile à partager pour la collaboration.</div>
+        </div>
+        <div class="feature-item color-emerald">
+            <div class="feature-title">Notes Collaboratives</div>
+            <div class="feature-description">Plusieurs membres de l'équipe peuvent ajouter des observations et des notes au même dossier de patient.</div>
+        </div>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Assigner le Travail</h3>
+    <p style="color: #666; margin-bottom: 15px;">Distribuez efficacement le travail dans votre équipe :</p>
+    <div class="steps-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <div class="step-title">Assigner des Tâches</div>
+                <div class="step-description">Créez des tâches et assignez-les à des membres de l'équipe spécifiques avec des délais clairs.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <div class="step-title">Demander une Consultation</div>
+                <div class="step-description">Demandez aux membres de l'équipe des avis médicaux sur des patients ou des cas spécifiques.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <div class="step-title">Partager des Documents</div>
+                <div class="step-description">Partagez les documents médicaux, les rapports et les ordonnances avec les membres de l'équipe pertinents.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="highlight-box">
+        <strong>🤝 Force de l'Équipe :</strong> En exploitant l'expertise de votre équipe et en partageant la charge de travail via OpenCare, vous pouvez améliorer la qualité des soins aux patients et réduire l'épuisement professionnel individuel.
+    </div>
+</div>
+
+<!-- ========== SECTION 13: NOTIFICATIONS ========== -->
+<div class="section" id="notifications">
+    <div class="section-number">Section 13</div>
+    <div class="section-title">
+        <div class="section-icon">🔔</div>
+        Notifications
+    </div>
+    <div class="divider"></div>
+
+    <p class="section-intro">
+        Restez informé avec les notifications en temps réel. Recevez des alertes pour les nouvelles demandes de consultation, les assignations de tâches, les documents en attente et les messages d'équipe. Personnalisez vos préférences de notification pour qu'elles correspondent à votre flux de travail.
+    </p>
+
+    <div class="screenshot-container">
+        <div>
+            <div class="screenshot-label">Centre de Notifications et Dropdown</div>
+            <img src="/tutorial-screenshots/03-patients-list.png" alt="Liste des Patients OpenCare" style="max-width: 100%; height: auto; border-radius: 8px;" />
+        </div>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Types de Notifications</h3>
+    <div class="feature-grid">
+        <div class="feature-item">
+            <div class="feature-title">Notifications de Consultation</div>
+            <div class="feature-description">Obtenez une alerte lorsque de nouveaux avis médicaux sont demandés ou que les réponses des spécialistes arrivent.</div>
+        </div>
+        <div class="feature-item color-rose">
+            <div class="feature-title">Assignations de Tâches</div>
+            <div class="feature-description">Sachez immédiatement quand les tâches vous sont assignées ou quand les dates d'échéance s'approchent.</div>
+        </div>
+        <div class="feature-item color-sky">
+            <div class="feature-title">Résultats des Tests</div>
+            <div class="feature-description">Recevez des notifications quand les résultats de laboratoire arrivent ou que les analyses sont terminées.</div>
+        </div>
+        <div class="feature-item color-emerald">
+            <div class="feature-title">Activité de l'Équipe</div>
+            <div class="feature-description">Consultez quand les membres de l'équipe agissent sur les patients partagés ou répondent aux demandes.</div>
+        </div>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Gérer les Notifications</h3>
+    <div class="steps-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <div class="step-title">Ouvrir le Centre de Notifications</div>
+                <div class="step-description">Cliquez sur l'icône de cloche de notification dans la barre de navigation supérieure pour afficher toutes les notifications.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <div class="step-title">Examiner et Filtrer</div>
+                <div class="step-description">Consultez toutes les notifications récentes. Filtrez par type (consultations, tâches, résultats, etc.).</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <div class="step-title">Marquer comme Lu</div>
+                <div class="step-description">Cliquez sur les notifications pour afficher les détails ou marquez-les comme lues pour les effacer de votre liste.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <div class="step-title">Personnaliser les Préférences</div>
+                <div class="step-description">Allez à Profil → Paramètres pour ajuster la fréquence et les types de notifications.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="highlight-box">
+        <strong>⚙️ Configuration :</strong> Dans vos paramètres de profil, choisissez les notifications à recevoir et leur fréquence. Cela vous aide à rester informé sans être submergé.
+    </div>
+</div>
+
+<!-- ========== SECTION 14: PROFILE ========== -->
+<div class="section" id="profile">
+    <div class="section-number">Section 14</div>
+    <div class="section-title">
+        <div class="section-icon">⚙️</div>
+        Profil et Paramètres
+    </div>
+    <div class="divider"></div>
+
+    <p class="section-intro">
+        Gérez votre profil personnel, les paramètres de compte et les préférences du système. Configurez comment OpenCare fonctionne pour vous, y compris la langue, les paramètres de notification et les préférences de confidentialité.
+    </p>
+
+    <div class="screenshot-container">
+        <div>
+            <div class="screenshot-label">Page des Paramètres de Profil</div>
+            <img src="/tutorial-screenshots/03-patients-list.png" alt="Liste des Patients OpenCare" style="max-width: 100%; height: auto; border-radius: 8px;" />
+        </div>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Composants du Profil</h3>
+    <div class="feature-grid">
+        <div class="feature-item">
+            <div class="feature-title">Informations Professionnelles</div>
+            <div class="feature-description">Mettez à jour votre nom, spécialité, numéro de licence médicale, affiliation hospitalière et coordonnées.</div>
+        </div>
+        <div class="feature-item color-rose">
+            <div class="feature-title">Photo de Profil</div>
+            <div class="feature-description">Téléchargez une photo professionnelle qui apparaît dans l'en-tête et l'annuaire de l'équipe.</div>
+        </div>
+        <div class="feature-item color-sky">
+            <div class="feature-title">Préférence de Langue</div>
+            <div class="feature-description">Choisissez entre l'anglais et le français. L'interface bascule immédiatement à votre langue préférée.</div>
+        </div>
+        <div class="feature-item color-emerald">
+            <div class="feature-title">Paramètres de Confidentialité</div>
+            <div class="feature-description">Contrôlez la visibilité du profil, le partage de données et les préférences de communication.</div>
+        </div>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Préférences de Notification</h3>
+    <p style="color: #666; margin-bottom: 15px;">Personnalisez exactement les notifications que vous recevez :</p>
+
+    <div class="benefits-section">
+        <div class="benefits-title">Paramètres de Notification</div>
+        <ul class="benefits-list">
+            <li>Notifications de demande de consultation</li>
+            <li>Alertes d'assignation de tâches</li>
+            <li>Notifications de résultats de tests</li>
+            <li>Mises à jour d'activité d'équipe</li>
+            <li>Rappels de rendez-vous</li>
+            <li>Notifications par e-mail vs dans l'application</li>
+        </ul>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Sécurité du Compte</h3>
+    <p style="color: #666; margin-bottom: 15px;">Gardez votre compte sécurisé :</p>
+    <div class="steps-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <div class="step-title">Changer le Mot de Passe</div>
+                <div class="step-description">Mettez régulièrement à jour votre mot de passe pour la sécurité du compte. Utilisez une combinaison forte de caractères.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <div class="step-title">Authentification à Deux Facteurs</div>
+                <div class="step-description">Activez l'authentification à deux facteurs optionnelle pour une sécurité renforcée, particulièrement importante pour l'accès aux données des patients sensibles.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <div class="step-title">Afficher les Sessions</div>
+                <div class="step-description">Consultez les sessions actives et déconnectez-vous d'autres appareils si nécessaire.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="highlight-box">
+        <strong>🔒 Priorité de Sécurité :</strong> La sécurité des données des patients est primordiale. Utilisez toujours des mots de passe forts et déconnectez-vous lorsque vous avez terminé avec un ordinateur partagé.
+    </div>
+</div>
+
+<!-- ========== SECTION 15: TIPS ========== -->
+<div class="section" id="tips">
+    <div class="section-number">Section 15</div>
+    <div class="section-title">
+        <div class="section-icon">💡</div>
+        Conseils et Bonnes Pratiques
+    </div>
+    <div class="divider"></div>
+
+    <p class="section-intro">
+        Tirez le meilleur parti d'OpenCare avec ces conseils pratiques et stratégies d'optimisation du flux de travail. Ces meilleures pratiques vous aideront à travailler plus efficacement et à fournir de meilleurs soins aux patients.
+    </p>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Conseils du Flux de Travail Quotidien</h3>
+    <div class="steps-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <div class="step-title">Commencer par le Tableau de Bord</div>
+                <div class="step-description">Examinez votre tableau de bord chaque matin pour voir les tâches d'aujourd'hui, les activités à venir et les éléments de travail en attente. Priorisez d'abord les tâches hautement prioritaires.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <div class="step-title">Consulter la Chronologie du Patient Avant les Visites</div>
+                <div class="step-description">Avant de voir un patient, consultez sa chronologie pour rester informé de son historique médical récent et de son état actuel.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <div class="step-title">Documenter Immédiatement</div>
+                <div class="step-description">Ajoutez des observations et des notes pendant ou immédiatement après les visites de patients pendant que les informations sont fraîches.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <div class="step-title">Utiliser les Modèles d'Ordonnances</div>
+                <div class="step-description">Créez des modèles pour vos prescriptions les plus courantes. Cela économise du temps et réduit les erreurs.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+                <div class="step-title">Assigner des Tâches pour les Suivis</div>
+                <div class="step-description">Quand un patient a besoin d'un suivi, créez immédiatement une tâche et assignez-la pour assurer que rien n'est oublié.</div>
+            </div>
+        </div>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Améliorations de Productivité</h3>
+    <div class="benefits-section">
+        <div class="benefits-title">Gains Rapides en Productivité</div>
+        <ul class="benefits-list">
+            <li>Utiliser le scanner OCR pour numériser rapidement les rapports médicaux</li>
+            <li>Créer des modèles d'ordonnances pour les médicaments courants</li>
+            <li>Configurer les filtres préférés pour les recherches rapides</li>
+            <li>Utiliser les raccourcis clavier pour la navigation</li>
+            <li>Regrouper les tâches similaires (ex. toutes les ordonnances, toutes les consultations)</li>
+            <li>Déléguer les tâches aux membres de l'équipe de manière appropriée</li>
+            <li>Examiner l'analyse mensuellement pour suivre votre productivité</li>
+            <li>Archiver ou supprimer régulièrement les tâches complétées</li>
+        </ul>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Meilleures Pratiques de Saisie de Données</h3>
+    <div class="feature-grid">
+        <div class="feature-item">
+            <div class="feature-title">Complétude</div>
+            <div class="feature-description">Complétez tous les champs pertinents lors de la création des dossiers des patients et des documents. Les dossiers complets sont plus utiles pour la continuité des soins.</div>
+        </div>
+        <div class="feature-item color-rose">
+            <div class="feature-title">Précision</div>
+            <div class="feature-description">Vérifiez deux fois les dosages, les dates et les identifiants de patients. Les erreurs dans les données cliniques peuvent avoir des conséquences graves.</div>
+        </div>
+        <div class="feature-item color-sky">
+            <div class="feature-title">Cohérence</div>
+            <div class="feature-description">Utilisez une terminologie et des abréviations cohérentes. Cela rend les dossiers plus faciles à comprendre pour vous et votre équipe.</div>
+        </div>
+        <div class="feature-item color-emerald">
+            <div class="feature-title">Rapidité</div>
+            <div class="feature-description">Entrez les données rapidement pendant que les détails sont frais. La documentation retardée peut entraîner des erreurs et des informations oubliées.</div>
+        </div>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Meilleures Pratiques de Collaboration d'Équipe</h3>
+    <div class="steps-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <div class="step-title">Descriptions de Tâches Claires</div>
+                <div class="step-description">Lorsque vous assignez des tâches, fournissez des descriptions claires et du contexte pour que les membres de l'équipe comprennent ce qui doit être fait.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <div class="step-title">Points de Vérification Réguliers</div>
+                <div class="step-description">Examinez régulièrement les tâches d'équipe et la progression. Utilisez les notifications d'OpenCare pour rester informé de l'activité de l'équipe.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <div class="step-title">Modèles Partagés</div>
+                <div class="step-description">Créez des modèles d'ordonnances et d'observations partagés que toute votre équipe peut utiliser pour la cohérence.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <div class="step-title">Accès aux Patients</div>
+                <div class="step-description">Accordez aux membres de l'équipe pertinents l'accès aux patients partagés. Plus d'yeux peuvent détecter les détails importants.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="highlight-box">
+        <strong>🎯 Métrique de Succès :</strong> Si votre équipe utilise efficacement OpenCare, vous devriez voir un temps réduit passé à documenter, moins de retards de suivi et une meilleure communication concernant les soins aux patients.
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 15px; color: #1d184f;">Obtenir de l'Aide et du Support</h3>
+    <div class="feature-grid">
+        <div class="feature-item">
+            <div class="feature-title">Aide Dans l'Application</div>
+            <div class="feature-description">Recherchez les icônes "?" dans OpenCare pour l'aide contextuelle et les conseils expliquant les fonctionnalités.</div>
+        </div>
+        <div class="feature-item color-rose">
+            <div class="feature-title">Documentation</div>
+            <div class="feature-description">Consultez le centre d'aide OpenCare pour des guides détaillés et des informations de dépannage.</div>
+        </div>
+        <div class="feature-item color-sky">
+            <div class="feature-title">Équipe de Support</div>
+            <div class="feature-description">Contactez le support OpenCare si vous rencontrez des problèmes ou avez des questions. Nous sommes là pour vous aider à réussir.</div>
+        </div>
+        <div class="feature-item color-emerald">
+            <div class="feature-title">Ressources de Formation</div>
+            <div class="feature-description">Vérifiez régulièrement les webinaires, tutoriels et vidéos de formation pour apprendre les fonctionnalités avancées et les flux de travail.</div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ========== CLOSING PAGE ========== -->
+<div class="section" style="page-break-after: avoid;">
+    <div style="margin-top: 80px; text-align: center;">
+        <div style="font-size: 24px; font-weight: 700; color: #1d184f; margin-bottom: 20px;">
+            Vous Êtes Prêt à Utiliser OpenCare !
+        </div>
+        <p style="color: #666; font-size: 16px; line-height: 1.8; max-width: 500px; margin: 0 auto;">
+            Ce tutoriel a couvert les fonctionnalités essentielles d'OpenCare. Au fur et à mesure que vous continuez à utiliser la plateforme, vous découvrirez des capacités supplémentaires et développerez des flux de travail qui fonctionnent mieux pour votre pratique.
+        </p>
+
+        <div style="margin-top: 50px; padding: 30px; background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(79, 70, 229, 0.1) 100%); border-radius: 12px;">
+            <div style="color: #7c3aed; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">
+                Des Questions ou Commentaires ?
+            </div>
+            <p style="color: #666; font-size: 14px; margin-bottom: 10px;">
+                Avez-vous des questions sur l'utilisation d'OpenCare ? Besoin de formation pour votre équipe ? Vous souhaitez suggérer des fonctionnalités ?
+            </p>
+            <p style="color: #7c3aed; font-weight: 600;">
+                Contactez notre équipe de support : support@opencare.app
+            </p>
+        </div>
+
+        <p style="color: #999; font-size: 12px; margin-top: 80px;">
+            © 2025 OpenCare. Tous droits réservés. | Guide Tutoriel Version 1.0
+        </p>
+    </div>
+</div>
+
+<div class="footer">
+    <p>Fin du Guide Tutoriel</p>
+</div>
+
+</body>
+</html>

@@ -37,14 +37,14 @@ export async function GET(req: NextRequest) {
         creatorId: userIdNum,
       },
       include: {
-        patient: {
+        Patient: {
           select: {
             id: true,
             fullName: true,
             dateOfBirth: true,
           },
         },
-        creator: {
+        User: {
           select: {
             id: true,
             firstName: true,
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
             email: true,
           },
         },
-        labEntries: {
+        LabEntry: {
           select:{
             id:true,
             name:true,
@@ -160,6 +160,7 @@ export async function POST(req: NextRequest) {
       patientAge: patientAge ? String(patientAge) : undefined,
       patientHistory: patientHistory || undefined,
       creatorId: userIdNum, // Set creator to current user
+      updatedAt: new Date(),
     };
 
     if (patientId) {
@@ -169,13 +170,13 @@ export async function POST(req: NextRequest) {
     const analyse = await prisma.analyse.create({
       data: analyseData,
       include: {
-        patient: {
+        Patient: {
           select: {
             id: true,
             fullName: true,
           },
         },
-        creator: {
+        User: {
           select: {
             id: true,
             firstName: true,
@@ -183,7 +184,7 @@ export async function POST(req: NextRequest) {
             email: true,
           },
         },
-        labEntries: true,
+        LabEntry: true,
       },
     });
 
@@ -206,7 +207,8 @@ export async function POST(req: NextRequest) {
               name: itemName,
               value: null,
               interpretation: null,
-              analyse: {
+              updatedAt: new Date(),
+              Analyse: {
                 connect:{
                   id:analyse.id,
                 }
@@ -217,7 +219,7 @@ export async function POST(req: NextRequest) {
       );
 
       // Add lab entries to the response
-      analyse.labEntries = labEntries;
+      analyse.LabEntry = labEntries;
     }
 
     return NextResponse.json({
@@ -225,7 +227,7 @@ export async function POST(req: NextRequest) {
       message: "Analyse créée avec succès",
     });
   } catch (error) {
-    console.error("Error creating analyse:", error);
+    console.error("Error creating Analyse:", error);
     return NextResponse.json(
       {
         error:

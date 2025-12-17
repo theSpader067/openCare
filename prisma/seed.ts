@@ -246,6 +246,7 @@ async function main() {
         lastName: "Administrator",
         specialty: "Administrator",
         language: "fr",
+        updatedAt: new Date(),
       },
     });
     console.log("✓ System user created:", systemUser.id);
@@ -277,7 +278,9 @@ async function main() {
           class: categoryData.class,
           prescriptionDetails: template.prescriptionDetails,
           prescriptionConsignes: template.prescriptionConsignes,
+          isPublic: true,
           creatorId: systemUser.id,
+          updatedAt: new Date(),
         },
       });
       totalSeeded++;

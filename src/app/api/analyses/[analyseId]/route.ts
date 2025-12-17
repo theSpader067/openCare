@@ -57,14 +57,14 @@ export async function PATCH(
         ...(status !== undefined && { status }),
       },
       include: {
-        patient: {
+        Patient: {
           select: {
             id: true,
             fullName: true,
             dateOfBirth: true,
           },
         },
-        creator: {
+        User: {
           select: {
             id: true,
             firstName: true,
@@ -72,7 +72,7 @@ export async function PATCH(
             email: true,
           },
         },
-        labEntries: true,
+        LabEntry: true,
       },
     });
 
@@ -81,7 +81,7 @@ export async function PATCH(
       data: updatedAnalyse,
     });
   } catch (error) {
-    console.error("Error updating analyse:", error);
+    console.error("Error updating Analyse:", error);
     return NextResponse.json(
       { error: "Failed to update analyse" },
       { status: 500 }
@@ -131,7 +131,7 @@ export async function DELETE(
       message: "Analyse deleted successfully",
     });
   } catch (error) {
-    console.error("Error deleting analyse:", error);
+    console.error("Error deleting Analyse:", error);
     return NextResponse.json(
       { error: "Failed to delete analyse" },
       { status: 500 }

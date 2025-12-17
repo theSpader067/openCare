@@ -55,7 +55,7 @@ export async function GET(
     }
 
     const { patientId } = await params;
-    console.log('[timeline] Fetching timeline for patient:', patientId, 'by user:', userId);
+    console.log('[timeline] Fetching timeline for Patient:', patientId, 'by User:', userId);
 
     // Parse patientId as numeric ID
     const numericId = parseInt(patientId, 10);
@@ -67,7 +67,7 @@ export async function GET(
     const patient = await prisma.patient.findUnique({
       where: { id: numericId },
       include: {
-        user: {
+        User: {
           select: {
             firstName: true,
             lastName: true,
@@ -86,7 +86,7 @@ export async function GET(
 
     // Verify that the patient belongs to the current user
     if (patient.userId !== userId) {
-      console.log('[timeline] Unauthorized - patient belongs to user:', patient.userId, 'but request from:', userId);
+      console.log('[timeline] Unauthorized - patient belongs to User:', patient.userId, 'but request from:', userId);
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -102,10 +102,10 @@ export async function GET(
       timestamp: patient.createdAt.toISOString(),
       summary: `Admission au service: ${patient.service || "non spécifié"}`,
       details: {
-        fullName: `${patient.user.firstName || ""} ${patient.user.lastName || ""}`.trim() || "Non renseigné",
-        username: patient.user.username || "Non renseigné",
-        specialty: patient.user.specialty || "Non renseigné",
-        hospital: patient.user.hospital || "Non renseigné",
+        fullName: `${patient.User.firstName || ""} ${patient.User.lastName || ""}`.trim() || "Non renseigné",
+        username: patient.User.username || "Non renseigné",
+        specialty: patient.User.specialty || "Non renseigné",
+        hospital: patient.User.hospital || "Non renseigné",
         service: patient.service || "Non renseigné",
       },
     });
@@ -134,13 +134,13 @@ export async function GET(
     // Fetch lab results (analyses) from database
     const analyses = await prisma.analyse.findMany({
       where: { patientId: numericId },
-      include: { labEntries: true },
+      include: { LabEntry: true },
       orderBy: { createdAt: "desc" },
     });
 
     for (const analyse of analyses) {
       // Create a summary of lab entries
-      const labEntriesSummary = analyse.labEntries
+      const labEntriesSummary = analyse.LabEntry
         .map((entry) => `${entry.name}: ${entry.value}`)
         .join(", ");
 
@@ -152,7 +152,7 @@ export async function GET(
         timestamp: analyse.createdAt.toISOString(),
         summary: labEntriesSummary.substring(0, 200) + (labEntriesSummary.length > 200 ? "..." : "") || "Résultats d'analyses",
         details: {
-          labEntries: analyse.labEntries,
+          LabEntry: analyse.LabEntry,
           interpretation: analyse.interpretation,
         },
       });

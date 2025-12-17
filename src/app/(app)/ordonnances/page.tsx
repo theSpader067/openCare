@@ -423,6 +423,7 @@ export default function OrdonnancesPage() {
   const handleSelectTemplate = (template: OrdonnanceTemplate) => {
     setCreateForm((prev) => ({
       ...prev,
+      title: template.name,
       prescriptionDetails: template.prescriptionDetails,
       remarquesConsignes: template.remarquesConsignes,
     }));

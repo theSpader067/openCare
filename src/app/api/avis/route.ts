@@ -28,7 +28,7 @@ function convertAvisToJSON(avis: any) {
     destination_specialty: avis.destination_specialty,
     answer_date: avis.answer_date ? new Date(avis.answer_date).toISOString() : null,
     patientId: avis.patientId,
-    patient: avis.patient,
+    Patient: avis.patient,
     patientName: avis.patientName,
     patientAge: avis.patientAge,
     patientHistory: avis.patientHistory,
@@ -38,7 +38,7 @@ function convertAvisToJSON(avis: any) {
     creatorId: avis.creatorId,
     createdAt: new Date(avis.createdAt).toISOString(),
     updatedAt: new Date(avis.updatedAt).toISOString(),
-    creator: avis.creator,
+    User: avis.creator,
     creatorSpecialty:avis.creator.specialty,
   };
 }
@@ -88,8 +88,8 @@ export async function GET(request: NextRequest) {
         ],
       },
       include: {
-        patient: true,
-        creator: {
+        Patient: true,
+        User: {
           select: {
             id: true,
             firstName: true,
@@ -200,6 +200,7 @@ export async function POST(request: NextRequest) {
       details: avisData.details,
       answer_date: avisData.answer_date,
       creatorId: avisData.creatorId,
+      updatedAt: new Date(),
     };
 
     // If patientId exists, connect to existing patient
@@ -215,8 +216,8 @@ export async function POST(request: NextRequest) {
     const avis = await prisma.avis.create({
       data: createData,
       include: {
-        patient: true,
-        creator: {
+        Patient: true,
+        User: {
           select: {
             id: true,
             firstName: true,
@@ -287,10 +288,11 @@ export async function PATCH(request: NextRequest) {
       where: { id: parseInt(avisId) },
       data: {
         answer: answer.trim(),
+        updatedAt: new Date(),
       },
       include: {
-        patient: true,
-        creator: {
+        Patient: true,
+        User: {
           select: {
             id: true,
             firstName: true,

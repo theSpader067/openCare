@@ -23,7 +23,7 @@ const googleClient = new OAuth2Client(
  *
  * Response:
  * {
- *   user: { id, email, firstName, lastName, username },
+ *   User: { id, email, firstName, lastName, username },
  *   token: string (JWT)
  * }
  */
@@ -96,6 +96,7 @@ export async function POST(req: Request) {
           username: googleEmail!.split("@")[0], // username from email prefix
           emailVerified: true, // Auto-verify Google users
           image: googlePicture,
+          updatedAt: new Date(),
           // No password for OAuth users
         },
       });
@@ -107,7 +108,7 @@ export async function POST(req: Request) {
       if (!user.image && googlePicture) {
         await prisma.user.update({
           where: { id: user.id },
-          data: { image: googlePicture },
+          data: { image: googlePicture, updatedAt: new Date() },
         });
       }
     }
@@ -128,9 +129,9 @@ export async function POST(req: Request) {
     console.log("[MOBILE_GOOGLE] JWT token generated successfully");
 
     // Return user data and token
-    console.log("[MOBILE_GOOGLE] Google login successful for user:", user.email);
+    console.log("[MOBILE_GOOGLE] Google login successful for User:", user.email);
     return NextResponse.json({
-      user: {
+      User: {
         id: user.id,
         email: user.email,
         username: user.username,

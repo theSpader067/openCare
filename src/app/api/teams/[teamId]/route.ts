@@ -131,6 +131,7 @@ export async function PUT(
         name: name.trim(),
         hospital: hospital || null,
         service: service || null,
+        updatedAt: new Date(),
         // Replace members with the new list (removes members not in the list)
         members: {
           set: validMemberIds.map((id: number) => ({ id })),

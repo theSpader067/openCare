@@ -30,7 +30,7 @@ function convertOrdonnanceToJSON(ordonnance: any) {
     createdAt: new Date(ordonnance.createdAt).toISOString(),
     updatedAt: new Date(ordonnance.updatedAt).toISOString(),
     patientId: ordonnance.patientId,
-    patient: ordonnance.patient,
+    Patient: ordonnance.patient,
     patientName: ordonnance.patientName,
     patientAge: ordonnance.patientAge,
     patientHistory: ordonnance.patientHistory,
@@ -88,8 +88,8 @@ export async function GET(request: NextRequest) {
         ],
       },
       include: {
-        patient: true,
-        creator: {
+        Patient: true,
+        User: {
           select: {
             firstName: true,
             lastName: true,
@@ -230,10 +230,13 @@ export async function POST(request: NextRequest) {
     }
 
     const ordonnance = await prisma.ordonnance.create({
-      data: ordonnanceData,
+      data: {
+        ...ordonnanceData,
+        updatedAt: new Date(),
+      },
       include: {
-        patient: true,
-        creator: {
+        Patient: true,
+        User: {
           select: {
             firstName: true,
             lastName: true,

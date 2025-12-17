@@ -27,7 +27,7 @@ interface ProcessFileRequest {
 }
 
 interface LabDataExtraction {
-  labEntries: Array<{
+  LabEntry: Array<{
     name: string;
     value: string;
     interpretation?: string;
@@ -217,9 +217,9 @@ Extract values for these tests when found in the image.`;
     console.log(JSON.stringify(extracted, null, 2));
 
     // Match extracted test names to expected test labels using fuzzy matching
-    if (testLabels && testLabels.length > 0 && extracted.labEntries && extracted.labEntries.length > 0) {
+    if (testLabels && testLabels.length > 0 && extracted.LabEntry && extracted.LabEntry.length > 0) {
       console.log("\n=== FUZZY MATCHING TEST NAMES ===");
-      const matchedEntries = extracted.labEntries.map((entry) => {
+      const matchedEntries = extracted.LabEntry.map((entry) => {
         console.log(`\nProcessing: "${entry.name}"`);
         const matchedLabel = findBestMatchingLabel(entry.name, testLabels);
         if (matchedLabel) {
@@ -227,7 +227,7 @@ Extract values for these tests when found in the image.`;
         }
         return entry;
       });
-      extracted.labEntries = matchedEntries;
+      extracted.LabEntry = matchedEntries;
     }
 
     console.log("\n=== FINAL EXTRACTED LAB DATA ===");

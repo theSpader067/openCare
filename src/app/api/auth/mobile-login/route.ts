@@ -57,7 +57,7 @@ export async function POST(req: Request) {
     console.log("[MOBILE_LOGIN] Password valid:", isValidPassword)
 
     if (!isValidPassword) {
-      console.log("[MOBILE_LOGIN] Password invalid for user:", email)
+      console.log("[MOBILE_LOGIN] Password invalid for User:", email)
       return NextResponse.json(
         { error: "Invalid email or password" },
         { status: 401 }
@@ -81,9 +81,9 @@ export async function POST(req: Request) {
     console.log("[MOBILE_LOGIN] Token generated successfully");
 
     // Return user data and token
-    console.log("[MOBILE_LOGIN] Login successful for user:", user.email)
+    console.log("[MOBILE_LOGIN] Login successful for User:", user.email)
     return NextResponse.json({
-      user: {
+      User: {
         id: user.id,
         email: user.email,
         username: user.username,

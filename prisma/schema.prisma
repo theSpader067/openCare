@@ -1,10 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -15,188 +8,201 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model User {
-  id          Int         @id @default(autoincrement())
-  firstName   String?
-  lastName    String?
-  username    String?
-  email       String      @unique
-  phone       String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  emailVerified Boolean   @default(false)
-  image     String?
-  password    String?   //hashed string, optional because social logins don't have password
-  specialty   String?
-  hospital    String?
-  year        String?
-  language    String?     @default("en")
-  onboardingCompleted Boolean @default(false)
-  biographie  String?
-  notifyByEmail Boolean @default(false)
-  notifyByPush Boolean @default(false)
-  profileVisible Boolean @default(true)
-  addresse    String?
-  sessions    Session[]
-  accounts    Account[]
-  verificationToken   VerificationToken[]
-  patients    Patient[]
-  teamsAsAdmin Team[]    @relation("TeamAdmin")
-  teamsAsMember Team[]   @relation("TeamMembers")
-  createdTasks Task[]    @relation("TaskCreator")
-  createdFavouriteTasks FavouriteTask[] @relation("FavouriteTaskCreator")
-  createdActivities Activity[] @relation("ActivityCreator")
-  createdOrdonnances Ordonnance[] @relation("OrdonnanceCreator")
-  createdAvis Avis[] @relation("AvisCreator")
-  createdRapports Rapport[] @relation("RapportCreator")
-  createdAnalyses Analyse[]
-  rapportParticipations Rapport[] @relation("RapportParticipants")
-  teamRequests TeamRequest[] @relation("TeamRequestSender")
-  createdOrdonnanceTemplates OrdonnanceTemplate[] @relation("OrdonnanceTemplateCreator")
-}
+model Account {
+  id                String  @id
+  userId            Int
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  User              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-model Observation {
-  id        Int       @id @default(autoincrement())
-  text      String
-  patientId Int
-  patient   Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-}
-
-model Patient {
-  id                    Int            @id @default(autoincrement())
-  fullName              String
-  pid                   String         @unique
-  dateOfBirth           DateTime?
-  service               String?
-  status                String?
-  userId                Int
-  user                  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  isPrivate             Boolean        @default(false)
-  nextContact           String?
-  diagnostic            String?
-  cim                   String?
-  motif                 String?
-  atcdsMedical          String?
-  atcdsChirurgical      String?
-  atcdsExtra            String?
-  atcdsGynObstetrique   String?
-  atcdsFamiliaux        String?
-  addressOrigin         String?
-  addressHabitat        String?
-  couvertureSociale     String?
-  situationFamiliale    String?
-  profession            String?
-  fdrs                  String?       @db.Text
-  observations          Observation[]
-  ordonnances           Ordonnance[]
-  avis                  Avis[]
-  rapports              Rapport[]
-  analyses              Analyse[]
-  tasks                 Task[]
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @updatedAt
-}
-
-model Team {
-  id        Int       @id @default(autoincrement())
-  name      String
-  hospital  String?
-  service   String?
-  adminId   Int
-  admin     User      @relation("TeamAdmin", fields: [adminId], references: [id], onDelete: Cascade)
-  members   User[]    @relation("TeamMembers")
-  teamRequests TeamRequest[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-}
-
-model Task {
-  id              Int       @id @default(autoincrement())
-  title           String
-  creatorId       Int
-  creator         User      @relation("TaskCreator", fields: [creatorId], references: [id], onDelete: Cascade)
-  patientId       Int?
-  patient         Patient?  @relation(fields: [patientId], references: [id], onDelete: SetNull)
-  patientName     String?
-  patientAge      String?
-  patientHistory  String?   @db.Text
-  isPrivate       Boolean   @default(false)
-  isComplete      Boolean   @default(false)
-  teamsData       String?   @db.Text
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-}
-
-model FavouriteTask {
-  id        Int       @id @default(autoincrement())
-  title     String
-  creatorId Int
-  creator   User      @relation("FavouriteTaskCreator", fields: [creatorId], references: [id], onDelete: Cascade)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  @@unique([provider, providerAccountId])
 }
 
 model Activity {
-  id           Int       @id @default(autoincrement())
-  title        String
-  horaire      String?
-  category     String?
-  details      String?
-  place        String?
-  activityDay  DateTime?
-  équipe       String?
-  creatorId    Int
-  creator      User      @relation("ActivityCreator", fields: [creatorId], references: [id], onDelete: Cascade)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id          Int       @id @default(autoincrement())
+  title       String
+  horaire     String?
+  category    String?
+  details     String?
+  place       String?
+  activityDay DateTime?
+  creatorId   Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime
+  quipe       String?   @map("équipe")
+  User        User      @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+}
+
+model Analyse {
+  id             Int        @id @default(autoincrement())
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime
+  category       String?
+  title          String?
+  patientId      Int?
+  patientName    String?
+  patientAge     String?
+  patientHistory String?
+  details        String?
+  interpretation String?
+  status         String?
+  labId          String     @unique
+  creatorId      Int
+  User           User       @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  Patient        Patient?   @relation(fields: [patientId], references: [id])
+  LabEntry       LabEntry[]
+}
+
+model Avis {
+  id                    Int       @id @default(autoincrement())
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime
+  patientId             Int?
+  patientName           String?
+  patientAge            String?
+  patientHistory        String?
+  creatorId             Int
+  details               String?
+  answer                String?
+  answer_date           DateTime?
+  destination_specialty String?
+  User                  User      @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  Patient               Patient?  @relation(fields: [patientId], references: [id])
+}
+
+model Contact {
+  id        Int      @id @default(autoincrement())
+  fullName  String
+  email     String
+  specialty String
+  message   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+}
+
+model FavouriteTask {
+  id        Int      @id @default(autoincrement())
+  title     String
+  creatorId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  User      User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+}
+
+model LabEntry {
+  id             Int      @id @default(autoincrement())
+  analyseId      Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime
+  interpretation String?
+  name           String?
+  value          String?
+  Analyse        Analyse  @relation(fields: [analyseId], references: [id], onDelete: Cascade)
 }
 
 model Notification {
-  id          Int       @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   category    String?
   title       String
   description String?
   source      String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+}
+
+model Observation {
+  id        Int      @id @default(autoincrement())
+  text      String
+  patientId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  Patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
 }
 
 model Ordonnance {
-  id                  Int       @id @default(autoincrement())
-  title               String
-  date                DateTime?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-  patientId           Int?
-  patient             Patient?  @relation(fields: [patientId], references: [id], onDelete: SetNull)
-  patientName         String?
-  patientAge          String?
-  patientHistory      String?
-  details             String?   @db.Text
-  remarquesConsignes  String?   @db.Text
-  creatorId           Int
-  creator             User      @relation("OrdonnanceCreator", fields: [creatorId], references: [id], onDelete: Cascade)
-  isPrivate           Boolean   @default(false)
-  teamsData           String?   @db.Text
+  id                 Int       @id @default(autoincrement())
+  title              String
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime
+  patientId          Int?
+  patientName        String?
+  patientAge         String?
+  patientHistory     String?
+  remarquesConsignes String?
+  details            String?
+  creatorId          Int
+  isPrivate          Boolean   @default(false)
+  date               DateTime?
+  teamsData          String?
+  User               User      @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  Patient            Patient?  @relation(fields: [patientId], references: [id])
 }
 
-model Avis {
-  id             Int       @id @default(autoincrement())
-  destination_specialty   String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  patientId      Int?
-  patient        Patient?  @relation(fields: [patientId], references: [id], onDelete: SetNull)
-  patientName    String?
-  patientAge     String?
-  patientHistory String?
-  creatorId      Int
-  creator        User      @relation("AvisCreator", fields: [creatorId], references: [id], onDelete: Cascade)
-  details        String?
-  answer         String?
-  answer_date           DateTime?
+model OrdonnanceTemplate {
+  id                    Int      @id @default(autoincrement())
+  title                 String
+  class                 String
+  prescriptionDetails   String
+  prescriptionConsignes String?
+  creatorId             Int
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime
+  isPublic              Boolean  @default(false)
+  User                  User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+}
+
+model PasswordResetToken {
+  identifier String   @id
+  token      String   @unique
+  email      String
+  expires    DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([email])
+  @@index([expires])
+}
+
+model Patient {
+  id                  Int           @id @default(autoincrement())
+  fullName            String
+  pid                 String        @unique
+  dateOfBirth         DateTime?
+  service             String?
+  status              String?
+  userId              Int
+  isPrivate           Boolean       @default(false)
+  nextContact         String?
+  diagnostic          String?
+  cim                 String?
+  atcdsMedical        String?
+  atcdsChirurgical    String?
+  atcdsExtra          String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime
+  addressHabitat      String?
+  addressOrigin       String?
+  couvertureSociale   String?
+  atcdsFamiliaux      String?
+  atcdsGynObstetrique String?
+  motif               String?
+  profession          String?
+  situationFamiliale  String?
+  fdrs                String?
+  Analyse             Analyse[]
+  Avis                Avis[]
+  Observation         Observation[]
+  Ordonnance          Ordonnance[]
+  User                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Rapport             Rapport[]
+  Task                Task[]
 }
 
 model Rapport {
@@ -212,6 +218,7 @@ model Rapport {
   patientName    String?
   patientAge     String?
   patientHistory String?
+  operators      String?   @default("")
   participants   User[]    @relation("RapportParticipants")
   details        String?   @db.Text
   recommandations String?  @db.Text
@@ -219,126 +226,115 @@ model Rapport {
   creator        User      @relation("RapportCreator", fields: [creatorId], references: [id], onDelete: Cascade)
 }
 
-model LabEntry {
-  id             Int       @id @default(autoincrement())
-  name           String?
-  value          String?
-  interpretation String?
-  analyseId      Int
-  analyse        Analyse   @relation(fields: [analyseId], references: [id], onDelete: Cascade)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-}
-
-model Analyse {
-  id             Int        @id @default(autoincrement())
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-  category       String?
-  title          String?
-  patientId      Int?
-  patient        Patient?   @relation(fields: [patientId], references: [id], onDelete: SetNull)
-  patientName    String?
-  patientAge     String?
-  patientHistory String?
-  details        String?
-  labEntries     LabEntry[]
-  interpretation String?
-  status         String?
-  labId          String    @unique @default(cuid())
-  creatorId      Int
-  creator        User       @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-}
-
-model TeamRequest {
-  id        Int       @id @default(autoincrement())
-  senderId  Int
-  sender    User      @relation("TeamRequestSender", fields: [senderId], references: [id], onDelete: Cascade)
-  teamId    Int
-  team      Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  accepted  Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-}
-
-model Account {
-  id                String  @id @default(cuid())
-  userId            Int
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
 model Session {
-  id           String   @id @default(cuid())
+  id           String   @id
   sessionToken String   @unique
   userId       Int
   expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model VerificationToken {
-  identifier String   @id @default(cuid())
-  token      String   @unique
-  userId    Int
-  expires   DateTime
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  @@unique([identifier, token])
+model Task {
+  id             Int      @id @default(autoincrement())
+  title          String
+  creatorId      Int
+  isPrivate      Boolean  @default(false)
+  isComplete     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime
+  patientAge     String?
+  patientHistory String?
+  patientId      Int?
+  patientName    String?
+  teamsData      String?
+  User           User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  Patient        Patient? @relation(fields: [patientId], references: [id])
 }
 
-model PasswordResetToken {
-  identifier String   @id @default(cuid())
-  token      String   @unique
-  email      String
-  expires    DateTime
-  createdAt  DateTime @default(now())
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Team {
+  id                      Int           @id @default(autoincrement())
+  name                    String
+  hospital                String?
+  service                 String?
+  adminId                 Int
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime
+  admin                   User          @relation("TeamAdmin", fields: [adminId], references: [id], onDelete: Cascade)
+  TeamRequest             TeamRequest[]
+  members                 User[]        @relation("TeamMembers")
+}
 
-  @@index([email])
-  @@index([expires])
+model TeamRequest {
+  id        Int      @id @default(autoincrement())
+  senderId  Int
+  teamId    Int
+  accepted  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  User      User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  Team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id                              Int                  @id @default(autoincrement())
+  firstName                       String?
+  lastName                        String?
+  username                        String?
+  email                           String               @unique
+  phone                           String?
+  createdAt                       DateTime             @default(now())
+  updatedAt                       DateTime
+  emailVerified                   Boolean              @default(false)
+  image                           String?
+  password                        String?
+  specialty                       String?
+  hospital                        String?
+  year                            String?
+  onboardingCompleted             Boolean              @default(false)
+  biographie                      String?
+  notifyByEmail                   Boolean              @default(false)
+  notifyByPush                    Boolean              @default(false)
+  profileVisible                  Boolean              @default(true)
+  addresse                        String?
+  language                        String?              @default("en")
+  Account                         Account[]
+  Activity                        Activity[]
+  Analyse                         Analyse[]
+  Avis                            Avis[]
+  FavouriteTask                   FavouriteTask[]
+  Ordonnance                      Ordonnance[]
+  OrdonnanceTemplate              OrdonnanceTemplate[]
+  Patient                         Patient[]
+  rapportsAsCreator               Rapport[]            @relation("RapportCreator")
+  Session                         Session[]
+  Task                            Task[]
+  teamsAsAdmin                    Team[]               @relation("TeamAdmin")
+  TeamRequest                     TeamRequest[]
+  VerificationToken               VerificationToken[]
+  rapportParticipations           Rapport[]            @relation("RapportParticipants")
+  teamsAsMember                   Team[]               @relation("TeamMembers")
 }
 
 model VerificationCode {
-  id        Int       @id @default(autoincrement())
-  email     String    @unique
-  code      String    // 6-digit code as string
-  expiresAt DateTime  // 10 minutes from creation
-  attempts  Int       @default(0)
-  maxAttempts Int     @default(5)
-  createdAt DateTime  @default(now())
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
+  code        String
+  expiresAt   DateTime
+  attempts    Int      @default(0)
+  maxAttempts Int      @default(5)
+  createdAt   DateTime @default(now())
 
   @@index([email])
   @@index([expiresAt])
 }
 
-model Contact {
-  id        Int       @id @default(autoincrement())
-  fullName  String
-  email     String
-  specialty String
-  message   String    @db.Text
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-}
+model VerificationToken {
+  identifier String   @id
+  token      String   @unique
+  userId     Int
+  expires    DateTime
+  User       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-model OrdonnanceTemplate {
-  id                    Int       @id @default(autoincrement())
-  title                 String
-  class                 String
-  prescriptionDetails   String    @db.Text
-  prescriptionConsignes String?   @db.Text
-  creatorId             Int
-  creator               User      @relation("OrdonnanceTemplateCreator", fields: [creatorId], references: [id], onDelete: Cascade)
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  @@unique([identifier, token])
 }

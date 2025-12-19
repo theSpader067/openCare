@@ -227,6 +227,604 @@ const ordonnanceTemplatesData = [
   },
 ];
 
+const crTemplatesData = [
+  {
+    specialty: "chirurgie générale",
+    templates: [
+      {
+        title: "Appendicectomie",
+        details: `## Déroulement de l'intervention
+
+### Préparation
+- Anesthésie générale avec intubation
+- Installation en décubitus dorsal
+- Antisepsie et champs stériles
+
+### Technique opératoire
+1. **Incision** - Selon McBurney ou laparoscopie
+2. **Identification** - Exposition de l'appendice
+3. **Ligature** - Des vaisseaux de l'appendice
+4. **Résection** - De l'appendice
+5. **Nettoyage** - De la cavité abdominale
+6. **Hémostase** - Vérification complète
+7. **Fermeture** - En deux plans`,
+        recommendationsPostop: "- Repos strict 48h\n- Analgésiques: Paracétamol 1000mg × 3/jour\n- Antibiotiques: Ceftriaxone 2g × 2/jour × 5 jours\n- Réalimentation progressive\n- Absence de sports 3-4 semaines\n- Ablation points J10-12"
+      },
+      {
+        title: "Cholécystectomie Laparoscopique",
+        details: `## Déroulement de l'intervention
+
+### Installation et insufflation
+- Anesthésie générale avec intubation
+- Décubitus dorsal
+- 4 trocarts pour pneumopéritoine CO2
+
+### Technique opératoire
+1. **Exploration** - Inspection de la cavité
+2. **Exposition** - Vésicule et triangle de Calot
+3. **Identification** - Artère et canal cystique
+4. **Clipping artériel** - Section sécurisée
+5. **Clipping canalaire** - Section du canal
+6. **Résection** - Extraction de la vésicule
+7. **Hémostase** - Inspection complète
+8. **Fermeture** - Des trocarts`,
+        recommendationsPostop: "- Ambulation J1\n- Analgésiques: Paracétamol 500mg × 3/jour\n- Antibiotiques: Cephalexin 500mg × 4/jour × 5 jours\n- Régime sans graisses 2-3 semaines\n- Ablation agrafes J7-10"
+      },
+      {
+        title: "Herniorraphie Inguinale",
+        details: `## Déroulement de l'intervention
+
+### Accès et préparation
+- Anesthésie locale + sédation
+- Incision selon Grynfeltt
+- Antisepsie du champ opératoire
+
+### Technique opératoire
+1. **Dissection** - Structures spermatiques
+2. **Isolation** - Du sac herniaire
+3. **Réduction** - Du contenu hernié
+4. **Mesh placement** - Filet synthétique
+5. **Fixation** - Aux structures anatomiques
+6. **Fermeture aponévrotique** - Plan solide
+7. **Fermeture cutanée** - Suture intradermique`,
+        recommendationsPostop: "- Repos strict 3-4 jours\n- Analgésiques: Paracétamol 500mg × 3/jour\n- Antibiotiques si indication: Cephalexin 500mg × 4/jour\n- Suspensoir 2 semaines\n- Pas d'effort physique 4-6 semaines\n- Ablation fils J7-10"
+      },
+      {
+        title: "Mastectomie Partielle",
+        details: `## Déroulement de l'intervention
+
+### Préparation
+- Anesthésie générale avec intubation
+- Installation en décubitus dorsal
+- Marquage du site opératoire
+
+### Technique opératoire
+1. **Incision** - Curviligne péri-aréolaire
+2. **Dissection des plans** - Avec soin
+3. **Résection** - Marge de sécurité 1-2cm
+4. **Examen extemporané** - Si carcinome
+5. **Hémostase** - Minutieuse
+6. **Reconstruction** - Fermeture esthétique
+7. **Drain** - Si cavité importante`,
+        recommendationsPostop: "- Drainage 24-48h si nécessaire\n- Analgésiques: Paracétamol 1000mg × 3/jour\n- Soutien-gorge adapté 2 semaines\n- Pas de poids > 2kg pendant 4 semaines\n- Radiothérapie 6-8 semaines selon indication\n- Suivi oncologique régulier"
+      },
+      {
+        title: "Gastrectomie Totale",
+        details: `## Déroulement de l'intervention
+
+### Accès et préparation
+- Anesthésie générale avec intubation
+- Laparotomie médiane longue
+- Exploration abdominale complète
+
+### Technique opératoire
+1. **Identification tumorale** - Localisation
+2. **Mobilisation** - De l'estomac
+3. **Section vasculaire** - Artères gastriques
+4. **Résection** - Totale de l'estomac
+5. **Dissection ganglionnaire** - D2
+6. **Anastomose** - Œsophago-jéjunale Roux-en-Y
+7. **Hémostase** - Vérification complète
+8. **Fermeture** - Par plans`,
+        recommendationsPostop: "- Sonde nasogastrique 3-5 jours\n- Drainage 5-7 jours\n- Repos strict 3-4 jours\n- Antibiotiques: Céphalosporine 5 jours\n- Réalimentation très progressive\n- Supplémentation B12 mensuelle\n- Chimiothérapie selon stage"
+      }
+    ]
+  },
+  {
+    specialty: "chirurgie cardiovasculaire",
+    templates: [
+      {
+        title: "Pontage Coronarien",
+        details: `## Déroulement de l'intervention
+
+### Préparation et accès
+- Anesthésie générale avec monitoring invasif
+- Sternotomie médiane
+- Préparation des greffons
+
+### Technique opératoire
+1. **Mise en place CEC** - Circulation extracorporelle
+2. **Occlusion aortique** - Et cardioplégie
+3. **Identification** - Lésions coronaires
+4. **Anastomoses distales** - Une ou plusieurs
+5. **Anastomose proximale** - À l'aorte
+6. **Sevrage CEC** - Progressif
+7. **Hémostase** - Contrôle complet`,
+        recommendationsPostop: "- Soins intensifs 48-72h\n- Anticoagulation: Héparine + Warfarine (INR 2-3)\n- Double antiagrégant: Aspirine + Clopidogrel\n- Bêtabloquants: Métoprolol 25mg × 2/jour\n- Statines: Atorvastatine 40mg/jour\n- Rééducation cardiaque J3-4\n- Pas de conduite 4 semaines"
+      },
+      {
+        title: "Remplacement Valvulaire Mitrale",
+        details: `## Déroulement de l'intervention
+
+### Préparation
+- Anesthésie générale avec monitoring TOE
+- Sternotomie médiane
+- Cannulation CEC
+
+### Technique opératoire
+1. **Arrêt cardiaque** - Cardioplégie
+2. **Atriotomie gauche** - Accès à la valve
+3. **Visualisation** - Valve mitrale
+4. **Résection** - Valve endommagée
+5. **Implantation** - Nouvelle valve
+6. **Suture** - Points séparés
+7. **Vérification** - Compétence valvulaire
+8. **Fermeture** - Atriale et incisions`,
+        recommendationsPostop: "- Anticoagulation: INR 2.5-3.5 si valve mécanique\n- Prophylaxie endocardite si biologique\n- Suivi échocardiographique 6 semaines\n- Revalidation progressive\n- Surveillance insuffisance cardiaque\n- Suivi cardiologique annuel"
+      },
+      {
+        title: "Implantation Pacemaker",
+        details: `## Déroulement de l'intervention
+
+### Accès et préparation
+- Anesthésie locale avec sédation IV
+- Incision sous-claviculaire droite
+- Dissection du tissu sous-cutané
+
+### Technique opératoire
+1. **Abord veineux** - Céphalique ou sous-clavière
+2. **Positionnement électrodes** - Endocavitaires
+3. **Test capture** - Seuil et sensibilité
+4. **Connexion générateur** - Au boîtier
+5. **Programmation** - Selon indication
+6. **Vérification fonctionnelle** - Complète
+7. **Fermeture** - Par plans`,
+        recommendationsPostop: "- Repos strict 24-48h, pas de lever bras\n- Analgésiques: Paracétamol 500mg × 3/jour\n- Ablation agrafes J10-14\n- Éviter efforts membres supérieurs 4-6 semaines\n- Pas de scanners RM 6 mois\n- Suivi électrophysiologie 6 semaines"
+      }
+    ]
+  },
+  {
+    specialty: "neurochirurgie",
+    templates: [
+      {
+        title: "Craniotomie Tumorale",
+        details: `## Déroulement de l'intervention
+
+### Préparation
+- Anesthésie générale avec neuromonitoring
+- Installation stéréotaxique si nécessaire
+- Marquage du site
+
+### Technique opératoire
+1. **Incision cuir chevelu** - Selon localisation
+2. **Ostéoplastie** - Flap osseux
+3. **Ouverture durale** - Technique stérile
+4. **Microscopie opératoire** - Visualisation
+5. **Résection tumorale** - Marges de sécurité
+6. **Hémostase** - De la cavité
+7. **Fermeture durale** - Étanche
+8. **Réapposition flap** - Stabilisation`,
+        recommendationsPostop: "- Soins intensifs 24-48h\n- Anticonvulsivants: Lévétiracétam 500mg × 2/jour\n- Corticostéroïdes dégressifs\n- Surveillance neurologique horaire\n- Ablation drains J2-3\n- Radiothérapie/chimiothérapie selon pathologie"
+      },
+      {
+        title: "Endartériectomie Carotidienne",
+        details: `## Déroulement de l'intervention
+
+### Accès et préparation
+- Anesthésie générale ou locale + sédation
+- Incision long sternum-mastoïdien
+- Exposition bifurcation carotidienne
+
+### Technique opératoire
+1. **Clampage artériel** - Progressif
+2. **Arteriotomie** - Longitudinale
+3. **Dissection plaque** - Athéromateuse
+4. **Résection** - Complète et sécurisée
+5. **Vérification lit artériel** - Inspection
+6. **Suture** - Avec ou sans patch
+7. **Déclampage** - Progressif
+8. **Fermeture** - Par plans`,
+        recommendationsPostop: "- Surveillance neurologique 48h\n- Antiagrégants: Aspirine 100mg long terme\n- Statines: Atorvastatine 40mg/jour\n- Antihypertenseurs si besoin (TA < 160/90)\n- Mobilisation progressive J1\n- Ablation points J7-10\n- Écho-doppler à 1 mois"
+      },
+      {
+        title: "Décompression Canal Carpien",
+        details: `## Déroulement de l'intervention
+
+### Préparation
+- Anesthésie locale ou générale
+- Installation bras en supination
+- Antisepsie du champ
+
+### Technique opératoire
+1. **Incision** - Transversale au poignet
+2. **Dissection fascia** - Palmaire
+3. **Identification nerf** - Médian
+4. **Section ligament** - Transverse
+5. **Libération nerf** - Vérification complète
+6. **Hémostase** - Contrôle
+7. **Fermeture cutanée** - Suture simple`,
+        recommendationsPostop: "- Immobilisation 2 semaines (attelle)\n- Glaçage 48 premières heures\n- Analgésiques: Paracétamol 500mg × 3/jour\n- Ablation points J10-14\n- Rééducation dès J15\n- Port attelle nuit 6-8 semaines\n- Reprise activités 4-6 semaines"
+      }
+    ]
+  },
+  {
+    specialty: "chirurgie thoracique",
+    templates: [
+      {
+        title: "Lobectomie Pulmonaire",
+        details: `## Déroulement de l'intervention
+
+### Installation et accès
+- Anesthésie générale avec intubation double-lumen
+- Décubitus latéral opposé
+- Thoracotomie postérolatérale (espace 5-6)
+
+### Technique opératoire
+1. **Exploration pleurale** - Inspection complet
+2. **Identification hile** - Pulmonaire
+3. **Section artérielle** - Artère pulmonaire
+4. **Section bronchique** - Bronche souche
+5. **Section veineuse** - Veine pulmonaire
+6. **Résection lobe** - Complet
+7. **Nettoyage cavité** - Inspection
+8. **Drainage** - Mise en place`,
+        recommendationsPostop: "- Soins intensifs respiratoires 48h\n- Analgésiques: Paracétamol 1000mg × 3/jour + Morphine\n- Kinésithérapie dès J1\n- Drainage thoracique 5-7 jours\n- Radiographie pulmonaire quotidienne\n- Ablation drains à expansion complète"
+      },
+      {
+        title: "Pleurodèse Talc",
+        details: `## Déroulement de l'intervention
+
+### Préparation
+- Anesthésie générale avec intubation
+- Position décubitus dorsal
+- Antisepsie complète
+
+### Technique opératoire
+1. **Ponction pleurale** - Ou thoracotomie mineure
+2. **Drainage épanchement** - Complet
+3. **Vérification expansion** - Pulmonaire
+4. **Insufflation talc** - Stérile (5g)
+5. **Lavage cavité** - Solution saline
+6. **Mise en place drain** - Pleural
+7. **Fermeture** - Simple ou suturée`,
+        recommendationsPostop: "- Drainage thoracique 3-5 jours\n- Analgésiques: Paracétamol 1000mg × 3/jour\n- Antibiotiques: Cephalexin 500mg × 4/jour\n- Kinésithérapie respiratoire J1\n- Radiographie pulmonaire quotidienne\n- Mobilisation drain progressive\n- Ablation drain à expansion complète"
+      },
+      {
+        title: "Thoracoscopie Diagnostique",
+        details: `## Déroulement de l'intervention
+
+### Préparation
+- Anesthésie générale ou locale
+- Décubitus latéral
+- Antisepsie du champ
+
+### Technique opératoire
+1. **Ponction trocar** - 10-12mm
+2. **Insufflation CO2** - Si VATS complète
+3. **Insertion thoracoscope** - Visualisation
+4. **Exploration cavité** - Inspection complète
+5. **Prélèvements/biopsies** - Si nécessaire
+6. **Photographies** - Documentation
+7. **Ablation instruments** - Complet
+8. **Fermeture** - Simple ou suturée`,
+        recommendationsPostop: "- Observation 2-4h avant sortie (ambulatoire)\n- Analgésiques: Paracétamol 500mg × 3/jour\n- Pas d'effort 48-72h\n- Ablation points J7-10\n- Radiographie pulmonaire contrôle\n- Résultats histologiques 5-7 jours"
+      }
+    ]
+  },
+  {
+    specialty: "chirurgie digestive",
+    templates: [
+      {
+        title: "Colectomie Partielle",
+        details: `## Déroulement de l'intervention
+
+### Accès et préparation
+- Anesthésie générale avec intubation
+- Laparotomie selon localisation tumorale
+- Exploration abdominale complète
+
+### Technique opératoire
+1. **Identification tumeur** - Localisation précise
+2. **Mobilisation segment** - Atteint
+3. **Section pédicules** - Vasculaires et nerveux
+4. **Résection colique** - Avec marge 5cm
+5. **Prélèvement ganglions** - Dissection D3
+6. **Anastomose** - Termino-terminale si possible
+7. **Vérification étanchéité** - Manométrie
+8. **Fermeture** - Par plans`,
+        recommendationsPostop: "- Sonde nasogastrique 1-2 jours\n- Repos strict 3-4 jours\n- Alimentation progressive J3-4\n- Antibiotiques: Céphalosporines 5 jours\n- Analgésiques: Paracétamol 1000mg × 3/jour\n- Chimiothérapie selon stage (J30-45)\n- Surveillance oncologique régulière"
+      },
+      {
+        title: "Appendicectomie Laparoscopique",
+        details: `## Déroulement de l'intervention
+
+### Installation et insufflation
+- Anesthésie générale avec intubation
+- Décubitus dorsal
+- 3 trocarts (ombilical, épigastre, fosse iliaque)
+
+### Technique opératoire
+1. **Exploration abdominale** - Inspection complète
+2. **Identification appendice** - Localisation
+3. **Libération méso-appendice** - Avec soin
+4. **Clipping artériel** - Section sécurisée
+5. **Clipping méso** - Dissection complète
+6. **Clipping base** - Section sécurisée
+7. **Extraction** - Sac endoscopique
+8. **Fermeture trocarts** - Sutures`,
+        recommendationsPostop: "- Alimentation progressive J1\n- Analgésiques: Paracétamol 500mg × 3/jour\n- Antibiotiques si perforation: Amoxicilline-acide clavulanique 1g × 3/jour\n- Ambulation J1\n- Ablation agrafes J5-7\n- Reprise activités légères 1 semaine\n- Reprise sports 4 semaines"
+      },
+      {
+        title: "Résection Endométriale",
+        details: `## Déroulement de l'intervention
+
+### Préparation
+- Anesthésie générale ou régionale
+- Position lithotomie
+- Antisepsie intrautérine
+
+### Technique opératoire
+1. **Hysteroscopie diagnostic** - Visualisation
+2. **Examen cavité** - Inspection complète
+3. **Résection endométriale** - Électrode REE
+4. **Destruction endomètre** - Jusqu'au myomètre
+5. **Vérification perforations** - Inspection
+6. **Ablation instruments** - Complet
+7. **Retrait hystéroscope** - Sécurisé`,
+        recommendationsPostop: "- Repos 24-48h\n- Analgésiques: Paracétamol 500mg × 3/jour\n- Antibiotiques: Amoxicilline 500mg × 3/jour × 3 jours\n- Saignements normaux 4-6 semaines\n- Pas douche vaginale/rapports 2 semaines\n- Pas d'efforts 1 semaine\n- Suivi gynéco 6 semaines"
+      }
+    ]
+  },
+  {
+    specialty: "urologie",
+    templates: [
+      {
+        title: "Prostatectomie Radicale",
+        details: `## Déroulement de l'intervention
+
+### Accès et préparation
+- Anesthésie générale avec intubation
+- Symphysiotomie ou rétropubienne
+- Trendelenburg modéré
+
+### Technique opératoire
+1. **Exposition vésicules** - Séminales
+2. **Identification nerfs** - Caverneux
+3. **Dissection prostate** - Complète
+4. **Résection** - Prostate entière
+5. **Anastomose** - Urétro-vésicale
+6. **Hémostase** - Minutieuse
+7. **Drainage pelvien** - Mise en place
+8. **Fermeture** - Par plans`,
+        recommendationsPostop: "- Sonde vésicale 2-3 semaines\n- Repos strict 2 semaines\n- Analgésiques: Paracétamol 1000mg × 3/jour\n- Antibiotiques prophylactiques: Quinolone 5 jours\n- Drainage pelvien 3-5 jours\n- Pas d'efforts 6 semaines\n- Suivi PSA et TR régulier"
+      },
+      {
+        title: "Néphrectomie Partielle",
+        details: `## Déroulement de l'intervention
+
+### Accès et préparation
+- Anesthésie générale avec intubation
+- Décubitus latéral opposé
+- Incision flank ou mini-invasive
+
+### Technique opératoire
+1. **Exposition rénale** - Accès vasculaire
+2. **Identification tumorale** - Localisation
+3. **Occlusion vasculaire** - Temporaire
+4. **Énucléation ou résection** - En coin
+5. **Hémostase** - Coagulation laser/bipolaire
+6. **Fermeture capsule** - Suture rénale
+7. **Vérification perfusion** - Post-opératoire
+8. **Drainage** - Mise en place`,
+        recommendationsPostop: "- Drainage 2-3 jours\n- Repos strict 1-2 semaines\n- Analgésiques: Paracétamol 1000mg × 3/jour + Codéine\n- Antibiotiques: Fluoroquinolone 5 jours\n- Pas d'efforts 4-6 semaines\n- Suivi urinaire (créatinine, protéinurie)\n- Échographie rénale 1 mois"
+      },
+      {
+        title: "Résection Endoscopique Prostate",
+        details: `## Déroulement de l'intervention
+
+### Anesthésie et installation
+- Anesthésie régionale ou générale
+- Position lithotomie
+- Antisepsie transurétrale
+
+### Technique opératoire
+1. **Cystoscopie** - Inspection vésicale
+2. **Insertion résectoscope** - Positionnement
+3. **Résection tissulaire** - Hyperplasie prostatique
+4. **Hémostase** - Coagulation bipolaire
+5. **Vérification cavité** - Inspection
+6. **Retrait résectoscope** - Complet
+7. **Mise en place cathéter** - Transurétral`,
+        recommendationsPostop: "- Sonde vésicale 24h (optionnel si pas saignement)\n- Irrigation si saignement important\n- Analgésiques: Paracétamol 500mg × 3/jour\n- Antibiotiques: Fluoroquinolone 3 jours\n- Antispasmodiques: Mébévérine si dysuries\n- Alimentation et boissons abondantes J1\n- Repos 1-2 semaines"
+      }
+    ]
+  },
+  {
+    specialty: "orthopédie",
+    templates: [
+      {
+        title: "Prothèse Totale du Genou",
+        details: `## Déroulement de l'intervention
+
+### Préparation
+- Anesthésie générale ± bloc nerveux
+- Décubitus dorsal
+- Garrot pneumatique MI
+
+### Technique opératoire
+1. **Incision antérieure** - Genou
+2. **Exposition articulation** - Complet
+3. **Résection surfaces** - Articulaires usées
+4. **Préparation lit** - Pour implants
+5. **Essayage composants** - Positionnement
+6. **Cimentation ou fixation** - Press-fit
+7. **Test mobilité/stabilité** - Complet
+8. **Hémostase et drainage** - Mise en place`,
+        recommendationsPostop: "- Drainage 24-48h\n- Anticoagulation: Énoxaparine 40mg × 10 jours\n- Antibiotiques: Céphalosporine 24h\n- Kinésithérapie J0-1\n- Charge progressive semaines 2-4\n- Ablation agrafes J12-14\n- Réhabilitation 3-6 mois"
+      },
+      {
+        title: "Méniscectomie Arthroscopique",
+        details: `## Déroulement de l'intervention
+
+### Anesthésie et installation
+- Anesthésie générale ou régionale
+- Position lithotomie
+- Garrot pneumatique MI
+
+### Technique opératoire
+1. **Arthroscopie antérolatérale** - Accès
+2. **Arthroscopie antéromédiale** - Accès
+3. **Identification lésion** - Méniscale
+4. **Résection partielle/totale** - Fragment
+5. **Vérification surfaces** - Cartilage
+6. **Nettoyage débridement** - Complet
+7. **Ablation instruments** - Complet
+8. **Suture portails** - Simples`,
+        recommendationsPostop: "- Ambulation J1 sans limitation charge\n- Analgésiques: Paracétamol 500mg × 3/jour\n- Anti-inflammatoires: Ibuprofène 400mg × 3/jour × 1 semaine\n- Glaçage 2-3 fois/jour\n- Ablation agrafes J10-14\n- Reprise sport 4-6 semaines"
+      },
+      {
+        title: "Fixation Fracture Fémur Intertrochantérienne",
+        details: `## Déroulement de l'intervention
+
+### Préparation
+- Anesthésie générale ou régionale
+- Installation table de traction
+- Réduction fermée sous fluoroscopie
+
+### Technique opératoire
+1. **Réduction fracture** - Contrôle fluoroscopique
+2. **Incision latérale** - Courte trochantérienne
+3. **Exposition cortex** - Fémoral latéral
+4. **Insertion plaque-vis** - DHS ou intra-médullaire
+5. **Vérification réduction** - Radiographique
+6. **Vérification fixation** - Solidité
+7. **Hémostase** - Contrôle complet
+8. **Fermeture** - Par plans`,
+        recommendationsPostop: "- Drainage 24-48h\n- Analgésiques: Paracétamol 1000mg × 3/jour + Morphine si besoin\n- Antibiotiques: Céphalosporine 24h\n- Anticoagulation: Énoxaparine 40mg × 10 jours\n- Kinésithérapie J1\n- Charge progressive J4-5\n- Ablation agrafes J10-12"
+      }
+    ]
+  },
+  {
+    specialty: "ophtalmologie",
+    templates: [
+      {
+        title: "Chirurgie de la Cataracte",
+        details: `## Déroulement de l'intervention
+
+### Anesthésie et installation
+- Anesthésie locale ou topique
+- Décubitus dorsal
+- Spéculum paupières
+
+### Technique opératoire
+1. **Incision sclérale** - 2.8-3.0mm
+2. **Substance viscoélastique** - Injection
+3. **Capsulorhexis** - Antérieure
+4. **Hydrodissection** - Du noyau
+5. **Phacoémulsification** - Émulsification
+6. **Aspiration cortex** - Complet
+7. **Implantation IOL** - Positionnement
+8. **Vérification étanchéité** - Incision`,
+        recommendationsPostop: "- Patch oculaire 24h\n- Lunettes protection 1 semaine\n- Gouttes: Antibiotiques 4×/jour × 2 semaines\n- Gouttes: Anti-inflammatoires dégressif 4-6 semaines\n- Pas d'eau dans l'oeil 1 semaine\n- Éviter efforts 2 semaines\n- Suivi J1, J7, J30"
+      },
+      {
+        title: "Chirurgie du Glaucome",
+        details: `## Déroulement de l'intervention
+
+### Anesthésie et installation
+- Anesthésie locale (bloc rétrobulbaire)
+- Position décubitus dorsal
+- Installation confortable
+
+### Technique opératoire
+1. **Incision limbale** - Supérieure
+2. **Ouverture conjonctive** - Et Tenon
+3. **Exposition limbe** - Scléral
+4. **Création flap scléral** - Partiel
+5. **Trabeculectomie** - Résection trabéculum
+6. **Iridectomie** - Basale
+7. **Vérification perméabilité** - Filtrante
+8. **Fermeture flap** - Et conjonctive`,
+        recommendationsPostop: "- Patch oculaire 24h\n- Lunettes protectrices 2 semaines\n- Gouttes: Antibiotiques + Anti-inflammatoires\n- Anti-inflammatoires dégressif 4 semaines\n- Pas baignade 2 semaines\n- Positions favorisant filtration\n- Suivi ophtalmologique rapproché\n- Tonométrie de contrôle chaque visite"
+      }
+    ]
+  },
+  {
+    specialty: "gynécologie",
+    templates: [
+      {
+        title: "Hystérectomie Totale",
+        details: `## Déroulement de l'intervention
+
+### Accès et préparation
+- Anesthésie générale avec intubation
+- Laparotomie médiane ou Pfannenstiel
+- Exploration abdominale complète
+
+### Technique opératoire
+1. **Exposition utérus** - Et annexes
+2. **Ligature artérielle** - Ovarique si indication
+3. **Section ligament** - Utéro-ovarien
+4. **Fermeture péritoine** - Viscéral
+5. **Ligature vasculaire** - Artères utérines
+6. **Résection utérine** - Énucléation
+7. **Fermeture dôme** - Vaginal
+8. **Vérification hémostase** - Complète`,
+        recommendationsPostop: "- Repos strict 2-3 jours\n- Sonde vésicale 24h\n- Drainage 24-48h si présent\n- Analgésiques: Paracétamol 1000mg × 3/jour + Morphine\n- Antibiotiques: Céphalosporine 24h\n- Réalimentation progressive dès J2\n- Ablation points J10-12\n- Pas d'effort 6-8 semaines"
+      },
+      {
+        title: "Césarienne",
+        details: `## Déroulement de l'intervention
+
+### Anesthésie et accès
+- Anesthésie générale ou rachi-anesthésie
+- Décubitus dorsal
+- Laparotomie Pfannenstiel
+
+### Technique opératoire
+1. **Incision péritoine** - Pariétal
+2. **Incision utérine** - Transverse segmentaire
+3. **Extraction enfant** - Sécurisée
+4. **Clampage cordon** - Ombilical
+5. **Extraction placenta** - Complète
+6. **Suture utérine** - Deux plans
+7. **Exploration abdominale** - Inspection
+8. **Fermeture** - Par plans`,
+        recommendationsPostop: "- Soins mère-enfant salle de réveil\n- Analgésiques: Paracétamol 1000mg × 4/jour + Opioïdes\n- Antibiotiques: Céphalosporine 24h\n- Sonde vésicale 24h\n- Mobilisation précoce J0-1\n- Alimentation dès tolérance\n- Ablation agrafes J8-10\n- Pas d'effort 6 semaines"
+      },
+      {
+        title: "Résection Endométriale",
+        details: `## Déroulement de l'intervention
+
+### Préparation
+- Anesthésie générale ou régionale
+- Position lithotomie
+- Antisepsie intrautérine
+
+### Technique opératoire
+1. **Hysteroscopie diagnostic** - Inspection
+2. **Examen cavité** - Complet
+3. **Résection endométriale** - Électrode REE
+4. **Destruction endomètre** - Jusqu'au myomètre
+5. **Vérification perforations** - Inspection
+6. **Ablation instruments** - Complet
+7. **Retrait hystéroscope** - Sécurisé`,
+        recommendationsPostop: "- Repos 24-48h\n- Analgésiques: Paracétamol 500mg × 3/jour\n- Antibiotiques: Amoxicilline 500mg × 3/jour × 3 jours\n- Saignements normaux 4-6 semaines\n- Pas douche vaginale/rapports 2 semaines\n- Pas d'efforts 1 semaine\n- Contraception recommandée"
+      }
+    ]
+  }
+];
+
 async function main() {
   console.log("Starting seed of ordonnance templates...");
 
@@ -258,17 +856,11 @@ async function main() {
   const existingCount = await prisma.ordonnanceTemplate.count();
   console.log(`Current templates in database: ${existingCount}`);
 
-  if (existingCount > 0) {
-    console.log(
-      "Templates already exist. Skipping seed to avoid duplicates.",
-    );
-    return;
-  }
-
-  // Seed all templates
   let totalSeeded = 0;
 
-  for (const categoryData of ordonnanceTemplatesData) {
+  if (existingCount === 0) {
+    // Seed all templates
+    for (const categoryData of ordonnanceTemplatesData) {
     console.log(`\nSeeding ${categoryData.class} templates...`);
 
     for (const template of categoryData.templates) {
@@ -289,9 +881,54 @@ async function main() {
     console.log(
       `✓ Seeded ${categoryData.templates.length} templates for ${categoryData.class}`,
     );
+    }
+
+    console.log(`\n✓ Successfully seeded ${totalSeeded} ordonnance templates!`);
+  } else {
+    console.log("Templates already exist. Skipping ordonnance templates seed to avoid duplicates.");
   }
 
-  console.log(`\n✓ Successfully seeded ${totalSeeded} ordonnance templates!`);
+  // Seed CR templates
+  console.log("\n\nStarting seed of CR templates...");
+
+  // Check existing CR templates
+  const existingCRCount = await prisma.cR_template.count();
+  console.log(`Current CR templates in database: ${existingCRCount}`);
+
+  // Clean up existing CR templates if they exist
+  if (existingCRCount > 0) {
+    console.log("Deleting existing CR templates to reseed...");
+    await prisma.cR_template.deleteMany({});
+    console.log("✓ Existing CR templates deleted");
+  }
+
+  // Seed all CR templates
+  let totalCRSeeded = 0;
+
+  for (const specialtyData of crTemplatesData) {
+    console.log(`\nSeeding ${specialtyData.specialty} CR templates...`);
+
+    for (const template of specialtyData.templates) {
+      await prisma.cR_template.create({
+        data: {
+          title: template.title,
+          specialite: specialtyData.specialty,
+          details: template.details,
+          recommendationsPostop: template.recommendationsPostop,
+          isPublic: true,
+          creatorId: systemUser.id,
+          updatedAt: new Date(),
+        },
+      });
+      totalCRSeeded++;
+    }
+
+    console.log(
+      `✓ Seeded ${specialtyData.templates.length} CR templates for ${specialtyData.specialty}`,
+    );
+  }
+
+  console.log(`\n✓ Successfully seeded ${totalCRSeeded} CR templates!`);
 }
 
 main()

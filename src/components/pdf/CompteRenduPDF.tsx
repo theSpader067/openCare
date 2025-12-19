@@ -132,6 +132,34 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     lineHeight: 1.7,
   },
+  heading1: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#1f2937",
+    marginTop: 10,
+    marginBottom: 6,
+  },
+  heading2: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#374151",
+    marginTop: 8,
+    marginBottom: 5,
+  },
+  heading3: {
+    fontSize: 11,
+    fontWeight: "bold",
+    color: "#4b5563",
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  listItem: {
+    fontSize: 10,
+    color: "#374151",
+    lineHeight: 1.6,
+    marginLeft: 15,
+    marginBottom: 4,
+  },
   footer: {
     marginTop: 20,
     fontSize: 9,
@@ -161,45 +189,113 @@ interface CompteRenduPDFProps {
   postNotes: string;
 }
 
-// Helper component to render formatted content with line breaks and structure
+// Helper to extract clean text from HTML (removes all tags)
+function stripHtmlTags(html: string): string {
+  return html.replace(/<[^>]*>/g, '');
+}
+
+// Helper component to render formatted HTML content with proper structure
 function FormattedContent({ content }: { content: string }) {
-  const stripHtmlTags = (html: string) => html.replace(/<[^>]*>/g, "");
-  const cleanedContent = stripHtmlTags(content);
+  if (!content || content === "N/A") return null;
 
-  // Split content by double newlines to create paragraphs
-  const paragraphs = cleanedContent
-    .split(/\n\n+/)
-    .filter(p => p.trim().length > 0)
-    .map(p => p.trim());
+  const elements: React.ReactNode[] = [];
+  let key = 0;
 
-  return (
-    <>
-      {paragraphs.map((paragraph, idx) => {
-        // Check if paragraph contains bullet points or numbered lists
-        const lines = paragraph.split("\n").filter(l => l.trim().length > 0);
+  // Remove script tags
+  const cleanContent = content.replace(/<script[^>]*>.*?<\/script>/gs, '');
 
-        if (lines.some(l => l.match(/^[•\-*\d.]/))) {
-          // This is a list
-          return (
-            <View key={idx} style={styles.contentList}>
-              {lines.map((line, lineIdx) => (
-                <Text key={lineIdx} style={styles.contentListItem}>
-                  {line.trim()}
-                </Text>
-              ))}
-            </View>
+  // Parse h1, h2, h3, ol, ul, and p tags
+  const blockRegex = /<(h[123]|ol|ul|p)(?:\s[^>]*)?>[\s\S]*?<\/\1>|<br\s*\/?>/gi;
+  let match;
+
+  while ((match = blockRegex.exec(cleanContent)) !== null) {
+    const fullMatch = match[0];
+    const tagName = match[1].toLowerCase();
+
+    if (tagName === 'h1') {
+      const text = stripHtmlTags(fullMatch).trim();
+      if (text) {
+        elements.push(
+          <Text key={key++} style={styles.heading1}>
+            {text}
+          </Text>
+        );
+      }
+    } else if (tagName === 'h2') {
+      const text = stripHtmlTags(fullMatch).trim();
+      if (text) {
+        elements.push(
+          <Text key={key++} style={styles.heading2}>
+            {text}
+          </Text>
+        );
+      }
+    } else if (tagName === 'h3') {
+      const text = stripHtmlTags(fullMatch).trim();
+      if (text) {
+        elements.push(
+          <Text key={key++} style={styles.heading3}>
+            {text}
+          </Text>
+        );
+      }
+    } else if (tagName === 'ol') {
+      // Extract list items from ordered list
+      const liRegex = /<li(?:\s[^>]*)?>[\s\S]*?<\/li>/gi;
+      let liMatch;
+      let itemIndex = 1;
+      while ((liMatch = liRegex.exec(fullMatch)) !== null) {
+        const liText = stripHtmlTags(liMatch[0]).trim();
+        if (liText) {
+          elements.push(
+            <Text key={key++} style={styles.listItem}>
+              {itemIndex}. {liText}
+            </Text>
           );
-        } else {
-          // Regular paragraph
-          return (
-            <Text key={idx} style={styles.contentParagraph}>
-              {paragraph}
+          itemIndex++;
+        }
+      }
+    } else if (tagName === 'ul') {
+      // Extract list items from unordered list
+      const liRegex = /<li(?:\s[^>]*)?>[\s\S]*?<\/li>/gi;
+      let liMatch;
+      while ((liMatch = liRegex.exec(fullMatch)) !== null) {
+        const liText = stripHtmlTags(liMatch[0]).trim();
+        if (liText) {
+          elements.push(
+            <Text key={key++} style={styles.listItem}>
+              • {liText}
             </Text>
           );
         }
-      })}
-    </>
-  );
+      }
+    } else if (tagName === 'p') {
+      const text = stripHtmlTags(fullMatch).trim();
+      if (text) {
+        elements.push(
+          <Text key={key++} style={styles.contentParagraph}>
+            {text}
+          </Text>
+        );
+      }
+    } else if (fullMatch.includes('<br')) {
+      elements.push(<View key={key++} style={{ height: 4 }} />);
+    }
+  }
+
+  // If no block elements found, just clean and render as paragraph
+  if (elements.length === 0) {
+    const cleanText = stripHtmlTags(cleanContent).trim();
+    if (cleanText) {
+      elements.push(
+        <Text key={key++} style={styles.contentParagraph}>
+          {cleanText}
+        </Text>
+      );
+    }
+  }
+
+  return <>{elements}</>;
 }
 
 export function CompteRenduPDF({

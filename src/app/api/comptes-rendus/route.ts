@@ -327,15 +327,11 @@ export async function POST(request: NextRequest) {
         details: rapportData.details,
         recommandations: rapportData.recommandations,
         operators: rapportData.operators,
-        ...(patientConnect && { Patient: patientConnect }),
+        creatorId: rapportData.creatorId,
+        ...(hasExistingPatient && { patientId: parsedPatientId }),
         ...(rapportData.patientName && { patientName: rapportData.patientName }),
         ...(rapportData.patientAge !== undefined && { patientAge: rapportData.patientAge }),
         ...(rapportData.patientHistory !== undefined && { patientHistory: rapportData.patientHistory }),
-        User: {
-          connect: {
-            id: rapportData.creatorId,
-          },
-        },
         ...(validOperatorIds.length > 0 && {
           participants: {
             connect: validOperatorIds.map((id) => ({ id })),

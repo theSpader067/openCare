@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenCare - Plateforme Clinique Prospectus</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            line-height: 1.6;
+            color: #1d184f;
+            background: white;
+            padding: 0;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* ========== PAGE STRUCTURE ========== */
+        .page {
+            min-height: auto;
+            page-break-after: always;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 20px 35px;
+        }
+
+        .page:first-child {
+            min-height: 100vh;
+            justify-content: center;
+            padding: 40px 0;
+        }
+
+        .page:last-child {
+            page-break-after: avoid;
+        }
+
+        /* ========== COLOR SCHEME ========== */
+        :root {
+            --primary: #7c3aed;
+            --primary-dark: #4f46e5;
+            --accent-1: #f43f5e;
+            --accent-2: #0ea5e9;
+            --accent-3: #10b981;
+            --accent-4: #f59e0b;
+            --accent-5: #ec4899;
+            --accent-6: #06b6d4;
+            --text-dark: #1d184f;
+            --text-light: #666;
+            --bg-light: #f5f3ff;
+            --border-light: #e5ddf7;
+        }
+
+        /* ========== PAGE 1: COVER ========== */
+        .cover-page {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #7c3aed 0%, #f43f5e 20%, #0ea5e9 40%, #10b981 60%, #f59e0b 80%, #ec4899 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cover-page::before {
+            content: '';
+            position: absolute;
+            top: -30%;
+            right: -15%;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .cover-page::after {
+            content: '';
+            position: absolute;
+            bottom: -20%;
+            left: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .cover-page::backdrop {
+            filter: blur(1px);
+        }
+
+        .logo-large {
+            width: 180px;
+            height: 180px;
+            background: linear-gradient(135deg, #7c3aed 0%, #6366f1 25%, #0ea5e9 50%, #06b6d4 75%, #10b981 100%);
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 120px;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 30px 80px rgba(124, 58, 237, 0.4), 0 0 60px rgba(10, 165, 233, 0.2);
+            margin-bottom: 40px;
+            letter-spacing: -3px;
+            position: relative;
+            z-index: 1;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .main-title {
+            font-size: 72px;
+            font-weight: 900;
+            margin-bottom: 15px;
+            color: #4B5563;
+            position: relative;
+            z-index: 1;
+            letter-spacing: -1px;
+        }
+
+        .tagline-main {
+            font-size: 32px;
+            background: linear-gradient(90deg, #0ea5e9 0%, #06b6d4 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 50px;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+
+        .value-proposition {
+            font-size: 16px;
+            color: var(--text-dark);
+            max-width: 650px;
+            line-height: 1.7;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 1;
+            font-weight: 500;
+        }
+
+        .cta-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #f43f5e 0%, #7c3aed 50%, #0ea5e9 100%);
+            color: white;
+            padding: 18px 50px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 18px;
+            box-shadow: 0 15px 40px rgba(244, 63, 94, 0.3);
+            position: relative;
+            z-index: 1;
+            letter-spacing: 0.5px;
+        }
+
+        /* ========== PAGE 2: PROBLEM & SOLUTION ========== */
+        .section-page {
+            page-break-after: always;
+            background: white;
+        }
+
+        .section-page:nth-of-type(2) {
+            background: linear-gradient(to bottom, white 0%, white 50%, #f8f9fa 100%);
+        }
+
+        .section-page:nth-of-type(3) {
+            background: linear-gradient(to bottom, #ffffff 0%, #f5f3ff 100%);
+        }
+
+        .section-page:nth-of-type(4) {
+            background: linear-gradient(to bottom, #f0f9ff 0%, white 100%);
+        }
+
+        .section-page:nth-of-type(5) {
+            background: linear-gradient(to bottom, white 0%, #fffbeb 100%);
+        }
+
+        .section-page:nth-of-type(6) {
+            page-break-after: avoid;
+        }
+
+        .section-header {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: 8px;
+            color: white;
+        }
+
+        .section-number {
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .section-title {
+            font-size: 38px;
+            font-weight: 800;
+            color: white;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .section-icon {
+            width: 55px;
+            height: 55px;
+            background: rgba(255,255,255,0.25);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .divider {
+            height: 0;
+            width: 0;
+            display: none;
+        }
+
+        /* ========== PROBLEM STATEMENT ========== */
+        .problem-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 25px;
+            margin-top: 15px;
+        }
+
+        .problem-item {
+            padding: 18px;
+            border-radius: 12px;
+            border: 3px solid;
+            background: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+
+        .problem-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .problem-item:nth-child(1) {
+            border-color: #f43f5e;
+            background: linear-gradient(135deg, #fff5f7 0%, white 100%);
+        }
+
+        .problem-item:nth-child(2) {
+            border-color: #0ea5e9;
+            background: linear-gradient(135deg, #f0f9ff 0%, white 100%);
+        }
+
+        .problem-item:nth-child(3) {
+            border-color: #f59e0b;
+            background: linear-gradient(135deg, #fffbeb 0%, white 100%);
+        }
+
+        .problem-item:nth-child(4) {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #ecfdf5 0%, white 100%);
+        }
+
+        .problem-item h4 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .problem-item:nth-child(1) h4 {
+            color: #f43f5e;
+        }
+
+        .problem-item:nth-child(2) h4 {
+            color: #0ea5e9;
+        }
+
+        .problem-item:nth-child(3) h4 {
+            color: #f59e0b;
+        }
+
+        .problem-item:nth-child(4) h4 {
+            color: #10b981;
+        }
+
+        .problem-item p {
+            font-size: 14px;
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .solution-highlight {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 28px;
+            border-radius: 12px;
+            border: none;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(124, 58, 237, 0.2);
+            color: white;
+        }
+
+        .solution-highlight h3 {
+            font-size: 24px;
+            color: white;
+            margin-bottom: 12px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .solution-highlight p {
+            font-size: 15px;
+            color: rgba(255,255,255,0.95);
+            line-height: 1.8;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        /* ========== PAGE 3: KEY FEATURES ========== */
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .feature-card {
+            background: white;
+            border: 3px solid var(--border-light);
+            border-radius: 14px;
+            padding: 18px 14px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+        }
+
+        .feature-card:nth-child(1) {
+            border-color: #f43f5e;
+            background: linear-gradient(135deg, #fff5f7 0%, white 100%);
+        }
+
+        .feature-card:nth-child(2) {
+            border-color: #0ea5e9;
+            background: linear-gradient(135deg, #f0f9ff 0%, white 100%);
+        }
+
+        .feature-card:nth-child(3) {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #ecfdf5 0%, white 100%);
+        }
+
+        .feature-card:nth-child(4) {
+            border-color: #f59e0b;
+            background: linear-gradient(135deg, #fffbeb 0%, white 100%);
+        }
+
+        .feature-card:nth-child(5) {
+            border-color: #ec4899;
+            background: linear-gradient(135deg, #fdf2f8 0%, white 100%);
+        }
+
+        .feature-card:nth-child(6) {
+            border-color: #06b6d4;
+            background: linear-gradient(135deg, #ecfdfd 0%, white 100%);
+        }
+
+        .feature-icon-box {
+            width: 80px;
+            height: 80px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+            margin: 0 auto 20px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .feature-card:nth-child(1) .feature-icon-box {
+            background: linear-gradient(135deg, #f43f5e 0%, #e01e5a 100%);
+        }
+
+        .feature-card:nth-child(2) .feature-icon-box {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+        }
+
+        .feature-card:nth-child(3) .feature-icon-box {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .feature-card:nth-child(4) .feature-icon-box {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .feature-card:nth-child(5) .feature-icon-box {
+            background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+        }
+
+        .feature-card:nth-child(6) .feature-icon-box {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        }
+
+        .feature-card h4 {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+            line-height: 1.2;
+        }
+
+        .feature-card:nth-child(1) h4 {
+            color: #f43f5e;
+        }
+
+        .feature-card:nth-child(2) h4 {
+            color: #0ea5e9;
+        }
+
+        .feature-card:nth-child(3) h4 {
+            color: #10b981;
+        }
+
+        .feature-card:nth-child(4) h4 {
+            color: #f59e0b;
+        }
+
+        .feature-card:nth-child(5) h4 {
+            color: #ec4899;
+        }
+
+        .feature-card:nth-child(6) h4 {
+            color: #06b6d4;
+        }
+
+        .feature-card p {
+            font-size: 12px;
+            color: var(--text-light);
+            line-height: 1.4;
+            font-weight: 500;
+        }
+
+        /* ========== MOCKUP COMPONENTS ========== */
+        .mockup-container {
+            background: linear-gradient(135deg, var(--bg-light) 0%, rgba(255,255,255,0.8) 100%);
+            border: 3px solid var(--primary);
+            border-radius: 16px;
+            padding: 12px;
+            margin: 8px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            box-shadow: 0 10px 30px rgba(124, 58, 237, 0.15);
+        }
+
+        .mockup-label {
+            font-size: 10px;
+            color: white;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 5px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            width: fit-content;
+            margin-bottom: 6px;
+        }
+
+        /* ========== DASHBOARD MOCKUP ========== */
+        .dashboard-mockup {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 8px;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .dashboard-header h5 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            margin-bottom: 6px;
+        }
+
+        .stat-box {
+            padding: 6px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid white;
+            font-weight: bold;
+        }
+
+        .stat-box:nth-child(1) {
+            background: linear-gradient(135deg, #f43f5e 0%, #e01e5a 100%);
+        }
+
+        .stat-box:nth-child(2) {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+        }
+
+        .stat-box:nth-child(3) {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .stat-box:nth-child(4) {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .stat-number {
+            font-size: 18px;
+            font-weight: 800;
+            color: white;
+        }
+
+        .stat-label {
+            font-size: 9px;
+            color: rgba(255,255,255,0.9);
+            text-transform: uppercase;
+            margin-top: 2px;
+            letter-spacing: 0.3px;
+        }
+
+        .dashboard-tasks {
+            background: white;
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            padding: 8px;
+        }
+
+        .task-item {
+            padding: 6px;
+            border-left: 3px solid var(--primary);
+            margin-bottom: 4px;
+            background: #fafafa;
+        }
+
+        .task-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .task-meta {
+            font-size: 9px;
+            color: var(--text-light);
+            margin-top: 2px;
+        }
+
+        /* ========== CLINICAL DOCUMENT MOCKUP ========== */
+        .clinical-doc-mockup {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .doc-header {
+            text-align: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .doc-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .doc-meta {
+            font-size: 11px;
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+
+        .doc-section {
+            margin-bottom: 8px;
+        }
+
+        .doc-section-title {
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .doc-content {
+            color: #555;
+            font-size: 12px;
+        }
+
+        /* ========== PATIENT RECORD MOCKUP ========== */
+        .patient-mockup {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .patient-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .patient-info h5 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .patient-meta {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .patient-sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .patient-section {
+            padding: 12px;
+            background: var(--bg-light);
+            border-radius: 6px;
+        }
+
+        .patient-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .patient-content {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        /* ========== BENEFITS SECTION ========== */
+        .benefits-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .benefit-item {
+            padding: 22px;
+            background: white;
+            border: 3px solid var(--border-light);
+            border-radius: 14px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .benefit-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+
+        .benefit-item:nth-child(1) {
+            border-color: #f43f5e;
+            background: linear-gradient(135deg, #fff5f7 0%, white 100%);
+        }
+
+        .benefit-item:nth-child(2) {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #ecfdf5 0%, white 100%);
+        }
+
+        .benefit-item:nth-child(3) {
+            border-color: #0ea5e9;
+            background: linear-gradient(135deg, #f0f9ff 0%, white 100%);
+        }
+
+        .benefit-item:nth-child(4) {
+            border-color: #f59e0b;
+            background: linear-gradient(135deg, #fffbeb 0%, white 100%);
+        }
+
+        .benefit-number {
+            width: 50px;
+            height: 50px;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .benefit-item:nth-child(1) .benefit-number {
+            background: linear-gradient(135deg, #f43f5e 0%, #e01e5a 100%);
+        }
+
+        .benefit-item:nth-child(2) .benefit-number {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .benefit-item:nth-child(3) .benefit-number {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+        }
+
+        .benefit-item:nth-child(4) .benefit-number {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .benefit-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+        }
+
+        .benefit-description {
+            font-size: 12px;
+            color: var(--text-light);
+            line-height: 1.5;
+        }
+
+        /* ========== COMPARISON TABLE ========== */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border: 2px solid var(--border-light);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .comparison-table thead {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        }
+
+        .comparison-table th {
+            padding: 12px 12px;
+            text-align: left;
+            font-weight: 700;
+            color: white;
+            font-size: 12px;
+            border-bottom: 2px solid var(--border-light);
+        }
+
+        .comparison-table td {
+            padding: 10px 12px;
+            font-size: 11px;
+            color: var(--text-light);
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .check {
+            color: var(--accent-3);
+            font-weight: 800;
+        }
+
+        /* ========== TIMELINE MOCKUP ========== */
+        .timeline-mockup {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .timeline-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--primary);
+            border-radius: 50%;
+            margin-top: 5px;
+            flex-shrink: 0;
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .timeline-description {
+            font-size: 11px;
+            color: var(--text-light);
+            margin-top: 3px;
+        }
+
+        .timeline-date {
+            font-size: 10px;
+            color: #999;
+        }
+
+        /* ========== CALL TO ACTION PAGE ========== */
+        .cta-page {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            padding: 40px 20px;
+        }
+
+        .cta-content {
+            max-width: 600px;
+        }
+
+        .cta-title {
+            font-size: 44px;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+        }
+
+        .cta-subtitle {
+            font-size: 20px;
+            color: var(--text-light);
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 60px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 35px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .contact-info {
+            background: var(--bg-light);
+            padding: 40px;
+            border-radius: 12px;
+            margin-top: 40px;
+        }
+
+        .contact-item {
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .contact-item strong {
+            color: var(--primary);
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .contact-item span {
+            color: var(--text-light);
+            font-size: 15px;
+        }
+
+        /* ========== PRINT STYLES ========== */
+        @media print {
+            body {
+                padding: 0;
+            }
+            .page {
+                page-break-after: always;
+                padding: 40px;
+            }
+            .page:last-child {
+                page-break-after: avoid;
+            }
+            .logo-large {
+                animation: none !important;
+            }
+            .cover-page::before,
+            .cover-page::after {
+                opacity: 0.5;
+            }
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            body {
+                padding: 20px;
+            }
+            .problem-grid {
+                grid-template-columns: 1fr;
+            }
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            .benefits-section {
+                grid-template-columns: 1fr;
+            }
+            .patient-sections {
+                grid-template-columns: 1fr;
+            }
+            .cta-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ========== PAGE 1: COVER PAGE ========== -->
+<div class="page cover-page">
+    <!-- Decorative circles -->
+    <div style="position: absolute; top: 10%; right: 5%; width: 120px; height: 120px; background: rgba(255,255,255,0.2); border-radius: 50%; z-index: 0;"></div>
+    <div style="position: absolute; top: 60%; left: 8%; width: 80px; height: 80px; background: rgba(255,255,255,0.15); border-radius: 50%; z-index: 0;"></div>
+    <div style="position: absolute; bottom: 15%; right: 10%; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; z-index: 0;"></div>
+
+    <div class="logo-large">OC</div>
+    <h1 class="main-title">OpenCare</h1>
+    <p class="tagline-main">Plateforme de Coordination Clinique</p>
+    <p class="value-proposition">
+        Rationalisez la gestion des patients, coordonnez les soins de manière transparente et offrez de meilleurs résultats grâce à notre plateforme clinique intégrée conçue pour les équipes de soins modernes.
+    </p>
+    <div class="cta-badge">Découvrez Comment Cela Fonctionne</div>
+</div>
+
+<!-- ========== PAGE 2: PROBLEM & SOLUTION ========== -->
+<div class="page section-page">
+    <div class="section-header">
+        <div class="section-number">Le Défi</div>
+        <div class="section-title">
+            <div class="section-icon">⚠️</div>
+            Problèmes de Coordination Clinique
+        </div>
+        <div class="divider"></div>
+    </div>
+
+    <div class="problem-grid">
+        <div class="problem-item">
+            <h4>Dossiers Fragmentés</h4>
+            <p>Les informations des patients dispersées dans plusieurs systèmes et fichiers papier, ralentissant la prestation de soins.</p>
+        </div>
+        <div class="problem-item">
+            <h4>Documentation Chronophage</h4>
+            <p>Des heures consacrées à la saisie manuelle des données et à la création de documents au lieu des soins aux patients.</p>
+        </div>
+        <div class="problem-item">
+            <h4>Mauvaise Coordination d'Équipe</h4>
+            <p>Difficile de partager les informations et de collaborer entre les départements et les spécialistes.</p>
+        </div>
+        <div class="problem-item">
+            <h4>Suivi Manqué</h4>
+            <p>Les tâches importantes et les suivi des patients s'échappent sans suivi adéquat.</p>
+        </div>
+    </div>
+
+    <div class="solution-highlight">
+        <h3>✓ Solution OpenCare</h3>
+        <p>
+            OpenCare unifie les dossiers des patients, automatise la documentation, rationalise la collaboration d'équipe et s'assure que rien ne passe à travers les mailles du filet. Une plateforme. Coordination complète des soins. Résultats mesurables.
+        </p>
+    </div>
+</div>
+
+<!-- ========== PAGE 3: KEY FEATURES WITH DASHBOARD MOCKUP ========== -->
+<div class="page section-page">
+    <div class="section-header">
+        <div class="section-number">Fonctionnalités Clés</div>
+        <div class="section-title">
+            <div class="section-icon">⚙️</div>
+            Tout ce Dont Vous Avez Besoin
+        </div>
+        <div class="divider"></div>
+    </div>
+
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon-box">
+                <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="8" y="12" width="40" height="36" rx="2" stroke="#4B5563" stroke-width="2.5" fill="none"/>
+                    <line x1="14" y1="20" x2="42" y2="20" stroke="#4B5563" stroke-width="2"/>
+                    <line x1="14" y1="28" x2="42" y2="28" stroke="#4B5563" stroke-width="2"/>
+                    <line x1="14" y1="36" x2="42" y2="36" stroke="#4B5563" stroke-width="2"/>
+                    <line x1="14" y1="44" x2="30" y2="44" stroke="#4B5563" stroke-width="2"/>
+                </svg>
+            </div>
+            <h4>Dossiers Patients Unifiés</h4>
+            <p>Historique complet, conditions médicales, médicaments et résultats de tests au même endroit.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon-box">
+                <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="10" y="8" width="36" height="44" rx="2" stroke="#4B5563" stroke-width="2.5" fill="none"/>
+                    <path d="M16 16H40M16 24H40M16 32H40M16 40H28" stroke="#4B5563" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <h4>Documentation Intelligente</h4>
+            <p>Modèles alimentés par l'IA et numérisation OCR pour créer des documents 5x plus vite.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon-box">
+                <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="28" cy="20" r="8" stroke="#4B5563" stroke-width="2.5"/>
+                    <path d="M14 48C14 40.268 20.268 34 28 34C35.732 34 42 40.268 42 48" stroke="#4B5563" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M28 8V16M28 24V32" stroke="#4B5563" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M38 18L33.5 22.5M22.5 33.5L18 38" stroke="#4B5563" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <h4>Hub Labo & Imagerie</h4>
+            <p>Organisez les résultats de tests, études d'imagerie et rapports d'analyse avec accès instantané.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon-box">
+                <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="18" cy="22" r="6" stroke="#4B5563" stroke-width="2.5"/>
+                    <path d="M10 40C10 33.097 14.477 27.5 20 27.5C25.523 27.5 30 33.097 30 40" stroke="#4B5563" stroke-width="2.5"/>
+                    <circle cx="38" cy="22" r="6" stroke="#4B5563" stroke-width="2.5"/>
+                    <path d="M30 40C30 33.097 34.477 27.5 40 27.5C45.523 27.5 50 33.097 50 40" stroke="#4B5563" stroke-width="2.5"/>
+                </svg>
+            </div>
+            <h4>Collaboration d'Équipe</h4>
+            <p>Partage en temps réel, assignation de tâches et demandes de consultation dans votre équipe.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon-box">
+                <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="12" y="10" width="32" height="36" rx="2" stroke="#4B5563" stroke-width="2.5"/>
+                    <line x1="12" y1="18" x2="44" y2="18" stroke="#4B5563" stroke-width="2"/>
+                    <line x1="18" y1="24" x2="20" y2="24" stroke="#4B5563" stroke-width="1.5"/>
+                    <line x1="25" y1="24" x2="27" y2="24" stroke="#4B5563" stroke-width="1.5"/>
+                    <line x1="32" y1="24" x2="34" y2="24" stroke="#4B5563" stroke-width="1.5"/>
+                    <line x1="18" y1="32" x2="20" y2="32" stroke="#4B5563" stroke-width="1.5"/>
+                    <line x1="25" y1="32" x2="27" y2="32" stroke="#4B5563" stroke-width="1.5"/>
+                    <line x1="32" y1="32" x2="34" y2="32" stroke="#4B5563" stroke-width="1.5"/>
+                </svg>
+            </div>
+            <h4>Gestion des Activités</h4>
+            <p>Planifiez les rendez-vous, définissez des rappels et suivez les visites et suivi des patients.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon-box">
+                <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="28" cy="28" r="20" stroke="#4B5563" stroke-width="2.5"/>
+                    <path d="M28 14V28L36 35" stroke="#4B5563" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="28" cy="12" r="2" fill="#4B5563"/>
+                </svg>
+            </div>
+            <h4>Suivi des Tâches</h4>
+            <p>Ne manquez jamais un suivi avec la gestion intelligente des tâches et le marquage des priorités.</p>
+        </div>
+    </div>
+
+    <div class="mockup-container">
+        <div class="mockup-label">Vue Tableau de Bord - Votre Centre de Commande Clinique</div>
+        <div class="dashboard-mockup">
+            <div class="dashboard-header">
+                <h5>Mon Tableau de Bord</h5>
+                <span style="font-size: 12px; color: #999;">Aujourd'hui</span>
+            </div>
+            <div class="dashboard-stats">
+                <div class="stat-box">
+                    <div class="stat-number">28</div>
+                    <div class="stat-label">Patients</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">7</div>
+                    <div class="stat-label">Tâches</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Résultats</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">2</div>
+                    <div class="stat-label">Consultations</div>
+                </div>
+            </div>
+            <div class="dashboard-tasks">
+                <div style="font-weight: 700; font-size: 10px; margin-bottom: 4px; color: var(--text-dark);">Tâches d'Aujourd'hui</div>
+                <div class="task-item">
+                    <div class="task-title">Examiner résultats labo pour J. Dupont</div>
+                    <div class="task-meta">Priorité Haute • À faire aujourd'hui</div>
+                </div>
+                <div class="task-item">
+                    <div class="task-title">Appel de suivi patient cardiaque</div>
+                    <div class="task-meta">Priorité Moyenne • 14:00</div>
+                </div>
+                <div class="task-item">
+                    <div class="task-title">Soumettre demande consultation</div>
+                    <div class="task-meta">Assigné à Sarah M. • À faire demain</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== PAGE 4: CLINICAL DOCUMENTS & PATIENT TIMELINE ========== -->
+<div class="page section-page">
+    <div class="section-header">
+        <div class="section-number">En Action</div>
+        <div class="section-title">
+            <div class="section-icon">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="6" y="4" width="20" height="24" rx="1" stroke="white" stroke-width="1.5" fill="none"/>
+                    <path d="M10 10H22M10 15H22M10 20H18" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                    <rect x="4" y="8" width="20" height="20" rx="1" stroke="white" stroke-width="1.5" fill="none" opacity="0.6"/>
+                    <path d="M8 14H24M8 19H24" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+                </svg>
+            </div>
+            Documentation Clinique & Dossiers
+        </div>
+        <div class="divider"></div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="mockup-container">
+            <div class="mockup-label">Générateur de Rapport Clinique</div>
+            <div class="clinical-doc-mockup">
+                <div class="doc-header">
+                    <div class="doc-title">RAPPORT CLINIQUE</div>
+                    <div class="doc-meta">Patient : Marie Garcia | Date : 19 déc. 2025</div>
+                </div>
+                <div class="doc-section">
+                    <div class="doc-section-title">Motif Principal</div>
+                    <div class="doc-content">Suivi hypertension et contrôle du diabète.</div>
+                </div>
+                <div class="doc-section">
+                    <div class="doc-section-title">Examen Physique</div>
+                    <div class="doc-content">TA : 138/86 mmHg | FC : 72 bpm | Poumons clairs</div>
+                </div>
+                <div class="doc-section">
+                    <div class="doc-section-title">Évaluation</div>
+                    <div class="doc-content">HTA et diabète bien contrôlés avec bonne adhérence.</div>
+                </div>
+                <div class="doc-section">
+                    <div class="doc-section-title">Plan</div>
+                    <div class="doc-content">Continuer médications actuelles. Refaire labo dans 3 mois.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mockup-container">
+            <div class="mockup-label">Vue Chronologie Patient</div>
+            <div class="timeline-mockup">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Résultats Labo Reçus</div>
+                        <div class="timeline-description">Glucose à jeun 118 mg/dL</div>
+                        <div class="timeline-date">18 déc. 2025</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Visite Clinique</div>
+                        <div class="timeline-description">Consultation suivi avec Dr. Smith</div>
+                        <div class="timeline-date">15 déc. 2025</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Imagerie Complétée</div>
+                        <div class="timeline-description">Radiographie thoracique - normal</div>
+                        <div class="timeline-date">10 déc. 2025</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== PAGE 5: BENEFITS & RESULTS ========== -->
+<div class="page section-page">
+    <div class="section-header">
+        <div class="section-number">Pourquoi OpenCare</div>
+        <div class="section-title">
+            <div class="section-icon">📈</div>
+            Impact Mesurable
+        </div>
+        <div class="divider"></div>
+    </div>
+
+    <div class="benefits-section">
+        <div class="benefit-item">
+            <div class="benefit-number">5x</div>
+            <div class="benefit-title">Documentation Plus Rapide</div>
+            <div class="benefit-description">La numérisation OCR et les modèles intelligents réduisent le temps de documentation de heures à minutes.</div>
+        </div>
+        <div class="benefit-item">
+            <div class="benefit-number">0</div>
+            <div class="benefit-title">Suivi Manqué</div>
+            <div class="benefit-description">La gestion intelligente des tâches garantit que rien ne passe à travers.</div>
+        </div>
+        <div class="benefit-item">
+            <div class="benefit-number">100%</div>
+            <div class="benefit-title">Accès Données Patient</div>
+            <div class="benefit-description">Historique médical complet accessible instantanément à l'équipe autorisée.</div>
+        </div>
+        <div class="benefit-item">
+            <div class="benefit-number">30%</div>
+            <div class="benefit-title">Économies de Temps</div>
+            <div class="benefit-description">Les équipes cliniques rapportent 30% de réduction de travail administratif par semaine.</div>
+        </div>
+    </div>
+
+    <h3 style="font-size: 18px; margin-top: 15px; margin-bottom: 12px; color: var(--text-dark); font-weight: 700;">Comparaison</h3>
+    <table class="comparison-table">
+        <thead>
+            <tr>
+                <th>Fonctionnalité</th>
+                <th>Approche Traditionnelle</th>
+                <th>Plateforme OpenCare</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Dossiers Patients</strong></td>
+                <td>Fragmentés entre systèmes</td>
+                <td><span class="check">✓</span> Unifiés et recherchables</td>
+            </tr>
+            <tr>
+                <td><strong>Temps Documentation</strong></td>
+                <td>2-3 heures par jour par praticien</td>
+                <td><span class="check">✓</span> 30-45 minutes par jour</td>
+            </tr>
+            <tr>
+                <td><strong>Collaboration d'Équipe</strong></td>
+                <td>Email, appels, réunions</td>
+                <td><span class="check">✓</span> Plateforme temps réel</td>
+            </tr>
+            <tr>
+                <td><strong>OCR Rapports Médicaux</strong></td>
+                <td>Saisie manuelle</td>
+                <td><span class="check">✓</span> Extraction automatisée</td>
+            </tr>
+            <tr>
+                <td><strong>Suivi Tâches</strong></td>
+                <td>Notes papier, post-its</td>
+                <td><span class="check">✓</span> Système intelligent</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ========== PAGE 6: CALL TO ACTION ========== -->
+<div class="page cta-page">
+    <div class="cta-content">
+        <h1 class="cta-title">Prêt à Transformer Vos Soins ?</h1>
+        <p class="cta-subtitle">
+            Rejoignez les équipes de santé de la région qui ont rationalisé leurs flux de travail et amélioré les résultats des patients avec OpenCare.
+        </p>
+
+        <div class="contact-info">
+            <div class="contact-item">
+                <strong>Email</strong>
+                <span>symbolicaagency@gmail.com</span>
+            </div>
+            <div class="contact-item">
+                <strong>Téléphone</strong>
+                <span>0625474595</span>
+            </div>
+            <div class="contact-item">
+                <strong>Web</strong>
+                <span>itsopencare.com</span>
+            </div>
+            <div style="margin-top: 30px; padding-top: 30px; border-top: 1px solid var(--border-light); font-size: 12px; color: var(--text-light);">
+                © 2025 OpenCare. Tous droits réservés. | Plateforme de Coordination Clinique
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

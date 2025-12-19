@@ -6,6 +6,9 @@ import { useSession } from "next-auth/react";
 import { Calendar, FilePlus, Stethoscope, User, X, Plus, MoreVertical, Trash2, Download } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import { CompteRenduPDF } from "@/components/pdf/CompteRenduPDF";
+import { CRTemplatesSidebar } from "@/components/comptes-rendus/CRTemplatesSidebar";
+import { CreateCRTemplateModal } from "@/components/comptes-rendus/CreateCRTemplateModal";
+import { QuillEditor } from "@/components/QuillEditor";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataListLayout } from "@/components/document/DataListLayout";
@@ -179,6 +182,7 @@ export default function ComptesRendusPage() {
   const [mobilePanelMode, setMobilePanelMode] = useState<"view" | "create" | null>(null);
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [showOperatorSelect, setShowOperatorSelect] = useState(false);
+  const [showCreateTemplateModal, setShowCreateTemplateModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -188,6 +192,7 @@ export default function ComptesRendusPage() {
   const [teammates, setTeammates] = useState<TeamMember[]>([]);
   const [accessiblePatients, setAccessiblePatients] = useState<Patient[]>([]);
   const [currentUser, setCurrentUser] = useState<TeamMember | null>(null);
+  const [templateRefreshTrigger, setTemplateRefreshTrigger] = useState(0);
 
   // Load comptes-rendus from API on mount
   useEffect(() => {
@@ -527,6 +532,51 @@ export default function ComptesRendusPage() {
     }));
   };
 
+  // Helper function to convert markdown to HTML for Quill editor
+  const markdownToHtml = (markdown: string): string => {
+    if (!markdown) return "";
+
+    let html = markdown;
+
+    // Convert headings (must be done in order from # to ### to avoid conflicts)
+    html = html.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.*?)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^# (.*?)$/gm, '<h1>$1</h1>');
+
+    // Convert bold
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    // Convert italic
+    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+    // Convert unordered lists
+    html = html.replace(/^\s*[-•]\s+(.*?)$/gm, '<li>$1</li>');
+
+    // Wrap consecutive list items in <ul>
+    html = html.replace(/(<li>.*?<\/li>)/s, '<ul>$1</ul>');
+    html = html.replace(/<\/ul>\s*<ul>/g, ''); // Remove duplicate ul tags
+
+    // Convert paragraphs (wrap text that's not already in a tag)
+    const lines = html.split('\n');
+    html = lines.map(line => {
+      line = line.trim();
+      if (!line) return '<br>';
+      if (line.match(/^<[^>]+>/)) return line; // Already a tag
+      return `<p>${line}</p>`;
+    }).join('');
+
+    return html;
+  };
+
+  const handleSelectTemplate = (template: any) => {
+    setCreateForm((prev) => ({
+      ...prev,
+      title: template.title,
+      details: markdownToHtml(template.details),
+      postNotes: template.recommendationsPostop || "",
+    }));
+  };
+
   const handleSelectPatient = (patient: Patient) => {
     setCreateForm((prev) => ({
       ...prev,
@@ -730,7 +780,7 @@ export default function ComptesRendusPage() {
           patientAge={patientAge}
           patientDateOfBirth={patientDateOfBirth}
           duration={String(activeOperation.duration || "0")}
-          createdBy={activeOperation.createdBy}
+          createdBy={currentUser?.name || activeOperation.createdBy}
           operators={activeOperation.operators}
           details={activeOperation.details || "N/A"}
           postNotes={activeOperation.postNotes || "N/A"}
@@ -771,9 +821,19 @@ export default function ComptesRendusPage() {
     createForm.patientSource;
 
   const createFormContent = (
-    <div className="space-y-4">
-      {/* Title */}
-      <div className="space-y-2">
+    <div className="flex h-full gap-0 bg-white">
+      {/* Templates Sidebar */}
+      <CRTemplatesSidebar
+        onSelectTemplate={handleSelectTemplate}
+        onOpenCreateTemplate={() => setShowCreateTemplateModal(true)}
+        refreshTrigger={templateRefreshTrigger}
+      />
+
+      {/* Form Content */}
+      <div className="flex-1 overflow-y-auto px-6 py-6">
+        <div className="space-y-4 max-w-2xl">
+          {/* Title */}
+          <div className="space-y-2">
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
           {t("reports.forms.title")}
         </label>
@@ -1065,13 +1125,14 @@ export default function ComptesRendusPage() {
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
           {t("reports.forms.details")}
         </label>
-        <QuillDetailsEditor
-          value={createForm.details}
-          onChange={(value) =>
-            setCreateForm((prev) => ({ ...prev, details: value }))
-          }
-          placeholder={t("reports.forms.detailsPlaceholder")}
-        />
+        <div className="h-80 border border-slate-300 rounded-lg overflow-y-auto">
+          <QuillEditor
+            value={createForm.details}
+            onChange={(value) =>
+              setCreateForm((prev) => ({ ...prev, details: value }))
+            }
+          />
+        </div>
       </div>
 
       {/* Post Notes */}
@@ -1091,6 +1152,8 @@ export default function ComptesRendusPage() {
           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
           placeholder={t("reports.forms.postOpPlaceholder")}
         />
+      </div>
+        </div>
       </div>
     </div>
   );
@@ -1443,6 +1506,14 @@ export default function ComptesRendusPage() {
         onSelectPatient={handleSelectPatient}
         newPatientFields={["fullName", "age","histoire"]}
         onCreatePatient={handleCreateNewPatient}
+      />
+
+      <CreateCRTemplateModal
+        isOpen={showCreateTemplateModal}
+        onClose={() => setShowCreateTemplateModal(false)}
+        onSuccess={() => {
+          setTemplateRefreshTrigger((prev) => prev + 1);
+        }}
       />
 
       {/* Delete Confirmation Dialog */}

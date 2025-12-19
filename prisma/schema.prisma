@@ -159,6 +159,19 @@ model OrdonnanceTemplate {
   User                  User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
 }
 
+model CR_template {
+  id                    Int      @id @default(autoincrement())
+  title                 String
+  details               String?
+  recommendationsPostop String?
+  specialite            String?
+  creatorId             Int
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime
+  isPublic              Boolean  @default(false)
+  User                  User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+}
+
 model PasswordResetToken {
   identifier String   @id
   token      String   @unique
@@ -305,6 +318,7 @@ model User {
   FavouriteTask                   FavouriteTask[]
   Ordonnance                      Ordonnance[]
   OrdonnanceTemplate              OrdonnanceTemplate[]
+  CR_template                     CR_template[]
   Patient                         Patient[]
   rapportsAsCreator               Rapport[]            @relation("RapportCreator")
   Session                         Session[]

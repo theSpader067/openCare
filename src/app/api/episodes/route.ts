@@ -104,8 +104,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Map type to status: "actif" → default status, "fermé" → CLOSED
-    const status = type === "fermé" ? "CLOSED" : "CONSULTATION";
+    // Map type to status: "actif" → ACTIVE, "fermé" → CLOSED
+    const status = type === "fermé" ? "CLOSED" : "ACTIVE";
 
     console.log('[EPISODES_API] Creating episode:', {
       motif,

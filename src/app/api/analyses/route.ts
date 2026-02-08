@@ -67,8 +67,19 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    // Transform response to match mobile app's expected format
+    const transformedAnalyses = analyses.map((analyse) => {
+      const { User, Patient, LabEntry, ...rest } = analyse;
+      return {
+        ...rest,
+        creator: User,
+        patient: Patient,
+        labEntries: LabEntry || [],
+      };
+    });
+
     return NextResponse.json({
-      data: analyses,
+      data: transformedAnalyses,
     });
   } catch (error) {
     console.error("Error fetching analyses:", error);
@@ -224,8 +235,17 @@ export async function POST(req: NextRequest) {
       analyse.LabEntry = labEntries;
     }
 
+    // Transform response to match mobile app's expected format
+    const { User, Patient, LabEntry, ...rest } = analyse;
+    const transformedAnalyse = {
+      ...rest,
+      creator: User,
+      patient: Patient,
+      labEntries: LabEntry || [],
+    };
+
     return NextResponse.json({
-      data: analyse,
+      data: transformedAnalyse,
       message: "Analyse créée avec succès",
     });
   } catch (error) {

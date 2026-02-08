@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { verifyMobileToken } from "@/lib/mobile-auth";
+import { prisma } from "@/lib/prisma";
+import { EpisodeStatus } from "@prisma/client";
 
 // Helper function to get userId from session or JWT token
 async function getUserId(request: NextRequest): Promise<number | null> {
-  // Try mobile JWT authentication first
   const mobileUserId = verifyMobileToken(request);
   if (mobileUserId) {
     return mobileUserId;
   }
 
-  // Fall back to session-based authentication (web)
   const session = await getSession();
   if (session?.user) {
     return parseInt((session.user as any).id);
@@ -20,328 +19,168 @@ async function getUserId(request: NextRequest): Promise<number | null> {
   return null;
 }
 
-// Helper function to convert Prisma Episode to API response format
-function convertEpisodeToItem(episode: any) {
-  return {
-    id: episode.id,
-    entryAt: episode.entryAt.toISOString(),
-    exitAt: episode.exitAt ? episode.exitAt.toISOString() : null,
-    motif: episode.motif,
-    status: episode.status,
-    fullname: episode.fullname,
-    sex: episode.sex || null,
-    age: episode.age || null,
-    origin: episode.origin || null,
-    patientId: episode.patientId || null,
-    atcds: episode.atcds || null,
-    clinique: episode.clinique || null,
-    paraclinique: episode.paraclinique || null,
-    creatorId: episode.creatorId,
-    createdAt: episode.createdAt.toISOString(),
-    updatedAt: episode.updatedAt.toISOString(),
-  };
-}
-
-// GET - Fetch all episodes for user or by specific ID
-export async function GET(request: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    const userId = await getUserId(request);
+    const userId = await getUserId(req);
     if (!userId) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get episodeId from query params if provided
-    const { searchParams } = new URL(request.url);
-    const episodeId = searchParams.get("id");
-
-    if (episodeId) {
-      // Fetch specific episode by ID
-      const episode = await prisma.episode.findUnique({
-        where: { id: episodeId },
-      });
-
-      if (!episode) {
-        return NextResponse.json(
-          { success: false, error: "Episode not found" },
-          { status: 404 }
-        );
-      }
-
-      // Verify episode belongs to current user
-      if (episode.creatorId !== userId) {
-        return NextResponse.json(
-          { success: false, error: "Unauthorized" },
-          { status: 403 }
-        );
-      }
-
-      return NextResponse.json({
-        success: true,
-        data: convertEpisodeToItem(episode),
-      });
-    } else {
-      // Fetch all episodes for current user
-      const episodes = await prisma.episode.findMany({
-        where: {
-          creatorId: userId,
-        },
-        orderBy: { createdAt: "desc" },
-        include: {
-          patient: {
-            select: {
-              fullName: true,
-            },
+    const episodes = await prisma.episode.findMany({
+      where: {
+        creatorId: userId,
+      },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            fullName: true,
+            dateOfBirth: true,
           },
         },
-      });
+      },
+      orderBy: {
+        entryAt: "desc",
+      },
+    });
 
-      const convertedEpisodes = episodes.map(convertEpisodeToItem);
-      return NextResponse.json({
-        success: true,
-        data: convertedEpisodes,
-      });
-    }
+    // Transform response to match mobile app format
+    const transformedEpisodes = episodes.map((ep) => ({
+      id: ep.id,
+      motif: ep.motif,
+      atcds: ep.atcds || "",
+      clinique: ep.clinique || "",
+      paraclinique: ep.paraclinique || "",
+      type: ep.status === "CLOSED" ? "fermé" : "actif",
+      isPrivate: false,
+      patient: ep.patient ? {
+        id: ep.patient.id,
+        fullName: ep.patient.fullName,
+        dateOfBirth: ep.patient.dateOfBirth,
+      } : undefined,
+      patientName: ep.fullname,
+      patientAge: ep.age?.toString(),
+      patientHistory: undefined,
+      createdAt: ep.entryAt.toISOString(),
+      updatedAt: ep.updatedAt.toISOString(),
+    }));
+
+    return NextResponse.json({
+      data: transformedEpisodes,
+    });
   } catch (error) {
     console.error("Error fetching episodes:", error);
     return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch episodes",
-      },
+      { error: "Failed to fetch episodes" },
       { status: 500 }
     );
   }
 }
 
-// POST - Create a new episode
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const userId = await getUserId(request);
+    const userId = await getUserId(req);
     if (!userId) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json();
+    const data = await req.json();
     const {
-      motif,
-      fullname,
-      sex,
-      age,
-      origin,
       patientId,
+      patientName,
+      patientAge,
+      patientHistory,
+      motif,
       atcds,
       clinique,
       paraclinique,
-    } = body;
+      type,
+    } = data;
 
-    // Validate required fields
-    if (!motif || !motif.trim() || !fullname || !fullname.trim()) {
+    if (!motif || !clinique) {
       return NextResponse.json(
-        { success: false, error: "Motif and fullname are required" },
+        { error: "Motif and clinique are required" },
         { status: 400 }
       );
     }
 
-    // If patientId is provided, verify it belongs to the user
-    if (patientId) {
-      const patient = await prisma.patient.findUnique({
-        where: { id: parseInt(patientId) },
-      });
+    // Map type to status: "actif" → default status, "fermé" → CLOSED
+    const status = type === "fermé" ? "CLOSED" : "CONSULTATION";
 
-      if (!patient || patient.userId !== userId) {
-        return NextResponse.json(
-          { success: false, error: "Invalid patient" },
-          { status: 400 }
-        );
-      }
-    }
+    console.log('[EPISODES_API] Creating episode:', {
+      motif,
+      clinique,
+      type,
+      status,
+      patientId,
+      patientName,
+      userId,
+    });
 
-    // Create the episode
     const episode = await prisma.episode.create({
       data: {
-        motif: motif.trim(),
-        fullname: fullname.trim(),
-        sex: sex || "",
-        age: age ? parseInt(age) : null,
-        origin: origin || null,
-        patientId: patientId ? parseInt(patientId) : null,
-        creatorId: userId,
+        motif,
+        atcds: atcds || null,
+        clinique,
+        paraclinique: paraclinique || null,
+        status: status as EpisodeStatus,
+        fullname: patientName || "Unknown",
+        sex: "Unknown",
+        age: patientAge ? parseInt(patientAge) : null,
         entryAt: new Date(),
-        status: "ACTIVE",
+        patientId: patientId ? parseInt(String(patientId)) : null,
+        creatorId: userId,
+      },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            fullName: true,
+            dateOfBirth: true,
+          },
+        },
       },
     });
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: convertEpisodeToItem(episode),
-      },
-      { status: 201 }
-    );
+    // Transform response to match mobile app format
+    const transformed = {
+      id: episode.id,
+      motif: episode.motif,
+      atcds: episode.atcds || "",
+      clinique: episode.clinique || "",
+      paraclinique: episode.paraclinique || "",
+      type: episode.status === "CLOSED" ? "fermé" : "actif",
+      isPrivate: false,
+      patient: episode.patient ? {
+        id: episode.patient.id,
+        fullName: episode.patient.fullName,
+        dateOfBirth: episode.patient.dateOfBirth,
+      } : undefined,
+      patientName: episode.fullname,
+      patientAge: episode.age?.toString(),
+      patientHistory: undefined,
+      createdAt: episode.entryAt.toISOString(),
+      updatedAt: episode.updatedAt.toISOString(),
+    };
+
+    console.log('[EPISODES_API] Episode created successfully:', {
+      id: episode.id,
+      motif: episode.motif,
+      type: transformed.type,
+    });
+
+    return NextResponse.json({
+      data: transformed,
+      message: "Episode created successfully",
+    });
   } catch (error) {
     console.error("Error creating episode:", error);
     return NextResponse.json(
       {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to create episode",
-      },
-      { status: 500 }
-    );
-  }
-}
-
-// PATCH - Update an episode
-export async function PATCH(request: NextRequest) {
-  try {
-    const userId = await getUserId(request);
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    const body = await request.json();
-    const {
-      id,
-      motif,
-      fullname,
-      sex,
-      age,
-      origin,
-      exitAt,
-      status,
-      atcds,
-      clinique,
-      paraclinique,
-    } = body;
-
-    if (!id) {
-      return NextResponse.json(
-        { success: false, error: "Episode ID is required" },
-        { status: 400 }
-      );
-    }
-
-    // Fetch the episode
-    const episode = await prisma.episode.findUnique({
-      where: { id },
-    });
-
-    if (!episode) {
-      return NextResponse.json(
-        { success: false, error: "Episode not found" },
-        { status: 404 }
-      );
-    }
-
-    // Verify episode belongs to current user
-    if (episode.creatorId !== userId) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 403 }
-      );
-    }
-
-    // Build update data
-    const updateData: any = {};
-    if (motif !== undefined) updateData.motif = motif.trim();
-    if (fullname !== undefined) updateData.fullname = fullname.trim();
-    if (sex !== undefined) updateData.sex = sex;
-    if (age !== undefined) updateData.age = age ? parseInt(age) : null;
-    if (origin !== undefined) updateData.origin = origin;
-    if (atcds !== undefined) updateData.atcds = atcds;
-    if (clinique !== undefined) updateData.clinique = clinique;
-    if (paraclinique !== undefined) updateData.paraclinique = paraclinique;
-    if (exitAt !== undefined) updateData.exitAt = exitAt ? new Date(exitAt) : null;
-    if (status !== undefined) updateData.status = status;
-    updateData.updatedAt = new Date();
-
-    // Update the episode
-    const updatedEpisode = await prisma.episode.update({
-      where: { id },
-      data: updateData,
-    });
-
-    return NextResponse.json({
-      success: true,
-      data: convertEpisodeToItem(updatedEpisode),
-    });
-  } catch (error) {
-    console.error("Error updating episode:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to update episode",
-      },
-      { status: 500 }
-    );
-  }
-}
-
-// DELETE - Delete an episode
-export async function DELETE(request: NextRequest) {
-  try {
-    const userId = await getUserId(request);
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    // Get episodeId from query params
-    const { searchParams } = new URL(request.url);
-    const episodeId = searchParams.get("id");
-
-    if (!episodeId) {
-      return NextResponse.json(
-        { success: false, error: "Episode ID is required" },
-        { status: 400 }
-      );
-    }
-
-    // Fetch the episode
-    const episode = await prisma.episode.findUnique({
-      where: { id: episodeId },
-    });
-
-    if (!episode) {
-      return NextResponse.json(
-        { success: false, error: "Episode not found" },
-        { status: 404 }
-      );
-    }
-
-    // Verify episode belongs to current user
-    if (episode.creatorId !== userId) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 403 }
-      );
-    }
-
-    // Delete the episode (cascade will handle related records)
-    await prisma.episode.delete({
-      where: { id: episodeId },
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: "Episode deleted successfully",
-    });
-  } catch (error) {
-    console.error("Error deleting episode:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to delete episode",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to create episode",
       },
       { status: 500 }
     );

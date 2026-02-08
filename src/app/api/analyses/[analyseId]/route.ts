@@ -76,9 +76,18 @@ export async function PATCH(
       },
     });
 
+    // Transform response to match mobile app's expected format
+    const { User, Patient, LabEntry, ...rest } = updatedAnalyse;
+    const transformedAnalyse = {
+      ...rest,
+      creator: User,
+      patient: Patient,
+      labEntries: LabEntry || [],
+    };
+
     return NextResponse.json({
       success: true,
-      data: updatedAnalyse,
+      data: transformedAnalyse,
     });
   } catch (error) {
     console.error("Error updating Analyse:", error);

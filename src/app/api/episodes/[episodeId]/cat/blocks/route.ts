@@ -97,6 +97,8 @@ export async function POST(
       },
     });
 
+    const isFirstBlock = !cat;
+
     // Create CAT if it doesn't exist
     if (!cat) {
       console.log("[CAT_API] Creating new CAT for episode:", episodeId);
@@ -147,6 +149,17 @@ export async function POST(
         ...(type === "timer" && timerMinutes && { duration: parseInt(timerMinutes) }),
       },
     });
+
+    // If this is the first block, set it as currentBlock
+    if (isFirstBlock) {
+      await prisma.cAT.update({
+        where: { id: cat.id },
+        data: {
+          currentBlockId: block.id,
+        },
+      });
+      console.log("[CAT_API] Set currentBlockId for first block:", block.id);
+    }
 
     // If this block has a parent, update parent's children
     if (parentBlockId) {
@@ -233,14 +246,22 @@ export async function GET(
       return NextResponse.json({
         data: {
           catId: null,
+          currentBlockId: null,
           blocks: [],
         },
       });
     }
 
+    console.log("[CAT_API] Returning CAT data:", {
+      catId: cat.id,
+      currentBlockId: cat.currentBlockId,
+      blockCount: cat.blocks.length,
+    });
+
     return NextResponse.json({
       data: {
         catId: cat.id,
+        currentBlockId: cat.currentBlockId,
         blocks: cat.blocks.map((block) => ({
           id: block.id,
           type: block.type.toLowerCase(),

@@ -728,7 +728,7 @@ export default function AnalysesPage() {
 
       <section className="grid gap-6 xl:grid-cols-[3fr_1fr]">
         <Card className="flex h-fit flex-col overflow-hidden">
-          <CardHeader className="flex flex-col gap-2 border-b border-slate-200 bg-white px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <CardHeader className="flex flex-col gap-2 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <CardTitle>{t("analyses.sections.historyTitle")}</CardTitle>
               <CardDescription>
@@ -775,21 +775,21 @@ export default function AnalysesPage() {
               <div className="flex flex-col">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-slate-200 bg-white text-left text-sm">
-                    <thead className="bg-slate-50">
+                    <thead className="bg-slate-100">
                       <tr>
-                        <th className="px-4 py-3 font-medium text-slate-500">
+                        <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-slate-700">
                           {t("analyses.table.headers.analysisId")}
                         </th>
-                        <th className="px-4 py-3 font-medium text-slate-500">
+                        <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-slate-700">
                           {t("analyses.table.headers.patient")}
                         </th>
-                        <th className="px-4 py-3 font-medium text-slate-500">
+                        <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-slate-700">
                           {t("analyses.table.headers.title")}
                         </th>
-                        <th className="px-4 py-3 font-medium text-slate-500">
+                        <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-slate-700">
                           {t("analyses.table.headers.type")}
                         </th>
-                        <th className="px-4 py-3 font-medium text-slate-500">
+                        <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-slate-700">
                           {t("analyses.table.headers.date")}
                         </th>
                       </tr>
@@ -798,19 +798,19 @@ export default function AnalysesPage() {
                       {paginatedHistory.map((analyse) => (
                         <tr
                           key={analyse.id}
-                          className="cursor-pointer transition hover:bg-slate-50/70"
+                          className="cursor-pointer transition hover:bg-slate-50"
                           onClick={() => setSelectedBilan(analyse)}
                         >
-                          <td className="px-4 py-3 font-semibold text-slate-800">
+                          <td className="px-6 py-3 font-semibold text-slate-900">
                             {analyse.id}
                           </td>
-                          <td className="px-4 py-3 text-sm text-slate-700">
+                          <td className="px-6 py-3 text-sm text-slate-700">
                             {analyse.patient}
                           </td>
-                          <td className="px-4 py-3 text-sm text-slate-600">
+                          <td className="px-6 py-3 text-sm text-slate-600">
                             {analyse.type}
                           </td>
-                          <td className="px-4 py-3 text-sm text-slate-600">
+                          <td className="px-6 py-3 text-sm text-slate-600">
                             <span className={cn(
                               "inline-flex items-center rounded-full border px-2 py-1 text-xs font-semibold",
                               bilanCategoryBadgeMap[analyse.bilanCategory].color,
@@ -818,7 +818,7 @@ export default function AnalysesPage() {
                               {bilanCategoryBadgeMap[analyse.bilanCategory].label}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-sm text-slate-600">
+                          <td className="px-6 py-3 text-sm text-slate-600">
                             {formatAnalyseDateTime(analyse.requestedDate)}
                           </td>
                         </tr>
@@ -826,7 +826,7 @@ export default function AnalysesPage() {
                     </tbody>
                   </table>
                 </div>
-                <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-4 py-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
                   <span>
                     {startItem === 0
                       ? t("analyses.emptyStates.noAnalysesToDisplay")
@@ -892,7 +892,7 @@ export default function AnalysesPage() {
               />
             ) : (
               <div className="flex h-full flex-col overflow-hidden">
-                <div className="flex-1 space-y-3 overflow-y-auto pr-1">
+                <div className="flex-1 space-y-3 overflow-y-auto pr-1 pt-2">
                   {pendingAnalyses.map((analyse) => (
                     <PendingAnalyseCard
                       key={analyse.id}
@@ -970,7 +970,7 @@ export default function AnalysesPage() {
               }
             />
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 pt-2">
               {pendingAnalyses.map((analyse) => (
                 <PendingAnalyseCard
                   key={analyse.id}

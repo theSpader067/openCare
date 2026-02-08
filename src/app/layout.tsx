@@ -22,6 +22,9 @@ export const metadata: Metadata = {
   title: "OpenCare | Healthcare Platform",
   description:
     "OpenCare streamlines healthcare coordination for practitioners and teams.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default async function RootLayout({

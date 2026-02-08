@@ -124,16 +124,16 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
 
   return (
     <div className="space-y-4">
-      {/* Mode Tabs - Only show if showTabs is true */}
+      {/* Mode Tabs - Only show if showTabs is true - Clean Pill Shape Style */}
       {showTabs && (
-        <div className="flex gap-2 border-b border-slate-200">
+        <div className="flex gap-4 bg-white p-1 border border-slate-200 rounded-full inline-flex">
           <button
             onClick={() => setPatientMode("select")}
             className={cn(
-              "px-4 py-2 text-sm font-medium border-b-2 transition",
+              "flex-1 px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all rounded-full border-2",
               patientMode === "select"
-                ? "border-indigo-600 text-indigo-600"
-                : "border-transparent text-slate-600"
+                ? "bg-cyan-600 text-white border-cyan-600"
+                : "bg-transparent text-slate-700 border-transparent hover:text-slate-900"
             )}
           >
             {t("patients.tabs.existing")}
@@ -141,10 +141,10 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
           <button
             onClick={() => setPatientMode("new")}
             className={cn(
-              "px-4 py-2 text-sm font-medium border-b-2 transition",
+              "flex-1 px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all rounded-full border-2",
               patientMode === "new"
-                ? "border-indigo-600 text-indigo-600"
-                : "border-transparent text-slate-600"
+                ? "bg-cyan-600 text-white border-cyan-600"
+                : "bg-transparent text-slate-700 border-transparent hover:text-slate-900"
             )}
           >
             {t("patients.tabs.new")}
@@ -153,10 +153,10 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
       )}
 
       {patientMode === "select" ? (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {/* Search Input */}
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-slate-50">
-            <Search className="h-4 w-4 text-slate-400" />
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded border border-slate-200 bg-slate-50">
+            <Search className="h-4 w-4 text-slate-400 flex-shrink-0" />
             <input
               type="text"
               placeholder={defaultSearchPlaceholder}
@@ -165,52 +165,106 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
               className="flex-1 bg-transparent text-sm text-slate-600 outline-none placeholder:text-slate-400"
             />
           </div>
+
           {/* Patients List */}
-          <div className="space-y-2 max-h-64 overflow-y-auto">
+          <div className="max-h-80 overflow-y-auto space-y-2">
             {filteredPatients.length > 0 ? (
-              filteredPatients.map((patient) => (
-                <button
-                  key={patient.id}
-                  type="button"
-                  onClick={() => {
-                    console.log("PatientCreate: Clicked patient", patient);
-                    onSelectPatient(patient);
-                  }}
-                  className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition cursor-pointer"
-                >
-                  <p className="font-medium text-slate-900">
-                    {patient.fullName} <span className="text-slate-400">({(patient as any).pid || patient.id})</span>
-                  </p>
-                  <p className="text-xs text-slate-500 line-clamp-2">
-                    {Object.entries(patient)
-                      .filter(([k]) => k !== "id" && k !== "fullName")
-                      .map(([, v]) => v)
-                      .filter((v) => typeof v === "string")
-                      .join(" • ")}
-                  </p>
-                </button>
-              ))
+              filteredPatients.map((patient) => {
+                // Extract patient info for display
+                const pid = (patient as any).pid || patient.id;
+                const patientInitials = patient.fullName
+                  .split(" ")
+                  .slice(0, 2)
+                  .map((n) => n[0])
+                  .join("")
+                  .toUpperCase();
+
+                // Get age if available
+                const age = (patient as any).age || (patient as any).dateOfBirth;
+
+                // Get other relevant fields (filter out id, fullName, age, pid)
+                const otherFields = Object.entries(patient)
+                  .filter(([k, v]) => {
+                    const keyToSkip = ["id", "fullName", "age", "pid"];
+                    return !keyToSkip.includes(k) && typeof v === "string" && v.trim();
+                  })
+                  .slice(0, 2); // Only show first 2 additional fields
+
+                return (
+                  <button
+                    key={patient.id}
+                    type="button"
+                    onClick={() => {
+                      console.log("PatientCreate: Clicked patient", patient);
+                      onSelectPatient(patient);
+                    }}
+                    className="w-full text-left p-4 rounded border border-slate-200 hover:border-cyan-300 hover:bg-cyan-50 transition cursor-pointer group"
+                  >
+                    {/* Patient Header */}
+                    <div className="flex items-start gap-3 mb-2">
+                      {/* Avatar */}
+                      <div className="flex h-10 w-10 items-center justify-center rounded bg-cyan-100 text-sm font-semibold text-cyan-700 flex-shrink-0">
+                        {patientInitials}
+                      </div>
+
+                      {/* Name and ID */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-slate-900 truncate">
+                          {patient.fullName}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          ID: {pid}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Additional Info */}
+                    {(age || otherFields.length > 0) && (
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        {age && (
+                          <span className="px-2 py-1 rounded bg-slate-100 text-slate-600">
+                            {age}
+                          </span>
+                        )}
+                        {otherFields.map(([key, value]) => (
+                          <span key={key} className="px-2 py-1 rounded bg-slate-100 text-slate-600 truncate">
+                            {String(value)}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </button>
+                );
+              })
             ) : (
-              <p className="text-center text-sm text-slate-500 py-4">
-                {defaultNoResultsText}
-              </p>
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <p className="text-sm text-slate-500">{defaultNoResultsText}</p>
+              </div>
             )}
           </div>
         </div>
       ) : (
-        <div className="space-y-3">
-          {newPatientFields.map((field) => {
+        <div className="space-y-4">
+          {newPatientFields.map((field, index) => {
             const isTextarea = field === "histoire" || field === "description";
             const isNumber = field === "age";
+            const isRequired = field === "fullName" || field === "nom";
             const label = field
               .replace(/([A-Z])/g, " $1")
               .replace(/^./, (s) => s.toUpperCase());
 
             return isTextarea ? (
               <div key={field} className="space-y-2">
-                <label className="text-xs font-semibold uppercase text-slate-600">
-                  {label} ({t("common.labels.optional")})
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                    {label}
+                  </label>
+                  {!isRequired && (
+                    <span className="text-xs text-slate-400">
+                      {t("common.labels.optional")}
+                    </span>
+                  )}
+                </div>
                 <textarea
                   value={newPatientForm[field]}
                   onChange={(e) =>
@@ -221,16 +275,23 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
                   }
                   placeholder={t("patients.create.enterField", { field: label.toLowerCase() })}
                   rows={3}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                  className="w-full rounded border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition"
                 />
               </div>
             ) : (
               <div key={field} className="space-y-2">
-                <label className="text-xs font-semibold uppercase text-slate-600">
-                  {label} {field==="Nom"? "": `(${t("common.labels.optional")})`}
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                    {label}
+                  </label>
+                  {!isRequired && (
+                    <span className="text-xs text-slate-400">
+                      {t("common.labels.optional")}
+                    </span>
+                  )}
+                </div>
                 <input
-                  type={"text"}
+                  type={isNumber ? "number" : "text"}
                   value={newPatientForm[field]}
                   onChange={(e) =>
                     setNewPatientForm((prev) => ({
@@ -239,7 +300,7 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
                     }))
                   }
                   placeholder={t("patients.create.enterField", { field: label.toLowerCase() })}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                  className="w-full rounded border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition"
                 />
               </div>
             );
@@ -247,25 +308,25 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
 
           {/* Status Messages */}
           {createStatus === "error" && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-rose-50 border border-rose-200">
-              <AlertCircle className="h-5 w-5 text-rose-600 flex-shrink-0" />
-              <p className="text-sm text-rose-700">{createError}</p>
+            <div className="flex items-center gap-3 p-4 rounded border border-red-200 bg-red-50">
+              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+              <p className="text-sm text-red-700">{createError}</p>
             </div>
           )}
 
           {createStatus === "success" && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
+            <div className="flex items-center gap-3 p-4 rounded border border-emerald-200 bg-emerald-50">
               <CheckCircle className="h-5 w-5 text-emerald-600 flex-shrink-0" />
               <p className="text-sm text-emerald-700">{t("patients.messages.created")}</p>
             </div>
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-2 pt-4">
+          <div className="flex gap-2 pt-2">
             <button
               onClick={handleCancel}
               disabled={isCreating}
-              className="flex-1 px-4 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2.5 rounded border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
               type="button"
             >
               {t("common.buttons.cancel")}
@@ -273,7 +334,7 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
             <button
               onClick={handleCreateNewPatient}
               disabled={isCreating}
-              className="flex-1 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2.5 rounded bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               type="button"
             >
               {isCreating ? (
@@ -282,7 +343,10 @@ export const PatientCreate = forwardRef<PatientCreateRef, PatientCreateProps>(
                   {t("common.loading.creating")}
                 </>
               ) : (
-                t("common.buttons.save")
+                <>
+                  <Plus className="h-4 w-4" />
+                  {t("common.buttons.save")}
+                </>
               )}
             </button>
           </div>

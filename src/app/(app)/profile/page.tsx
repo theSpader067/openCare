@@ -831,17 +831,17 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex flex-wrap items-center gap-1 rounded-[10px] border border-slate-200 bg-white p-1">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="inline-flex gap-4 bg-white p-1 border border-slate-200 rounded-full">
             {tabItems.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "rounded-[10px] px-3 py-1.5 text-sm font-medium transition",
+                  "px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all rounded-full border-2",
                   activeTab === tab.id
-                    ? "bg-slate-900 text-white"
-                    : "text-slate-500 hover:text-slate-900"
+                    ? "bg-cyan-600 text-white border-cyan-600"
+                    : "bg-transparent text-slate-700 border-transparent hover:text-slate-900"
                 )}
               >
                 {tab.label}
@@ -849,7 +849,7 @@ export default function ProfilePage() {
             ))}
           </div>
           {isSavingProfile && (
-            <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
+            <div className="inline-flex items-center gap-2 rounded-full bg-cyan-100 px-3 py-2 text-xs font-bold text-cyan-700 border-2 border-cyan-300">
               <Loader className="h-3 w-3 animate-spin" />
               {t("profile.buttons.saving")}
             </div>

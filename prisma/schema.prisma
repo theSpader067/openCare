@@ -216,6 +216,7 @@ model Patient {
   User                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   Rapport             Rapport[]
   Task                Task[]
+  Episode             Episode[]
 }
 
 model Rapport {
@@ -328,6 +329,7 @@ model User {
   VerificationToken               VerificationToken[]
   rapportParticipations           Rapport[]            @relation("RapportParticipants")
   teamsAsMember                   Team[]               @relation("TeamMembers")
+  Episode                          Episode[]
 }
 
 model VerificationCode {
@@ -351,4 +353,77 @@ model VerificationToken {
   User       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([identifier, token])
+}
+
+model Episode {
+  id        String    @id @default(cuid())
+  entryAt   DateTime
+  exitAt    DateTime?
+  motif     String
+  status    EpisodeStatus
+  fullname  String
+  sex       String
+  age       Int?
+  origin    String?
+  patientId Int?
+  patient   Patient?  @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  creatorId Int
+  creator   User      @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  atcds     String?
+  clinique  String?
+  paraclinique String?
+  cats      CAT[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model CAT {
+  id               String      @id @default(cuid())
+  title            String
+  episodeId        String
+  episode          Episode     @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  blocks           CATBlock[]
+  currentBlockId   String?     @unique
+  currentBlock     CATBlock?   @relation("CurrentBlock", fields: [currentBlockId], references: [id], onDelete: SetNull)
+  chosenPath       String[]    @default([])
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+model CATBlock {
+  id              String         @id @default(cuid())
+  catId           String
+  cat             CAT            @relation(fields: [catId], references: [id], onDelete: Cascade)
+  currentInCAT    CAT?           @relation("CurrentBlock")
+  type            CATBlockType
+  content         String
+  status          CATBlockStatus
+  blockDepth      Int
+  duration        Int?
+  parentBlockIds  String[]       @default([])
+  childBlockIds   String[]       @default([])
+  activatedAt     DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+enum EpisodeStatus {
+  CREATED
+  ACTIVE
+  PAUSED
+  CLOSED
+}
+
+enum CATBlockType {
+  ACTION
+  CONDITION
+  WAIT
+}
+
+enum CATBlockStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  SKIPPED
 }

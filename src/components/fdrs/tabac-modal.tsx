@@ -87,24 +87,24 @@ export function TabacModal({ isOpen, onClose, onSave, initialData }: TabacModalP
   return (
     <Modal open={isOpen} onClose={onClose} title="Évaluation - Tabagisme">
       <div className="space-y-6">
-        {/* Tabs */}
-        <div className="flex gap-2 border-b border-slate-200">
+        {/* Tabs - Clean Pill Shape Style */}
+        <div className="flex gap-4 bg-white p-1 border border-slate-200 rounded-full inline-flex">
           <button
             onClick={() => setActiveTab("info")}
-            className={`px-4 py-2 font-medium transition-colors ${
+            className={`px-6 py-2.5 text-sm font-bold uppercase tracking-wider transition-all rounded-full border-2 ${
               activeTab === "info"
-                ? "border-b-2 border-indigo-500 text-indigo-600"
-                : "text-slate-600 hover:text-slate-900"
+                ? "bg-cyan-600 text-white border-cyan-600"
+                : "bg-transparent text-slate-700 border-transparent hover:text-slate-900"
             }`}
           >
             Informations
           </button>
           <button
             onClick={() => setActiveTab("fagerstrom")}
-            className={`px-4 py-2 font-medium transition-colors ${
+            className={`px-6 py-2.5 text-sm font-bold uppercase tracking-wider transition-all rounded-full border-2 ${
               activeTab === "fagerstrom"
-                ? "border-b-2 border-indigo-500 text-indigo-600"
-                : "text-slate-600 hover:text-slate-900"
+                ? "bg-cyan-600 text-white border-cyan-600"
+                : "bg-transparent text-slate-700 border-transparent hover:text-slate-900"
             }`}
           >
             Test de Fagerstrom

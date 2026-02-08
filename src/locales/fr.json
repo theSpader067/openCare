@@ -1090,7 +1090,7 @@
       "prescription": "Ordonnance",
       "analyses": "Analyses",
       "report": "Compte rendu",
-      "Messages": "Avis",
+      "opinion": "Avis",
       "notifications": "Notifications",
       "realTime": "Temps réel",
       "noNotifications": "Aucune notification pour le moment.",
@@ -1109,6 +1109,7 @@
       "avis": "Avis",
       "comptes_rendus": "Comptes rendus",
       "ordonnances": "Ordonnances",
+      "episodes": "Épisodes",
       "profile": "Profil"
     },
     "mobileNav": {
@@ -1395,6 +1396,134 @@
       "ocrFailed": "Échec de l'extraction de texte du fichier. Veuillez réessayer.",
       "fileUploadFailed": "Échec du chargement du fichier. Veuillez réessayer.",
       "extractionFailed": "Échec de l'extraction des valeurs. Veuillez vérifier le texte et réessayer."
+    }
+  },
+  "episodes": {
+    "page": {
+      "title": "Épisodes",
+      "subtitle": "Gérez les épisodes des patients et les parcours de soins."
+    },
+    "buttons": {
+      "newEpisode": "Nouvel épisode",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "previous": "Précédent",
+      "next": "Suivant",
+      "close": "Fermer",
+      "changePatient": "Changer de patient",
+      "back": "Retour",
+      "edit": "Modifier",
+      "episodeDetails": "Détails de l'Épisode"
+    },
+    "modal": {
+      "title": "Nouvel épisode",
+      "patient": "Patient",
+      "searchPatient": "Rechercher un patient existant",
+      "searchPlaceholder": "Rechercher un patient...",
+      "orCreateNew": "Ou créer un nouveau patient",
+      "fullName": "Nom complet",
+      "age": "Âge",
+      "ageUnit": "ans",
+      "origin": "Origine",
+      "motif": "Motif",
+      "motifPlaceholder": "Ex: Infection respiratoire",
+      "atcds": "Antécédents",
+      "atcdsPlaceholder": "Contexte médical...",
+      "clinique": "Clinique",
+      "cliniquePlaceholder": "Signes cliniques observés...",
+      "paraclinique": "Paraclinique",
+      "paracliniquePlaceholder": "Résultats paracliniques...",
+      "required": "Obligatoire",
+      "selectedPatient": "Patient sélectionné"
+    },
+    "sections": {
+      "listTitle": "Liste des Épisodes",
+      "listDescription": "Suivi de tous les épisodes des patients et leur statut."
+    },
+    "table": {
+      "headers": {
+        "patient": "Patient",
+        "entryDate": "Date d'entrée",
+        "duration": "Durée",
+        "status": "Statut",
+        "motif": "Motif"
+      },
+      "ongoingStatus": "En cours"
+    },
+    "deleteConfirm": {
+      "title": "Supprimer les épisodes",
+      "message": "Êtes-vous sûr de vouloir supprimer les épisode(s) sélectionné(s) ?",
+      "willDelete": "épisode(s) seront définitivement supprimé(s).",
+      "warning": "Cette action ne peut pas être annulée.",
+      "confirm": "Supprimer"
+    },
+    "filters": {
+      "title": "Filtres et Recherche",
+      "toggleAria": "Activer la recherche et les filtres",
+      "patientOrReason": "Patient / Motif",
+      "searchPlaceholder": "Rechercher par nom de patient ou motif...",
+      "status": "Statut",
+      "allStatus": "Tous les statuts",
+      "from": "Du",
+      "to": "Au"
+    },
+    "emptyStates": {
+      "noEpisodes": "Aucun épisode disponible",
+      "noEpisodesDesc": "Créez un nouvel épisode pour commencer.",
+      "noResults": "Aucun résultat ne correspond à ces critères.",
+      "clearFilters": "Effacer les filtres"
+    },
+    "pagination": {
+      "showing": "Affichage {{startItem}}–{{endItem}} sur {{total}} épisodes",
+      "pageOf": "Page {{current}} / {{total}}"
+    },
+    "statuses": {
+      "CREATED": "Créé",
+      "ACTIVE": "Actif",
+      "PAUSED": "En pause",
+      "CLOSED": "Fermé"
+    },
+    "form": {
+      "sex": "Sexe",
+      "notSpecified": "Non spécifié",
+      "male": "Homme",
+      "female": "Femme",
+      "entryDate": "Date d'entrée"
+    },
+    "details": {
+      "episodeTitle": "Détails de l'Épisode",
+      "patientTitle": "Détails du Patient",
+      "motif": "Raison",
+      "status": "Statut",
+      "entryDateLabel": "Date d'entrée",
+      "fullNameLabel": "Nom complet",
+      "ageLabel": "Âge",
+      "originLabel": "Origine",
+      "sexLabel": "Sexe",
+      "linkedPatient": "Patient lié",
+      "yearsOld": "ans"
+    },
+    "loading": {
+      "fetchingEpisodes": "Chargement des épisodes...",
+      "saving": "Enregistrement...",
+      "deleting": "Suppression..."
+    },
+    "blocks": {
+      "title": "Conduite à Tenir",
+      "addBlock": "Ajouter un bloc",
+      "saveBlock": "Enregistrer le bloc",
+      "blockType": "Type de bloc",
+      "tasks": "Tâches",
+      "addTask": "Ajouter une nouvelle tâche",
+      "condition": "Condition",
+      "options": "Options/Résultats",
+      "addOption": "Ajouter une nouvelle option",
+      "duration": "Durée (minutes)",
+      "noBlocks": "Aucun bloc pour l'instant. Créez votre premier bloc pour commencer."
+    },
+    "aria": {
+      "openFilters": "Ouvrir les filtres",
+      "closePanel": "Fermer le panneau"
     }
   },
   "tasks": {

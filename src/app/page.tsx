@@ -657,8 +657,8 @@ export default function LandingPage() {
                   <div
                     key={feature.id}
                     className={cn(
-                      "rounded-3xl border border-indigo-100 bg-white/70 p-5 shadow-sm shadow-indigo-100 transition",
-                      isActive && "border-indigo-200 bg-indigo-50/70 shadow-lg shadow-indigo-200",
+                      "rounded-2xl border-2 border-slate-300 bg-white p-5 shadow-sm transition hover:border-slate-400 hover:shadow-md",
+                      isActive && "border-2 border-cyan-600 bg-cyan-50",
                     )}
                   >
                     <button
@@ -667,18 +667,18 @@ export default function LandingPage() {
                       className="flex w-full items-center justify-between gap-4 text-left"
                     >
                       <div className="flex items-center gap-4">
-                        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-500">
+                        <span className="flex h-11 w-11 items-center justify-center rounded bg-cyan-100 text-cyan-600">
                           <Icon className="h-5 w-5" />
                         </span>
                         <div>
-                          <p className="text-sm font-semibold text-[#1d184f]">{t(`features.${feature.id}.title`)}</p>
+                          <p className="text-sm font-semibold text-slate-900">{t(`features.${feature.id}.title`)}</p>
                           <p className="text-xs text-slate-500">{t('about.clickToExplore')}</p>
                         </div>
                       </div>
                       <ChevronRight
                         className={cn(
-                          "h-5 w-5 text-indigo-400 transition",
-                          isActive && "rotate-90 text-indigo-600",
+                          "h-5 w-5 text-slate-400 transition",
+                          isActive && "rotate-90 text-cyan-600",
                         )}
                       />
                     </button>
@@ -696,7 +696,7 @@ export default function LandingPage() {
                             <ul className="space-y-2">
                               {Object.keys(t(`features.${feature.id}.highlights`, { returnObjects: true }) as unknown as Record<string, string>).map((key) => (
                                 <li key={key} className="flex items-start gap-2 text-sm text-slate-600">
-                                  <CircleCheck className="mt-0.5 h-4 w-4 text-indigo-500" />
+                                  <CircleCheck className="mt-0.5 h-4 w-4 text-cyan-600" />
                                   <span>{t(`features.${feature.id}.highlights.${key}`)}</span>
                                 </li>
                               ))}

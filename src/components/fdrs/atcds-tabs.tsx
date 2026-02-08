@@ -548,15 +548,15 @@ export function ATCDSTabs({
 
   return (
     <div className="space-y-4">
-      {/* Tabs Navigation - Redesigned */}
-      <div className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg border border-slate-200 p-1 flex gap-1">
+      {/* Tabs Navigation - Clean Pill Shape Style */}
+      <div className="flex gap-4 bg-white p-1 border border-slate-200 rounded-full inline-flex">
         <button
           type="button"
           onClick={() => setActiveTab("adulte")}
-          className={`flex-1 px-6 py-3 font-semibold text-sm rounded-md transition-all ${
+          className={`px-8 py-2.5 text-sm font-bold uppercase tracking-wider transition-all rounded-full border-2 ${
             activeTab === "adulte"
-              ? "bg-white text-indigo-600 shadow-md border border-indigo-200"
-              : "text-slate-600 hover:text-slate-800"
+              ? "bg-cyan-600 text-white border-cyan-600"
+              : "bg-transparent text-slate-700 border-transparent hover:text-slate-900"
           }`}
         >
           <span className="hidden sm:inline">👨‍⚕️ </span>Adulte
@@ -564,10 +564,10 @@ export function ATCDSTabs({
         <button
           type="button"
           onClick={() => setActiveTab("enfant")}
-          className={`flex-1 px-6 py-3 font-semibold text-sm rounded-md transition-all ${
+          className={`px-8 py-2.5 text-sm font-bold uppercase tracking-wider transition-all rounded-full border-2 ${
             activeTab === "enfant"
-              ? "bg-white text-indigo-600 shadow-md border border-indigo-200"
-              : "text-slate-600 hover:text-slate-800"
+              ? "bg-cyan-600 text-white border-cyan-600"
+              : "bg-transparent text-slate-700 border-transparent hover:text-slate-900"
           }`}
         >
           <span className="hidden sm:inline">👶 </span>Enfant

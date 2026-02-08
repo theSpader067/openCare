@@ -167,7 +167,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-violet-200/60 bg-white/70 backdrop-blur-xl">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-sm">
         <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <Button
@@ -217,7 +217,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                 </Button>
 
                 {createDropdownOpen ? (
-                  <div className="absolute right-0 top-full z-40 mt-3 w-56 rounded-3xl border border-violet-200/70 bg-white/95 p-2 shadow-2xl shadow-indigo-200/60 backdrop-blur">
+                  <div className="absolute right-0 top-full z-40 mt-2 w-56 rounded border border-slate-200 bg-white p-2 shadow-lg">
                     <ul className="space-y-1">
                       <li>
                         <button
@@ -226,9 +226,9 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                             setCreateDropdownOpen(false);
                             router.push("/ordonnances");
                           }}
-                          className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-[#352f72] transition hover:bg-indigo-50/80 hover:text-[#2f2961]"
+                          className="flex w-full items-center gap-3 rounded px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 hover:text-slate-900"
                         >
-                          <FileText className="h-5 w-5 text-indigo-600" />
+                          <FileText className="h-5 w-5 text-cyan-600" />
                           {t('dashboard.header.prescription')}
                         </button>
                       </li>
@@ -239,9 +239,9 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                             setCreateDropdownOpen(false);
                             router.push("/analyses");
                           }}
-                          className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-[#352f72] transition hover:bg-indigo-50/80 hover:text-[#2f2961]"
+                          className="flex w-full items-center gap-3 rounded px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 hover:text-slate-900"
                         >
-                          <Beaker className="h-5 w-5 text-indigo-600" />
+                          <Beaker className="h-5 w-5 text-cyan-600" />
                           {t('dashboard.header.analyses')}
                         </button>
                       </li>
@@ -252,9 +252,9 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                             setCreateDropdownOpen(false);
                             router.push("/comptes-rendus");
                           }}
-                          className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-[#352f72] transition hover:bg-indigo-50/80 hover:text-[#2f2961]"
+                          className="flex w-full items-center gap-3 rounded px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 hover:text-slate-900"
                         >
-                          <FileText className="h-5 w-5 text-indigo-600" />
+                          <FileText className="h-5 w-5 text-cyan-600" />
                           {t('dashboard.header.report')}
                         </button>
                       </li>
@@ -265,9 +265,9 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                             setCreateDropdownOpen(false);
                             router.push("/avis");
                           }}
-                          className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-[#352f72] transition hover:bg-indigo-50/80 hover:text-[#2f2961]"
+                          className="flex w-full items-center gap-3 rounded px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 hover:text-slate-900"
                         >
-                          <Stethoscope className="h-5 w-5 text-indigo-600" />
+                          <Stethoscope className="h-5 w-5 text-cyan-600" />
                           {t('dashboard.header.opinion')}
                         </button>
                       </li>
@@ -282,8 +282,8 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
               variant="ghost"
               size="sm"
               className={cn(
-                "relative text-[#5f5aa5]",
-                notificationsOpen && "bg-indigo-50/80 text-[#4338ca]",
+                "relative text-slate-500",
+                notificationsOpen && "bg-cyan-50 text-cyan-700",
               )}
               onClick={() => {
                 setProfileOpen(false);
@@ -307,21 +307,21 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
             </Button>
 
             {notificationsOpen && window.innerWidth >= 1024 ? (
-              <div className="absolute right-0 top-full z-40 mt-3 w-80 rounded-3xl border border-violet-200/70 bg-white/95 p-4 shadow-2xl shadow-indigo-200/60 backdrop-blur">
+              <div className="absolute right-0 top-full z-40 mt-2 w-80 rounded border border-slate-200 bg-white p-4 shadow-lg">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-[#8a81d6]">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                       {t('dashboard.header.notifications')}
                     </p>
                   </div>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-3 py-1 text-[11px] font-semibold text-[#4338ca]">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-cyan-50 px-3 py-1 text-[11px] font-semibold text-cyan-700">
                     <Sparkles className="h-3.5 w-3.5" />
                     {t('dashboard.header.realTime')}
                   </span>
                 </div>
                 <div className="mt-3 max-h-72 overflow-y-auto pr-1">
                   {notifications.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-violet-200/70 bg-white/80 px-4 py-10 text-center text-sm text-slate-500">
+                    <div className="flex flex-col items-center justify-center gap-2 rounded border border-dashed border-slate-200 bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">
                       <Bell className="h-5 w-5 text-slate-400" />
                       {t('dashboard.header.noNotifications')}
                     </div>
@@ -405,26 +405,26 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                 setNotificationsOpen(false);
               }}
               className={cn(
-                "flex items-center gap-3 rounded-full border border-violet-200/60 bg-white/60 px-4 py-1.5 text-left shadow-inner shadow-white/70 transition",
-                "hover:border-violet-300 hover:bg-white/80 focus:outline-none focus:ring-2 focus:ring-violet-200/80",
+                "flex items-center gap-3 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-left shadow-sm transition",
+                "hover:border-slate-400 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500",
               )}
               aria-haspopup="menu"
               aria-expanded={profileOpen}
             >
-             
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#c4b5fd] to-[#a5b4fc] text-sm font-semibold text-[#1d184f] shadow-sm shadow-indigo-200/60">
+
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-600 text-sm font-semibold text-white shadow-sm">
               {(session.user as any).firstName && (session.user as any).lastName ? `${(session.user as any).firstName[0]}${(session.user as any).lastName[0]}` : (session.user as any).username ? (session.user as any).username[0] : "" }
               </div>
               <ChevronDown
                 className={cn(
-                  "h-4 w-4 text-[#8a81d6] transition-transform",
+                  "h-4 w-4 text-slate-400 transition-transform",
                   profileOpen && "rotate-180",
                 )}
               />
             </button>
 
               {profileOpen ? (
-                <div className="absolute right-0 top-full z-40 mt-3 w-72 rounded-3xl border border-violet-200/60 bg-gradient-to-br from-white via-[#f8f7ff] to-[#ede9ff] p-4 shadow-2xl shadow-indigo-200/50 backdrop-blur">
+                <div className="absolute right-0 top-full z-40 mt-2 w-72 rounded border border-slate-200 bg-white p-4 shadow-lg">
                   {/* Language Switcher */}
                   <div className="mb-3 space-y-2">
                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 px-2">
@@ -441,10 +441,10 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                             setLanguage(lang.code as 'en' | 'fr');
                           }}
                           className={cn(
-                            "flex-1 px-3 py-2 rounded-2xl text-sm font-medium transition flex items-center justify-center gap-2",
+                            "flex-1 px-3 py-2 rounded text-sm font-medium transition flex items-center justify-center gap-2",
                             language === lang.code
-                              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
-                              : 'bg-white/60 text-slate-700 border border-violet-100/70 hover:bg-white'
+                              ? 'bg-cyan-600 text-white shadow-sm'
+                              : 'bg-slate-50 text-slate-700 border border-slate-200 hover:bg-white'
                           )}
                         >
                           {lang.flag === 'fr' ? (
@@ -493,10 +493,10 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                       ))}
                     </div>
                   </div>
-                  <div className="border-b border-violet-100/70 pb-3 mb-3"></div>
+                  <div className="border-b border-slate-200 pb-3 mb-3"></div>
 
-                  <div className="flex items-center gap-3 border-b border-violet-100/70 pb-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#a855f7] via-[#6366f1] to-[#4f46e5] text-lg font-semibold text-white shadow-md shadow-indigo-300/40">
+                  <div className="flex items-center gap-3 border-b border-slate-200 pb-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded bg-cyan-600 text-lg font-semibold text-white shadow-sm">
                     {(session.user as any).firstName && (session.user as any).lastName ? `${(session.user as any).firstName[0]}${(session.user as any).lastName[0]}` : (session.user as any).username ? (session.user as any).username[0] : "" }
                     </div>
                     <div>

@@ -71,7 +71,7 @@ export function PatientModal({
           <CardTitle>{modalTitle}</CardTitle>
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-1 hover:bg-slate-100 rounded-lg transition"
+            className="absolute top-4 right-4 p-1 hover:bg-slate-100 rounded transition"
           >
             <X className="h-5 w-5 text-slate-500" />
           </button>

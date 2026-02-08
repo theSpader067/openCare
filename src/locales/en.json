@@ -1090,7 +1090,7 @@
       "prescription": "Prescription",
       "analyses": "Analyses",
       "report": "Report",
-      "opinion": "Messages",
+      "opinion": "Opinion",
       "notifications": "Notifications",
       "realTime": "Real-time",
       "noNotifications": "No notifications at the moment.",
@@ -1109,6 +1109,7 @@
       "avis": "Messages",
       "comptes_rendus": "Reports",
       "ordonnances": "Prescriptions",
+      "episodes": "Episodes",
       "profile": "Profile"
     },
     "mobileNav": {
@@ -1394,6 +1395,134 @@
       "ocrFailed": "Failed to extract text from file. Please try again.",
       "fileUploadFailed": "Failed to upload file. Please try again.",
       "extractionFailed": "Failed to extract values. Please check the text and try again."
+    }
+  },
+  "episodes": {
+    "page": {
+      "title": "Episodes",
+      "subtitle": "Manage patient episodes and care pathways."
+    },
+    "buttons": {
+      "newEpisode": "New episode",
+      "save": "Save",
+      "cancel": "Cancel",
+      "previous": "Previous",
+      "next": "Next",
+      "close": "Close",
+      "changePatient": "Change patient",
+      "back": "Back",
+      "edit": "Edit",
+      "episodeDetails": "Episode Details"
+    },
+    "modal": {
+      "title": "New episode",
+      "patient": "Patient",
+      "searchPatient": "Search existing patient",
+      "searchPlaceholder": "Search patient...",
+      "orCreateNew": "Or create new patient",
+      "fullName": "Full name",
+      "age": "Age",
+      "ageUnit": "years",
+      "origin": "Origin",
+      "motif": "Reason",
+      "motifPlaceholder": "Ex: Respiratory infection",
+      "atcds": "Medical History",
+      "atcdsPlaceholder": "Medical background...",
+      "clinique": "Clinical Findings",
+      "cliniquePlaceholder": "Observed clinical signs...",
+      "paraclinique": "Additional Tests",
+      "paracliniquePlaceholder": "Paraclinical results...",
+      "required": "Required",
+      "selectedPatient": "Selected patient"
+    },
+    "sections": {
+      "listTitle": "Episodes List",
+      "listDescription": "Track all patient episodes and their status."
+    },
+    "table": {
+      "headers": {
+        "patient": "Patient",
+        "entryDate": "Entry Date",
+        "duration": "Duration",
+        "status": "Status",
+        "motif": "Reason"
+      },
+      "ongoingStatus": "Ongoing"
+    },
+    "deleteConfirm": {
+      "title": "Delete episodes",
+      "message": "Are you sure you want to delete the selected episode(s)?",
+      "willDelete": "episode(s) will be permanently deleted.",
+      "warning": "This action cannot be undone.",
+      "confirm": "Delete"
+    },
+    "filters": {
+      "title": "Filters & Search",
+      "toggleAria": "Toggle search and filters",
+      "patientOrReason": "Patient / Reason",
+      "searchPlaceholder": "Search by patient name or reason...",
+      "status": "Status",
+      "allStatus": "All statuses",
+      "from": "From",
+      "to": "To"
+    },
+    "emptyStates": {
+      "noEpisodes": "No episodes available",
+      "noEpisodesDesc": "Create a new episode to get started.",
+      "noResults": "No results match these criteria.",
+      "clearFilters": "Clear filters"
+    },
+    "pagination": {
+      "showing": "Showing {{startItem}}–{{endItem}} of {{total}} episodes",
+      "pageOf": "Page {{current}} / {{total}}"
+    },
+    "statuses": {
+      "CREATED": "Created",
+      "ACTIVE": "Active",
+      "PAUSED": "Paused",
+      "CLOSED": "Closed"
+    },
+    "form": {
+      "sex": "Sex",
+      "notSpecified": "Not specified",
+      "male": "Male",
+      "female": "Female",
+      "entryDate": "Entry Date"
+    },
+    "details": {
+      "episodeTitle": "Episode Details",
+      "patientTitle": "Patient Details",
+      "motif": "Reason",
+      "status": "Status",
+      "entryDateLabel": "Entry Date",
+      "fullNameLabel": "Full Name",
+      "ageLabel": "Age",
+      "originLabel": "Origin",
+      "sexLabel": "Sex",
+      "linkedPatient": "Linked Patient",
+      "yearsOld": "years"
+    },
+    "loading": {
+      "fetchingEpisodes": "Loading episodes...",
+      "saving": "Saving...",
+      "deleting": "Deleting..."
+    },
+    "blocks": {
+      "title": "Conduite à Tenir",
+      "addBlock": "Add Block",
+      "saveBlock": "Save Block",
+      "blockType": "Block Type",
+      "tasks": "Tasks",
+      "addTask": "Add new task",
+      "condition": "Condition",
+      "options": "Options/Outcomes",
+      "addOption": "Add new option",
+      "duration": "Duration (minutes)",
+      "noBlocks": "No blocks yet. Create your first block to get started."
+    },
+    "aria": {
+      "openFilters": "Open filters",
+      "closePanel": "Close panel"
     }
   },
   "tasks": {

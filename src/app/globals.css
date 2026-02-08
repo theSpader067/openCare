@@ -3,20 +3,15 @@
 
 :root {
   color-scheme: light;
-  --background-primary: linear-gradient(
-    180deg,
-    #eef2ff 0%,
-    #fdf2ff 45%,
-    #fdf6f0 100%
-  );
-  --foreground-primary: #0c1223;
-  --foreground-muted: #5f5aa5;
-  --surface-base: rgba(255, 255, 255, 0.88);
-  --surface-elevated: #f9f6ff;
-  --surface-overlay: rgba(255, 255, 255, 0.72);
-  --border-soft: #e0def5;
-  --ticket-hole-bg: #f2ebff;
-  --shadow-color: rgba(149, 157, 255, 0.25);
+  --background-primary: #f8fafc;
+  --foreground-primary: #0f172a;
+  --foreground-muted: #64748b;
+  --surface-base: #ffffff;
+  --surface-elevated: #ffffff;
+  --surface-overlay: rgba(255, 255, 255, 0.95);
+  --border-soft: #e2e8f0;
+  --ticket-hole-bg: #cffafe;
+  --shadow-color: rgba(148, 163, 184, 0.15);
 }
 
 html,
@@ -47,7 +42,7 @@ body {
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: rgba(99, 102, 241, 0.3);
+  background-color: rgba(8, 145, 178, 0.3);
   border-radius: 9999px;
 }
 

@@ -83,7 +83,7 @@ function NavItemRenderer({ items, pathname, dropdownOpen, setDropdownOpen, t, cr
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 className={cn(
                   "relative -top-4 flex h-16 w-16 items-center justify-center rounded-full shadow-lg transition hover:shadow-xl",
-                  "bg-gradient-to-br from-[#7c3aed] to-[#6366f1] text-white hover:shadow-indigo-400/60 shadow-indigo-400/50",
+                  "bg-cyan-600 text-white hover:shadow-cyan-400/60 shadow-cyan-400/50",
                 )}
                 aria-label={label}
               >
@@ -91,7 +91,7 @@ function NavItemRenderer({ items, pathname, dropdownOpen, setDropdownOpen, t, cr
               </button>
 
               {dropdownOpen && (
-                <div className="absolute bottom-20 left-1/2 -translate-x-1/2 w-48 rounded-2xl bg-white shadow-lg border border-slate-200/60 overflow-hidden z-50">
+                <div className="absolute bottom-20 left-1/2 -translate-x-1/2 w-48 rounded bg-white shadow-lg border border-slate-200 overflow-hidden z-50">
                   {createMenuItems.map((menuItem) => {
                     const MenuIcon = menuItem.icon;
                     return (
@@ -99,9 +99,9 @@ function NavItemRenderer({ items, pathname, dropdownOpen, setDropdownOpen, t, cr
                         key={menuItem.href}
                         href={menuItem.href}
                         onClick={() => setDropdownOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#454562] hover:bg-slate-100 transition border-b border-slate-100 last:border-b-0"
+                        className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 transition border-b border-slate-100 last:border-b-0"
                       >
-                        <MenuIcon className="h-4 w-4 text-[#6d28d9]" />
+                        <MenuIcon className="h-4 w-4 text-cyan-600" />
                         <span>{t(menuItem.labelKey)}</span>
                       </Link>
                     );
@@ -124,10 +124,10 @@ function NavItemRenderer({ items, pathname, dropdownOpen, setDropdownOpen, t, cr
             key={itemHref}
             href={itemHref}
             className={cn(
-              "flex flex-col items-center gap-1.5 rounded-2xl px-1 py-1 text-[10px] font-medium transition duration-200",
+              "flex flex-col items-center gap-1.5 rounded px-1 py-1 text-[10px] font-medium transition duration-200",
               isActive
-                ? "bg-gradient-to-br from-[#eef2ff] via-[#ede9fe] to-white text-[#4338ca] shadow-sm shadow-indigo-200/60"
-                : "text-[#6c64b5] hover:bg-white/70 hover:text-[#2d2674]",
+                ? "bg-cyan-50 text-cyan-700 shadow-sm"
+                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
             )}
             aria-label={label}
           >
@@ -146,7 +146,7 @@ export function MobileNav() {
   const { t } = useLanguage();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-30 w-full border-t border-violet-200/70 bg-white/85 px-4 shadow-[0_-6px_18px_rgba(99,102,241,0.15)] backdrop-blur-xl lg:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-30 w-full border-t border-slate-200 bg-white/95 px-4 shadow-[0_-6px_18px_rgba(148,163,184,0.15)] backdrop-blur-sm lg:hidden">
       <div className="flex w-full items-center justify-evenly">
         {/* Phone screens (< md) */}
         <div className="flex w-full items-center justify-evenly md:hidden">

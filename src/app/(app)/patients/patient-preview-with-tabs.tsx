@@ -84,15 +84,15 @@ export function PatientPreviewWithTabs({
         {t("patients.buttons.addObservation")}
       </Button>
 
-      {/* Tabs - Modern Segmented Design */}
-      <div className="flex gap-1 bg-slate-100 p-1 rounded-lg w-full">
+      {/* Tabs - Clean Pill Shape Style */}
+      <div className="flex gap-4 bg-white p-1 border border-slate-200 rounded-full w-full inline-flex">
         <button
           onClick={() => setActiveTab("apercu")}
           className={cn(
-            "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-all duration-200",
+            "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all rounded-full border-2",
             activeTab === "apercu"
-              ? "bg-white text-indigo-600 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
+              ? "bg-cyan-600 text-white border-cyan-600"
+              : "bg-transparent text-slate-700 border-transparent hover:text-slate-900"
           )}
         >
           <FileText className="h-4 w-4" />
@@ -101,10 +101,10 @@ export function PatientPreviewWithTabs({
         <button
           onClick={() => setActiveTab("parcours")}
           className={cn(
-            "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-all duration-200",
+            "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all rounded-full border-2",
             activeTab === "parcours"
-              ? "bg-white text-indigo-600 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
+              ? "bg-cyan-600 text-white border-cyan-600"
+              : "bg-transparent text-slate-700 border-transparent hover:text-slate-900"
           )}
         >
           <Clock className="h-4 w-4" />

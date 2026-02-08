@@ -56,6 +56,11 @@ export const getPrimaryNav = (t: any) => [
         label: t('dashboard.sidebar.ordonnances'),
         icon: FileText,
       },
+      {
+        href: "/episodes",
+        label: t('dashboard.sidebar.episodes'),
+        icon: Activity,
+      },
     ],
   },
 ];
@@ -102,17 +107,17 @@ export function SidebarContent({ onNavigate }: SidebarContentProps) {
   };
 
   return (
-    <div className="flex h-full flex-col gap-6 rounded-3xl border border-slate-200/60 bg-white px-5 py-6 shadow-lg shadow-slate-200/40">
+    <div className="flex h-full flex-col gap-6 rounded border border-slate-200 bg-white px-5 py-6 shadow-sm">
       <div className="flex items-center gap-3">
-        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#7c3aed] via-[#6366f1] to-[#4f46e5] text-base font-semibold text-white shadow-lg shadow-indigo-300/60">
+        <span className="flex h-11 w-11 items-center justify-center rounded bg-cyan-600 text-base font-semibold text-white shadow-sm">
           OC
         </span>
         <div className="flex flex-col">
-          <span className="text-sm font-semibold text-[#1d184f]">
+          <span className="text-sm font-semibold text-slate-900">
             OpenCare
           </span>
-          <span className="flex items-center gap-1 text-xs text-[#5f5aa5]">
-            <Activity className="h-3.5 w-3.5 text-[#4f46e5]" />
+          <span className="flex items-center gap-1 text-xs text-slate-500">
+            <Activity className="h-3.5 w-3.5 text-cyan-600" />
             {t('dashboard.navigation.saas_clinical')}
           </span>
         </div>
@@ -134,17 +139,17 @@ export function SidebarContent({ onNavigate }: SidebarContentProps) {
                   <button
                     onClick={() => toggleExpanded(item.href)}
                     className={cn(
-                      "w-full group flex items-center justify-between gap-3 rounded-2xl px-3.5 py-2.5 text-sm font-medium transition-all",
+                      "w-full group flex items-center justify-between gap-3 rounded px-3.5 py-2.5 text-sm font-medium transition-all",
                       isActive
-                        ? "bg-slate-100 text-[#1d184f] shadow-sm"
-                        : "text-[#454562] hover:bg-slate-100 hover:text-[#1d184f]",
+                        ? "bg-cyan-50 text-slate-900 border-l-2 border-cyan-600 pl-3"
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
                     )}
                   >
                     <div className="flex items-center gap-3">
                       <Icon
                         className={cn(
                           "h-5 w-5",
-                          isActive ? "text-[#6d28d9]" : "text-[#5f5aa5]",
+                          isActive ? "text-cyan-600" : "text-slate-500",
                         )}
                       />
                       <span>{item.label}</span>
@@ -153,7 +158,7 @@ export function SidebarContent({ onNavigate }: SidebarContentProps) {
                       className={cn(
                         "h-4 w-4 transition-transform",
                         isExpanded ? "rotate-180" : "",
-                        isActive ? "text-[#6d28d9]" : "text-[#5f5aa5]",
+                        isActive ? "text-cyan-600" : "text-slate-500",
                       )}
                     />
                   </button>
@@ -172,14 +177,14 @@ export function SidebarContent({ onNavigate }: SidebarContentProps) {
                             href={subitem.href}
                             onClick={onNavigate}
                             className={cn(
-                              "group flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all hover:border-b-2",
+                              "group flex items-center gap-3 rounded px-3.5 py-2.5 text-sm font-medium transition-all hover:bg-slate-50",
                               isSubActive
-                                ? "bg-transparent border-b-[#6d28d9] text-[#1d184f]"
-                                : "border-b-transparent text-[#454562] hover:text-[#1d184f]",
+                                ? "bg-cyan-50 border-l-2 border-cyan-600 pl-3 text-slate-900"
+                                : "text-slate-600",
                             )}
                           >
                             {isSubActive && (
-                              <Circle className="h-3 w-3 fill-[#6d28d9] text-[#6d28d9]" />
+                              <Circle className="h-3 w-3 fill-cyan-600 text-cyan-600" />
                             )}
                             {!isSubActive && (
                               <div className="h-3 w-3" />
@@ -196,16 +201,16 @@ export function SidebarContent({ onNavigate }: SidebarContentProps) {
                   href={item.href}
                   onClick={onNavigate}
                   className={cn(
-                    "group flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm font-medium transition-all",
+                    "group flex items-center gap-3 rounded px-3.5 py-2.5 text-sm font-medium transition-all",
                     isActive
-                      ? "bg-slate-100 text-[#1d184f] shadow-sm"
-                      : "text-[#454562] hover:bg-slate-100 hover:text-[#1d184f]",
+                      ? "bg-cyan-50 text-slate-900 border-l-2 border-cyan-600 pl-3"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
                   )}
                 >
                   <Icon
                     className={cn(
                       "h-5 w-5",
-                      isActive ? "text-[#6d28d9]" : "text-[#5f5aa5]",
+                      isActive ? "text-cyan-600" : "text-slate-500",
                     )}
                   />
                   <span>{item.label}</span>
@@ -228,15 +233,15 @@ export function SidebarContent({ onNavigate }: SidebarContentProps) {
                 href={item.href}
                 onClick={onNavigate}
                 className={cn(
-                  "group flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm font-medium transition-all",
+                  "group flex items-center gap-3 rounded px-3.5 py-2.5 text-sm font-medium transition-all",
                   isActive
-                    ? "bg-slate-100 text-[#1d184f] shadow-sm"
-                    : "text-[#63637e] hover:bg-slate-100 hover:text-[#1d184f]",
+                    ? "bg-cyan-50 text-slate-900 border-l-2 border-cyan-600 pl-3"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
                 )}
               >
                 <Icon className={cn(
                   "h-5 w-5",
-                  isActive ? "text-[#6d28d9]" : "text-[#9ca3af] group-hover:text-[#4f46e5]",
+                  isActive ? "text-cyan-600" : "text-slate-500 group-hover:text-cyan-600",
                 )} />
                 <span>{item.label}</span>
               </Link>

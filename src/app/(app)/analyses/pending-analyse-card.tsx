@@ -13,19 +13,19 @@ const statusConfig: Record<
   { badge: string; indicator: string; bg: string }
 > = {
   "En cours": {
-    badge: "bg-sky-100 text-sky-700 border-sky-200",
-    indicator: "bg-sky-500",
-    bg: "bg-white hover:bg-sky-50/30",
+    badge: "bg-cyan-50 text-cyan-700 border-cyan-200",
+    indicator: "bg-cyan-500",
+    bg: "bg-white hover:bg-cyan-50",
   },
   Terminée: {
-    badge: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    badge: "bg-emerald-50 text-emerald-700 border-emerald-200",
     indicator: "bg-emerald-500",
-    bg: "bg-white hover:bg-emerald-50/30",
+    bg: "bg-white hover:bg-emerald-50",
   },
   Urgent: {
-    badge: "bg-rose-100 text-rose-700 border-rose-200",
-    indicator: "bg-rose-500",
-    bg: "bg-white hover:bg-rose-50/30",
+    badge: "bg-red-50 text-red-700 border-red-200",
+    indicator: "bg-red-500",
+    bg: "bg-white hover:bg-red-50",
   },
 };
 
@@ -297,41 +297,41 @@ export function PendingAnalyseCard({
   };
 
   const categoryBadgeMap: Record<"bilan" | "imagerie" | "anapath" | "autres", { label: string; color: string }> = {
-    bilan: { label: t("analyses.categories.bilan"), color: "bg-violet-500/15 text-violet-700" },
-    imagerie: { label: t("analyses.categories.imagerie"), color: "bg-blue-500/15 text-blue-700" },
-    anapath: { label: t("analyses.categories.anapath"), color: "bg-pink-500/15 text-pink-700" },
-    autres: { label: t("analyses.categories.autres"), color: "bg-slate-500/15 text-slate-700" },
+    bilan: { label: t("analyses.categories.bilan"), color: "bg-cyan-50 text-cyan-700 border border-cyan-200" },
+    imagerie: { label: t("analyses.categories.imagerie"), color: "bg-blue-50 text-blue-700 border border-blue-200" },
+    anapath: { label: t("analyses.categories.anapath"), color: "bg-purple-50 text-purple-700 border border-purple-200" },
+    autres: { label: t("analyses.categories.autres"), color: "bg-slate-100 text-slate-700 border border-slate-200" },
   };
 
   return (
     <>
       <div
         className={cn(
-          "group relative overflow-hidden rounded-2xl border border-slate-200/80 shadow-sm transition-all duration-200 hover:shadow-md",
+          "group relative overflow-hidden rounded border border-slate-200 shadow-sm transition-all duration-200 hover:shadow-md",
           config.bg,
         )}
       >
         {/* Status Indicator Bar */}
         <div className={cn("absolute left-0 top-0 h-full w-1", config.indicator)} />
 
-        <div className="px-4 py-3">
+        <div className="px-5 py-4">
           {/* Main Content */}
-          <div className="flex items-start justify-between gap-3">
-            {/* Patient and Type */}
-            <div className="flex-1 min-w-0 space-y-1">
+          <div className="flex items-start justify-between gap-4">
+            {/* Patient and Type Info */}
+            <div className="flex-1 min-w-0 space-y-2">
               <h3 className="text-sm font-semibold text-slate-900 truncate">
                 {analyse.patient}
               </h3>
-              <p className="text-xs text-slate-500 truncate">
+              <p className="text-xs text-slate-600 truncate">
                 {analyse.type}
               </p>
             </div>
 
-            {/* Status and Date */}
-            <div className="flex flex-col items-end gap-1 flex-shrink-0">
+            {/* Status Section */}
+            <div className="flex flex-col items-end gap-2 flex-shrink-0">
               <span
                 className={cn(
-                  "inline-flex items-center rounded-full border px-2 py-1 text-xs font-semibold whitespace-nowrap",
+                  "inline-flex items-center rounded border px-2.5 py-1 text-xs font-semibold whitespace-nowrap",
                   config.badge,
                 )}
               >
@@ -344,11 +344,11 @@ export function PendingAnalyseCard({
           </div>
 
           {/* Actions */}
-          <div className="mt-3 flex justify-end">
+          <div className="mt-4 flex justify-end">
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 rounded-full text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 text-xs"
+              className="text-cyan-600 hover:bg-cyan-50 hover:text-cyan-700 text-xs font-medium"
               onClick={() => setIsModalOpen(true)}
             >
               {t("analyses.buttons.viewDetails")}
@@ -368,9 +368,9 @@ export function PendingAnalyseCard({
 
           {/* Modal */}
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-1.5 sm:p-4 pointer-events-auto">
-            <div className="w-full max-w-2xl rounded-3xl bg-white shadow-2xl flex flex-col max-h-80vh h-80vh">
+            <div className="w-full max-w-2xl rounded border border-slate-200 bg-white shadow-xl flex flex-col max-h-80vh h-80vh">
               {/* Header */}
-              <div className="flex items-start justify-between border-b border-slate-200 px-3 py-2 sm:px-6 sm:py-4">
+              <div className="flex items-start justify-between border-b border-slate-200 bg-slate-50 px-4 py-4 sm:px-6 sm:py-5">
                 <div>
                   <h2 className="text-base sm:text-lg font-semibold text-slate-900">
                     {t("analyses.modal.title")}
@@ -390,49 +390,49 @@ export function PendingAnalyseCard({
               </div>
 
               {/* Content */}
-              <div className="flex-1 overflow-y-auto px-3 py-2 sm:px-6 sm:py-4 space-y-2 sm:space-y-4 sm:space-y-6">
+              <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6 space-y-6">
                 {/* Order Details */}
-                <div className="space-y-2 sm:space-y-3 sm:space-y-4 pb-2 sm:pb-4 border-b border-slate-200">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 sm:gap-4">
+                <div className="space-y-4 pb-4 border-b border-slate-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
+                      <p className="text-xs uppercase tracking-wider text-slate-600 font-semibold mb-2">
                         {t("analyses.labels.patient")}
                       </p>
-                      <p className="text-xs sm:text-sm font-semibold text-slate-900 mt-1">
+                      <p className="text-sm font-semibold text-slate-900">
                         {analyse.patient}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
+                      <p className="text-xs uppercase tracking-wider text-slate-600 font-semibold mb-2">
                         {t("analyses.labels.title")}
                       </p>
-                      <p className="text-xs sm:text-sm font-semibold text-slate-900 mt-1">
+                      <p className="text-sm font-semibold text-slate-900">
                         {analyse.type}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
+                      <p className="text-xs uppercase tracking-wider text-slate-600 font-semibold mb-2">
                         {t("analyses.labels.requestDate")}
                       </p>
-                      <p className="text-xs sm:text-sm font-semibold text-slate-900 mt-1">
+                      <p className="text-sm font-semibold text-slate-900">
                         {formatAnalyseDateTime(analyse.requestedDate)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
+                      <p className="text-xs uppercase tracking-wider text-slate-600 font-semibold mb-2">
                         {t("analyses.labels.orderNumber")}
                       </p>
-                      <p className="text-xs sm:text-sm font-semibold text-slate-900 mt-1">
+                      <p className="text-sm font-semibold text-slate-900">
                         {analyse.id}
                       </p>
                     </div>
                     <div className="col-span-2">
-                      <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
+                      <p className="text-xs uppercase tracking-wider text-slate-600 font-semibold mb-2">
                         {t("analyses.labels.type")}
                       </p>
-                      <div className="mt-1">
+                      <div>
                         <span className={cn(
-                          "inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold",
+                          "inline-flex items-center rounded border px-3 py-1.5 text-xs font-semibold",
                           categoryBadgeMap[analyse.bilanCategory].color,
                         )}>
                           {categoryBadgeMap[analyse.bilanCategory].label}
@@ -444,15 +444,15 @@ export function PendingAnalyseCard({
 
                 {/* Saisie des résultats - Adapted to type */}
                 <div>
-                  <div className="flex justify-between items-center w-full gap-2">
-                    <h3 className="text-xs sm:text-sm font-semibold text-slate-900">
+                  <div className="flex justify-between items-center w-full gap-2 mb-4">
+                    <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">
                       {t("analyses.results.sectionTitle")}
                     </h3>
                     <div className="flex gap-2">
                       <button
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isOcrProcessing}
-                        className="inline-flex align-end h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex align-end h-8 w-8 items-center justify-center rounded bg-slate-100 text-slate-600 hover:bg-slate-200 transition flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                         title={t("analyses.results.uploadFile") || "Upload file"}
                       >
                         {isOcrProcessing ? (
@@ -471,12 +471,11 @@ export function PendingAnalyseCard({
                     className="hidden"
                     aria-label="Upload image"
                   />
-                  <hr className="my-2 sm:my-3" />
 
                   {/* Bilan: Test inputs */}
                   {analyse.bilanCategory === "bilan" ? (
                     analyse.labEntries && analyse.labEntries.length > 0 ? (
-                      <div className="space-y-2 sm:space-y-3 max-h-[300px] overflow-y-auto">
+                      <div className="space-y-3 max-h-[300px] overflow-y-auto">
                         {analyse.labEntries.map((test) => {
                           const interpretation = testInterpretations[test.id!];
                           const borderColor = interpretation
@@ -491,7 +490,7 @@ export function PendingAnalyseCard({
                             : "";
 
                           return (
-                            <div key={test.id} className="space-y-0.5">
+                            <div key={test.id} className="space-y-1">
                               <div className="flex items-start gap-2 sm:gap-3">
                                 <label className="flex-1 text-xs sm:text-sm font-medium text-slate-700 pt-1">
                                   {test.name}
@@ -531,14 +530,14 @@ export function PendingAnalyseCard({
                       onChange={(e) => setTextareaResults(e.target.value)}
                       placeholder={t("analyses.results.describeResults")}
                       rows={4}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs sm:text-sm text-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition"
+                      className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-xs sm:text-sm text-slate-700 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition"
                     />
                   )}
                 </div>
               </div>
 
               {/* Footer */}
-              <div className="border-t border-slate-200 px-3 py-2 sm:px-6 sm:py-4 flex gap-2 justify-end">
+              <div className="border-t border-slate-200 bg-slate-50 px-4 py-4 sm:px-6 sm:py-5 flex gap-2 justify-end rounded-b">
                 <Button
                   variant="ghost"
                   size="sm"

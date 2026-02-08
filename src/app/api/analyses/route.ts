@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { bilanStructure } from "@/data/analyses/analyses-data";
 import { analyseServerAnalytics } from "@/lib/server-analytics";
+import { randomUUID } from "crypto";
 
 // Helper function to get userId from session or JWT token
 async function getUserId(request: NextRequest): Promise<number | null> {
@@ -160,6 +161,7 @@ export async function POST(req: NextRequest) {
       patientAge: patientAge ? String(patientAge) : undefined,
       patientHistory: patientHistory || undefined,
       creatorId: userIdNum, // Set creator to current user
+      labId: randomUUID(), // Generate unique lab ID
       updatedAt: new Date(),
     };
 

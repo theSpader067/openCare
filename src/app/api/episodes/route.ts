@@ -52,6 +52,7 @@ export async function GET(req: NextRequest) {
       clinique: ep.clinique || "",
       paraclinique: ep.paraclinique || "",
       type: ep.status === "CLOSED" ? "fermé" : "actif",
+      status: ep.status,
       isPrivate: false,
       patient: ep.patient ? {
         id: ep.patient.id,

@@ -28,6 +28,7 @@ function transformEpisode(ep: any) {
     clinique: ep.clinique || "",
     paraclinique: ep.paraclinique || "",
     type: ep.status === "CLOSED" ? "fermé" : "actif",
+    status: ep.status,
     isPrivate: false,
     patient: ep.patient ? {
       id: ep.patient.id,
@@ -104,7 +105,7 @@ export async function PATCH(
     const { episodeId } = await params;
 
     const data = await request.json();
-    const { motif, atcds, clinique, paraclinique, type } = data;
+    const { motif, atcds, clinique, paraclinique, type, status: directStatus } = data;
 
     // Verify episode exists and belongs to user
     const existingEpisode = await prisma.episode.findFirst({
@@ -136,8 +137,13 @@ export async function PATCH(
       );
     }
 
-    // Map type to status if provided
-    const status = type ? (type === "fermé" ? "CLOSED" : "ACTIVE") : undefined;
+    // Map type to status if provided, or use direct status
+    let status: EpisodeStatus | undefined;
+    if (directStatus) {
+      status = directStatus as EpisodeStatus;
+    } else if (type) {
+      status = type === "fermé" ? "CLOSED" : "ACTIVE";
+    }
 
     console.log("[EPISODES_API] Updating episode:", {
       episodeId,

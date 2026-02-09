@@ -126,8 +126,15 @@ Return ONLY the JSON array, no other text.`;
       ],
     });
 
-    const responseText = message.choices[0].message.content || "";
+    let responseText = message.choices[0].message.content || "";
     console.log("[CAT_GENERATION] ChatGPT response:", responseText);
+
+    // Strip markdown code fences if present
+    responseText = responseText
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/\s*```$/i, "")
+      .trim();
 
     // Parse the JSON response
     const blocks: BlockData[] = JSON.parse(responseText);
@@ -156,7 +163,8 @@ Return ONLY the JSON array, no other text.`;
  */
 async function createCATFromBlocks(
   episodeId: string,
-  blocks: BlockData[]
+  blocks: BlockData[],
+  motif: string
 ): Promise<string> {
   console.log("[CAT_GENERATION] Creating CAT with", blocks.length, "blocks");
 
@@ -168,7 +176,7 @@ async function createCATFromBlocks(
     // Create the CAT
     const cat = await prisma.cAT.create({
       data: {
-        title: `CAT for Episode ${episodeId}`,
+        title: `CAT for '${motif}'`,
         episodeId: episodeId,
         blocks: {
           create: blocks.map((block) => ({
@@ -295,7 +303,7 @@ export async function POST(request: NextRequest) {
     const blocks = await parseTextToBlocks(description);
 
     // Step 2: Create CAT and blocks in database
-    const catId = await createCATFromBlocks(episodeId, blocks);
+    const catId = await createCATFromBlocks(episodeId, blocks, episode.motif);
 
     console.log("[CAT_GENERATION] CAT generation completed successfully");
 

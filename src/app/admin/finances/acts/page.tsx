@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   TrendingUp,
   Activity,
@@ -19,6 +19,8 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  Search,
+  Filter,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +37,10 @@ interface ActLog {
   prix: number;
   datetime: string;
   status: ActStatus;
+  realisateur: {
+    name: string;
+    specialty: string;
+  };
 }
 
 interface StatCardProps {
@@ -202,6 +208,8 @@ export default function FinancesActsPage() {
   const [earningsPeriod, setEarningsPeriod] = useState<TimePeriod>("month");
   const [consultationsPeriod, setConsultationsPeriod] = useState<TimePeriod>("month");
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState<ActStatus | "all">("all");
 
   const statsData = {
     week: {
@@ -233,6 +241,7 @@ export default function FinancesActsPage() {
       prix: 2000,
       datetime: "2025-02-23 10:30",
       status: "paid",
+      realisateur: { name: "Dr. Ahmed Hassan", specialty: "Généraliste" },
     },
     {
       id: "2",
@@ -241,6 +250,7 @@ export default function FinancesActsPage() {
       prix: 20000,
       datetime: "2025-02-23 09:15",
       status: "paid",
+      realisateur: { name: "Dr. Fatima Benali", specialty: "Cardiologie" },
     },
     {
       id: "3",
@@ -249,6 +259,7 @@ export default function FinancesActsPage() {
       prix: 8000,
       datetime: "2025-02-22 14:45",
       status: "pending",
+      realisateur: { name: "Dr. Mohamed Rachid", specialty: "Cardiologie" },
     },
     {
       id: "4",
@@ -257,6 +268,7 @@ export default function FinancesActsPage() {
       prix: 2500,
       datetime: "2025-02-22 11:20",
       status: "paid",
+      realisateur: { name: "Infirmier Karim", specialty: "Soins paramédicaux" },
     },
     {
       id: "5",
@@ -265,6 +277,7 @@ export default function FinancesActsPage() {
       prix: 3500,
       datetime: "2025-02-21 16:00",
       status: "planned",
+      realisateur: { name: "Dr. Leila Sabrina", specialty: "Médecine interne" },
     },
     {
       id: "6",
@@ -273,13 +286,26 @@ export default function FinancesActsPage() {
       prix: 12000,
       datetime: "2025-02-21 13:30",
       status: "canceled",
+      realisateur: { name: "Dr. Hassan Saïd", specialty: "Pneumologie" },
     },
   ];
 
+  // Filter acts based on search and status
+  const filteredActLogs = useMemo(() => {
+    return allActLogs.filter((log) => {
+      const matchesSearch =
+        log.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.realisateur.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.realisateur.specialty.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = filterStatus === "all" || log.status === filterStatus;
+      return matchesSearch && matchesStatus;
+    });
+  }, [searchTerm, filterStatus]);
+
   // Pagination
-  const totalPages = Math.ceil(allActLogs.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredActLogs.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const actLogs = allActLogs.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const actLogs = filteredActLogs.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   const gesturesData = statsData[gesturesPeriod];
   const earningsData = statsData[earningsPeriod];
@@ -295,8 +321,29 @@ export default function FinancesActsPage() {
         </p>
       </div>
 
-      {/* Stat Cards */}
+      {/* Stat Cards - Consultations first */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {consultationsData.consultations === 0 ? (
+          <div className="md:col-span-1 flex items-center justify-center min-h-[300px] rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50">
+            <div className="text-center">
+              <Users className="h-12 w-12 text-slate-400 mx-auto mb-2" />
+              <p className="text-sm text-slate-600">Aucune donnée disponible</p>
+            </div>
+          </div>
+        ) : (
+          <StatCard
+            title="Consultations (Gén. + Spé.)"
+            value={consultationsData.consultations}
+            icon={<Users className="h-6 w-6 text-white" />}
+            period={consultationsPeriod}
+            onPeriodChange={setConsultationsPeriod}
+            gradient="from-purple-500 to-pink-500"
+            accentColor="from-purple-600 to-pink-600"
+            accentGradient="from-purple-500/20 to-pink-500/20"
+            subtext={`${((consultationsData.consultations / (consultationsData.consultations + gesturesData.gestures)) * 100).toFixed(1)}% du total des actes`}
+          />
+        )}
+
         {gesturesData.gestures === 0 ? (
           <div className="md:col-span-1 flex items-center justify-center min-h-[300px] rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50">
             <div className="text-center">
@@ -338,38 +385,63 @@ export default function FinancesActsPage() {
             subtext={`Revenu moyen: ${earningsData.earningsMean.toLocaleString()} MAD par geste`}
           />
         )}
+      </div>
 
-        {consultationsData.consultations === 0 ? (
-          <div className="md:col-span-1 flex items-center justify-center min-h-[300px] rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50">
-            <div className="text-center">
-              <Users className="h-12 w-12 text-slate-400 mx-auto mb-2" />
-              <p className="text-sm text-slate-600">Aucune donnée disponible</p>
+      {/* Filters & Search Component */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          {/* Search Input */}
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Rechercher par acte, réalisateur ou spécialité..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
             </div>
           </div>
-        ) : (
-          <StatCard
-            title="Consultations (Gén. + Spé.)"
-            value={consultationsData.consultations}
-            icon={<Users className="h-6 w-6 text-white" />}
-            period={consultationsPeriod}
-            onPeriodChange={setConsultationsPeriod}
-            gradient="from-purple-500 to-pink-500"
-            accentColor="from-purple-600 to-pink-600"
-            accentGradient="from-purple-500/20 to-pink-500/20"
-            subtext={`${((consultationsData.consultations / (consultationsData.consultations + gesturesData.gestures)) * 100).toFixed(1)}% du total des actes`}
-          />
-        )}
+
+          {/* Status Filter */}
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-slate-500" />
+            <select
+              value={filterStatus}
+              onChange={(e) => {
+                setFilterStatus(e.target.value as ActStatus | "all");
+                setCurrentPage(1);
+              }}
+              className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+            >
+              <option value="all">Tous les statuts</option>
+              <option value="paid">Payé</option>
+              <option value="pending">En attente</option>
+              <option value="planned">Prévu</option>
+              <option value="canceled">Annulé</option>
+            </select>
+          </div>
+        </div>
+        {searchTerm || filterStatus !== "all" ? (
+          <p className="text-sm text-slate-600">
+            {filteredActLogs.length} acte{filteredActLogs.length !== 1 ? "s" : ""} trouvé{filteredActLogs.length !== 1 ? "s" : ""}
+          </p>
+        ) : null}
       </div>
 
       {/* Acts Log Table */}
       <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
         <CardHeader className="bg-gradient-to-r from-slate-50 to-white px-8 py-6 border-b border-slate-200 flex items-center justify-between">
           <CardTitle className="text-xl">Journal des Actes</CardTitle>
-          <span className="text-sm text-slate-600">{allActLogs.length} actes</span>
+          <span className="text-sm text-slate-600">{filteredActLogs.length} actes</span>
         </CardHeader>
 
         <CardContent className="p-0">
-          {allActLogs.length === 0 ? (
+          {filteredActLogs.length === 0 ? (
             <div className="py-12 flex flex-col items-center justify-center">
               <Zap className="h-12 w-12 text-slate-400 mb-4" />
               <p className="text-slate-600 font-medium mb-2">Aucun acte trouvé</p>
@@ -381,6 +453,7 @@ export default function FinancesActsPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200">
+                      <th className="px-6 py-4 text-left font-semibold text-slate-700">Réalisateur</th>
                       <th className="px-6 py-4 text-left font-semibold text-slate-700">Type</th>
                       <th className="px-6 py-4 text-left font-semibold text-slate-700">Nom de l'acte</th>
                       <th className="px-6 py-4 text-right font-semibold text-slate-700">Prix</th>
@@ -397,6 +470,12 @@ export default function FinancesActsPage() {
                           index % 2 === 0 ? "" : "bg-slate-50/30"
                         }`}
                       >
+                        <td className="px-6 py-4">
+                          <div>
+                            <p className="font-medium text-slate-900">{log.realisateur.name}</p>
+                            <p className="text-xs text-slate-500 mt-0.5">{log.realisateur.specialty}</p>
+                          </div>
+                        </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2 p-2 bg-slate-100 rounded-lg w-fit">
                             {getActTypeIcon(log.type)}

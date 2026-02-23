@@ -111,7 +111,7 @@ function StatCard({
 
           {/* Period Selector - Only visible on hover */}
           {isHovered && (
-            <div className="flex gap-2 pt-4 border-t border-slate-200 animate-in fade-in duration-300">
+            <div className="flex gap-2 pt-4 border-t border-slate-200 animate-in fade-in duration-700">
               {(["week", "month", "year"] as const).map((p) => (
                 <button
                   key={p}

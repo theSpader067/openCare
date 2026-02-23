@@ -117,7 +117,7 @@ function StatCard({
 
           {/* Period Selector - Only visible on hover */}
           {isHovered && (
-            <div className="flex gap-2 pt-4 border-t border-slate-200 animate-in fade-in duration-700">
+            <div className="flex gap-2 pt-4 border-t border-slate-200 animate-in fade-in duration-1000">
               {(["week", "month", "year"] as const).map((p) => (
                 <button
                   key={p}
@@ -210,6 +210,10 @@ export default function FinancesActsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<ActStatus | "all">("all");
+  const [filterType, setFilterType] = useState<ActType | "all">("all");
+  const [filterSpecialty, setFilterSpecialty] = useState<string>("all");
+  const [dateRangeStart, setDateRangeStart] = useState<string>("");
+  const [dateRangeEnd, setDateRangeEnd] = useState<string>("");
 
   const statsData = {
     week: {
@@ -290,7 +294,12 @@ export default function FinancesActsPage() {
     },
   ];
 
-  // Filter acts based on search and status
+  // Helper function to get unique specialties
+  const uniqueSpecialties = useMemo(() => {
+    return Array.from(new Set(allActLogs.map((log) => log.realisateur.specialty))).sort();
+  }, []);
+
+  // Filter acts based on search, status, type, specialty, and date range
   const filteredActLogs = useMemo(() => {
     return allActLogs.filter((log) => {
       const matchesSearch =
@@ -298,9 +307,19 @@ export default function FinancesActsPage() {
         log.realisateur.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         log.realisateur.specialty.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = filterStatus === "all" || log.status === filterStatus;
-      return matchesSearch && matchesStatus;
+      const matchesType = filterType === "all" || log.type === filterType;
+      const matchesSpecialty = filterSpecialty === "all" || log.realisateur.specialty === filterSpecialty;
+
+      // Date range filtering
+      const logDate = new Date(log.datetime);
+      const startDate = dateRangeStart ? new Date(dateRangeStart) : null;
+      const endDate = dateRangeEnd ? new Date(dateRangeEnd) : null;
+      const matchesDateRange =
+        (!startDate || logDate >= startDate) && (!endDate || logDate <= endDate);
+
+      return matchesSearch && matchesStatus && matchesType && matchesSpecialty && matchesDateRange;
     });
-  }, [searchTerm, filterStatus]);
+  }, [searchTerm, filterStatus, filterType, filterSpecialty, dateRangeStart, dateRangeEnd]);
 
   // Pagination
   const totalPages = Math.ceil(filteredActLogs.length / ITEMS_PER_PAGE);
@@ -389,44 +408,99 @@ export default function FinancesActsPage() {
 
       {/* Filters & Search Component */}
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* Search Input */}
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Rechercher par acte, réalisateur ou spécialité..."
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          {/* Status Filter */}
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-slate-500" />
-            <select
-              value={filterStatus}
-              onChange={(e) => {
-                setFilterStatus(e.target.value as ActStatus | "all");
-                setCurrentPage(1);
-              }}
-              className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
-            >
-              <option value="all">Tous les statuts</option>
-              <option value="paid">Payé</option>
-              <option value="pending">En attente</option>
-              <option value="planned">Prévu</option>
-              <option value="canceled">Annulé</option>
-            </select>
-          </div>
+        {/* Search Input Row */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Rechercher par acte, réalisateur ou spécialité..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          />
         </div>
-        {searchTerm || filterStatus !== "all" ? (
+
+        {/* Filters Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          {/* Status Filter */}
+          <select
+            value={filterStatus}
+            onChange={(e) => {
+              setFilterStatus(e.target.value as ActStatus | "all");
+              setCurrentPage(1);
+            }}
+            className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-sm"
+          >
+            <option value="all">Tous les statuts</option>
+            <option value="paid">Payé</option>
+            <option value="pending">En attente</option>
+            <option value="planned">Prévu</option>
+            <option value="canceled">Annulé</option>
+          </select>
+
+          {/* Type Filter */}
+          <select
+            value={filterType}
+            onChange={(e) => {
+              setFilterType(e.target.value as ActType | "all");
+              setCurrentPage(1);
+            }}
+            className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-sm"
+          >
+            <option value="all">Tous les types</option>
+            <option value="geste">Geste</option>
+            <option value="exploration">Exploration</option>
+            <option value="consultation">Consultation</option>
+            <option value="suivi">Suivi</option>
+          </select>
+
+          {/* Specialty Filter */}
+          <select
+            value={filterSpecialty}
+            onChange={(e) => {
+              setFilterSpecialty(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-sm"
+          >
+            <option value="all">Toutes les spécialités</option>
+            {uniqueSpecialties.map((specialty) => (
+              <option key={specialty} value={specialty}>
+                {specialty}
+              </option>
+            ))}
+          </select>
+
+          {/* Date Range Start */}
+          <input
+            type="date"
+            value={dateRangeStart}
+            onChange={(e) => {
+              setDateRangeStart(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-sm"
+            placeholder="Date début"
+          />
+
+          {/* Date Range End */}
+          <input
+            type="date"
+            value={dateRangeEnd}
+            onChange={(e) => {
+              setDateRangeEnd(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-sm"
+            placeholder="Date fin"
+          />
+        </div>
+
+        {/* Results count */}
+        {searchTerm || filterStatus !== "all" || filterType !== "all" || filterSpecialty !== "all" || dateRangeStart || dateRangeEnd ? (
           <p className="text-sm text-slate-600">
             {filteredActLogs.length} acte{filteredActLogs.length !== 1 ? "s" : ""} trouvé{filteredActLogs.length !== 1 ? "s" : ""}
           </p>
@@ -495,30 +569,30 @@ export default function FinancesActsPage() {
                         <td className="px-6 py-4 text-slate-600 text-sm">{log.datetime}</td>
                         <td className="px-6 py-4 text-center">{getStatusBadge(log.status)}</td>
                         <td className="px-6 py-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
+                          <div className="flex items-center justify-end gap-3">
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0 hover:bg-blue-100"
+                              className="h-10 w-10 p-0 hover:bg-blue-100 rounded-lg transition-colors"
                               title="Imprimer"
                             >
-                              <Printer className="h-4 w-4 text-blue-600" />
+                              <Printer className="h-5 w-5 text-blue-600" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0 hover:bg-amber-100"
+                              className="h-10 w-10 p-0 hover:bg-amber-100 rounded-lg transition-colors"
                               title="Modifier"
                             >
-                              <Edit2 className="h-4 w-4 text-amber-600" />
+                              <Edit2 className="h-5 w-5 text-amber-600" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0 hover:bg-red-100"
+                              className="h-10 w-10 p-0 hover:bg-red-100 rounded-lg transition-colors"
                               title="Supprimer"
                             >
-                              <Trash2 className="h-4 w-4 text-red-600" />
+                              <Trash2 className="h-5 w-5 text-red-600" />
                             </Button>
                           </div>
                         </td>

@@ -14,6 +14,7 @@ import {
   Users2,
   Users,
   Circle,
+  Receipt,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -62,6 +63,11 @@ export const getPrimaryNav = (t: any) => [
         icon: Activity,
       },
     ],
+  },
+  {
+    href: "/factures",
+    label: "Mes Factures",
+    icon: Receipt,
   },
 ];
 

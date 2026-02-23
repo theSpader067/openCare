@@ -131,6 +131,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
     const [selectedTeamsEdit, setSelectedTeamsEdit] = useState<Team[]>([]);
     const [dbPatients, setDbPatients] = useState<Patient[]>([]);
     const [isLoadingPatients, setIsLoadingPatients] = useState(false);
+    const [openMenuTaskId, setOpenMenuTaskId] = useState<string | null>(null);
 
     // Refs for PatientCreate in add and edit modals
     const patientCreateAddRef = useRef<PatientCreateRef>(null);
@@ -417,7 +418,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
   };
 
   return (
-    <div className="">
+    <div className="pl-6">
       <Card
         className={cn(
           "flex max-h-fit flex-1 flex-col border-none bg-white/90",
@@ -466,7 +467,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
 
         <CardContent
           className={cn(
-            "flex-1 h-fit overflow-x-hidden pt-0",
+            "flex-1 h-fit overflow-x-hidden pt-0 mx-0 px-0",
             contentClassName
           )}
         >
@@ -487,46 +488,54 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
               }
             />
           ) : (
-            <div className="h-full min-h-0 overflow-y-auto pr-1">
-              <div className="space-y-3">
-                {tasks?.map((task) => {
-                  const isDone = task.done;
+            <div className="h-full min-h-0 overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50">
+                    <th className="w-12 py-3 text-left pl-6">
+                      <span className="text-xs font-semibold text-slate-600 uppercase tracking-[0.2em]">
+                        {/* Checkbox column header */}
+                      </span>
+                    </th>
+                    <th className="flex-1 py-3 text-left px-4">
+                      <span className="text-xs font-semibold text-slate-600 uppercase tracking-[0.2em]">
+                        {/* Tasks column - no title */}
+                      </span>
+                    </th>
+                    <th className="w-12 py-3 text-right pr-6">
+                      <span className="text-xs font-semibold text-slate-600 uppercase tracking-[0.2em]">
+                        {/* Actions column header */}
+                      </span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tasks?.map((task) => {
+                    const isDone = task.done;
 
-                  return (
-                    <div
-                      key={task.id}
-                      className="relative"
-                      onTouchStart={
-                        enableSwipeActions ? handleTouchStart : undefined
-                      }
-                      onTouchEnd={
-                        enableSwipeActions
-                          ? (e) => handleTouchEnd(e, task.id)
-                          : undefined
-                      }
-                    >
-                      {/* Task item */}
-                      <div
+                    return (
+                      <tr
+                        key={task.id}
                         className={cn(
-                          "flex flex-col gap-3 rounded-2xl border px-4 py-3 shadow-sm sm:flex-row sm:items-start sm:gap-4 transition-transform duration-300 ease-out",
+                          "border-b transition-colors hover:bg-slate-50",
                           isDone
-                            ? "border-emerald-200/80 bg-emerald-50/70"
-                            : "border-slate-200 bg-white/85 hover:border-indigo-200"
+                            ? "border-emerald-200/50 bg-emerald-50/30"
+                            : "border-slate-200"
                         )}
-                        style={{
-                          transform: enableSwipeActions && swipedTaskId === task.id ? "translateX(-96px)" : "translateX(0)",
-                        }}
                       >
-                        <div className="flex items-start gap-3 sm:flex-1">
+                        {/* Checkbox Column */}
+                        <td className="py-3 pl-6">
                           <button
-                            onClick={() => void onTaskToggle(task.id)}
-                            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border transition hover:bg-slate-100"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onTaskToggle(task.id);
+                            }}
+                            className="flex h-8 w-8 items-center justify-center rounded border transition hover:bg-slate-100 cursor-pointer"
                             type="button"
-                            disabled={isLoading}
                           >
                             <span
                               className={cn(
-                                "flex h-full w-full items-center justify-center rounded-full",
+                                "flex h-full w-full items-center justify-center rounded",
                                 isDone
                                   ? "border-emerald-300 bg-emerald-500/20 text-emerald-600"
                                   : "border-indigo-200 bg-white text-indigo-500"
@@ -539,7 +548,11 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
                               )}
                             </span>
                           </button>
-                          <div className="flex flex-1 flex-col gap-2 my-auto">
+                        </td>
+
+                        {/* Task Name Column with Patient/Team Info */}
+                        <td className="py-3 px-4">
+                          <div className="flex flex-col gap-1">
                             <p
                               className={cn(
                                 "text-sm font-semibold",
@@ -553,26 +566,27 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
                             <div className="flex flex-wrap items-center gap-2">
                               {/* Patient Name Tag */}
                               {task.patientName && (
-                                <div className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded">
-                                  <div className="flex gap-1 justify-center items-center"><UserIcon className="h-2 w-2"/> {task.patientName}</div>
+                                <div className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded inline-flex gap-1 items-center">
+                                  <UserIcon className="h-3 w-3" />
+                                  {task.patientName}
                                 </div>
                               )}
 
-                              {/* Private/Team indicator and Teams */}
+                              {/* Private/Team indicator */}
                               {task.taskType === "private" && (
-                                <span className="text-xs font-medium px-2 py-1 rounded flex items-center gap-1 bg-slate-800 text-white">
+                                <span className="text-xs font-medium px-2 py-0.5 rounded inline-flex items-center gap-1 bg-slate-800 text-white">
                                   <Lock className="h-3 w-3" />
                                   {t("tasks.form.privateType")}
                                 </span>
                               )}
 
-                              {/* Show team names (without équipe badge) */}
+                              {/* Team names */}
                               {task.taskType === "team" && task.teams && task.teams.length > 0 && (
                                 <div className="flex flex-wrap gap-2">
                                   {task.teams.map((team) => (
                                     <span
                                       key={team.id}
-                                      className="text-xs font-medium px-2 py-1 rounded bg-indigo-100 text-indigo-700 border border-indigo-300"
+                                      className="text-xs font-medium px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 border border-indigo-300"
                                     >
                                       {team.name}
                                     </span>
@@ -581,66 +595,61 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
                               )}
                             </div>
                           </div>
-                        </div>
-                        <div className="flex gap-1 flex-col items-center justify-center sm:w-auto">
-                          {/* Edit Button */}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 rounded-md text-indigo-600 hover:bg-indigo-50 transition"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              handleOpenEditTaskModal(task);
-                            }}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
+                        </td>
 
-                          {/* Delete Button */}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 rounded-md text-rose-600 hover:bg-rose-50 transition"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              handleOpenDeleteTaskModal(task);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
+                        {/* Actions Column with Dropdown */}
+                        <td className="py-3 text-right pr-6 relative">
+                          <div className="flex justify-end">
+                            <div className="relative">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 rounded p-0 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenMenuTaskId(
+                                    openMenuTaskId === task.id ? null : task.id
+                                  );
+                                }}
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
 
-                      {/* Swipe action buttons */}
-                      {enableSwipeActions && (
-                        <div
-                          className={cn(
-                            "absolute right-2 top-1/2 -translate-y-1/2 flex gap-2 transition-all duration-300 ease-out",
-                            swipedTaskId === task.id
-                              ? "opacity-100 pointer-events-auto"
-                              : "opacity-0 pointer-events-none"
-                          )}
-                        >
-                          <button
-                            onClick={() => handleOpenEditTaskModal(task)}
-                            className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-md"
-                            type="button"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => handleOpenDeleteTaskModal(task)}
-                            className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-600 text-white hover:bg-rose-700 transition shadow-md"
-                            type="button"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+                              {/* Dropdown Menu */}
+                              {openMenuTaskId === task.id && (
+                                <div className="absolute right-0 top-full mt-1 z-50 w-40 rounded-lg border border-slate-200 bg-white shadow-lg">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenEditTaskModal(task);
+                                      setOpenMenuTaskId(null);
+                                    }}
+                                    className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 transition first:rounded-t-lg"
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                    {t("tasks.form.edit")}
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenDeleteTaskModal(task);
+                                      setOpenMenuTaskId(null);
+                                    }}
+                                    className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-rose-600 hover:bg-rose-50 transition last:rounded-b-lg"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                    {t("tasks.form.delete")}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </CardContent>

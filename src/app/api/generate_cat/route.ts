@@ -105,12 +105,21 @@ Rules:
    - "vérifier" → "condition"
    - "attendre" → "wait"
 3. content should contain what follows the keyword
-4. children_nodes should list the ids of blocks that follow from this one
-5. depth should be 0 for root blocks, incrementing by 1 for each level
-6. For action blocks starting with "faire", content should list comma-separated tasks (keep the comma-separated format)
-7. For condition blocks starting with "vérifier", content should describe the condition
-8. For timer blocks starting with "attendre", content should describe the wait time
-9. Make sure the tree structure is logical and complete
+4. children_nodes should list ONLY the immediate child block ids
+5. depth should be based on hierarchical nesting level:
+   - Root blocks (first level, no parent) = depth 0
+   - Blocks nested under root = depth 1
+   - Blocks nested under depth 1 = depth 2, etc.
+6. CRITICAL: Analyze the text structure:
+   - Indentation or nesting indicates parent-child relationships
+   - A block's children are the blocks that directly follow and are nested under it
+   - Do NOT include descendant blocks (grandchildren) in children_nodes; only direct children
+7. For action blocks starting with "faire", content should list comma-separated tasks
+8. For condition blocks starting with "vérifier", content should describe the condition
+9. For timer blocks starting with "attendre", content should describe the wait time
+10. Ensure there is exactly ONE root block (depth 0, no parent references)
+11. All non-root blocks must have at least one parent in the structure
+12. Make sure the tree structure is hierarchically correct and complete
 
 Return ONLY the JSON array, no other text.`;
 
@@ -139,6 +148,35 @@ Return ONLY the JSON array, no other text.`;
     // Parse the JSON response
     const blocks: BlockData[] = JSON.parse(responseText);
     console.log("[CAT_GENERATION] Parsed blocks:", blocks.length);
+
+    // Validate block structure
+    const rootBlocks = blocks.filter((b) => b.depth === 0);
+    if (rootBlocks.length !== 1) {
+      throw new Error(`Expected exactly 1 root block (depth 0), but found ${rootBlocks.length}. Tree structure is invalid.`);
+    }
+
+    // Validate that all non-root blocks are reachable from the root
+    const blockIds = new Set(blocks.map((b) => b.id));
+    const visited = new Set<number>();
+
+    function traverseTree(blockId: number): void {
+      if (visited.has(blockId)) return;
+      visited.add(blockId);
+
+      const block = blocks.find((b) => b.id === blockId);
+      if (!block) return;
+
+      for (const childId of block.children_nodes) {
+        traverseTree(childId);
+      }
+    }
+
+    traverseTree(rootBlocks[0].id);
+
+    if (visited.size !== blocks.length) {
+      const unreachableIds = blocks.filter((b) => !visited.has(b.id)).map((b) => b.id);
+      throw new Error(`Block structure is invalid. Unreachable blocks: ${unreachableIds.join(", ")}`);
+    }
 
     // Process blocks to ensure proper task formatting for action blocks
     const processedBlocks = blocks.map((block) => {
@@ -233,18 +271,18 @@ async function createCATFromBlocks(
     }
 
     // Set the current block to the first block (root block with depth 0)
-    const rootBlock = cat.blocks.find(
-      (b) => blocks.find((bl) => bl.id === parseInt(b.id))?.depth === 0
-    );
-
-    if (rootBlock) {
-      await prisma.cAT.update({
-        where: { id: cat.id },
-        data: {
-          currentBlockId: rootBlock.id,
-        },
-      });
-      console.log("[CAT_GENERATION] Set current block to:", rootBlock.id);
+    const rootBlockOriginal = blocks.find((b) => b.depth === 0);
+    if (rootBlockOriginal) {
+      const rootBlockDb = idMap[rootBlockOriginal.id];
+      if (rootBlockDb) {
+        await prisma.cAT.update({
+          where: { id: cat.id },
+          data: {
+            currentBlockId: rootBlockDb,
+          },
+        });
+        console.log("[CAT_GENERATION] Set current block to:", rootBlockDb);
+      }
     }
 
     console.log(

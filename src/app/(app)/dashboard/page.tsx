@@ -724,13 +724,9 @@ export default function DashboardPage() {
     <div
       className={cn(
         plex.className,
-        "relative flex h-full flex-col overflow-x-hidden overflow-y-auto bg-[#f8f9fb] pb-20 text-[#111322] lg:pb-0",
+        "relative flex h-full flex-col overflow-x-hidden overflow-y-auto pb-20 text-[#111322] lg:pb-0",
       )}
     >
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white via-[#f8f9fb] to-[#eef1f5]" />
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-white/60 backdrop-blur" />
-      <div aria-hidden="true" className="pointer-events-none absolute -top-20 right-8 h-64 w-64 rounded-full bg-gradient-to-br from-[#c7d2fe] via-[#e0e7ff] to-transparent opacity-40 blur-3xl" />
-      <div aria-hidden="true" className="pointer-events-none absolute -bottom-10 left-10 h-56 w-56 rounded-full bg-gradient-to-br from-[#fbcfe8] via-transparent to-transparent opacity-40 blur-3xl" />
       <div className="relative z-10 flex h-full flex-col">
       <section className="shrink-0 hidden lg:flex">
         {!hasStats ? (
@@ -899,9 +895,6 @@ export default function DashboardPage() {
                         <th className="px-4 py-3 text-xs font-semibold tracking-[0.2em] text-slate-500 uppercase">
                           {t('dashboard.dashboardPage.patientTableDiagnosis')}
                         </th>
-                        <th className="px-4 py-3 text-xs font-semibold tracking-[0.2em] text-slate-500 uppercase">
-                          {t('dashboard.dashboardPage.patientTableStatus')}
-                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -923,14 +916,7 @@ export default function DashboardPage() {
                           <td className="px-4 py-3 text-sm text-slate-500">
                             {patient.diagnosis}
                           </td>
-                          <td className="px-4 py-3">
-                            <span
-                              className="rounded-full border border-slate-200/80 bg-white px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-slate-600"
-                            >
-                              {patientStatusMeta[patient.status].label}
-                            </span>
-                          </td>
-                          
+
                         </tr>
                       ))}
                     </tbody>

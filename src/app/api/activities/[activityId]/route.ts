@@ -53,7 +53,7 @@ export async function GET(
     const activity = await prisma.activity.findUnique({
       where: { id: activityId },
       include: {
-        User: {
+        author: {
           select: {
             id: true,
             firstName: true,
@@ -137,7 +137,7 @@ export async function PUT(
         ...(team !== undefined && { équipe: team || null }),
       },
       include: {
-        User: {
+        author: {
           select: {
             id: true,
             firstName: true,
@@ -153,7 +153,7 @@ export async function PUT(
     await activityServerAnalytics.trackActivityUpdated({
       id: updatedActivity.id,
       title: updatedActivity.title,
-      category: updatedActivity.category || '',
+      category: updatedActivity.type || '',
     });
 
     return NextResponse.json({

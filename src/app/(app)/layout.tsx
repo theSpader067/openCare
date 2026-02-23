@@ -46,7 +46,7 @@ export default function ApplicationLayout({
 
       <div className="flex h-full px-2 pb-6 pt-2 sm:px-1 lg:px-2 lg:pb-6 lg:pt-4">
         <DesktopSidebar />
-        <div className="relative flex h-full flex-1 flex-col overflow-hidden rounded-[28px] bg-white/55 shadow-[0_25px_65px_-35px_rgba(79,70,229,0.45)] backdrop-blur-2xl lg:rounded-[36px]">
+        <div className="relative flex h-full flex-1 flex-col overflow-hidden rounded-[28px] bg-white/40 shadow-[0_25px_65px_-35px_rgba(79,70,229,0.45)] backdrop-blur-2xl lg:rounded-[36px]">
           <AppHeader onToggleSidebar={() => setSidebarOpen(true)} />
 
           <main className="flex-1 overflow-y-auto pb-24 md:pb-20 lg:pb-8">

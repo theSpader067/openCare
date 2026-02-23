@@ -25,7 +25,8 @@
       "Bash(yes:*)",
       "Bash(node --version:*)",
       "WebFetch(domain:ocr.space)",
-      "Bash(npx prisma migrate:*)"
+      "Bash(npx prisma migrate:*)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []

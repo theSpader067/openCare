@@ -8,6 +8,28 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// ============ Organization & Core Models ============
+
+model Organization {
+  id                  String    @id @default(cuid())
+  name                String
+  email               String?
+  phone               String?
+  address             String?
+  taxId               String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  // Relations
+  members             User[]    @relation("OrgMembers")
+  performedActs       PerformedAct[]
+  invoices            Invoice[]
+  invoiceLines        InvoiceLine[]
+  payments            Payment[]
+  paymentAllocations  PaymentAllocation[]
+  actCatalogItems     ActCatalogItem[]
+  billingDocuments    BillingDocument[]
+}
+
 model Account {
   id                String  @id
   userId            Int
@@ -26,19 +48,105 @@ model Account {
   @@unique([provider, providerAccountId])
 }
 
+// ============ Activity Models (Class Table Inheritance) ============
+
+enum ActivityType {
+  CONSULTATION
+  EXPLORATION
+  OPERATION
+  PROCEDURE
+  OTHER
+}
+
+enum ActivityStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+/// Common trunk for all activities
 model Activity {
+  id            Int              @id @default(autoincrement())
+  type          ActivityType
+  title         String           // Summary/title of the activity
+  startAt       DateTime
+  endAt         DateTime?
+  status        ActivityStatus   @default(PLANNED)
+  authorId      Int
+  author        User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // Links to patient/episode for multi-tenancy and permissions
+  patientId     Int?
+  patient       Patient?         @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  episodeId     String?
+  episode       Episode?         @relation(fields: [episodeId], references: [id], onDelete: SetNull)
+
+  // Optional metadata for non-critical extras (JSON)
+  metadata      Json?
+
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  // 1-1 relations to detail tables
+  consultationDetail  ConsultationDetail?
+  explorationDetail   ExplorationDetail?
+  operationDetail     OperationDetail?
+
+  // Billable acts performed during this activity
+  performedActs       PerformedAct[]
+
+  @@index([authorId])
+  @@index([patientId])
+  @@index([episodeId])
+  @@index([type])
+  @@index([status])
+}
+
+/// Consultation-specific details (1-1 with Activity)
+model ConsultationDetail {
   id          Int       @id @default(autoincrement())
-  title       String
-  horaire     String?
-  category    String?
-  details     String?
-  place       String?
-  activityDay DateTime?
-  creatorId   Int
+  activityId  Int       @unique
+  activity    Activity  @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  motif       String?   // Reason for consultation
+  histoire    String?   @db.Text // Medical history / background
+  examen      String?   @db.Text // Physical examination findings
+  diagnostic  String?   @db.Text // Diagnosis
+  plan        String?   @db.Text // Treatment/action plan
+
   createdAt   DateTime  @default(now())
-  updatedAt   DateTime
-  quipe       String?   @map("équipe")
-  User        User      @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  updatedAt   DateTime  @updatedAt
+}
+
+/// Exploration/Investigation-specific details (1-1 with Activity)
+model ExplorationDetail {
+  id                Int       @id @default(autoincrement())
+  activityId        Int       @unique
+  activity          Activity  @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  typeExploration   String?   // Type: endoscopy, echo, scan, xray, etc.
+  indication        String?   @db.Text // Reason for exploration
+  compt_rendu       String?   @db.Text // Account report/findings
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+/// Operation/Surgery-specific details (1-1 with Activity)
+model OperationDetail {
+  id            Int       @id @default(autoincrement())
+  activityId    Int       @unique
+  activity      Activity  @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  geste         String?   // Surgical gesture/procedure
+  voie_dabord   String?   // Approach (voie d'abord)
+  anesthesie    String?   // Anesthesia type/details
+  incidents     String?   @db.Text // Any incidents during surgery
+  drains        String?   // Drain placements and types
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model Analyse {
@@ -59,6 +167,7 @@ model Analyse {
   User           User       @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   Patient        Patient?   @relation(fields: [patientId], references: [id])
   LabEntry       LabEntry[]
+  performedActs   PerformedAct[]
 }
 
 model Avis {
@@ -217,6 +326,10 @@ model Patient {
   Rapport             Rapport[]
   Task                Task[]
   Episode             Episode[]
+  Activity            Activity[]
+  performedActs       PerformedAct[]
+  invoices            Invoice[]
+  payments            Payment[]
 }
 
 model Rapport {
@@ -312,8 +425,12 @@ model User {
   profileVisible                  Boolean              @default(true)
   addresse                        String?
   language                        String?              @default("en")
+  // Organization - doctor can work at multiple orgs
+  orgIds                          String[]            @default([]) // Array of organization IDs
+  organizations                   Organization[]      @relation("OrgMembers")
   Account                         Account[]
   Activity                        Activity[]
+  performedActs                   PerformedAct[]
   Analyse                         Analyse[]
   Avis                            Avis[]
   FavouriteTask                   FavouriteTask[]
@@ -329,7 +446,11 @@ model User {
   VerificationToken               VerificationToken[]
   rapportParticipations           Rapport[]            @relation("RapportParticipants")
   teamsAsMember                   Team[]               @relation("TeamMembers")
-  Episode                          Episode[]
+  Episode                         Episode[]
+  invoicesCreated                 Invoice[]
+  paymentsReceived                Payment[]
+
+  @@index([orgIds])
 }
 
 model VerificationCode {
@@ -372,9 +493,12 @@ model Episode {
   atcds     String?
   clinique  String?
   paraclinique String?
-  cats      CAT[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  cats           CAT[]
+  activities     Activity[]
+  performedActs  PerformedAct[]
+  invoices       Invoice[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
 model CAT {
@@ -426,4 +550,242 @@ enum CATBlockStatus {
   ACTIVE
   COMPLETED
   SKIPPED
+}
+
+// ============ Billing & Invoicing Models ============
+
+enum PerformedActStatus {
+  PLANNED
+  DONE
+  CANCELED
+}
+
+enum BillableStatus {
+  NOT_BILLABLE
+  BILLABLE
+  INVOICED
+}
+
+/// PerformedAct: Tracks actual clinical acts that can be billed
+/// Acts as the bridge between clinical activities and invoicing
+model PerformedAct {
+  id                  String            @id @default(cuid())
+  orgId               String
+  org                 Organization      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  patientId           Int?
+  patient             Patient?          @relation(fields: [patientId], references: [id], onDelete: SetNull)
+
+  episodeId           String?
+  episode             Episode?          @relation(fields: [episodeId], references: [id], onDelete: SetNull)
+
+  // Link to act catalog for standard pricing/info
+  catalogItemId       String?
+  catalogItem         ActCatalogItem?   @relation(fields: [catalogItemId], references: [id], onDelete: SetNull)
+
+  // Billing details (can override catalog defaults)
+  quantity            Int               @default(1)
+  unitPriceOverride   Decimal?          @db.Decimal(12, 2) // If null, use catalogItem.defaultPrice
+  taxRateOverride     Decimal?          @db.Decimal(5, 2)  // If null, use catalogItem.taxRate
+  discount            Decimal?          @default(0)        @db.Decimal(12, 2)
+
+  // Clinical source - where this act originated from
+  source              String?           // e.g., "CONSULTATION", "EXPLORATION", "OPERATION", "ANALYSE", "MANUAL"
+
+  // Links to clinical events (optional, but helpful for traceability)
+  activityId          Int?
+  activity            Activity?         @relation(fields: [activityId], references: [id], onDelete: SetNull)
+
+  analyseId           Int?
+  analyse             Analyse?          @relation(fields: [analyseId], references: [id], onDelete: SetNull)
+
+  // Additional info
+  note                String?           @db.Text
+  performedAt         DateTime?         // When the act was actually performed
+  performedById       Int?
+  performedBy         User?             @relation(fields: [performedById], references: [id], onDelete: SetNull)
+
+  // Status tracking
+  status              PerformedActStatus @default(PLANNED)
+  billableStatus      BillableStatus     @default(BILLABLE)
+
+  // Invoicing
+  invoiceLines        InvoiceLine[]     // One PerformedAct can be split across multiple invoices
+
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@index([orgId])
+  @@index([patientId])
+  @@index([episodeId])
+  @@index([catalogItemId])
+  @@index([activityId])
+  @@index([analyseId])
+  @@index([billableStatus])
+  @@index([status])
+}
+
+model Invoice {
+  id              String          @id @default(cuid())
+  orgId           String
+  org             Organization    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  patientId       Int
+  patient         Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  episodeId       String?
+  episode         Episode?        @relation(fields: [episodeId], references: [id], onDelete: SetNull)
+  number          String          // Invoice number, unique per org
+  issueDate       DateTime
+  dueDate         DateTime?
+  status          InvoiceStatus   @default(DRAFT)
+  currency        String          @default("MAD")
+  subtotal        Decimal         @db.Decimal(12, 2)
+  discountTotal   Decimal         @default(0) @db.Decimal(12, 2)
+  taxTotal        Decimal         @default(0) @db.Decimal(12, 2)
+  total           Decimal         @db.Decimal(12, 2)
+  balanceDue      Decimal         @db.Decimal(12, 2)
+  notes           String?         @db.Text
+  createdById     Int
+  createdBy       User            @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  lines           InvoiceLine[]
+  payments        Payment[]
+  documents       BillingDocument[]
+  paymentAllocations PaymentAllocation[]
+
+  @@unique([orgId, number])
+  @@index([orgId])
+  @@index([patientId])
+  @@index([status])
+}
+
+model InvoiceLine {
+  id              String          @id @default(cuid())
+  invoiceId       String
+  invoice         Invoice         @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  // Link to PerformedAct (super important for clinical traceability)
+  performedActId  String?
+  performedAct    PerformedAct?   @relation(fields: [performedActId], references: [id], onDelete: SetNull)
+
+  // Fallback to catalog item if no PerformedAct
+  actId           String?
+  act             ActCatalogItem? @relation(fields: [actId], references: [id], onDelete: SetNull)
+
+  description     String
+  qty             Int             @default(1)
+  unitPrice       Decimal         @db.Decimal(12, 2)
+  discountAmount  Decimal         @default(0) @db.Decimal(12, 2)
+  taxRate         Decimal         @default(0) @db.Decimal(5, 2)
+  taxAmount       Decimal         @default(0) @db.Decimal(12, 2)
+  lineTotal       Decimal         @db.Decimal(12, 2)
+  orgId           String
+  org             Organization    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([invoiceId])
+  @@index([actId])
+  @@index([performedActId])
+}
+
+model Payment {
+  id              String          @id @default(cuid())
+  orgId           String
+  org             Organization    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  invoiceId       String?
+  invoice         Invoice?        @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  patientId       Int
+  patient         Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  amount          Decimal         @db.Decimal(12, 2)
+  currency        String          @default("MAD")
+  paidAt          DateTime
+  method          PaymentMethod
+  reference       String?         // Payment reference number
+  receivedById    Int
+  receivedBy      User            @relation(fields: [receivedById], references: [id], onDelete: Cascade)
+  documents       BillingDocument[]
+  allocations     PaymentAllocation[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([orgId])
+  @@index([invoiceId])
+  @@index([patientId])
+}
+
+model PaymentAllocation {
+  id              String          @id @default(cuid())
+  paymentId       String
+  payment         Payment         @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  invoiceId       String
+  invoice         Invoice         @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amountApplied   Decimal         @db.Decimal(12, 2)
+  orgId           String
+  org             Organization    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@unique([paymentId, invoiceId])
+  @@index([paymentId])
+  @@index([invoiceId])
+  @@index([orgId])
+}
+
+model ActCatalogItem {
+  id              String          @id @default(cuid())
+  orgId           String
+  org             Organization    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  code            String?         // Optional code/reference
+  name            String
+  defaultPrice    Decimal         @db.Decimal(12, 2)
+  taxRate         Decimal         @default(0) @db.Decimal(5, 2)
+  active          Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  performedActs   PerformedAct[]
+  lines           InvoiceLine[]
+
+  @@unique([orgId, code])
+  @@index([orgId])
+}
+
+model BillingDocument {
+  id              String              @id @default(cuid())
+  orgId           String
+  org             Organization        @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  type            BillingDocumentType
+  invoiceId       String?
+  invoice         Invoice?            @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  paymentId       String?
+  payment         Payment?            @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  storageKey      String              // S3 or storage key for the PDF
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([orgId])
+  @@index([invoiceId])
+  @@index([paymentId])
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  PARTIALLY_PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  CHECK
+}
+
+enum BillingDocumentType {
+  INVOICE_PDF
+  RECEIPT_PDF
+  CREDIT_NOTE_PDF
 }

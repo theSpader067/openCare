@@ -50,9 +50,9 @@ export async function GET(request: NextRequest) {
 
     const activities = await prisma.activity.findMany({
       orderBy: { createdAt: "desc" },
-      where: { creatorId: parseInt(userId) },
+      where: { authorId: parseInt(userId) },
       include: {
-        User: {
+        author: {
           select: {
             id: true,
             firstName: true,
@@ -110,18 +110,20 @@ export async function POST(request: NextRequest) {
 
     const activity = await prisma.activity.create({
       data: {
+        type: type as any,
         title: title.trim(),
-        category: type,
-        details: description,
-        horaire: time,
-        place: location,
-        activityDay: activityDay ? new Date(activityDay) : undefined,
-        quipe: équipe || undefined,
-        creatorId: parseInt(userId),
-        updatedAt: new Date(),
+        startAt: activityDay ? new Date(activityDay) : new Date(),
+        authorId: parseInt(userId),
+        status: 'PLANNED',
+        metadata: {
+          description,
+          time,
+          location,
+          équipe,
+        },
       },
       include: {
-        User: {
+        author: {
           select: {
             id: true,
             firstName: true,
@@ -137,10 +139,10 @@ export async function POST(request: NextRequest) {
     await activityServerAnalytics.trackActivityCreated({
       id: activity.id,
       title: activity.title,
-      category: activity.category || '',
-      creatorId: activity.creatorId,
-      place: activity.place || '',
-      équipe: activity.quipe || '',
+      category: activity.type || '',
+      creatorId: activity.authorId,
+      place: (activity.metadata as any)?.location || '',
+      équipe: (activity.metadata as any)?.équipe || '',
     });
 
     return NextResponse.json({

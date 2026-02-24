@@ -178,9 +178,13 @@ export default function TeamsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDepartment, setFilterDepartment] = useState<string>("all");
   const [filterRole, setFilterRole] = useState<string>("all");
+  const [filterSpecialty, setFilterSpecialty] = useState<string>("all");
+  const [dateRangeStart, setDateRangeStart] = useState<string>("");
+  const [dateRangeEnd, setDateRangeEnd] = useState<string>("");
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(teams[0]);
   const [isAddTeamModal, setIsAddTeamModal] = useState(false);
   const [isAddMemberModal, setIsAddMemberModal] = useState(false);
+  const [isAddUserModal, setIsAddUserModal] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -200,6 +204,10 @@ export default function TeamsPage() {
     return Array.from(new Set(teams.map((t) => t.department))).sort();
   }, [teams]);
 
+  const specialties = useMemo(() => {
+    return Array.from(new Set(allUsers.map((u) => u.specialty))).sort();
+  }, [allUsers]);
+
   // Filter users
   const filteredUsers = useMemo(() => {
     return allUsers.filter((user) => {
@@ -208,9 +216,18 @@ export default function TeamsPage() {
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.specialty.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesRole = filterRole === "all" || user.role === filterRole;
-      return matchesSearch && matchesRole;
+      const matchesSpecialty = filterSpecialty === "all" || user.specialty === filterSpecialty;
+
+      // Date range filtering
+      const userDate = new Date(user.joinDate);
+      const startDate = dateRangeStart ? new Date(dateRangeStart) : null;
+      const endDate = dateRangeEnd ? new Date(dateRangeEnd) : null;
+      const matchesDateRange =
+        (!startDate || userDate >= startDate) && (!endDate || userDate <= endDate);
+
+      return matchesSearch && matchesRole && matchesSpecialty && matchesDateRange;
     });
-  }, [allUsers, searchTerm, filterRole]);
+  }, [allUsers, searchTerm, filterRole, filterSpecialty, dateRangeStart, dateRangeEnd]);
 
   // Paginate users
   const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
@@ -254,11 +271,17 @@ export default function TeamsPage() {
             <p className="text-slate-600 mt-2">Gérez vos équipes et les membres du personnel</p>
           </div>
           <Button
-            onClick={() => setIsAddTeamModal(true)}
+            onClick={() => {
+              if (activeTab === "users") {
+                setIsAddUserModal(true);
+              } else {
+                setIsAddTeamModal(true);
+              }
+            }}
             className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-semibold w-fit"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Nouvelle Équipe
+            {activeTab === "users" ? "Nouvel Utilisateur" : "Nouvelle Équipe"}
           </Button>
         </div>
       </div>
@@ -271,7 +294,7 @@ export default function TeamsPage() {
             setCurrentPage(1);
             setSearchTerm("");
           }}
-          className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all border-b-2 ${
+          className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 font-semibold transition-all border-b-2 ${
             activeTab === "users"
               ? "border-indigo-600 text-indigo-600 bg-indigo-50/50"
               : "border-transparent text-slate-600 hover:text-slate-900"
@@ -286,7 +309,7 @@ export default function TeamsPage() {
             setCurrentPage(1);
             setSearchTerm("");
           }}
-          className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all border-b-2 ${
+          className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 font-semibold transition-all border-b-2 ${
             activeTab === "teams"
               ? "border-indigo-600 text-indigo-600 bg-indigo-50/50"
               : "border-transparent text-slate-600 hover:text-slate-900"
@@ -300,34 +323,78 @@ export default function TeamsPage() {
       {/* USERS TAB */}
       {activeTab === "users" && (
         <div className="space-y-6">
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Rechercher par nom, email ou spécialité..."
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-            </div>
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Rechercher par nom, email ou spécialité..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Filters Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Role Filter */}
             <select
               value={filterRole}
               onChange={(e) => {
                 setFilterRole(e.target.value);
                 setCurrentPage(1);
               }}
-              className="px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white min-w-[180px]"
+              className="px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-sm"
             >
               <option value="all">Tous les rôles</option>
               <option value="head">Chef d'équipe</option>
               <option value="coordinator">Coordinateur</option>
               <option value="member">Membre</option>
             </select>
+
+            {/* Specialty Filter */}
+            <select
+              value={filterSpecialty}
+              onChange={(e) => {
+                setFilterSpecialty(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-sm"
+            >
+              <option value="all">Toutes les spécialités</option>
+              {specialties.map((specialty) => (
+                <option key={specialty} value={specialty}>
+                  {specialty}
+                </option>
+              ))}
+            </select>
+
+            {/* Date Range Start */}
+            <input
+              type="date"
+              value={dateRangeStart}
+              onChange={(e) => {
+                setDateRangeStart(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-sm"
+              placeholder="Date début"
+            />
+
+            {/* Date Range End */}
+            <input
+              type="date"
+              value={dateRangeEnd}
+              onChange={(e) => {
+                setDateRangeEnd(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-sm"
+              placeholder="Date fin"
+            />
           </div>
 
           {/* Results count */}
@@ -797,6 +864,81 @@ export default function TeamsPage() {
                 </Button>
                 <Button
                   onClick={() => setIsAddMemberModal(false)}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Annuler
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add User Modal */}
+      {isAddUserModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 p-6">
+              <h2 className="text-xl font-bold text-slate-900">Ajouter un Nouvel Utilisateur</h2>
+              <button
+                onClick={() => setIsAddUserModal(false)}
+                className="rounded-lg p-1 hover:bg-slate-100"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-4 p-6">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Nom Complet
+                </label>
+                <input
+                  type="text"
+                  placeholder="Dr. John Doe"
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  placeholder="john@hopital.com"
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Téléphone
+                </label>
+                <input
+                  type="tel"
+                  placeholder="+212 6XX XXX XXX"
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Spécialité
+                </label>
+                <select className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white">
+                  <option>Cardiologie</option>
+                  <option>Neurochirurgie</option>
+                  <option>Pédiatrie</option>
+                  <option>Chirurgie Viscérale</option>
+                </select>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button
+                  onClick={() => setIsAddUserModal(false)}
+                  className="flex-1 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white"
+                >
+                  Créer l'Utilisateur
+                </Button>
+                <Button
+                  onClick={() => setIsAddUserModal(false)}
                   variant="outline"
                   className="flex-1"
                 >

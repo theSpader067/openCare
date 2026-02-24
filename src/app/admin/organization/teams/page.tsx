@@ -16,6 +16,8 @@ import {
   ChevronRight,
   Filter,
   Check,
+  ChevronLeft,
+  ChevronRight as ChevronRightIcon,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -121,6 +123,16 @@ const MOCK_TEAMS: Team[] = [
         joinDate: "2024-02-05",
         avatar: "SM",
       },
+      {
+        id: "7",
+        name: "Infirmier Karim",
+        email: "karim.tech@hopital.com",
+        phone: "+212 6XX XXX XXX",
+        role: "member",
+        specialty: "Soins Spécialisés",
+        joinDate: "2024-02-15",
+        avatar: "KT",
+      },
     ],
   },
   {
@@ -144,23 +156,68 @@ const MOCK_TEAMS: Team[] = [
         joinDate: "2024-02-01",
         avatar: "LS",
       },
+      {
+        id: "8",
+        name: "Dr. Amal Khoury",
+        email: "amal.khoury@hopital.com",
+        phone: "+212 6XX XXX XXX",
+        role: "member",
+        specialty: "Pédiatrie Néonatale",
+        joinDate: "2024-02-12",
+        avatar: "AK",
+      },
     ],
   },
 ];
 
+const ITEMS_PER_PAGE = 10;
+
 export default function TeamsPage() {
   const [teams, setTeams] = useState<Team[]>(MOCK_TEAMS);
+  const [activeTab, setActiveTab] = useState<"users" | "teams">("users");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDepartment, setFilterDepartment] = useState<string>("all");
+  const [filterRole, setFilterRole] = useState<string>("all");
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(teams[0]);
   const [isAddTeamModal, setIsAddTeamModal] = useState(false);
   const [isAddMemberModal, setIsAddMemberModal] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Get all users from teams
+  const allUsers = useMemo(() => {
+    const users: (TeamMember & { teamName: string })[] = [];
+    teams.forEach((team) => {
+      team.members.forEach((member) => {
+        users.push({ ...member, teamName: team.name });
+      });
+    });
+    return users;
+  }, [teams]);
 
   const departments = useMemo(() => {
     return Array.from(new Set(teams.map((t) => t.department))).sort();
   }, [teams]);
 
+  // Filter users
+  const filteredUsers = useMemo(() => {
+    return allUsers.filter((user) => {
+      const matchesSearch =
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.specialty.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesRole = filterRole === "all" || user.role === filterRole;
+      return matchesSearch && matchesRole;
+    });
+  }, [allUsers, searchTerm, filterRole]);
+
+  // Paginate users
+  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  // Filter teams
   const filteredTeams = useMemo(() => {
     return teams.filter((team) => {
       const matchesSearch = team.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -204,242 +261,433 @@ export default function TeamsPage() {
             Nouvelle Équipe
           </Button>
         </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-xs font-medium text-slate-600">Total Équipes</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">{teams.length}</p>
-          </div>
-          <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-xs font-medium text-slate-600">Équipes Actives</p>
-            <p className="mt-2 text-2xl font-bold text-emerald-600">
-              {teams.filter((t) => t.status === "active").length}
-            </p>
-          </div>
-          <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-xs font-medium text-slate-600">Total Membres</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">
-              {teams.reduce((sum, t) => sum + t.memberCount, 0)}
-            </p>
-          </div>
-          <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-xs font-medium text-slate-600">Départements</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">{departments.length}</p>
-          </div>
-        </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Rechercher une équipe..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-          />
-        </div>
-        <select
-          value={filterDepartment}
-          onChange={(e) => setFilterDepartment(e.target.value)}
-          className="px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white min-w-[200px]"
+      {/* Tabs */}
+      <div className="flex gap-0 border-b border-slate-200 bg-white rounded-t-lg">
+        <button
+          onClick={() => {
+            setActiveTab("users");
+            setCurrentPage(1);
+            setSearchTerm("");
+          }}
+          className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all border-b-2 ${
+            activeTab === "users"
+              ? "border-indigo-600 text-indigo-600 bg-indigo-50/50"
+              : "border-transparent text-slate-600 hover:text-slate-900"
+          }`}
         >
-          <option value="all">Tous les départements</option>
-          {departments.map((dept) => (
-            <option key={dept} value={dept}>
-              {dept}
-            </option>
-          ))}
-        </select>
+          <Users className="h-4 w-4" />
+          Utilisateurs
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab("teams");
+            setCurrentPage(1);
+            setSearchTerm("");
+          }}
+          className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all border-b-2 ${
+            activeTab === "teams"
+              ? "border-indigo-600 text-indigo-600 bg-indigo-50/50"
+              : "border-transparent text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          <Shield className="h-4 w-4" />
+          Équipes
+        </button>
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Teams List */}
-        <div className="lg:col-span-1 space-y-3">
-          <h2 className="text-lg font-semibold text-slate-900 px-2">
-            Équipes ({filteredTeams.length})
-          </h2>
-          <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
-            {filteredTeams.map((team) => (
-              <button
-                key={team.id}
-                onClick={() => setSelectedTeam(team)}
-                className={`w-full text-left rounded-lg border-2 transition-all p-4 ${
-                  selectedTeam?.id === team.id
-                    ? "border-indigo-500 bg-indigo-50"
-                    : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-md"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-slate-900 truncate">{team.name}</h3>
-                      {team.status === "active" && (
-                        <span className="h-2 w-2 rounded-full bg-emerald-500 flex-shrink-0" />
-                      )}
-                    </div>
-                    <p className="text-sm text-slate-600 truncate">{team.department}</p>
-                    <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-                      <Users className="h-3 w-3" />
-                      {team.memberCount} membres
-                    </div>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Team Details */}
-        {selectedTeam && (
-          <div className="lg:col-span-2 space-y-6">
-            {/* Team Header Card */}
-            <div
-              className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${selectedTeam.color} p-8 text-white shadow-xl`}
+      {/* USERS TAB */}
+      {activeTab === "users" && (
+        <div className="space-y-6">
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Rechercher par nom, email ou spécialité..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
+            <select
+              value={filterRole}
+              onChange={(e) => {
+                setFilterRole(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white min-w-[180px]"
             >
-              <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-white opacity-10 blur-3xl" />
-              <div className="relative space-y-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h2 className="text-3xl font-bold">{selectedTeam.name}</h2>
-                    <p className="mt-1 text-white/90">{selectedTeam.department}</p>
+              <option value="all">Tous les rôles</option>
+              <option value="head">Chef d'équipe</option>
+              <option value="coordinator">Coordinateur</option>
+              <option value="member">Membre</option>
+            </select>
+          </div>
+
+          {/* Results count */}
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-slate-600">
+              {filteredUsers.length} utilisateur{filteredUsers.length !== 1 ? "s" : ""} trouvé
+              {filteredUsers.length !== 1 ? "s" : ""}
+              {searchTerm || filterRole !== "all" ? " (filtrés)" : ""}
+            </p>
+          </div>
+
+          {/* Users Table */}
+          {filteredUsers.length === 0 ? (
+            <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 py-12 flex flex-col items-center justify-center">
+              <Users className="h-12 w-12 text-slate-400 mb-4" />
+              <p className="text-slate-600 font-medium mb-2">Aucun utilisateur trouvé</p>
+              <p className="text-slate-500 text-sm">
+                {searchTerm || filterRole !== "all"
+                  ? "Essayez d'ajuster vos critères de recherche"
+                  : "Commencez par ajouter des membres à vos équipes"}
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-lg">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-200">
+                      <th className="px-6 py-4 text-left font-semibold text-slate-700">Utilisateur</th>
+                      <th className="px-6 py-4 text-left font-semibold text-slate-700">Créé le</th>
+                      <th className="px-6 py-4 text-left font-semibold text-slate-700">Contact</th>
+                      <th className="px-6 py-4 text-left font-semibold text-slate-700">Rôle</th>
+                      <th className="px-6 py-4 text-left font-semibold text-slate-700">Équipe</th>
+                      <th className="px-6 py-4 text-right font-semibold text-slate-700">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedUsers.map((user, index) => (
+                      <tr
+                        key={user.id}
+                        className={`border-b border-slate-200 hover:bg-slate-50 transition-colors ${
+                          index % 2 === 0 ? "" : "bg-slate-50/30"
+                        }`}
+                      >
+                        {/* User Info */}
+                        <td className="px-6 py-4">
+                          <div className="flex items-start gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 text-white font-semibold text-sm flex-shrink-0">
+                              {user.avatar}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-semibold text-slate-900">{user.name}</p>
+                              <p className="text-xs text-slate-500">{user.specialty}</p>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Creation Date */}
+                        <td className="px-6 py-4 text-sm text-slate-600">{user.joinDate}</td>
+
+                        {/* Contact */}
+                        <td className="px-6 py-4">
+                          <div className="space-y-1 text-sm">
+                            <div className="flex items-center gap-2 text-slate-700">
+                              <Mail className="h-3 w-3 text-slate-400" />
+                              <span className="truncate">{user.email}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-slate-600">
+                              <Phone className="h-3 w-3 text-slate-400" />
+                              {user.phone}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Role */}
+                        <td className="px-6 py-4">
+                          <Badge className={`text-xs ${getRoleColor(user.role)}`}>
+                            {getRoleLabel(user.role)}
+                          </Badge>
+                        </td>
+
+                        {/* Team */}
+                        <td className="px-6 py-4 text-sm">
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-medium text-xs">
+                            {user.teamName}
+                          </span>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button className="rounded-lg p-2 hover:bg-blue-100 transition-colors" title="Éditer">
+                              <Edit2 className="h-4 w-4 text-blue-600" />
+                            </button>
+                            <button className="rounded-lg p-2 hover:bg-red-100 transition-colors" title="Supprimer">
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 bg-gradient-to-r from-slate-50 to-white">
+                  <div className="text-sm text-slate-600">
+                    Page {currentPage} sur {totalPages}
                   </div>
                   <div className="flex gap-2">
-                    <button className="rounded-lg bg-white/20 p-2 hover:bg-white/30 transition-colors">
-                      <Edit2 className="h-5 w-5" />
-                    </button>
-                    <button className="rounded-lg bg-white/20 p-2 hover:bg-white/30 transition-colors">
-                      <Settings className="h-5 w-5" />
-                    </button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="h-8 px-3"
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Précédent
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="h-8 px-3"
+                    >
+                      Suivant
+                      <ChevronRightIcon className="h-4 w-4 ml-1" />
+                    </Button>
                   </div>
                 </div>
-                <p className="text-white/80 text-sm">{selectedTeam.description}</p>
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/20">
-                  <div>
-                    <p className="text-xs text-white/70">Créée le</p>
-                    <p className="font-semibold">{selectedTeam.createdAt}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-white/70">Membres</p>
-                    <p className="font-semibold">{selectedTeam.memberCount}</p>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
+          )}
+        </div>
+      )}
 
-            {/* Add Member Button */}
-            <Button
-              onClick={() => setIsAddMemberModal(true)}
-              className="w-full bg-slate-100 hover:bg-slate-200 text-slate-900 font-semibold"
+      {/* TEAMS TAB */}
+      {activeTab === "teams" && (
+        <div className="space-y-6">
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Rechercher une équipe..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
+            <select
+              value={filterDepartment}
+              onChange={(e) => {
+                setFilterDepartment(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white min-w-[200px]"
             >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Ajouter un Membre
-            </Button>
+              <option value="all">Tous les départements</option>
+              {departments.map((dept) => (
+                <option key={dept} value={dept}>
+                  {dept}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            {/* Members List */}
-            <div className="space-y-3">
-              <h3 className="font-semibold text-slate-900">Membres de l'équipe</h3>
-              <div className="space-y-2">
-                {selectedTeam.members.map((member) => (
-                  <div
-                    key={member.id}
-                    className="rounded-lg border border-slate-200 bg-white p-4 hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3 flex-1">
-                        {/* Avatar */}
-                        <div className={`flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br ${selectedTeam.color} text-white font-semibold text-sm flex-shrink-0`}>
-                          {member.avatar}
-                        </div>
-
-                        {/* Info */}
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Teams List */}
+            <div className="lg:col-span-1 space-y-3">
+              <h2 className="text-lg font-semibold text-slate-900 px-2">
+                Équipes ({filteredTeams.length})
+              </h2>
+              {filteredTeams.length === 0 ? (
+                <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 py-8 flex flex-col items-center justify-center">
+                  <Shield className="h-8 w-8 text-slate-400 mb-3" />
+                  <p className="text-sm text-slate-600">Aucune équipe trouvée</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
+                  {filteredTeams.map((team) => (
+                    <button
+                      key={team.id}
+                      onClick={() => setSelectedTeam(team)}
+                      className={`w-full text-left rounded-lg border-2 transition-all p-4 ${
+                        selectedTeam?.id === team.id
+                          ? "border-indigo-500 bg-indigo-50"
+                          : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-md"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-semibold text-slate-900">{member.name}</h4>
-                            <Badge className={`text-xs ${getRoleColor(member.role)}`}>
-                              {getRoleLabel(member.role)}
-                            </Badge>
+                            <h3 className="font-semibold text-slate-900 truncate">{team.name}</h3>
+                            {team.status === "active" && (
+                              <span className="h-2 w-2 rounded-full bg-emerald-500 flex-shrink-0" />
+                            )}
                           </div>
-                          <p className="text-sm text-slate-600">{member.specialty}</p>
-                          <div className="mt-2 flex flex-col gap-1 text-xs text-slate-500">
-                            <div className="flex items-center gap-2">
-                              <Mail className="h-3 w-3" />
-                              {member.email}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Phone className="h-3 w-3" />
-                              {member.phone}
-                            </div>
+                          <p className="text-sm text-slate-600 truncate">{team.department}</p>
+                          <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                            <Users className="h-3 w-3" />
+                            {team.memberCount} membres
                           </div>
                         </div>
                       </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
-                      {/* Actions Menu */}
-                      <div className="relative">
-                        <button
-                          onClick={() =>
-                            setOpenMenuId(openMenuId === member.id ? null : member.id)
-                          }
-                          className="rounded-lg p-2 hover:bg-slate-100 transition-colors"
-                        >
-                          <MoreVertical className="h-4 w-4 text-slate-500" />
+            {/* Team Details */}
+            {selectedTeam && (
+              <div className="lg:col-span-2 space-y-6">
+                {/* Team Header Card */}
+                <div
+                  className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${selectedTeam.color} p-8 text-white shadow-xl`}
+                >
+                  <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-white opacity-10 blur-3xl" />
+                  <div className="relative space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h2 className="text-3xl font-bold">{selectedTeam.name}</h2>
+                        <p className="mt-1 text-white/90">{selectedTeam.department}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button className="rounded-lg bg-white/20 p-2 hover:bg-white/30 transition-colors">
+                          <Edit2 className="h-5 w-5" />
                         </button>
-
-                        {openMenuId === member.id && (
-                          <div className="absolute right-0 top-full mt-1 w-48 rounded-lg border border-slate-200 bg-white shadow-lg z-10">
-                            <button className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 first:rounded-t-lg">
-                              Modifier le rôle
-                            </button>
-                            <button className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
-                              Envoyer un message
-                            </button>
-                            <button className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 last:rounded-b-lg">
-                              Retirer de l'équipe
-                            </button>
-                          </div>
-                        )}
+                        <button className="rounded-lg bg-white/20 p-2 hover:bg-white/30 transition-colors">
+                          <Settings className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-white/80 text-sm">{selectedTeam.description}</p>
+                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/20">
+                      <div>
+                        <p className="text-xs text-white/70">Créée le</p>
+                        <p className="font-semibold">{selectedTeam.createdAt}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-white/70">Membres</p>
+                        <p className="font-semibold">{selectedTeam.memberCount}</p>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Team Settings Card */}
-            <Card className="border-slate-200 shadow-md">
-              <CardHeader className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Settings className="h-4 w-4" />
-                  Paramètres de l'Équipe
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-slate-900">Équipe Active</p>
-                    <p className="text-sm text-slate-600">
-                      {selectedTeam.status === "active" ? "Cette équipe est actuellement active" : "Désactivée"}
-                    </p>
-                  </div>
-                  <div
-                    className={`h-2 w-2 rounded-full ${
-                      selectedTeam.status === "active" ? "bg-emerald-500" : "bg-slate-400"
-                    }`}
-                  />
                 </div>
-                <button className="w-full rounded-lg bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-100 transition-colors">
-                  <Trash2 className="inline h-4 w-4 mr-2" />
-                  Supprimer l'équipe
-                </button>
-              </CardContent>
-            </Card>
+
+                {/* Add Member Button */}
+                <Button
+                  onClick={() => setIsAddMemberModal(true)}
+                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-900 font-semibold"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Ajouter un Membre
+                </Button>
+
+                {/* Members List */}
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-slate-900">Membres de l'équipe</h3>
+                  {selectedTeam.members.length === 0 ? (
+                    <div className="rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 py-6 flex flex-col items-center justify-center">
+                      <Users className="h-8 w-8 text-slate-400 mb-2" />
+                      <p className="text-sm text-slate-600">Aucun membre dans cette équipe</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {selectedTeam.members.map((member) => (
+                        <div
+                          key={member.id}
+                          className="rounded-lg border border-slate-200 bg-white p-4 hover:shadow-md transition-shadow"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3 flex-1">
+                              <div
+                                className={`flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br ${selectedTeam.color} text-white font-semibold text-sm flex-shrink-0`}
+                              >
+                                {member.avatar}
+                              </div>
+
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="font-semibold text-slate-900">{member.name}</h4>
+                                  <Badge className={`text-xs ${getRoleColor(member.role)}`}>
+                                    {getRoleLabel(member.role)}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-slate-600">{member.specialty}</p>
+                                <div className="mt-2 flex flex-col gap-1 text-xs text-slate-500">
+                                  <div className="flex items-center gap-2">
+                                    <Mail className="h-3 w-3" />
+                                    {member.email}
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Phone className="h-3 w-3" />
+                                    {member.phone}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex gap-2">
+                              <button className="rounded-lg p-2 hover:bg-blue-100 transition-colors">
+                                <Edit2 className="h-4 w-4 text-blue-600" />
+                              </button>
+                              <button className="rounded-lg p-2 hover:bg-red-100 transition-colors">
+                                <Trash2 className="h-4 w-4 text-red-600" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Team Settings Card */}
+                <Card className="border-slate-200 shadow-md">
+                  <CardHeader className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Settings className="h-4 w-4" />
+                      Paramètres de l'Équipe
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-slate-900">Équipe Active</p>
+                        <p className="text-sm text-slate-600">
+                          {selectedTeam.status === "active"
+                            ? "Cette équipe est actuellement active"
+                            : "Désactivée"}
+                        </p>
+                      </div>
+                      <div
+                        className={`h-2 w-2 rounded-full ${
+                          selectedTeam.status === "active" ? "bg-emerald-500" : "bg-slate-400"
+                        }`}
+                      />
+                    </div>
+                    <button className="w-full rounded-lg bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-100 transition-colors">
+                      <Trash2 className="inline h-4 w-4 mr-2" />
+                      Supprimer l'équipe
+                    </button>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Add Team Modal */}
       {isAddTeamModal && (

@@ -117,7 +117,7 @@ function StatCard({
 
           {/* Period Selector - Only visible on hover */}
           {isHovered && (
-            <div className="flex gap-2 pt-4 border-t border-slate-200 animate-in fade-in duration-1000">
+            <div className="flex gap-2 pt-4 border-t border-slate-200 animate-in fade-in duration-[1800ms]">
               {(["week", "month", "year"] as const).map((p) => (
                 <button
                   key={p}
@@ -201,7 +201,7 @@ const getStatusBadge = (status: ActStatus) => {
   );
 };
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 10;
 
 export default function FinancesActsPage() {
   const [gesturesPeriod, setGesturesPeriod] = useState<TimePeriod>("month");

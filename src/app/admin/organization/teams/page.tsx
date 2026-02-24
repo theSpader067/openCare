@@ -581,21 +581,23 @@ export default function TeamsPage() {
                 </div>
               ) : (
                 <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-lg">
-                  <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-200">
+                        <th className="px-4 py-3 text-left font-semibold text-slate-700">Équipe</th>
+                        <th className="px-4 py-3 text-left font-semibold text-slate-700">Dept</th>
+                        <th className="px-4 py-3 text-center font-semibold text-slate-700">Membres</th>
+                      </tr>
+                    </thead>
+                  </table>
+                  <div className="max-h-[600px] overflow-y-auto">
                     <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-200">
-                          <th className="px-4 py-3 text-left font-semibold text-slate-700">Équipe</th>
-                          <th className="px-4 py-3 text-left font-semibold text-slate-700">Dept</th>
-                          <th className="px-4 py-3 text-center font-semibold text-slate-700">Membres</th>
-                        </tr>
-                      </thead>
-                      <tbody className="max-h-[600px] overflow-y-auto block">
+                      <tbody>
                         {filteredTeams.map((team, index) => (
                           <tr
                             key={team.id}
                             onClick={() => setSelectedTeam(team)}
-                            className={`border-b border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer w-full inline-table table-fixed ${
+                            className={`border-b border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer ${
                               selectedTeam?.id === team.id
                                 ? "bg-indigo-50 border-l-4 border-l-indigo-600"
                                 : index % 2 === 0

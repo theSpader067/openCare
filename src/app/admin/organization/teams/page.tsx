@@ -572,45 +572,59 @@ export default function TeamsPage() {
 
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Teams List */}
-            <div className="lg:col-span-1 space-y-3">
-              <h2 className="text-lg font-semibold text-slate-900 px-2">
-                Équipes ({filteredTeams.length})
-              </h2>
+            {/* Teams Table */}
+            <div className="lg:col-span-1">
               {filteredTeams.length === 0 ? (
                 <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 py-8 flex flex-col items-center justify-center">
                   <Shield className="h-8 w-8 text-slate-400 mb-3" />
                   <p className="text-sm text-slate-600">Aucune équipe trouvée</p>
                 </div>
               ) : (
-                <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
-                  {filteredTeams.map((team) => (
-                    <button
-                      key={team.id}
-                      onClick={() => setSelectedTeam(team)}
-                      className={`w-full text-left rounded-lg border-2 transition-all p-4 ${
-                        selectedTeam?.id === team.id
-                          ? "border-indigo-500 bg-indigo-50"
-                          : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-md"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-slate-900 truncate">{team.name}</h3>
-                            {team.status === "active" && (
-                              <span className="h-2 w-2 rounded-full bg-emerald-500 flex-shrink-0" />
-                            )}
-                          </div>
-                          <p className="text-sm text-slate-600 truncate">{team.department}</p>
-                          <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-                            <Users className="h-3 w-3" />
-                            {team.memberCount} membres
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
+                <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-lg">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-200">
+                          <th className="px-4 py-3 text-left font-semibold text-slate-700">Équipe</th>
+                          <th className="px-4 py-3 text-left font-semibold text-slate-700">Dept</th>
+                          <th className="px-4 py-3 text-center font-semibold text-slate-700">Membres</th>
+                        </tr>
+                      </thead>
+                      <tbody className="max-h-[600px] overflow-y-auto block">
+                        {filteredTeams.map((team, index) => (
+                          <tr
+                            key={team.id}
+                            onClick={() => setSelectedTeam(team)}
+                            className={`border-b border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer w-full inline-table table-fixed ${
+                              selectedTeam?.id === team.id
+                                ? "bg-indigo-50 border-l-4 border-l-indigo-600"
+                                : index % 2 === 0
+                                ? ""
+                                : "bg-slate-50/30"
+                            }`}
+                          >
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                <div>
+                                  <p className="font-semibold text-slate-900">{team.name}</p>
+                                  <p className="text-xs text-slate-500">{team.status === "active" ? "Actif" : "Inactif"}</p>
+                                </div>
+                                {team.status === "active" && (
+                                  <span className="h-2 w-2 rounded-full bg-emerald-500 flex-shrink-0" />
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-xs text-slate-600">{team.department}</td>
+                            <td className="px-4 py-3 text-center">
+                              <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
+                                {team.memberCount}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>

@@ -46,8 +46,8 @@ const adminNavItems: NavItem[] = [
     description: "Design des documents imprimables",
     children: [
       {
-        label: "Ordonnances",
-        href: "/admin/documents/prescriptions",
+        label: "Templates",
+        href: "/admin/documents/templates",
         icon: FileText,
       },
       {
@@ -99,11 +99,6 @@ const adminNavItems: NavItem[] = [
       {
         label: "Équipes",
         href: "/admin/organization/teams",
-        icon: Users,
-      },
-      {
-        label: "Utilisateurs",
-        href: "/admin/organization/users",
         icon: Users,
       },
     ],

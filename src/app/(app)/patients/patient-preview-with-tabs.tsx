@@ -78,7 +78,7 @@ export function PatientPreviewWithTabs({
   }
 
   return (
-    <div className="flex flex-col gap-6 pb-6">
+    <div className="flex flex-col gap-6 pb-6 w-full overflow-hidden">
       {/* Patient Header */}
       {renderPatientHeader()}
 
@@ -124,13 +124,13 @@ export function PatientPreviewWithTabs({
       </div>
 
       {/* Tab Content */}
-      <div className="min-h-96">
+      <div className="min-h-96 w-full overflow-hidden">
         {activeTab === "apercu" && renderPatientContent && (
           <div>{renderPatientContent()}</div>
         )}
 
         {activeTab === "traitement" && (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 w-full overflow-hidden">
             <TreatmentSheet
               treatments={treatments}
               isLoading={isLoadingTreatments}
@@ -180,7 +180,7 @@ function TreatmentSheet({ treatments, isLoading = false, onEdit }: TreatmentShee
   // Loading state
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 w-full overflow-hidden">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-slate-900">Fiche Traitement</h3>
@@ -190,14 +190,14 @@ function TreatmentSheet({ treatments, isLoading = false, onEdit }: TreatmentShee
             onClick={onEdit}
             variant="outline"
             size="sm"
-            className="gap-2"
+            className="gap-2 flex-shrink-0"
             disabled
           >
             <Edit2 className="h-4 w-4" />
             Éditer
           </Button>
         </div>
-        <div className="border border-slate-200 rounded-lg overflow-x-auto bg-white p-8 flex items-center justify-center">
+        <div className="border border-slate-200 rounded-lg overflow-x-auto bg-white p-8 flex items-center justify-center w-full">
           <div className="animate-pulse space-y-3 w-full">
             <div className="h-10 bg-slate-200 rounded w-full" />
             <div className="h-10 bg-slate-100 rounded w-full" />
@@ -211,7 +211,7 @@ function TreatmentSheet({ treatments, isLoading = false, onEdit }: TreatmentShee
   // Empty state
   if (treatments.length === 0) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 w-full overflow-hidden">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-slate-900">Fiche Traitement</h3>
@@ -221,13 +221,13 @@ function TreatmentSheet({ treatments, isLoading = false, onEdit }: TreatmentShee
             onClick={onEdit}
             variant="outline"
             size="sm"
-            className="gap-2"
+            className="gap-2 flex-shrink-0"
           >
             <Edit2 className="h-4 w-4" />
             Éditer
           </Button>
         </div>
-        <div className="border border-slate-200 rounded-lg bg-white p-12 text-center">
+        <div className="border border-slate-200 rounded-lg bg-white p-12 text-center w-full">
           <Clock className="h-12 w-12 text-slate-300 mx-auto mb-3" />
           <p className="text-slate-500 font-medium">Aucun traitement prévu</p>
           <p className="text-sm text-slate-400 mt-1">Les traitements s'afficheront ici une fois ajoutés</p>
@@ -237,7 +237,7 @@ function TreatmentSheet({ treatments, isLoading = false, onEdit }: TreatmentShee
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full overflow-hidden">
       {/* Header with date and edit button */}
       <div className="flex items-center justify-between">
         <div>
@@ -248,7 +248,7 @@ function TreatmentSheet({ treatments, isLoading = false, onEdit }: TreatmentShee
           onClick={onEdit}
           variant="outline"
           size="sm"
-          className="gap-2"
+          className="gap-2 flex-shrink-0"
         >
           <Edit2 className="h-4 w-4" />
           Éditer
@@ -256,7 +256,7 @@ function TreatmentSheet({ treatments, isLoading = false, onEdit }: TreatmentShee
       </div>
 
       {/* Treatment Table with horizontal scrollbar */}
-      <div className="border border-slate-200 rounded-lg overflow-x-auto bg-white">
+      <div className="border border-slate-200 rounded-lg overflow-x-auto bg-white w-full">
         <table className="w-full text-sm whitespace-nowrap">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50">
@@ -356,8 +356,8 @@ function TreatmentModal({
 
   return (
     <Modal open={open} onOpenChange={onClose}>
-      <div className="flex flex-col gap-4 w-full max-h-[90vh] overflow-auto">
-        <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 w-full max-h-[90vh] overflow-auto max-w-full">
+        <div className="flex items-center justify-between flex-shrink-0">
           <h2 className="text-xl font-bold text-slate-900">Éditer Fiche Traitement</h2>
           <button
             onClick={onClose}
@@ -369,7 +369,7 @@ function TreatmentModal({
         </div>
 
         {/* Editable Treatment Table with horizontal scrollbar */}
-        <div className="border border-slate-200 rounded-lg overflow-x-auto bg-white">
+        <div className="border border-slate-200 rounded-lg overflow-x-auto bg-white w-full">
           <table className="w-full text-sm whitespace-nowrap">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50">

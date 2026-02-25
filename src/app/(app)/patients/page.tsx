@@ -826,8 +826,8 @@ export default function PatientsPage() {
         </div>
       </div>
 
-      <section className="grid gap-6 xl:grid-cols-[7fr_5fr]">
-        <div className="flex flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-md">
+      <section className="grid gap-6 xl:grid-cols-[7fr_5fr] overflow-hidden">
+        <div className="flex flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-md min-w-0">
           {patientsLoading ? (
             <div className="flex h-64 items-center justify-center">
               <Spinner label={t("patients.labels.loadingFiles")} />
@@ -1007,8 +1007,8 @@ export default function PatientsPage() {
           )}
         </div>
 
-        <Card className="hidden h-full xl:block">
-          <CardContent className="h-full overflow-y-auto pt-6">
+        <Card className="hidden h-full xl:block min-w-0">
+          <CardContent className="h-full overflow-y-auto pt-6 overflow-x-hidden">
             {renderPreviewContent("desktop")}
           </CardContent>
         </Card>

@@ -78,7 +78,7 @@ export function PatientPreviewWithTabs({
   }
 
   return (
-    <div className="flex flex-col gap-6 pb-6 w-full overflow-hidden">
+    <div className="flex flex-col gap-6 pb-6 w-full h-full overflow-hidden">
       {/* Patient Header */}
       {renderPatientHeader()}
 
@@ -124,13 +124,13 @@ export function PatientPreviewWithTabs({
       </div>
 
       {/* Tab Content */}
-      <div className="min-h-96 w-full overflow-hidden">
+      <div className="flex-1 w-full overflow-hidden">
         {activeTab === "apercu" && renderPatientContent && (
           <div>{renderPatientContent()}</div>
         )}
 
         {activeTab === "traitement" && (
-          <div className="flex flex-col gap-4 w-full overflow-hidden">
+          <div className="flex flex-col gap-4 w-full h-full overflow-hidden">
             <TreatmentSheet
               treatments={treatments}
               isLoading={isLoadingTreatments}

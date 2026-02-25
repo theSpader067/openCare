@@ -9,6 +9,40 @@ import {
   ChevronUp,
 } from "lucide-react";
 
+// Helper function to clean HTML content and convert to text
+const stripHtmlTags = (html: string): string => {
+  if (!html) return "";
+  return html
+    .replace(/<[^>]*>/g, "") // Remove all HTML tags
+    .replace(/&nbsp;/g, " ") // Convert non-breaking spaces
+    .replace(/&lt;/g, "<") // Decode HTML entities
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .trim();
+};
+
+// Helper function to render HTML with proper line breaks
+const renderHtmlContent = (html: string): React.ReactNode => {
+  if (!html) return null;
+
+  // Split by <p>, <br>, and newlines to preserve structure
+  const parts = html
+    .split(/(<p>|<\/p>|<br\s*\/?><\/p>|<br\s*\/>)/g)
+    .filter((part) => part && part.trim() !== "" && !/^<\/?p>$/.test(part) && !/^<br/.test(part));
+
+  return (
+    <>
+      {parts.map((part, idx) => (
+        <div key={idx} className="mb-2">
+          {stripHtmlTags(part)}
+        </div>
+      ))}
+    </>
+  );
+};
+
 interface LabEntry {
   id: number;
   name: string | null;
@@ -44,12 +78,12 @@ interface LabDetails {
 
 export interface TimelineEvent {
   id: string;
-  type: "lab" | "imaging" | "observation" | "hospitalization" | "prescription";
+  type: "lab" | "imaging" | "observation" | "hospitalization" | "prescription" | "analyse" | "compte-rendu" | "ordonnance";
   title: string;
   date: string;
   timestamp: string;
   summary: string;
-  details?: HospitalizationDetails | ObservationDetails | PrescriptionDetails | ImagingDetails | LabDetails;
+  details?: HospitalizationDetails | ObservationDetails | PrescriptionDetails | ImagingDetails | LabDetails | any;
 }
 
 interface PatientTimelineProps {
@@ -59,6 +93,13 @@ interface PatientTimelineProps {
 
 const eventTypeConfig = {
   lab: {
+    icon: FileText,
+    label: "Analyses",
+    color: "text-blue-600",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-300",
+  },
+  analyse: {
     icon: FileText,
     label: "Analyses",
     color: "text-blue-600",
@@ -92,6 +133,20 @@ const eventTypeConfig = {
     color: "text-blue-600",
     bgColor: "bg-blue-50",
     borderColor: "border-blue-300",
+  },
+  ordonnance: {
+    icon: FileText,
+    label: "Ordonnance",
+    color: "text-blue-600",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-300",
+  },
+  "compte-rendu": {
+    icon: FileText,
+    label: "Compte Rendu",
+    color: "text-purple-600",
+    bgColor: "bg-purple-50",
+    borderColor: "border-purple-300",
   },
 };
 
@@ -182,27 +237,28 @@ export function PatientTimeline({ events, isLoading = false }: PatientTimelinePr
         );
       }
 
-      case "prescription": {
+      case "prescription":
+      case "ordonnance": {
         const details = event.details as PrescriptionDetails;
         return (
           <div className="space-y-2.5">
             {details.renseignementClinique && (
               <div className="bg-white/60 rounded-lg p-2.5">
-                <span className="text-xs font-bold text-slate-700 block mb-1">
+                <span className="text-xs font-bold text-slate-700 block mb-2">
                   Renseignement clinique
                 </span>
-                <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
-                  {details.renseignementClinique}
-                </p>
+                <div className="text-sm text-slate-600 leading-relaxed">
+                  {renderHtmlContent(details.renseignementClinique)}
+                </div>
               </div>
             )}
             <div className="bg-white/60 rounded-lg p-2.5">
-              <span className="text-xs font-bold text-slate-700 block mb-1">
+              <span className="text-xs font-bold text-slate-700 block mb-2">
                 Détails de l'ordonnance
               </span>
-              <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
-                {details.details}
-              </p>
+              <div className="text-sm text-slate-600 leading-relaxed">
+                {renderHtmlContent(details.details)}
+              </div>
             </div>
           </div>
         );
@@ -216,18 +272,56 @@ export function PatientTimeline({ events, isLoading = false }: PatientTimelinePr
               <span className="text-xs font-bold text-slate-700 block mb-1">
                 Interprétation
               </span>
-              <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
-                {details.interpretation}
-              </p>
+              <div className="text-sm text-slate-600 leading-relaxed">
+                {renderHtmlContent(details.interpretation)}
+              </div>
             </div>
             {details.recommandations && (
               <div className="bg-white/60 rounded-lg p-2.5">
                 <span className="text-xs font-bold text-slate-700 block mb-1">
                   Recommandations
                 </span>
-                <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
-                  {details.recommandations}
-                </p>
+                <div className="text-sm text-slate-600 leading-relaxed">
+                  {renderHtmlContent(details.recommandations)}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      case "compte-rendu": {
+        const details = event.details as any;
+        return (
+          <div className="space-y-2.5">
+            {details.interpretation && (
+              <div className="bg-white/60 rounded-lg p-2.5">
+                <span className="text-xs font-bold text-slate-700 block mb-2">
+                  Détails du Compte Rendu
+                </span>
+                <div className="text-sm text-slate-600 leading-relaxed">
+                  {renderHtmlContent(details.interpretation)}
+                </div>
+              </div>
+            )}
+            {details.recommandations && (
+              <div className="bg-white/60 rounded-lg p-2.5">
+                <span className="text-xs font-bold text-slate-700 block mb-2">
+                  Recommandations
+                </span>
+                <div className="text-sm text-slate-600 leading-relaxed">
+                  {renderHtmlContent(details.recommandations)}
+                </div>
+              </div>
+            )}
+            {details.category && (
+              <div className="bg-white/60 rounded-lg p-2.5">
+                <span className="text-xs font-bold text-slate-700 block mb-1">
+                  Catégorie
+                </span>
+                <span className="text-sm text-slate-600">
+                  {details.category}
+                </span>
               </div>
             )}
           </div>

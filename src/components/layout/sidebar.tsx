@@ -31,6 +31,18 @@ export const getPrimaryNav = (t: any) => [
     href: "/patients",
     label: t('dashboard.sidebar.patients'),
     icon: Users2,
+    subitems: [
+      {
+        href: "/patients",
+        label: "Hospitalisation",
+        icon: Users2,
+      },
+      {
+        href: "/episodes",
+        label: t('dashboard.sidebar.episodes'),
+        icon: Activity,
+      },
+    ],
   },
   {
     href: "/documents",
@@ -57,11 +69,6 @@ export const getPrimaryNav = (t: any) => [
         label: t('dashboard.sidebar.ordonnances'),
         icon: FileText,
       },
-      {
-        href: "/episodes",
-        label: t('dashboard.sidebar.episodes'),
-        icon: Activity,
-      },
     ],
   },
   {
@@ -86,7 +93,7 @@ interface SidebarContentProps {
 export function SidebarContent({ onNavigate }: SidebarContentProps) {
   const { t } = useLanguage();
   const pathname = usePathname();
-  const [expandedItems, setExpandedItems] = useState<string[]>(["/documents"]);
+  const [expandedItems, setExpandedItems] = useState<string[]>(["/documents", "/patients"]);
   const primaryNav = getPrimaryNav(t);
   const bottomNav = getBottomNav(t);
 

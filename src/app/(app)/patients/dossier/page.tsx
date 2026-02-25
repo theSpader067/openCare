@@ -599,7 +599,7 @@ export default function PatientDossierPage() {
               type="button"
               variant="ghost"
               className="border-2 border-blue-300 bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100 hover:border-blue-400 shadow-sm hover:shadow-md transition-all"
-              onClick={() => router.push(`/timeline?id=${formData.pid}`)}
+              onClick={() => router.push(`/timeline?id=${formData.id}`)}
             >
               <Clock className="mr-2 h-4 w-4" />
               {t("patients.buttons.carePathway")}

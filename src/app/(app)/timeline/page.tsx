@@ -6,10 +6,10 @@ import { PatientTimeline, TimelineEvent } from "@/components/timeline/patient-ti
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, User, AlertCircle, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 function TimelineContent() {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
   const patientId = searchParams.get("id");
@@ -27,11 +27,19 @@ function TimelineContent() {
         return;
       }
 
+      // Validate that patientId is numeric
+      const numericId = parseInt(patientId, 10);
+      if (isNaN(numericId)) {
+        setError("Invalid patient ID format. Please provide a numeric patient ID.");
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       setError(null);
 
       try {
-        const response = await fetch(`/api/patients/${patientId}/timeline`);
+        const response = await fetch(`/api/patients/${numericId}/timeline`);
         const data = await response.json();
 
         if (!response.ok) {
@@ -39,9 +47,9 @@ function TimelineContent() {
         }
 
         if (data.success) {
-          setEvents(data.data.events);
-          setPatientName(data.data.patientName);
-          setPatientDbId(data.data.patientId);
+          setEvents(data.events || []);
+          setPatientName(data.patientName || "Patient");
+          setPatientDbId(String(data.patientId || ""));
         } else {
           throw new Error(t("pages.timeline.invalidResponse"));
         }
@@ -175,7 +183,7 @@ function TimelineContent() {
 }
 
 export default function TimelinePage() {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
 
   return (
     <Suspense fallback={

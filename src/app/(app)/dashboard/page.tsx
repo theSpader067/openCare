@@ -783,8 +783,8 @@ export default function DashboardPage() {
       </section>
 
       <div className="mt-6 flex-1 min-h-0 lg:w-full">
-        <div className="grid h-full min-h-0 grid-cols-1 gap-7 xl:grid-cols-4">
-          <div className="hidden h-full min-h-0 flex-col gap-6 xl:flex">
+        <div className="grid h-full min-h-0 grid-cols-1 gap-7 xl:grid-cols-12">
+          <div className="hidden h-full min-h-0 flex-col gap-6 xl:col-span-3 xl:flex">
             {renderCalendarCard(undefined, "pt-3")}
             <TasksSection
               ref={tasksSectionRef}
@@ -806,7 +806,7 @@ export default function DashboardPage() {
             />
           </div>
 
-          <div className="flex xl:col-span-2">
+          <div className="flex xl:col-span-5">
           <ActivitySection
             ref={activitySectionRef}
             selectedDate={selectedDateObj}
@@ -863,12 +863,18 @@ export default function DashboardPage() {
           />
           </div>
 
-          <Card className={cn(panelBaseClass, "hidden h-full flex-col xl:flex")}>
+          <Card className={cn(panelBaseClass, "hidden h-full flex-col xl:col-span-4 xl:flex")}>
             <CardHeader className="flex flex-wrap items-center justify-between gap-3 pb-4">
               <div>
                 <CardTitle>{t('dashboard.dashboardPage.servicePatients')}</CardTitle>
-
+                <CardDescription className="mt-1">{servicePatients.length} {t(`dashboard.dashboardPage.patient${servicePatients.length === 1 ? 'Singular' : 'Plural'}`)}</CardDescription>
               </div>
+              <a
+                href="/patients"
+                className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
+              >
+                Voir tout →
+              </a>
             </CardHeader>
             <CardContent className="flex-1 min-h-0 overflow-hidden pt-0">
               {isServicePatientsLoading ? (
@@ -887,38 +893,58 @@ export default function DashboardPage() {
               ) : (
                 <div className="h-full min-h-0 overflow-y-auto overflow-x-auto">
                   <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
-                    <thead className="sticky top-0 z-10 bg-white/95 backdrop-blur">
+                    <thead className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b-2 border-slate-300">
                       <tr>
-                        <th className="px-4 py-3 text-xs font-semibold tracking-[0.2em] text-slate-500 uppercase">
+                        <th className="px-4 py-3 text-xs font-semibold tracking-[0.2em] text-slate-600 uppercase">
                           {t('dashboard.dashboardPage.patientTablePatient')}
                         </th>
-                        <th className="px-4 py-3 text-xs font-semibold tracking-[0.2em] text-slate-500 uppercase">
+                        <th className="px-4 py-3 text-xs font-semibold tracking-[0.2em] text-slate-600 uppercase">
                           {t('dashboard.dashboardPage.patientTableDiagnosis')}
+                        </th>
+                        <th className="px-4 py-3 text-xs font-semibold tracking-[0.2em] text-slate-600 uppercase">
+                          {t('dashboard.dashboardPage.patientTableService')}
                         </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {servicePatients.map((patient) => (
-                        <tr
-                          key={patient.id}
-                          className="hover:bg-slate-50/60"
-                        >
-                          <td className="px-4 py-3">
-                            <div className="flex flex-col">
-                              <span className="text-sm font-semibold text-[#111322]">
-                                {patient.name}
-                              </span>
-                              <span className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                                {patient.pid ?? patient.id}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-slate-500">
-                            {patient.diagnosis}
-                          </td>
-
-                        </tr>
-                      ))}
+                      {servicePatients.map((patient) => {
+                        const statusStyles = {
+                          "Pré-op": "bg-yellow-400 text-slate-900",
+                          "Post-op": "bg-sky-400 text-white",
+                          "Surveillance": "bg-violet-500 text-white",
+                          "Rééducation": "bg-teal-500 text-white",
+                        };
+                        return (
+                          <tr
+                            key={patient.id}
+                            className="hover:bg-slate-50/80 transition"
+                          >
+                            <td className="px-4 py-3">
+                              <div className="flex flex-col gap-1">
+                                <span className="text-sm font-bold text-slate-900">
+                                  {patient.name}
+                                </span>
+                                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                  ID: {patient.pid ?? patient.id}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex flex-col gap-2.5">
+                                <span className="text-sm font-medium text-slate-700">
+                                  {patient.diagnosis}
+                                </span>
+                                <div className={cn("inline-flex items-center px-3 py-1 rounded-full text-xs font-bold w-fit shadow-sm", statusStyles[patient.status as keyof typeof statusStyles])}>
+                                  {patientStatusMeta[patient.status]?.label || patient.status}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-sm font-medium text-slate-700">
+                              {patient.service}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

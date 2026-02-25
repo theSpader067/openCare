@@ -66,73 +66,74 @@ function StatCard({
   accentColor,
   accentGradient,
 }: StatCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
-
   const periodLabels = {
     week: "Cette semaine",
     month: "Ce mois",
     year: "Cette année",
   };
 
-  return (
-    <div
-      className="group relative"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* Gradient Background Haze */}
-      <div
-        className={`absolute -inset-0.5 rounded-2xl opacity-0 group-hover:opacity-100 blur transition duration-500 ${accentGradient}`}
-      />
+  // Extract primary color from gradient for hue background
+  const getHueGradient = (grad: string) => {
+    if (grad.includes("blue")) return "from-blue-50 to-cyan-50";
+    if (grad.includes("purple")) return "from-purple-50 to-pink-50";
+    if (grad.includes("green")) return "from-green-50 to-emerald-50";
+    return "from-slate-50 to-slate-100";
+  };
 
-      {/* Card */}
-      <div className="relative bg-white rounded-2xl p-6 backdrop-blur-xl border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-500">
+  return (
+    <div className="group relative">
+      {/* Card with Hue Gradient Background */}
+      <div
+        className={`relative bg-gradient-to-br ${getHueGradient(
+          gradient
+        )} rounded-lg p-5 backdrop-blur-xl border border-slate-200 shadow-lg hover:shadow-xl transition-all duration-300`}
+      >
         {/* Gradient Top Accent */}
-        <div className={`absolute top-0 left-0 right-0 h-1 rounded-t-2xl ${gradient}`} />
+        <div className={`absolute top-0 left-0 right-0 h-1 rounded-t-lg ${gradient}`} />
 
         {/* Content */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Header with Icon */}
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <h3 className="text-sm font-semibold text-slate-600 mb-1">{title}</h3>
+              <h3 className="text-xs font-bold text-slate-700 mb-0.5 uppercase tracking-wide">
+                {title}
+              </h3>
               <p className="text-xs text-slate-500">{periodLabels[period]}</p>
             </div>
-            <div className={`p-3 rounded-xl ${accentColor} ${accentGradient} bg-gradient-to-br`}>
+            <div className={`p-2.5 rounded-lg ${accentColor} ${accentGradient} bg-gradient-to-br`}>
               {icon}
             </div>
           </div>
 
           {/* Value with Animation */}
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <div
-              className={`text-5xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom duration-500`}
+              className={`text-4xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom duration-500`}
             >
               {value}
             </div>
             {subtext && (
-              <p className="text-sm text-slate-600 leading-relaxed">{subtext}</p>
+              <p className="text-xs text-slate-600 leading-relaxed">{subtext}</p>
             )}
           </div>
 
-          {/* Period Selector - Only visible on hover */}
-          {isHovered && (
-            <div className="flex gap-2 pt-4 border-t border-slate-200 animate-in fade-in duration-[1800ms]">
-              {(["week", "month", "year"] as const).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => onPeriodChange(p)}
-                  className={`flex-1 px-2 py-2 rounded-lg text-xs font-semibold transition-all duration-300 ${
-                    period === p
-                      ? `${accentGradient} bg-gradient-to-r text-white shadow-lg hover:shadow-xl`
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                  }`}
-                >
-                  {p === "week" ? "Semaine" : p === "month" ? "Mois" : "Année"}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Period Selector - Always visible */}
+          <div className="flex gap-2 pt-3 border-t border-slate-300">
+            {(["week", "month", "year"] as const).map((p) => (
+              <button
+                key={p}
+                onClick={() => onPeriodChange(p)}
+                className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 uppercase tracking-wide ${
+                  period === p
+                    ? `${gradient} bg-gradient-to-r text-white shadow-md hover:shadow-lg`
+                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                }`}
+              >
+                {p === "week" ? "Semaine" : p === "month" ? "Mois" : "Année"}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -341,11 +342,11 @@ export default function FinancesActsPage() {
       </div>
 
       {/* Stat Cards - Consultations first */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {consultationsData.consultations === 0 ? (
-          <div className="md:col-span-1 flex items-center justify-center min-h-[300px] rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50">
+          <div className="md:col-span-1 flex items-center justify-center min-h-[220px] rounded-lg border-2 border-dashed border-slate-300 bg-purple-50">
             <div className="text-center">
-              <Users className="h-12 w-12 text-slate-400 mx-auto mb-2" />
+              <Users className="h-10 w-10 text-slate-400 mx-auto mb-2" />
               <p className="text-sm text-slate-600">Aucune donnée disponible</p>
             </div>
           </div>
@@ -364,9 +365,9 @@ export default function FinancesActsPage() {
         )}
 
         {gesturesData.gestures === 0 ? (
-          <div className="md:col-span-1 flex items-center justify-center min-h-[300px] rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50">
+          <div className="md:col-span-1 flex items-center justify-center min-h-[220px] rounded-lg border-2 border-dashed border-slate-300 bg-blue-50">
             <div className="text-center">
-              <Activity className="h-12 w-12 text-slate-400 mx-auto mb-2" />
+              <Activity className="h-10 w-10 text-slate-400 mx-auto mb-2" />
               <p className="text-sm text-slate-600">Aucune donnée disponible</p>
             </div>
           </div>
@@ -385,9 +386,9 @@ export default function FinancesActsPage() {
         )}
 
         {earningsData.earnings === 0 ? (
-          <div className="md:col-span-1 flex items-center justify-center min-h-[300px] rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50">
+          <div className="md:col-span-1 flex items-center justify-center min-h-[220px] rounded-lg border-2 border-dashed border-slate-300 bg-green-50">
             <div className="text-center">
-              <TrendingUp className="h-12 w-12 text-slate-400 mx-auto mb-2" />
+              <TrendingUp className="h-10 w-10 text-slate-400 mx-auto mb-2" />
               <p className="text-sm text-slate-600">Aucune donnée disponible</p>
             </div>
           </div>

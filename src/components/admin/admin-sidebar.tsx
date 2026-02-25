@@ -34,10 +34,27 @@ const adminNavItems: NavItem[] = [
     description: "Vue d'ensemble de l'administration",
   },
   {
-    label: "Actes et Gestes",
-    href: "/admin/catalog/acts",
-    icon: Stethoscope,
-    description: "Catalogue des actes et gestes médicaux",
+    label: "Organisation",
+    href: "/admin/organization",
+    icon: Building2,
+    description: "Paramètres de l'hôpital/clinique",
+    children: [
+      {
+        label: "Informations",
+        href: "/admin/organization/info",
+        icon: Building2,
+      },
+      {
+        label: "Équipes",
+        href: "/admin/organization/teams",
+        icon: Users,
+      },
+      {
+        label: "Actes et Gestes",
+        href: "/admin/catalog/acts",
+        icon: Stethoscope,
+      },
+    ],
   },
   {
     label: "Documents",
@@ -46,18 +63,13 @@ const adminNavItems: NavItem[] = [
     description: "Design des documents imprimables",
     children: [
       {
-        label: "Templates",
-        href: "/admin/documents/templates",
-        icon: FileText,
-      },
-      {
-        label: "Rapports",
-        href: "/admin/documents/reports",
-        icon: FileText,
-      },
-      {
         label: "Modèles",
         href: "/admin/documents/templates",
+        icon: FileText,
+      },
+      {
+        label: "Tous les Documents",
+        href: "/admin/documents/list",
         icon: FileText,
       },
     ],
@@ -74,38 +86,15 @@ const adminNavItems: NavItem[] = [
         icon: DollarSign,
       },
       {
-        label: "Paiements",
-        href: "/admin/finances/payments",
-        icon: DollarSign,
-      },
-      {
-        label: "Rapports",
-        href: "/admin/finances/reports",
+        label: "Factures",
+        href: "/admin/finances/rapports",
         icon: FileText,
       },
     ],
   },
   {
-    label: "Organisation",
-    href: "/admin/organization",
-    icon: Building2,
-    description: "Paramètres de l'hôpital/clinique",
-    children: [
-      {
-        label: "Informations",
-        href: "/admin/organization/info",
-        icon: Building2,
-      },
-      {
-        label: "Équipes",
-        href: "/admin/organization/teams",
-        icon: Users,
-      },
-    ],
-  },
-  {
     label: "Paramètres",
-    href: "/admin/settings",
+    href: "/admin/organization/parametres",
     icon: Settings,
     description: "Configuration générale",
   },

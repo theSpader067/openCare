@@ -185,11 +185,16 @@ export async function GET(
 
     console.log('[timeline] Successfully built timeline with', timelineEvents.length, 'events');
 
+    // Construct patient name from User data
+    const patientName = patient.User
+      ? `${patient.User.firstName || ""} ${patient.User.lastName || ""}`.trim() || patient.fullName || "Patient"
+      : patient.fullName || "Patient";
+
     return NextResponse.json(
       {
         success: true,
         patientId: patient.id,
-        patientName: patient.fullName,
+        patientName: patientName,
         events: timelineEvents,
       },
       { headers: corsHeaders }

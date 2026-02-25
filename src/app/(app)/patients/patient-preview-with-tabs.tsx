@@ -36,6 +36,7 @@ export function PatientPreviewWithTabs({
 }: PatientPreviewWithTabsProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>("apercu")
+  const [isLoadingTreatments, setIsLoadingTreatments] = useState(false)
   const [treatments, setTreatments] = useState<Treatment[]>([
     {
       id: "1",
@@ -132,6 +133,7 @@ export function PatientPreviewWithTabs({
           <div className="flex flex-col gap-4">
             <TreatmentSheet
               treatments={treatments}
+              isLoading={isLoadingTreatments}
               onEdit={handleEditClick}
             />
             <TreatmentModal
@@ -151,10 +153,11 @@ export function PatientPreviewWithTabs({
 // Treatment Sheet component for displaying the treatment schedule
 interface TreatmentSheetProps {
   treatments: Treatment[]
+  isLoading?: boolean
   onEdit: () => void
 }
 
-function TreatmentSheet({ treatments, onEdit }: TreatmentSheetProps) {
+function TreatmentSheet({ treatments, isLoading = false, onEdit }: TreatmentSheetProps) {
   const today = new Date()
   const formattedDate = new Intl.DateTimeFormat("fr-FR", {
     weekday: "long",
@@ -172,6 +175,65 @@ function TreatmentSheet({ treatments, onEdit }: TreatmentSheetProps) {
       return <Minus className="h-4 w-4 text-slate-400" />
     }
     return null
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">Fiche Traitement</h3>
+            <p className="text-sm text-slate-500 capitalize">{formattedDate}</p>
+          </div>
+          <Button
+            onClick={onEdit}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            disabled
+          >
+            <Edit2 className="h-4 w-4" />
+            Éditer
+          </Button>
+        </div>
+        <div className="border border-slate-200 rounded-lg overflow-x-auto bg-white p-8 flex items-center justify-center">
+          <div className="animate-pulse space-y-3 w-full">
+            <div className="h-10 bg-slate-200 rounded w-full" />
+            <div className="h-10 bg-slate-100 rounded w-full" />
+            <div className="h-10 bg-slate-100 rounded w-full" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Empty state
+  if (treatments.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">Fiche Traitement</h3>
+            <p className="text-sm text-slate-500 capitalize">{formattedDate}</p>
+          </div>
+          <Button
+            onClick={onEdit}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            <Edit2 className="h-4 w-4" />
+            Éditer
+          </Button>
+        </div>
+        <div className="border border-slate-200 rounded-lg bg-white p-12 text-center">
+          <Clock className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+          <p className="text-slate-500 font-medium">Aucun traitement prévu</p>
+          <p className="text-sm text-slate-400 mt-1">Les traitements s'afficheront ici une fois ajoutés</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -193,21 +255,18 @@ function TreatmentSheet({ treatments, onEdit }: TreatmentSheetProps) {
         </Button>
       </div>
 
-      {/* Treatment Table */}
+      {/* Treatment Table with horizontal scrollbar */}
       <div className="border border-slate-200 rounded-lg overflow-x-auto bg-white">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm whitespace-nowrap">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50">
-              <th className="px-4 py-3 text-left font-semibold text-slate-700 min-w-[180px]">
+              <th className="px-4 py-3 text-left font-semibold text-slate-700 sticky left-0 bg-slate-50 z-10 min-w-[200px]">
                 Traitement
-              </th>
-              <th className="px-4 py-3 text-left font-semibold text-slate-700 min-w-[100px]">
-                Voie
               </th>
               {hours.map((hour) => (
                 <th
                   key={hour}
-                  className="px-2 py-3 text-center font-semibold text-slate-600 text-xs w-8 min-w-[32px]"
+                  className="px-2 py-3 text-center font-semibold text-slate-600 text-xs w-10 min-w-[40px]"
                 >
                   {hour}h
                 </th>
@@ -217,14 +276,10 @@ function TreatmentSheet({ treatments, onEdit }: TreatmentSheetProps) {
           <tbody>
             {treatments.map((treatment, idx) => (
               <tr key={treatment.id} className={idx % 2 === 0 ? "bg-white" : "bg-slate-50"}>
-                <td className="px-4 py-3 text-slate-900">
+                <td className="px-4 py-3 text-slate-900 sticky left-0 z-10 bg-inherit">
                   <div className="font-semibold">{treatment.name}</div>
                   <div className="text-xs text-slate-500">{treatment.posologie}</div>
-                </td>
-                <td className="px-4 py-3">
-                  <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-semibold rounded bg-slate-100 text-slate-700">
-                    {treatment.voie}
-                  </span>
+                  <div className="text-xs font-medium text-indigo-600 mt-1">{treatment.voie}</div>
                 </td>
                 {hours.map((hour) => (
                   <td
@@ -301,33 +356,30 @@ function TreatmentModal({
 
   return (
     <Modal open={open} onOpenChange={onClose}>
-      <div className="flex flex-col gap-4 max-w-6xl max-h-[80vh] overflow-auto">
+      <div className="flex flex-col gap-4 w-full max-h-[90vh] overflow-auto">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-slate-900">Éditer Fiche Traitement</h2>
           <button
             onClick={onClose}
-            className="text-slate-500 hover:text-slate-700"
+            className="text-slate-500 hover:text-slate-700 flex-shrink-0"
             type="button"
           >
             <X className="h-6 w-6" />
           </button>
         </div>
 
-        {/* Editable Treatment Table */}
+        {/* Editable Treatment Table with horizontal scrollbar */}
         <div className="border border-slate-200 rounded-lg overflow-x-auto bg-white">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm whitespace-nowrap">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50">
-                <th className="px-4 py-3 text-left font-semibold text-slate-700 min-w-[180px]">
+                <th className="px-4 py-3 text-left font-semibold text-slate-700 sticky left-0 bg-slate-50 z-10 min-w-[200px]">
                   Traitement
-                </th>
-                <th className="px-4 py-3 text-left font-semibold text-slate-700 min-w-[100px]">
-                  Voie
                 </th>
                 {hours.map((hour) => (
                   <th
                     key={hour}
-                    className="px-2 py-3 text-center font-semibold text-slate-600 text-xs w-8 min-w-[32px]"
+                    className="px-2 py-3 text-center font-semibold text-slate-600 text-xs w-10 min-w-[40px]"
                   >
                     {hour}h
                   </th>
@@ -337,14 +389,10 @@ function TreatmentModal({
             <tbody>
               {treatments.map((treatment, idx) => (
                 <tr key={treatment.id} className={idx % 2 === 0 ? "bg-white" : "bg-slate-50"}>
-                  <td className="px-4 py-3 text-slate-900">
+                  <td className="px-4 py-3 text-slate-900 sticky left-0 z-10 bg-inherit">
                     <div className="font-semibold">{treatment.name}</div>
                     <div className="text-xs text-slate-500">{treatment.posologie}</div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-semibold rounded bg-slate-100 text-slate-700">
-                      {treatment.voie}
-                    </span>
+                    <div className="text-xs font-medium text-indigo-600 mt-1">{treatment.voie}</div>
                   </td>
                   {hours.map((hour) => (
                     <td

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, FileText, Clock, Edit2, Check, Minus, X } from "lucide-react"
+import { Plus, FileText, Clock, Edit2, Check, Minus, X, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { Modal } from "@/components/ui/modal"
@@ -77,6 +77,22 @@ export function PatientPreviewWithTabs({
     )
   }
 
+  const addTreatment = (name: string, posologie: string, voie: Treatment["voie"]) => {
+    setEditingTreatments([...editingTreatments, {
+      id: Date.now().toString(), name, posologie, voie, hours: {}
+    }])
+  }
+
+  const removeTreatment = (id: string) => {
+    setEditingTreatments(editingTreatments.filter((t) => t.id !== id))
+  }
+
+  const updateTreatmentField = (id: string, field: "name" | "posologie" | "voie", value: string) => {
+    setEditingTreatments(editingTreatments.map((t) =>
+      t.id === id ? { ...t, [field]: value } : t
+    ))
+  }
+
   return (
     <div className="flex flex-col gap-6 pb-6 w-full h-full overflow-hidden">
       {/* Patient Header */}
@@ -140,6 +156,9 @@ export function PatientPreviewWithTabs({
               open={isEditModalOpen}
               treatments={editingTreatments}
               onToggleCell={toggleCellState}
+              onUpdateField={updateTreatmentField}
+              onAddTreatment={addTreatment}
+              onRemoveTreatment={removeTreatment}
               onSave={handleSaveModal}
               onClose={() => setIsEditModalOpen(false)}
             />
@@ -274,7 +293,7 @@ function TreatmentSheet({ treatments, isLoading = false, onEdit }: TreatmentShee
       <div className="border border-slate-200 rounded-lg bg-white w-full p-6 overflow-y-auto max-h-96">
         <div className="relative space-y-6">
           {/* Vertical connecting line */}
-          <div className="absolute w-0.5 bg-slate-200" style={{ left: '26px', top: '6px', bottom: '6px' }} />
+          <div className="absolute w-0.5 bg-slate-200 left-[66px] top-[6px] bottom-[6px]" />
 
           {scheduledHours.map((hour) => (
             <div key={hour} className="flex gap-6 items-start">
@@ -326,22 +345,6 @@ function TreatmentSheet({ treatments, isLoading = false, onEdit }: TreatmentShee
           ))}
         </div>
       </div>
-
-      {/* Legend */}
-      <div className="flex gap-6 text-xs text-slate-600">
-        <div className="flex items-center gap-2">
-          <Check className="h-4 w-4 text-green-600" />
-          <span>Administré</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Minus className="h-4 w-4 text-slate-400" />
-          <span>Prévu</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-4" />
-          <span>Non prévu</span>
-        </div>
-      </div>
     </div>
   )
 }
@@ -351,6 +354,9 @@ interface TreatmentModalProps {
   open: boolean
   treatments: Treatment[]
   onToggleCell: (treatmentId: string, hour: number) => void
+  onUpdateField: (id: string, field: "name" | "posologie" | "voie", value: string) => void
+  onAddTreatment: (name: string, posologie: string, voie: Treatment["voie"]) => void
+  onRemoveTreatment: (id: string) => void
   onSave: () => void
   onClose: () => void
 }
@@ -359,126 +365,155 @@ function TreatmentModal({
   open,
   treatments,
   onToggleCell,
+  onUpdateField,
+  onAddTreatment,
+  onRemoveTreatment,
   onSave,
   onClose,
 }: TreatmentModalProps) {
+  const [newForm, setNewForm] = useState({ name: "", posologie: "", voie: "IV" as Treatment["voie"] })
+
   if (!open) return null
 
-  const hours = Array.from({ length: 24 }, (_, i) => i)
-
-  const getCellIcon = (state: boolean | null | undefined) => {
-    if (state === true) {
-      return <Check className="h-4 w-4 text-green-600" />
-    } else if (state === null) {
-      return <Minus className="h-4 w-4 text-slate-400" />
+  const handleAddTreatment = () => {
+    if (newForm.name.trim() && newForm.posologie.trim()) {
+      onAddTreatment(newForm.name, newForm.posologie, newForm.voie)
+      setNewForm({ name: "", posologie: "", voie: "IV" })
     }
-    return null
   }
 
-  const getCellBgColor = (state: boolean | null | undefined) => {
+  const getHourChipClass = (state: boolean | null | undefined) => {
     if (state === true) {
-      return "bg-green-50 hover:bg-green-100"
+      return "bg-green-100 text-green-700 ring-1 ring-green-400"
     } else if (state === null) {
-      return "bg-slate-100 hover:bg-slate-200"
+      return "bg-cyan-100 text-cyan-700 ring-1 ring-cyan-400"
     }
-    return "bg-white hover:bg-slate-50"
+    return "bg-slate-100 text-slate-400"
   }
+
+  const footerContent = (
+    <div className="flex gap-3">
+      <Button
+        variant="outline"
+        onClick={onClose}
+        type="button"
+      >
+        Annuler
+      </Button>
+      <Button
+        onClick={onSave}
+        className="bg-indigo-600 hover:bg-indigo-700 text-white"
+        type="button"
+      >
+        Enregistrer
+      </Button>
+    </div>
+  )
 
   return (
-    <Modal open={open} onClose={onClose}>
-      <div className="flex flex-col gap-4 w-full max-h-[90vh] overflow-auto max-w-full">
-        <div className="flex items-center justify-between flex-shrink-0">
-          <h2 className="text-xl font-bold text-slate-900">Éditer Fiche Traitement</h2>
-          <button
-            onClick={onClose}
-            className="text-slate-500 hover:text-slate-700 flex-shrink-0"
-            type="button"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
+    <Modal open={open} onClose={onClose} title="Éditer Fiche Traitement" size="lg" footer={footerContent}>
+      <div className="flex flex-col gap-6">
+        {/* Scrollable Treatments Section */}
+        <div className="overflow-y-auto max-h-[70vh] space-y-4 pr-4">
+          {treatments.map((treatment) => (
+            <div key={treatment.id} className="border border-slate-200 rounded-xl p-4 space-y-3 bg-white">
+              {/* Editable Fields Row */}
+              <div className="flex gap-3 items-end">
+                <input
+                  type="text"
+                  value={treatment.name}
+                  onChange={(e) => onUpdateField(treatment.id, "name", e.target.value)}
+                  placeholder="Médicament"
+                  className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                />
+                <input
+                  type="text"
+                  value={treatment.posologie}
+                  onChange={(e) => onUpdateField(treatment.id, "posologie", e.target.value)}
+                  placeholder="Posologie"
+                  className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                />
+                <select
+                  value={treatment.voie}
+                  onChange={(e) => onUpdateField(treatment.id, "voie", e.target.value)}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="IV">IV</option>
+                  <option value="IM">IM</option>
+                  <option value="VO">VO</option>
+                </select>
+                <button
+                  onClick={() => onRemoveTreatment(treatment.id)}
+                  className="text-slate-500 hover:text-red-600 transition-colors p-2"
+                  type="button"
+                  title="Supprimer ce traitement"
+                >
+                  <Trash2 className="h-5 w-5" />
+                </button>
+              </div>
 
-        {/* Editable Treatment Table with horizontal scrollbar */}
-        <div className="border border-slate-200 rounded-lg overflow-x-auto bg-white w-full">
-          <table className="w-full text-sm whitespace-nowrap">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50">
-                <th className="px-4 py-3 text-left font-semibold text-slate-700 sticky left-0 bg-slate-50 z-10 min-w-[200px]">
-                  Traitement
-                </th>
-                {hours.map((hour) => (
-                  <th
-                    key={hour}
-                    className="px-2 py-3 text-center font-semibold text-slate-600 text-xs w-10 min-w-[40px]"
+              {/* Horaires Label */}
+              <label className="block text-sm font-semibold text-slate-700">Horaires</label>
+
+              {/* 4x6 Hour Chip Grid */}
+              <div className="grid grid-cols-6 gap-1">
+                {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
+                  <button
+                    key={`${treatment.id}-${hour}`}
+                    onClick={() => onToggleCell(treatment.id, hour)}
+                    className={cn(
+                      "rounded text-xs py-1 font-mono font-semibold transition-colors",
+                      getHourChipClass(treatment.hours[hour])
+                    )}
+                    type="button"
+                    title={`${String(hour).padStart(2, "0")}h`}
                   >
-                    {hour}h
-                  </th>
+                    {String(hour).padStart(2, "0")}
+                  </button>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {treatments.map((treatment, idx) => (
-                <tr key={treatment.id} className={idx % 2 === 0 ? "bg-white" : "bg-slate-50"}>
-                  <td className="px-4 py-3 text-slate-900 sticky left-0 z-10 bg-inherit">
-                    <div className="font-semibold">{treatment.name}</div>
-                    <div className="text-xs text-slate-500">{treatment.posologie}</div>
-                    <div className="text-xs font-medium text-indigo-600 mt-1">{treatment.voie}</div>
-                  </td>
-                  {hours.map((hour) => (
-                    <td
-                      key={`${treatment.id}-${hour}`}
-                      className="px-2 py-3 text-center border-l border-slate-100"
-                    >
-                      <button
-                        onClick={() => onToggleCell(treatment.id, hour)}
-                        className={cn(
-                          "flex items-center justify-center h-8 w-8 rounded cursor-pointer transition-colors mx-auto",
-                          getCellBgColor(treatment.hours[hour])
-                        )}
-                        type="button"
-                        title="Click to cycle through states"
-                      >
-                        {getCellIcon(treatment.hours[hour])}
-                      </button>
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* Legend */}
-        <div className="flex gap-6 text-xs text-slate-600 p-4 bg-slate-50 rounded-lg">
-          <div className="flex items-center gap-2">
-            <Check className="h-4 w-4 text-green-600" />
-            <span>Administré</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Minus className="h-4 w-4 text-slate-400" />
-            <span>Prévu</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-4 bg-white border border-slate-300 rounded" />
-            <span>Non prévu</span>
-          </div>
-        </div>
+        {/* Separator */}
+        <div className="border-t border-slate-200" />
 
-        {/* Modal Actions */}
-        <div className="flex gap-3 justify-end pt-4 border-t border-slate-200">
+        {/* Add New Treatment Section */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-slate-700">Ajouter un traitement</h3>
+          <div className="grid grid-cols-3 gap-2">
+            <input
+              type="text"
+              value={newForm.name}
+              onChange={(e) => setNewForm({ ...newForm, name: e.target.value })}
+              placeholder="Médicament"
+              className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+            />
+            <input
+              type="text"
+              value={newForm.posologie}
+              onChange={(e) => setNewForm({ ...newForm, posologie: e.target.value })}
+              placeholder="Posologie"
+              className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+            />
+            <select
+              value={newForm.voie}
+              onChange={(e) => setNewForm({ ...newForm, voie: e.target.value as Treatment["voie"] })}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="IV">IV</option>
+              <option value="IM">IM</option>
+              <option value="VO">VO</option>
+            </select>
+          </div>
           <Button
-            variant="outline"
-            onClick={onClose}
+            onClick={handleAddTreatment}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
             type="button"
           >
-            Annuler
-          </Button>
-          <Button
-            onClick={onSave}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white"
-            type="button"
-          >
-            Enregistrer
+            <Plus className="h-4 w-4 mr-2" />
+            Ajouter
           </Button>
         </div>
       </div>

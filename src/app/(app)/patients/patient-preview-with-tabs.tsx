@@ -236,6 +236,21 @@ function TreatmentSheet({ treatments, isLoading = false, onEdit }: TreatmentShee
     )
   }
 
+  // Get unique hours with scheduled treatments (state true or null)
+  const getScheduledHours = () => {
+    const hoursSet = new Set<number>()
+    treatments.forEach((treatment) => {
+      Object.entries(treatment.hours).forEach(([hour, state]) => {
+        if (state === true || state === null) {
+          hoursSet.add(Number(hour))
+        }
+      })
+    })
+    return Array.from(hoursSet).sort((a, b) => a - b)
+  }
+
+  const scheduledHours = getScheduledHours()
+
   return (
     <div className="space-y-4 w-full overflow-hidden">
       {/* Header with date and edit button */}
@@ -255,46 +270,61 @@ function TreatmentSheet({ treatments, isLoading = false, onEdit }: TreatmentShee
         </Button>
       </div>
 
-      {/* Treatment Table with horizontal scrollbar */}
-      <div className="border border-slate-200 rounded-lg overflow-x-auto bg-white w-full">
-        <table className="w-full text-sm whitespace-nowrap">
-          <thead>
-            <tr className="border-b border-slate-200 bg-slate-50">
-              <th className="px-4 py-3 text-left font-semibold text-slate-700 sticky left-0 bg-slate-50 z-10 min-w-[200px]">
-                Traitement
-              </th>
-              {hours.map((hour) => (
-                <th
-                  key={hour}
-                  className="px-2 py-3 text-center font-semibold text-slate-600 text-xs w-10 min-w-[40px]"
-                >
-                  {hour}h
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {treatments.map((treatment, idx) => (
-              <tr key={treatment.id} className={idx % 2 === 0 ? "bg-white" : "bg-slate-50"}>
-                <td className="px-4 py-3 text-slate-900 sticky left-0 z-10 bg-inherit">
-                  <div className="font-semibold">{treatment.name}</div>
-                  <div className="text-xs text-slate-500">{treatment.posologie}</div>
-                  <div className="text-xs font-medium text-indigo-600 mt-1">{treatment.voie}</div>
-                </td>
-                {hours.map((hour) => (
-                  <td
-                    key={`${treatment.id}-${hour}`}
-                    className="px-2 py-3 text-center border-l border-slate-100"
-                  >
-                    <div className="flex items-center justify-center h-8">
-                      {getCellIcon(treatment.hours[hour])}
+      {/* Vertical Timeline */}
+      <div className="border border-slate-200 rounded-lg bg-white w-full p-6 overflow-y-auto max-h-96">
+        <div className="relative space-y-6">
+          {/* Vertical connecting line */}
+          <div className="absolute w-0.5 bg-slate-200" style={{ left: '26px', top: '6px', bottom: '6px' }} />
+
+          {scheduledHours.map((hour) => (
+            <div key={hour} className="flex gap-6 items-start">
+              {/* Time label and timeline dot */}
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="font-mono text-sm font-bold text-slate-700 w-12 text-right">
+                  {String(hour).padStart(2, "0")}h
+                </div>
+                <div className="h-3 w-3 rounded-full bg-cyan-500 border-2 border-white shadow-sm flex-shrink-0" />
+              </div>
+
+              {/* Medications scheduled at this hour */}
+              <div className="flex-1 space-y-3">
+                {treatments
+                  .filter((treatment) => treatment.hours[hour] !== undefined && treatment.hours[hour] !== false)
+                  .map((treatment) => (
+                    <div
+                      key={`${treatment.id}-${hour}`}
+                      className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm flex items-center justify-between gap-4"
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        <div>
+                          <div className="font-medium text-slate-900">{treatment.name}</div>
+                          <div className="text-xs text-slate-500">{treatment.posologie}</div>
+                        </div>
+                        <span className="text-xs font-bold text-indigo-600 bg-indigo-50 rounded-full px-2 py-0.5 flex-shrink-0">
+                          {treatment.voie}
+                        </span>
+                      </div>
+
+                      {/* Status badge */}
+                      <div className="flex-shrink-0">
+                        {treatment.hours[hour] === true ? (
+                          <div className="flex items-center gap-1 text-xs font-bold text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
+                            <Check className="h-3 w-3" />
+                            <span>Administré</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 text-xs font-bold text-slate-500 bg-slate-50 border border-slate-200 rounded-full px-2 py-0.5">
+                            <Minus className="h-3 w-3" />
+                            <span>Prévu</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Legend */}
@@ -355,7 +385,7 @@ function TreatmentModal({
   }
 
   return (
-    <Modal open={open} onOpenChange={onClose}>
+    <Modal open={open} onClose={onClose}>
       <div className="flex flex-col gap-4 w-full max-h-[90vh] overflow-auto max-w-full">
         <div className="flex items-center justify-between flex-shrink-0">
           <h2 className="text-xl font-bold text-slate-900">Éditer Fiche Traitement</h2>

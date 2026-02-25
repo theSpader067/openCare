@@ -99,12 +99,12 @@ export function PatientPreviewWithTabs({
       treatments.map((t) => {
         if (t.id === treatmentId) {
           const current = t.hours[hour]
-          // Only toggle between empty and scheduled (null), not administered
+          // Cycle through: empty (false) → scheduled (null) → administered (true) → empty
           return {
             ...t,
             hours: {
               ...t.hours,
-              [hour]: current === null ? false : null,
+              [hour]: current === false ? null : current === null ? true : false,
             },
           }
         }
@@ -350,7 +350,12 @@ function TreatmentSheet({ treatments, isLoading = false, onEdit, onToggleHour }:
 
                       {/* Status badge - clickable indicator */}
                       <div className="flex-shrink-0">
-                        {treatment.hours[hour] === null ? (
+                        {treatment.hours[hour] === true ? (
+                          <div className="flex items-center gap-1 text-xs font-bold text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
+                            <Check className="h-3 w-3" />
+                            <span>Administré</span>
+                          </div>
+                        ) : treatment.hours[hour] === null ? (
                           <div className="flex items-center gap-1 text-xs font-bold text-cyan-700 bg-cyan-50 border border-cyan-200 rounded-full px-2 py-0.5">
                             <span>Prévu</span>
                           </div>

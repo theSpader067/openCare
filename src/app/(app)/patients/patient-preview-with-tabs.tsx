@@ -64,11 +64,12 @@ export function PatientPreviewWithTabs({
       editingTreatments.map((t) => {
         if (t.id === treatmentId) {
           const current = t.hours[hour]
+          // Only cycle between empty (false) and scheduled (null), not administered
           return {
             ...t,
             hours: {
               ...t.hours,
-              [hour]: current === true ? null : current === null ? false : true,
+              [hour]: current === null ? false : null,
             },
           }
         }
@@ -93,6 +94,25 @@ export function PatientPreviewWithTabs({
     ))
   }
 
+  const toggleTreatmentHour = (treatmentId: string, hour: number) => {
+    setTreatments(
+      treatments.map((t) => {
+        if (t.id === treatmentId) {
+          const current = t.hours[hour]
+          // Only toggle between empty and scheduled (null), not administered
+          return {
+            ...t,
+            hours: {
+              ...t.hours,
+              [hour]: current === null ? false : null,
+            },
+          }
+        }
+        return t
+      })
+    )
+  }
+
   return (
     <div className="flex flex-col gap-6 pb-6 w-full h-full overflow-hidden">
       {/* Patient Header */}
@@ -111,12 +131,12 @@ export function PatientPreviewWithTabs({
         {t("patients.buttons.addObservation")}
       </Button>
 
-      {/* Tabs - Clean Pill Shape Style */}
-      <div className="flex gap-4 bg-white p-1 border border-slate-200 rounded-full w-full inline-flex">
+      {/* Tabs - Less rounded style */}
+      <div className="flex gap-4 bg-white p-1 border border-slate-200 rounded-lg w-full inline-flex">
         <button
           onClick={() => setActiveTab("apercu")}
           className={cn(
-            "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all rounded-full border-2",
+            "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all rounded-lg border-2",
             activeTab === "apercu"
               ? "bg-cyan-600 text-white border-cyan-600"
               : "bg-transparent text-slate-700 border-transparent hover:text-slate-900"
@@ -128,7 +148,7 @@ export function PatientPreviewWithTabs({
         <button
           onClick={() => setActiveTab("traitement")}
           className={cn(
-            "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all rounded-full border-2",
+            "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all rounded-lg border-2",
             activeTab === "traitement"
               ? "bg-cyan-600 text-white border-cyan-600"
               : "bg-transparent text-slate-700 border-transparent hover:text-slate-900"
@@ -151,6 +171,7 @@ export function PatientPreviewWithTabs({
               treatments={treatments}
               isLoading={isLoadingTreatments}
               onEdit={handleEditClick}
+              onToggleHour={toggleTreatmentHour}
             />
             <TreatmentModal
               open={isEditModalOpen}
@@ -174,9 +195,10 @@ interface TreatmentSheetProps {
   treatments: Treatment[]
   isLoading?: boolean
   onEdit: () => void
+  onToggleHour: (treatmentId: string, hour: number) => void
 }
 
-function TreatmentSheet({ treatments, isLoading = false, onEdit }: TreatmentSheetProps) {
+function TreatmentSheet({ treatments, isLoading = false, onEdit, onToggleHour }: TreatmentSheetProps) {
   const today = new Date()
   const formattedDate = new Intl.DateTimeFormat("fr-FR", {
     weekday: "long",
@@ -310,9 +332,11 @@ function TreatmentSheet({ treatments, isLoading = false, onEdit }: TreatmentShee
                 {treatments
                   .filter((treatment) => treatment.hours[hour] !== undefined && treatment.hours[hour] !== false)
                   .map((treatment) => (
-                    <div
+                    <button
                       key={`${treatment.id}-${hour}`}
-                      className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm flex items-center justify-between gap-4"
+                      onClick={() => onToggleHour(treatment.id, hour)}
+                      className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm flex items-center justify-between gap-4 w-full cursor-pointer hover:bg-slate-50 transition-colors text-left"
+                      type="button"
                     >
                       <div className="flex items-center gap-3 flex-1">
                         <div>
@@ -324,21 +348,19 @@ function TreatmentSheet({ treatments, isLoading = false, onEdit }: TreatmentShee
                         </span>
                       </div>
 
-                      {/* Status badge */}
+                      {/* Status badge - clickable indicator */}
                       <div className="flex-shrink-0">
-                        {treatment.hours[hour] === true ? (
-                          <div className="flex items-center gap-1 text-xs font-bold text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
-                            <Check className="h-3 w-3" />
-                            <span>Administré</span>
+                        {treatment.hours[hour] === null ? (
+                          <div className="flex items-center gap-1 text-xs font-bold text-cyan-700 bg-cyan-50 border border-cyan-200 rounded-full px-2 py-0.5">
+                            <span>Prévu</span>
                           </div>
                         ) : (
                           <div className="flex items-center gap-1 text-xs font-bold text-slate-500 bg-slate-50 border border-slate-200 rounded-full px-2 py-0.5">
-                            <Minus className="h-3 w-3" />
-                            <span>Prévu</span>
+                            <span>Non coché</span>
                           </div>
                         )}
                       </div>
-                    </div>
+                    </button>
                   ))}
               </div>
             </div>
@@ -383,9 +405,8 @@ function TreatmentModal({
   }
 
   const getHourChipClass = (state: boolean | null | undefined) => {
-    if (state === true) {
-      return "bg-green-100 text-green-700 ring-1 ring-green-400"
-    } else if (state === null) {
+    // Modal only shows scheduled (null) vs empty - no administered state
+    if (state === null) {
       return "bg-cyan-100 text-cyan-700 ring-1 ring-cyan-400"
     }
     return "bg-slate-100 text-slate-400"

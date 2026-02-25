@@ -826,7 +826,7 @@ export default function PatientsPage() {
         </div>
       </div>
 
-      <section className="grid gap-6 xl:grid-cols-[1fr_360px]">
+      <section className="grid gap-6 xl:grid-cols-[7fr_5fr]">
         <div className="flex flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-md">
           {patientsLoading ? (
             <div className="flex h-64 items-center justify-center">

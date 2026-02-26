@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, FileText, Clock, Edit2, Check, Minus, X, Trash2 } from "lucide-react"
+import { Plus, FileText, Clock, Edit2, Check, Minus, X, Trash2, CheckSquare, Square, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { Modal } from "@/components/ui/modal"
@@ -24,7 +24,14 @@ interface Treatment {
   name: string
   posologie: string
   voie: "IV" | "IM" | "VO"
-  hours: Record<number, boolean | null> // null = line, true = checkmark, false = empty
+  duration?: number // duration in days
+  hours: Record<number, boolean> // true = checked, false = unchecked
+}
+
+interface User {
+  id: string
+  name: string
+  role: string
 }
 
 export function PatientPreviewWithTabs({
@@ -43,7 +50,24 @@ export function PatientPreviewWithTabs({
       name: "Triaxone",
       posologie: "250mg",
       voie: "IV",
-      hours: { 8: true, 14: true, 20: null },
+      duration: 7,
+      hours: { 8: true, 14: true, 20: false },
+    },
+    {
+      id: "2",
+      name: "Amoxicilline",
+      posologie: "500mg",
+      voie: "VO",
+      duration: 10,
+      hours: { 8: false, 16: false },
+    },
+    {
+      id: "3",
+      name: "Metformine",
+      posologie: "1000mg",
+      voie: "VO",
+      duration: 30,
+      hours: { 8: false, 12: true },
     },
   ])
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -64,12 +88,12 @@ export function PatientPreviewWithTabs({
       editingTreatments.map((t) => {
         if (t.id === treatmentId) {
           const current = t.hours[hour]
-          // Only cycle between empty (false) and scheduled (null), not administered
+          // Toggle between unchecked (false) and checked (true)
           return {
             ...t,
             hours: {
               ...t.hours,
-              [hour]: current === null ? false : null,
+              [hour]: current === true ? false : true,
             },
           }
         }
@@ -78,9 +102,9 @@ export function PatientPreviewWithTabs({
     )
   }
 
-  const addTreatment = (name: string, posologie: string, voie: Treatment["voie"]) => {
+  const addTreatment = (name: string, posologie: string, voie: Treatment["voie"], duration?: number) => {
     setEditingTreatments([...editingTreatments, {
-      id: Date.now().toString(), name, posologie, voie, hours: {}
+      id: Date.now().toString(), name, posologie, voie, duration, hours: {}
     }])
   }
 
@@ -88,10 +112,16 @@ export function PatientPreviewWithTabs({
     setEditingTreatments(editingTreatments.filter((t) => t.id !== id))
   }
 
-  const updateTreatmentField = (id: string, field: "name" | "posologie" | "voie", value: string) => {
-    setEditingTreatments(editingTreatments.map((t) =>
-      t.id === id ? { ...t, [field]: value } : t
-    ))
+  const updateTreatmentField = (id: string, field: "name" | "posologie" | "voie" | "duration", value: string | number) => {
+    setEditingTreatments(editingTreatments.map((t) => {
+      if (t.id === id) {
+        if (field === "duration") {
+          return { ...t, [field]: value === "" ? undefined : Number(value) }
+        }
+        return { ...t, [field]: value }
+      }
+      return t
+    }))
   }
 
   const toggleTreatmentHour = (treatmentId: string, hour: number) => {
@@ -99,12 +129,12 @@ export function PatientPreviewWithTabs({
       treatments.map((t) => {
         if (t.id === treatmentId) {
           const current = t.hours[hour]
-          // Cycle through: empty (false) → scheduled (null) → administered (true) → empty
+          // Toggle between unchecked (false) and checked (true)
           return {
             ...t,
             hours: {
               ...t.hours,
-              [hour]: current === false ? null : current === null ? true : false,
+              [hour]: current === true ? false : true,
             },
           }
         }
@@ -196,9 +226,37 @@ interface TreatmentSheetProps {
   isLoading?: boolean
   onEdit: () => void
   onToggleHour: (treatmentId: string, hour: number) => void
+  currentUser?: User
+  onSave?: () => void
 }
 
-function TreatmentSheet({ treatments, isLoading = false, onEdit, onToggleHour }: TreatmentSheetProps) {
+function TreatmentSheet({ treatments, isLoading = false, onEdit, onToggleHour, currentUser, onSave }: TreatmentSheetProps) {
+  const [hasChanges, setHasChanges] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [isSaved, setIsSaved] = useState(false)
+
+  const user: User = currentUser || {
+    id: "user-1",
+    name: "Dr. Jean Dupont",
+    role: "Infirmier(e)"
+  }
+
+  const handleToggleHour = (treatmentId: string, hour: number) => {
+    onToggleHour(treatmentId, hour)
+    setHasChanges(true)
+    setIsSaved(false)
+  }
+
+  const handleSave = async () => {
+    setIsSaving(true)
+    await new Promise(resolve => setTimeout(resolve, 600))
+    onSave?.()
+    setIsSaving(false)
+    setHasChanges(false)
+    setIsSaved(true)
+    setTimeout(() => setIsSaved(false), 2000)
+  }
+
   const today = new Date()
   const formattedDate = new Intl.DateTimeFormat("fr-FR", {
     weekday: "long",
@@ -209,11 +267,9 @@ function TreatmentSheet({ treatments, isLoading = false, onEdit, onToggleHour }:
 
   const hours = Array.from({ length: 24 }, (_, i) => i)
 
-  const getCellIcon = (state: boolean | null | undefined) => {
+  const getCellIcon = (state: boolean | undefined) => {
     if (state === true) {
       return <Check className="h-4 w-4 text-green-600" />
-    } else if (state === null) {
-      return <Minus className="h-4 w-4 text-slate-400" />
     }
     return null
   }
@@ -277,14 +333,12 @@ function TreatmentSheet({ treatments, isLoading = false, onEdit, onToggleHour }:
     )
   }
 
-  // Get unique hours with scheduled treatments (state true or null)
+  // Get unique hours with scheduled treatments
   const getScheduledHours = () => {
     const hoursSet = new Set<number>()
     treatments.forEach((treatment) => {
-      Object.entries(treatment.hours).forEach(([hour, state]) => {
-        if (state === true || state === null) {
-          hoursSet.add(Number(hour))
-        }
+      Object.keys(treatment.hours).forEach((hour) => {
+        hoursSet.add(Number(hour))
       })
     })
     return Array.from(hoursSet).sort((a, b) => a - b)
@@ -300,15 +354,41 @@ function TreatmentSheet({ treatments, isLoading = false, onEdit, onToggleHour }:
           <h3 className="text-lg font-semibold text-slate-900">Fiche Traitement</h3>
           <p className="text-sm text-slate-500 capitalize">{formattedDate}</p>
         </div>
-        <Button
-          onClick={onEdit}
-          variant="outline"
-          size="sm"
-          className="gap-2 flex-shrink-0"
-        >
-          <Edit2 className="h-4 w-4" />
-          Éditer
-        </Button>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {hasChanges && (
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline disabled:opacity-50 transition-colors"
+            >
+              {isSaving ? (
+                <>
+                  <div className="w-3 h-3 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin" />
+                  Enregistrement...
+                </>
+              ) : isSaved ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  Enregistré
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4" />
+                  Enregistrer
+                </>
+              )}
+            </button>
+          )}
+          <Button
+            onClick={onEdit}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            <Edit2 className="h-4 w-4" />
+            Éditer
+          </Button>
+        </div>
       </div>
 
       {/* Vertical Timeline */}
@@ -330,42 +410,52 @@ function TreatmentSheet({ treatments, isLoading = false, onEdit, onToggleHour }:
               {/* Medications scheduled at this hour */}
               <div className="flex-1 space-y-3">
                 {treatments
-                  .filter((treatment) => treatment.hours[hour] !== undefined && treatment.hours[hour] !== false)
+                  .filter((treatment) => hour in treatment.hours)
                   .map((treatment) => (
-                    <button
+                    <div
                       key={`${treatment.id}-${hour}`}
-                      onClick={() => onToggleHour(treatment.id, hour)}
-                      className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm flex items-center justify-between gap-4 w-full cursor-pointer hover:bg-slate-50 transition-colors text-left"
-                      type="button"
+                      className={cn(
+                        "rounded-lg border-2 px-4 py-3 flex flex-col gap-2 w-full transition-all",
+                        treatment.hours[hour] === true
+                          ? "bg-green-50 border-green-300 shadow-md"
+                          : "bg-slate-50 border-slate-200 shadow-sm"
+                      )}
                     >
-                      <div className="flex items-center gap-3 flex-1">
-                        <div>
-                          <div className="font-medium text-slate-900">{treatment.name}</div>
-                          <div className="text-xs text-slate-500">{treatment.posologie}</div>
+                      <button
+                        onClick={() => handleToggleHour(treatment.id, hour)}
+                        className="flex items-center justify-between gap-4 cursor-pointer hover:opacity-80 transition-opacity text-left"
+                        type="button"
+                      >
+                        <div className="flex items-center gap-3 flex-1">
+                          <div>
+                            <div className="font-medium text-slate-900">{treatment.name}</div>
+                            <div className="text-xs text-slate-500">{treatment.posologie}</div>
+                          </div>
+                          <span className="text-xs font-bold text-indigo-600 bg-indigo-50 rounded-full px-2 py-0.5 flex-shrink-0">
+                            {treatment.voie}
+                          </span>
                         </div>
-                        <span className="text-xs font-bold text-indigo-600 bg-indigo-50 rounded-full px-2 py-0.5 flex-shrink-0">
-                          {treatment.voie}
-                        </span>
-                      </div>
 
-                      {/* Status badge - clickable indicator */}
-                      <div className="flex-shrink-0">
-                        {treatment.hours[hour] === true ? (
-                          <div className="flex items-center gap-1 text-xs font-bold text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
-                            <Check className="h-3 w-3" />
-                            <span>Administré</span>
-                          </div>
-                        ) : treatment.hours[hour] === null ? (
-                          <div className="flex items-center gap-1 text-xs font-bold text-cyan-700 bg-cyan-50 border border-cyan-200 rounded-full px-2 py-0.5">
-                            <span>Prévu</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1 text-xs font-bold text-slate-500 bg-slate-50 border border-slate-200 rounded-full px-2 py-0.5">
-                            <span>Non coché</span>
-                          </div>
-                        )}
-                      </div>
-                    </button>
+                        {/* Checkbox indicator */}
+                        <div className="flex-shrink-0">
+                          {treatment.hours[hour] === true ? (
+                            <CheckSquare className="h-5 w-5 text-green-600" />
+                          ) : (
+                            <Square className="h-5 w-5 text-slate-400" />
+                          )}
+                        </div>
+                      </button>
+
+                      {/* User info shown when treatment is checked */}
+                      {treatment.hours[hour] === true && (
+                        <div className="pt-2 border-t border-green-200 flex items-center gap-2">
+                          <User className="h-4 w-4 text-green-600 flex-shrink-0" />
+                          <span className="text-xs text-slate-700">
+                            <span className="font-semibold">Par:</span> {user.name} <span className="text-slate-500">({user.role})</span>
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   ))}
               </div>
             </div>
@@ -381,8 +471,8 @@ interface TreatmentModalProps {
   open: boolean
   treatments: Treatment[]
   onToggleCell: (treatmentId: string, hour: number) => void
-  onUpdateField: (id: string, field: "name" | "posologie" | "voie", value: string) => void
-  onAddTreatment: (name: string, posologie: string, voie: Treatment["voie"]) => void
+  onUpdateField: (id: string, field: "name" | "posologie" | "voie" | "duration", value: string | number) => void
+  onAddTreatment: (name: string, posologie: string, voie: Treatment["voie"], duration?: number) => void
   onRemoveTreatment: (id: string) => void
   onSave: () => void
   onClose: () => void
@@ -398,20 +488,58 @@ function TreatmentModal({
   onSave,
   onClose,
 }: TreatmentModalProps) {
-  const [newForm, setNewForm] = useState({ name: "", posologie: "", voie: "IV" as Treatment["voie"] })
+  const [newForm, setNewForm] = useState({ name: "", posologie: "", voie: "IV" as Treatment["voie"], duration: "", hours: {} as Record<number, boolean> })
+  const [editingTreatmentId, setEditingTreatmentId] = useState<string | null>(null)
+  const [modifiedTreatments, setModifiedTreatments] = useState<Set<string>>(new Set())
+  const [savingTreatmentId, setSavingTreatmentId] = useState<string | null>(null)
+
+  const handleToggleNewFormHour = (hour: number) => {
+    setNewForm(prev => ({
+      ...prev,
+      hours: {
+        ...prev.hours,
+        [hour]: prev.hours[hour] ? undefined : false
+      }
+    }))
+  }
+
+  const handleToggleCell = (treatmentId: string, hour: number) => {
+    onToggleCell(treatmentId, hour)
+    setModifiedTreatments(prev => new Set(prev).add(treatmentId))
+  }
+
+  const handleSaveTreatment = async (treatmentId: string) => {
+    setSavingTreatmentId(treatmentId)
+    // Simulate save delay
+    await new Promise(resolve => setTimeout(resolve, 600))
+    setModifiedTreatments(prev => {
+      const updated = new Set(prev)
+      updated.delete(treatmentId)
+      return updated
+    })
+    setSavingTreatmentId(null)
+  }
 
   if (!open) return null
 
   const handleAddTreatment = () => {
     if (newForm.name.trim() && newForm.posologie.trim()) {
-      onAddTreatment(newForm.name, newForm.posologie, newForm.voie)
-      setNewForm({ name: "", posologie: "", voie: "IV" })
+      // Create treatment with selected hours, filling in any missing hours as false
+      const treatmentHours: Record<number, boolean> = {}
+      Object.entries(newForm.hours).forEach(([hour, val]) => {
+        if (val !== undefined) {
+          treatmentHours[parseInt(hour)] = false
+        }
+      })
+      const duration = newForm.duration ? Number(newForm.duration) : undefined
+      onAddTreatment(newForm.name, newForm.posologie, newForm.voie, duration)
+      setNewForm({ name: "", posologie: "", voie: "IV", duration: "", hours: {} })
     }
   }
 
-  const getHourChipClass = (state: boolean | null | undefined) => {
-    // Modal only shows scheduled (null) vs empty - no administered state
-    if (state === null) {
+  const getHourChipClass = (state: boolean | undefined) => {
+    // Cyan for checked (true), gray for unchecked (false/undefined)
+    if (state === true) {
       return "bg-cyan-100 text-cyan-700 ring-1 ring-cyan-400"
     }
     return "bg-slate-100 text-slate-400"
@@ -438,77 +566,136 @@ function TreatmentModal({
 
   return (
     <Modal open={open} onClose={onClose} title="Éditer Fiche Traitement" size="lg" footer={footerContent}>
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 h-[70vh]">
         {/* Scrollable Treatments Section */}
-        <div className="overflow-y-auto max-h-[70vh] space-y-4 pr-4">
-          {treatments.map((treatment) => (
-            <div key={treatment.id} className="border border-slate-200 rounded-xl p-4 space-y-3 bg-white">
-              {/* Editable Fields Row */}
-              <div className="flex gap-3 items-end">
-                <input
-                  type="text"
-                  value={treatment.name}
-                  onChange={(e) => onUpdateField(treatment.id, "name", e.target.value)}
-                  placeholder="Médicament"
-                  className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                />
-                <input
-                  type="text"
-                  value={treatment.posologie}
-                  onChange={(e) => onUpdateField(treatment.id, "posologie", e.target.value)}
-                  placeholder="Posologie"
-                  className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                />
-                <select
-                  value={treatment.voie}
-                  onChange={(e) => onUpdateField(treatment.id, "voie", e.target.value)}
-                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="IV">IV</option>
-                  <option value="IM">IM</option>
-                  <option value="VO">VO</option>
-                </select>
-                <button
-                  onClick={() => onRemoveTreatment(treatment.id)}
-                  className="text-slate-500 hover:text-red-600 transition-colors p-2"
-                  type="button"
-                  title="Supprimer ce traitement"
-                >
-                  <Trash2 className="h-5 w-5" />
-                </button>
-              </div>
+        <div className="flex-1 overflow-y-auto space-y-4 pr-4">
+          {treatments.map((treatment) => {
+            const scheduledHours = Object.entries(treatment.hours)
+              .filter(([, value]) => value === true)
+              .map(([hour]) => Number(hour))
+              .sort((a, b) => a - b)
 
-              {/* Horaires Label */}
-              <label className="block text-sm font-semibold text-slate-700">Horaires</label>
-
-              {/* 4x6 Hour Chip Grid */}
-              <div className="grid grid-cols-6 gap-1">
-                {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
-                  <button
-                    key={`${treatment.id}-${hour}`}
-                    onClick={() => onToggleCell(treatment.id, hour)}
-                    className={cn(
-                      "rounded text-xs py-1 font-mono font-semibold transition-colors",
-                      getHourChipClass(treatment.hours[hour])
-                    )}
-                    type="button"
-                    title={`${String(hour).padStart(2, "0")}h`}
+            return (
+              <div key={treatment.id} className="border border-slate-200 rounded-xl p-4 space-y-3 bg-white">
+                {/* Editable Fields Row */}
+                <div className="flex gap-3 items-end">
+                  <input
+                    type="text"
+                    value={treatment.name}
+                    onChange={(e) => onUpdateField(treatment.id, "name", e.target.value)}
+                    placeholder="Médicament"
+                    className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                  />
+                  <input
+                    type="text"
+                    value={treatment.posologie}
+                    onChange={(e) => onUpdateField(treatment.id, "posologie", e.target.value)}
+                    placeholder="Posologie"
+                    className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                  />
+                  <select
+                    value={treatment.voie}
+                    onChange={(e) => onUpdateField(treatment.id, "voie", e.target.value)}
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
-                    {String(hour).padStart(2, "0")}
+                    <option value="IV">IV</option>
+                    <option value="IM">IM</option>
+                    <option value="VO">VO</option>
+                  </select>
+                  <input
+                    type="number"
+                    value={treatment.duration || ""}
+                    onChange={(e) => onUpdateField(treatment.id, "duration", e.target.value)}
+                    placeholder="Durée (j)"
+                    min="1"
+                    className="w-20 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                  />
+                  <button
+                    onClick={() => setEditingTreatmentId(editingTreatmentId === treatment.id ? null : treatment.id)}
+                    className="text-slate-500 hover:text-indigo-600 transition-colors p-2"
+                    type="button"
+                    title="Éditer les horaires"
+                  >
+                    <Edit2 className="h-5 w-5" />
                   </button>
-                ))}
+                  <button
+                    onClick={() => onRemoveTreatment(treatment.id)}
+                    className="text-slate-500 hover:text-red-600 transition-colors p-2"
+                    type="button"
+                    title="Supprimer ce traitement"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </div>
+
+                {/* Always visible: Compact view of scheduled hours */}
+                <div className="flex flex-wrap gap-2">
+                  {scheduledHours.length > 0 ? (
+                    scheduledHours.map((hour) => (
+                      <span
+                        key={`compact-${hour}`}
+                        className="text-xs font-semibold px-2 py-1 rounded bg-cyan-100 text-cyan-700 border border-cyan-300"
+                      >
+                        {String(hour).padStart(2, "0")}h
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-slate-500 italic">Aucun horaire défini</span>
+                  )}
+                </div>
+
+                {/* Expanded grid shown when editing this treatment - All 24 hours */}
+                {editingTreatmentId === treatment.id && (
+                  <div className="space-y-3 pt-2 border-t border-slate-200">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-sm font-semibold text-slate-700">Modifier les horaires</label>
+                      {modifiedTreatments.has(treatment.id) && (
+                        <button
+                          onClick={() => handleSaveTreatment(treatment.id)}
+                          disabled={savingTreatmentId === treatment.id}
+                          className="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 disabled:opacity-50 transition-colors"
+                          type="button"
+                        >
+                          {savingTreatmentId === treatment.id ? (
+                            <>
+                              <div className="w-3 h-3 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin" />
+                              Enregistrement...
+                            </>
+                          ) : (
+                            <>
+                              ✓ Enregistrer
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-6 gap-1">
+                      {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
+                        <button
+                          key={`${treatment.id}-${hour}`}
+                          onClick={() => handleToggleCell(treatment.id, hour)}
+                          className={cn(
+                            "rounded text-xs py-1 font-mono font-semibold transition-colors",
+                            getHourChipClass(treatment.hours[hour])
+                          )}
+                          type="button"
+                          title={`${String(hour).padStart(2, "0")}h`}
+                        >
+                          {String(hour).padStart(2, "0")}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
-        {/* Separator */}
-        <div className="border-t border-slate-200" />
-
         {/* Add New Treatment Section */}
-        <div className="space-y-3">
+        <div className="space-y-4 p-4 bg-slate-50 rounded-xl border border-slate-200 flex-shrink-0">
           <h3 className="text-sm font-semibold text-slate-700">Ajouter un traitement</h3>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             <input
               type="text"
               value={newForm.name}
@@ -532,7 +719,39 @@ function TreatmentModal({
               <option value="IM">IM</option>
               <option value="VO">VO</option>
             </select>
+            <input
+              type="number"
+              value={newForm.duration}
+              onChange={(e) => setNewForm({ ...newForm, duration: e.target.value })}
+              placeholder="Durée (j)"
+              min="1"
+              className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+            />
           </div>
+
+          {/* Hour Grid for New Treatment */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-slate-700">Sélectionner les horaires</label>
+            <div className="grid grid-cols-6 gap-1">
+              {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
+                <button
+                  key={`new-${hour}`}
+                  onClick={() => handleToggleNewFormHour(hour)}
+                  className={cn(
+                    "rounded text-xs py-1 font-mono font-semibold transition-colors",
+                    newForm.hours[hour] !== undefined
+                      ? "bg-cyan-100 text-cyan-700 ring-1 ring-cyan-400"
+                      : "bg-slate-100 text-slate-400"
+                  )}
+                  type="button"
+                  title={`${String(hour).padStart(2, "0")}h`}
+                >
+                  {String(hour).padStart(2, "0")}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <Button
             onClick={handleAddTreatment}
             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"

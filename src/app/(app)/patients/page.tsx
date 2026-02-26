@@ -126,6 +126,7 @@ export default function PatientsPage() {
     from: "",
     to: "",
   });
+  const [isObservationModalOpen, setIsObservationModalOpen] = useState(false);
 
   // Fetch patients from API
   useEffect(() => {
@@ -569,128 +570,110 @@ export default function PatientsPage() {
           </section>
         )}
 
-        <div className="space-y-6">
-          <HistorySection
-            title={t("patients.section.medicalHistory")}
-            tags={selectedPatient.histories.medical}
-            emptyLabel={t("patients.empty.noHistory")}
-          />
-          <HistorySection
-            title={t("patients.section.surgicalHistory")}
-            tags={selectedPatient.histories.surgical}
-            emptyLabel={t("patients.empty.noHistory")}
-          />
-          {selectedPatient.atcdsFamiliaux && (
-            <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-              <h3 className="text-sm font-semibold text-slate-800 mb-3">
-                {t("patients.dossier.atcdsFamiliaux")}
-              </h3>
-              <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
-                {selectedPatient.atcdsFamiliaux}
+        {/* Antécédents Section */}
+        <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+          <h2 className="text-sm font-semibold text-slate-800 mb-5 pb-4 border-b border-slate-200">
+            Antécédents
+          </h2>
+          <div className="space-y-6">
+            {/* Medical History */}
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-3">
+                {t("patients.section.medicalHistory")}
               </p>
-            </section>
-          )}
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-slate-800">
-              {t("patients.section.otherInfo")}
-            </h3>
-            <div className="mt-4 space-y-4">
-              {selectedPatient.histories.other}
+              {selectedPatient.histories.medical && selectedPatient.histories.medical.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {selectedPatient.histories.medical}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500">{t("patients.empty.noHistory")}</p>
+              )}
             </div>
-          </div>
-        </div>
 
-        <div className="space-y-6">
-          <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-            <header className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-200">
-              <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                <CalendarDays className="h-4 w-4 text-indigo-500" />
-                {t("patients.section.observations")}
+            {/* Surgical History */}
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-3">
+                {t("patients.section.surgicalHistory")}
+              </p>
+              {selectedPatient.histories.surgical && selectedPatient.histories.surgical.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {selectedPatient.histories.surgical}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500">{t("patients.empty.noHistory")}</p>
+              )}
+            </div>
+
+            {/* Family ATCDs */}
+            {selectedPatient.atcdsFamiliaux && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-3">
+                  {t("patients.dossier.atcdsFamiliaux")}
+                </p>
+                <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap bg-slate-50 p-3 rounded-lg border border-slate-200">
+                  {selectedPatient.atcdsFamiliaux}
+                </p>
               </div>
-              <div className="flex items-center gap-4">
-                <span className="text-xs font-medium text-slate-500 bg-slate-50 px-2.5 py-1 rounded-full">
-                  {sortedObservations.length} {t("patients.labels.entries")}
-                </span>
-                <button
-                  onClick={() => router.push(`/patients/dossier/quickFill?id=${selectedPatient.id}`)}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-sm font-medium rounded-lg transition-colors"
-                >
-                  Ajout rapide
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            </header>
+            )}
 
-            {sortedObservations.length > 0 ? (
-              <div className="mt-5 max-h-80 overflow-y-auto pr-2">
-                <div className="space-y-4">
-                  {sortedObservations.map((observation, index) => (
-                    <div key={observation.id ?? `${observation.timestamp}-${index}`} className="flex gap-4">
-                      {/* Timeline indicator */}
-                      <div className="flex flex-col items-center flex-shrink-0">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-indigo-300 bg-indigo-50 shadow-sm">
-                          <span className="h-2 w-2 rounded-full bg-indigo-500" />
-                        </div>
-                        {index < sortedObservations.length - 1 && (
-                          <div className="my-1 h-8 w-px bg-gradient-to-b from-indigo-300 to-slate-200" />
-                        )}
-                      </div>
-
-                      {/* Observation content */}
-                      <div className="flex-1 pb-2">
-                        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                          <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">
-                            {formatObservationDate(observation.timestamp)}
-                          </p>
-                          <span className="text-xs text-slate-400">
-                            {formatRelativeTimeFromNow(observation.timestamp)}
-                          </span>
-                        </div>
-                        <div className="rounded-lg bg-slate-50 border border-slate-200 p-3">
-                            {observation.note.length > 150 ? (
-                              <>
-                                {observation.note.includes("<") ? (
-                                  <div
-                                    className="text-sm text-slate-700 leading-relaxed [&_p]:m-0 [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-lg [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_strong]:font-semibold [&_em]:italic [&_u]:underline"
-                                    dangerouslySetInnerHTML={{ __html: observation.note.substring(0, 150) }}
-                                  />
-                                ) : (
-                                  <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
-                                    {observation.note.substring(0, 150)}
-                                  </p>
-                                )}
-                                <p className="text-xs text-indigo-600 font-medium mt-2">
-                                  {t("patients.buttons.showMore")}
-                                </p>
-                              </>
-                            ) : (
-                              <>
-                                {observation.note.includes("<") ? (
-                                  <div
-                                    className="text-sm text-slate-700 leading-relaxed [&_p]:m-0 [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-lg [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_strong]:font-semibold [&_em]:italic [&_u]:underline"
-                                    dangerouslySetInnerHTML={{ __html: observation.note }}
-                                  />
-                                ) : (
-                                  <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
-                                    {observation.note}
-                                  </p>
-                                )}
-                              </>
-                            )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+            {/* Other Info */}
+            {selectedPatient.histories.other && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-3">
+                  {t("patients.section.otherInfo")}
+                </p>
+                <div className="space-y-2">
+                  {selectedPatient.histories.other}
                 </div>
               </div>
-            ) : (
-              <p className="mt-4 text-sm text-slate-500">
-                {t("patients.empty.noObservations")}
-              </p>
             )}
-          </section>
+          </div>
+        </section>
 
-        </div>
+        {/* Last Observation - Simple Text Button */}
+        {sortedObservations.length > 0 && (
+          <button
+            onClick={() => setIsObservationModalOpen(true)}
+            className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline transition-colors text-left"
+          >
+            Consulter la dernière observation
+          </button>
+        )}
+
+        {/* Observation Modal */}
+        {sortedObservations.length > 0 && (
+          <Modal
+            open={isObservationModalOpen}
+            onClose={() => setIsObservationModalOpen(false)}
+            title="Observation - Dernière"
+            size="lg"
+          >
+            {sortedObservations[0] && (
+              <div className="flex flex-col gap-4 h-[60vh] overflow-y-auto pr-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-200 flex-shrink-0">
+                  <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide">
+                    {formatObservationDate(sortedObservations[0].timestamp)}
+                  </p>
+                  <span className="text-sm text-slate-500">
+                    {formatRelativeTimeFromNow(sortedObservations[0].timestamp)}
+                  </span>
+                </div>
+                <div className="prose prose-sm max-w-none">
+                  {sortedObservations[0].note.includes("<") ? (
+                    <div
+                      className="text-base text-slate-700 leading-relaxed [&_p]:m-0 [&_p]:mb-3 [&_h1]:text-xl [&_h1]:font-bold [&_h1]:mb-3 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:font-semibold [&_h3]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3 [&_li]:mb-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-3 [&_strong]:font-semibold [&_em]:italic [&_u]:underline"
+                      dangerouslySetInnerHTML={{ __html: sortedObservations[0].note }}
+                    />
+                  ) : (
+                    <p className="text-base text-slate-700 leading-relaxed whitespace-pre-wrap">
+                      {sortedObservations[0].note}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </Modal>
+        )}
       </div>
     );
   };
@@ -826,7 +809,7 @@ export default function PatientsPage() {
         </div>
       </div>
 
-      <section className="grid gap-6 xl:grid-cols-[7fr_5fr] overflow-hidden">
+      <section className="grid gap-6 xl:grid-cols-[8fr_4fr] overflow-hidden">
         <div className="flex flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-md min-w-0">
           {patientsLoading ? (
             <div className="flex h-64 items-center justify-center">

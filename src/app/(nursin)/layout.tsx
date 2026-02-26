@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LogOut, User, ChevronDown, Heart } from "lucide-react";
+import { LogOut, User, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,9 @@ export default function NursingLayout({
   const { status, data: session } = useSession();
   const router = useRouter();
   const [profileOpen, setProfileOpen] = useState(false);
+
+  // Default service name (can be customized based on user assignment)
+  const serviceName = "Cardiologie";
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -61,7 +64,7 @@ export default function NursingLayout({
             <p className="text-sm font-bold text-slate-900">
               {session?.user?.name || "Infirmier"}
             </p>
-            <p className="text-xs text-slate-500">Poste Infirmier</p>
+            <p className="text-xs text-slate-500">{serviceName}</p>
           </div>
 
           {/* Profile Dropdown */}
@@ -94,7 +97,13 @@ export default function NursingLayout({
 
                 {/* Menu Items */}
                 <div className="p-2">
-                  <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium text-slate-900 hover:bg-indigo-50 hover:text-indigo-700 transition-colors duration-200 group">
+                  <button
+                    onClick={() => {
+                      setProfileOpen(false);
+                      router.push("/workstation/profile");
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium text-slate-900 hover:bg-indigo-50 hover:text-indigo-700 transition-colors duration-200 group"
+                  >
                     <User className="h-4 w-4" />
                     <span>Mon profil</span>
                   </button>

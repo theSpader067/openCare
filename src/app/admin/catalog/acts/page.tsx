@@ -5,6 +5,7 @@ import { Plus, Search, CheckCircle2, Circle, X, ChevronDown, Filter } from "luci
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AdminHeader } from "@/components/admin/admin-header";
 import actesMedicalesData from "@/components/data/actes-medicales.json";
 
 interface Act {
@@ -240,18 +241,10 @@ export default function CatalogActsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Catalogue des Actes</h1>
-          <p className="text-slate-600 mt-1">
-            Sélectionnez et ajoutez des actes à votre organisation
-          </p>
-        </div>
-        <Button onClick={handleOpenModal} className="bg-indigo-600 hover:bg-indigo-700">
-          <Plus className="h-4 w-4 mr-2" />
-          Nouvel Acte
-        </Button>
-      </div>
+      <AdminHeader
+        title="Catalogue des Actes"
+        subtitle="Sélectionnez et ajoutez des actes à votre organisation"
+      />
 
       {/* Search and Filters */}
       <div className="space-y-4">
@@ -326,8 +319,8 @@ export default function CatalogActsPage() {
 
       {/* Selection Actions Bar */}
       {selectedActIds.size > 0 && (
-        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 flex items-center justify-between">
-          <p className="text-slate-900 font-medium">
+        <div className="bg-teal-50 border-2 border-teal-300 p-4 flex items-center justify-between">
+          <p className="text-slate-900 font-bold uppercase tracking-wide">
             {selectedActIds.size} acte{selectedActIds.size !== 1 ? "s" : ""} sélectionné{selectedActIds.size !== 1 ? "s" : ""}
           </p>
           <div className="flex gap-2">
@@ -338,7 +331,7 @@ export default function CatalogActsPage() {
               Annuler
             </Button>
             <Button
-              className="bg-indigo-600 hover:bg-indigo-700"
+              className="bg-teal-600 hover:bg-teal-700 text-white font-bold"
               onClick={handleAddActs}
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -451,7 +444,8 @@ export default function CatalogActsPage() {
                         {specialtyActs.map((act, actIndex) => (
                           <tr
                             key={act.id}
-                            className={`border-t border-slate-200 hover:bg-slate-50 transition ${
+                            onClick={() => toggleActSelection(act.id)}
+                            className={`border-t border-slate-200 hover:bg-slate-50 transition cursor-pointer ${
                               selectedActIds.has(act.id) ? "bg-indigo-50" : ""
                             } ${actIndex === specialtyActs.length - 1 ? "" : ""}`}
                           >

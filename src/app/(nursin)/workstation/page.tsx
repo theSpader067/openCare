@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import {
   Plus,
   CheckCircle2,
@@ -19,6 +21,9 @@ import {
   Save,
   Loader,
   Calendar,
+  ChevronDown,
+  LogOut,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -223,17 +228,17 @@ function PatientListItem({
     <button
       onClick={onClick}
       className={cn(
-        "w-full px-3 py-2.5 transition-all duration-200 border-l-4 text-left group",
+        "w-full px-4 py-3 transition-all duration-200 text-left group border-l-4",
         isSelected
-          ? "bg-gradient-to-r from-indigo-50 to-blue-50 border-l-indigo-600 shadow-md"
-          : "bg-white border-l-transparent hover:bg-slate-50 hover:border-l-indigo-300"
+          ? "bg-indigo-50 border-l-indigo-500 shadow-sm"
+          : "bg-white border-l-transparent hover:bg-slate-50 hover:border-l-indigo-200"
       )}
     >
       <div className="flex items-start justify-between gap-2 mb-1.5">
         <div className="flex-1 min-w-0">
           <h3
             className={cn(
-              "text-sm font-bold transition-colors",
+              "text-sm font-semibold transition-colors",
               isSelected ? "text-indigo-900" : "text-slate-900 group-hover:text-indigo-700"
             )}
           >
@@ -242,9 +247,9 @@ function PatientListItem({
         </div>
         <div
           className={cn(
-            "text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap transition-colors",
+            "text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap transition-colors",
             isSelected
-              ? "bg-indigo-600 text-white"
+              ? "bg-indigo-100 text-indigo-700"
               : "bg-slate-100 text-slate-700 group-hover:bg-indigo-100 group-hover:text-indigo-700"
           )}
         >
@@ -338,10 +343,10 @@ function PatientDetailView({
   return (
     <div className="w-full h-full flex flex-col overflow-hidden bg-white">
       {/* Header */}
-      <div className="flex-shrink-0 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white px-6 py-4 shadow-lg border-b border-slate-700">
+      <div className="flex-shrink-0 px-6 py-4 border-b border-slate-200/70 bg-white">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-indigo-300 hover:text-white transition-colors mb-3 font-medium text-sm"
+          className="flex items-center gap-2 text-indigo-600 hover:text-indigo-700 transition-colors mb-3 text-sm font-medium"
         >
           <ArrowLeft className="h-4 w-4" />
           Retour au calendrier
@@ -349,12 +354,10 @@ function PatientDetailView({
 
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-white">{patient.name}</h2>
-            <p className="text-slate-300 text-sm mt-1">{patient.diagnostic}</p>
+            <h2 className="text-xl font-semibold tracking-tight text-slate-900">{patient.name}</h2>
+            <p className="text-slate-600 text-sm mt-1">{patient.diagnostic}</p>
           </div>
-          <Badge className="bg-white text-slate-900 font-bold text-base px-3 py-1.5">
-            {patient.salle}
-          </Badge>
+          <span className="px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-700">{patient.salle}</span>
         </div>
       </div>
 
@@ -363,7 +366,7 @@ function PatientDetailView({
         <div className="p-6 space-y-6">
           {/* Demographics Section */}
           <section>
-            <h3 className="text-xs font-bold text-slate-600 uppercase tracking-widest mb-3">
+            <h3 className="text-[0.7rem] uppercase tracking-[0.35em] font-semibold text-slate-500 mb-3">
               Données démographiques
             </h3>
             <div className="grid grid-cols-3 gap-4 bg-slate-50 rounded-lg p-4 border border-slate-200">
@@ -384,7 +387,7 @@ function PatientDetailView({
 
           {/* ATCD Section */}
           <section>
-            <h3 className="text-xs font-bold text-slate-600 uppercase tracking-widest mb-3">
+            <h3 className="text-[0.7rem] uppercase tracking-[0.35em] font-semibold text-slate-500 mb-3">
               Antécédents
             </h3>
             <div className="space-y-2 bg-slate-50 rounded-lg p-4 border border-slate-200">
@@ -401,7 +404,7 @@ function PatientDetailView({
 
           {/* Last Observation */}
           <section>
-            <h3 className="text-xs font-bold text-slate-600 uppercase tracking-widest mb-3">
+            <h3 className="text-[0.7rem] uppercase tracking-[0.35em] font-semibold text-slate-500 mb-3">
               Dernière observation
             </h3>
             <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
@@ -423,7 +426,7 @@ function PatientDetailView({
 
           {/* Horaire des Traitements Section */}
           <section>
-            <h3 className="text-xs font-bold text-slate-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+            <h3 className="text-[0.7rem] uppercase tracking-[0.35em] font-semibold text-slate-500 mb-3 flex items-center gap-2">
               <Pill className="h-4 w-4" />
               Horaire des traitements
             </h3>
@@ -439,7 +442,7 @@ function PatientDetailView({
                     <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
-                          <h4 className="text-sm font-bold text-slate-900">
+                          <h4 className="text-sm font-semibold text-slate-900">
                             {treatment.name}
                           </h4>
                           <p className="text-xs text-slate-600 mt-0.5">
@@ -466,13 +469,13 @@ function PatientDetailView({
                                 handleToggleTreatment(treatment.id, hour)
                               }
                               className={cn(
-                                "py-1.5 px-1 rounded text-xs font-bold transition-all duration-200 transform hover:scale-105 active:scale-95",
+                                "py-1.5 px-1 rounded text-xs font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95",
                                 !isScheduled
                                   ? "bg-slate-100 text-slate-400 hover:bg-slate-150"
                                   : isAdministered
-                                  ? "bg-emerald-500 text-white shadow-sm hover:bg-emerald-600"
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm hover:bg-emerald-100"
                                   : isPlanned
-                                  ? "bg-blue-500 text-white shadow-sm hover:bg-blue-600"
+                                  ? "bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-sm hover:bg-indigo-100"
                                   : ""
                               )}
                               title={`${timeDisplay}${isScheduled ? (isAdministered ? " - Administré" : " - À administrer") : " - Non prévu"}`}
@@ -490,11 +493,11 @@ function PatientDetailView({
                           <span className="text-slate-600">Non prévu</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <div className="h-4 w-4 bg-blue-500 rounded"></div>
+                          <div className="h-4 w-4 bg-indigo-50 border border-indigo-200 rounded"></div>
                           <span className="text-slate-600">À administrer</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <div className="h-4 w-4 bg-emerald-500 rounded"></div>
+                          <div className="h-4 w-4 bg-emerald-50 border border-emerald-200 rounded"></div>
                           <span className="text-slate-600">Administré</span>
                         </div>
                       </div>
@@ -645,9 +648,9 @@ function ShiftScheduleTimeline() {
   return (
     <div className="w-full h-full flex flex-col overflow-hidden bg-white">
       {/* Header */}
-      <div className="flex-shrink-0 px-6 py-4 border-b border-slate-300 bg-gradient-to-r from-slate-50 to-blue-50 flex items-start justify-between">
+      <div className="flex-shrink-0 px-6 py-4 border-b border-slate-200/70 bg-white flex items-start justify-between">
         <div className="flex-1">
-          <h1 className="text-2xl font-black text-slate-900 mb-1">
+          <h1 className="text-xl font-semibold tracking-tight text-slate-900 mb-1">
             Calendrier des traitements • 24h
           </h1>
           <p className="text-sm text-slate-600">
@@ -695,10 +698,10 @@ function ShiftScheduleTimeline() {
       <div className="flex-1 overflow-auto">
         <table className="w-full border-collapse">
           {/* Header row */}
-          <thead className="sticky top-0 z-10 bg-gradient-to-r from-slate-800 to-slate-900 text-white">
+          <thead className="sticky top-0 z-10 bg-slate-50 text-slate-500">
             <tr>
               {/* Patient column header */}
-              <th className="px-4 py-3 text-left font-bold text-sm border-b-2 border-slate-700 whitespace-nowrap w-40">
+              <th className="px-4 py-3 text-left font-semibold text-xs tracking-[0.1em] uppercase border-b border-slate-200 whitespace-nowrap w-40">
                 Patient
               </th>
 
@@ -709,11 +712,11 @@ function ShiftScheduleTimeline() {
                   onMouseEnter={() => setHoveredHour(hour)}
                   onMouseLeave={() => setHoveredHour(null)}
                   className={cn(
-                    "px-2 py-3 text-center font-bold text-xs border-b-2 border-slate-700 whitespace-nowrap transition-colors duration-200 cursor-pointer",
+                    "px-2 py-3 text-center font-semibold text-xs tracking-[0.1em] uppercase border-b border-slate-200 whitespace-nowrap transition-colors duration-200 cursor-pointer",
                     hoveredHour === hour
-                      ? "bg-indigo-600"
+                      ? "bg-indigo-50 text-indigo-700"
                       : hour === currentHour
-                      ? "bg-indigo-700"
+                      ? "bg-indigo-50 text-indigo-700"
                       : ""
                   )}
                 >
@@ -826,14 +829,14 @@ function ShiftScheduleTimeline() {
                             {/* Status badge */}
                             <div
                               className={cn(
-                                "h-6 w-6 rounded-full flex items-center justify-center font-bold text-xs text-white flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
+                                "h-6 w-6 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ring-1",
                                 cellStatus === "administered"
-                                  ? "bg-emerald-600"
+                                  ? "bg-emerald-100 text-emerald-700 ring-emerald-300"
                                   : cellStatus === "overdue"
-                                  ? "bg-red-600"
+                                  ? "bg-red-100 text-red-700 ring-red-300"
                                   : cellStatus === "pending"
-                                  ? "bg-indigo-600"
-                                  : "bg-slate-300"
+                                  ? "bg-indigo-100 text-indigo-700 ring-indigo-300"
+                                  : "bg-slate-200 text-slate-600"
                               )}
                             >
                               {cellStatus === "administered" ? (
@@ -866,34 +869,34 @@ function ShiftScheduleTimeline() {
       </div>
 
       {/* Legend */}
-      <div className="flex-shrink-0 px-6 py-4 border-t border-slate-300 bg-gradient-to-r from-slate-50 to-blue-50">
-        <p className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-3">
+      <div className="flex-shrink-0 px-6 py-4 border-t border-slate-200/70 bg-white">
+        <p className="text-[0.7rem] uppercase tracking-[0.35em] text-slate-500 font-semibold mb-3">
           Légende
         </p>
         <div className="flex gap-6">
           <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-full bg-emerald-600 flex items-center justify-center">
-              <CheckCircle2 className="h-4 w-4 text-white" />
+            <div className="h-6 w-6 rounded-full bg-emerald-100 flex items-center justify-center ring-1 ring-emerald-300">
+              <CheckCircle2 className="h-4 w-4 text-emerald-700" />
             </div>
             <span className="text-sm text-slate-700">Administré</span>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-xs">
+            <div className="h-6 w-6 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs ring-1 ring-indigo-300">
               ●
             </div>
             <span className="text-sm text-slate-700">À administrer</span>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-full bg-red-600 flex items-center justify-center animate-pulse">
-              <AlertTriangle className="h-4 w-4 text-white" />
+            <div className="h-6 w-6 rounded-full bg-red-100 flex items-center justify-center ring-1 ring-red-300">
+              <AlertTriangle className="h-4 w-4 text-red-700" />
             </div>
             <span className="text-sm text-slate-700">En retard</span>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded bg-white border border-slate-300 flex items-center justify-center text-slate-400">
+            <div className="h-6 w-6 rounded bg-slate-200 flex items-center justify-center text-slate-600">
               -
             </div>
             <span className="text-sm text-slate-700">Aucun traitement</span>
@@ -958,27 +961,30 @@ function TasksPanel({ tasks: initialTasks }: { tasks: Task[] }) {
   return (
     <div className="w-full h-full flex flex-col overflow-hidden bg-white">
       {/* Premium header */}
-      <div className="flex-shrink-0 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 py-4 shadow-lg">
-        <div className="flex items-center justify-between gap-3 mb-3">
+      <div className="flex-shrink-0 px-5 py-5 border-b border-slate-200/70 bg-white relative overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-teal-500" />
+        <div className="flex items-center justify-between gap-3 mb-4 pt-1">
           <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            <h2 className="text-xl font-bold">Tâches</h2>
+            <div className="p-2 bg-teal-50 rounded-lg">
+              <Clock className="h-5 w-5 text-teal-600" />
+            </div>
+            <h2 className="text-lg font-semibold tracking-tight text-slate-900">Tâches</h2>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-bold">{completionRate}%</p>
-            <p className="text-xs text-emerald-100">Complété</p>
+            <p className="text-3xl font-semibold tracking-tight text-slate-900">{completionRate}%</p>
+            <p className="text-[0.65rem] uppercase tracking-[0.35em] text-slate-500 font-semibold">Complété</p>
           </div>
         </div>
 
         {/* Progress bar */}
-        <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
           <div
-            className="h-full bg-white transition-all duration-500"
+            className="h-full bg-teal-500 transition-all duration-500"
             style={{ width: `${completionRate}%` }}
           ></div>
         </div>
 
-        <p className="text-xs text-emerald-100 mt-2">
+        <p className="text-xs text-slate-500 mt-3">
           {new Date().toLocaleDateString("fr-FR", {
             weekday: "long",
             day: "numeric",
@@ -988,11 +994,11 @@ function TasksPanel({ tasks: initialTasks }: { tasks: Task[] }) {
       </div>
 
       {/* Tasks content */}
-      <div className="flex-1 overflow-y-auto px-3 py-3">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
         {/* To-do section */}
         {todoTasks.length > 0 && (
           <div className="mb-4">
-            <p className="text-xs font-bold text-slate-600 uppercase tracking-widest mb-2 px-1">
+            <p className="text-[0.7rem] uppercase tracking-[0.35em] font-semibold text-slate-500 mb-2 px-1">
               À faire ({todoTasks.length})
             </p>
             <div className="space-y-2">
@@ -1002,21 +1008,21 @@ function TasksPanel({ tasks: initialTasks }: { tasks: Task[] }) {
                   <button
                     key={task.id}
                     onClick={() => handleToggleTask(task.id)}
-                    className="w-full group flex items-start gap-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 hover:from-red-100 hover:to-orange-100 hover:border-red-300 transition-all duration-200 text-left"
+                    className="w-full group flex items-start gap-3 px-3 py-2.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 transition-all duration-200 text-left"
                   >
-                    <Circle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5 group-hover:text-red-600 transition-colors" />
+                    <Circle className="h-5 w-5 text-slate-400 flex-shrink-0 mt-0.5 group-hover:text-slate-600 transition-colors" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-900 group-hover:text-red-900">
+                      <p className="text-sm font-medium text-slate-900">
                         {task.label}
                       </p>
                       {patientName && (
-                        <p className="text-xs text-red-600 mt-1 flex items-center gap-1.5">
+                        <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
                           <Users className="h-3 w-3" />
                           {patientName}
                         </p>
                       )}
                     </div>
-                    <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-red-300 transition-colors flex-shrink-0 mt-0.5" />
+                    <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors flex-shrink-0 mt-0.5" />
                   </button>
                 );
               })}
@@ -1027,7 +1033,7 @@ function TasksPanel({ tasks: initialTasks }: { tasks: Task[] }) {
         {/* Done section */}
         {doneTasks.length > 0 && (
           <div className="mb-2">
-            <p className="text-xs font-bold text-slate-600 uppercase tracking-widest mb-2 px-1">
+            <p className="text-[0.7rem] uppercase tracking-[0.35em] font-semibold text-slate-500 mb-2 px-1">
               Complétées ({doneTasks.length})
             </p>
             <div className="space-y-1.5">
@@ -1037,15 +1043,15 @@ function TasksPanel({ tasks: initialTasks }: { tasks: Task[] }) {
                   <button
                     key={task.id}
                     onClick={() => handleToggleTask(task.id)}
-                    className="w-full group flex items-start gap-3 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 transition-colors duration-200 text-left"
+                    className="w-full group flex items-start gap-3 px-3 py-2 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors duration-200 text-left"
                   >
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="h-5 w-5 text-slate-400 flex-shrink-0 mt-0.5" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-slate-500 line-through">
                         {task.label}
                       </p>
                       {patientName && (
-                        <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1.5">
+                        <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
                           <Users className="h-3 w-3" />
                           {patientName}
                         </p>
@@ -1067,9 +1073,9 @@ function TasksPanel({ tasks: initialTasks }: { tasks: Task[] }) {
           className={cn(
             "w-full gap-2 rounded-lg h-10 font-semibold flex items-center justify-center",
             isSavingTasks
-              ? "bg-emerald-600 text-white cursor-wait opacity-75"
+              ? "bg-indigo-600 text-white cursor-wait opacity-75"
               : hasTaskChanges
-              ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+              ? "bg-indigo-600 hover:bg-indigo-700 text-white"
               : "bg-slate-200 text-slate-400 cursor-not-allowed"
           )}
           size="sm"
@@ -1095,28 +1101,27 @@ function TasksPanel({ tasks: initialTasks }: { tasks: Task[] }) {
 // MAIN PAGE - RESPONSIVE
 // ============================================================================
 export default function WorkstationPage() {
+  const router = useRouter();
+  const { data: session } = useSession();
   const [selectedPatient, setSelectedPatient] = useState<NursingPatient | null>(null);
   const [activeView, setActiveView] = useState<"calendar" | "patients" | "tasks">("calendar");
   const [showPatientsList, setShowPatientsList] = useState(false);
   const [showTasksPanel, setShowTasksPanel] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   // Desktop view (3 columns)
   const desktopLayout = (
-    <div className="flex h-full gap-0 overflow-hidden bg-slate-50">
+    <div className="flex h-full gap-3 overflow-hidden p-3 relative">
       {/* LEFT: Patient list */}
-      <div className="w-3/12 border-r border-slate-300 bg-white flex flex-col overflow-hidden shadow-sm">
+      <div className="w-3/12 flex flex-col overflow-hidden rounded-[10px] border border-slate-200/80 bg-white shadow-[0px_18px_45px_rgba(15,23,42,0.04)]">
         {/* Header */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 text-white px-4 py-3 border-b border-slate-700 shadow-md">
-          <h1 className="text-sm font-black uppercase tracking-wider">
-            👥 Patients du Service
-          </h1>
-          <p className="text-xs text-slate-300 mt-1">
-            {mockPatients.length} patients hospitalisés
-          </p>
+        <div className="flex-shrink-0 px-5 py-4 border-b border-slate-200/70 bg-white">
+          <p className="text-[0.7rem] uppercase tracking-[0.35em] text-slate-500 font-semibold">Patients</p>
+          <p className="text-xs text-slate-500 mt-1">{mockPatients.length} patients</p>
         </div>
 
         {/* Patient list */}
-        <div className="flex-1 overflow-y-auto divide-y divide-slate-200">
+        <div className="flex-1 overflow-y-auto divide-y divide-slate-100/50">
           {mockPatients.map((patient) => (
             <PatientListItem
               key={patient.id}
@@ -1129,7 +1134,7 @@ export default function WorkstationPage() {
       </div>
 
       {/* CENTER: Shift Schedule Timeline or Patient Detail */}
-      <div className="w-6/12 border-r border-slate-300 flex overflow-hidden shadow-sm">
+      <div className="w-6/12 flex overflow-hidden rounded-[10px] border border-slate-200/80 bg-white shadow-[0px_18px_45px_rgba(15,23,42,0.04)]">
         {selectedPatient ? (
           <PatientDetailView
             patient={selectedPatient}
@@ -1141,22 +1146,115 @@ export default function WorkstationPage() {
       </div>
 
       {/* RIGHT: Tasks */}
-      <div className="w-3/12 bg-white flex flex-col overflow-hidden shadow-sm">
+      <div className="w-3/12 flex flex-col overflow-hidden rounded-[10px] border border-slate-200/80 bg-white shadow-[0px_18px_45px_rgba(15,23,42,0.04)]">
         <TasksPanel tasks={mockTasks} />
+      </div>
+
+      {/* Floating Profile Button */}
+      <div className="absolute bottom-4 right-4 z-40">
+        <div className="relative">
+          <button
+            onClick={() => setProfileOpen(!profileOpen)}
+            className="flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 text-white font-semibold text-lg hover:shadow-xl transition-shadow duration-200"
+          >
+            {(session?.user?.name?.[0] || "U").toUpperCase()}
+          </button>
+
+          {/* Dropdown Menu */}
+          {profileOpen && (
+            <div className="absolute bottom-20 right-0 w-56 bg-white rounded-lg shadow-lg border border-slate-200 overflow-hidden animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-200">
+              {/* Header */}
+              <div className="px-4 py-3 border-b border-slate-200 bg-indigo-50">
+                <p className="text-sm font-semibold text-slate-900">
+                  {session?.user?.name || "Utilisateur"}
+                </p>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  {session?.user?.email || "user@hopital.fr"}
+                </p>
+              </div>
+
+              {/* Menu Items */}
+              <div className="p-2 space-y-1">
+                <button
+                  onClick={() => {
+                    setProfileOpen(false);
+                    router.push("/workstation/profile");
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium text-slate-900 hover:bg-indigo-50 hover:text-indigo-700 transition-colors duration-200"
+                >
+                  <User className="h-4 w-4" />
+                  <span>Mon profil</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setProfileOpen(false);
+                    signOut({ callbackUrl: "/login" });
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium text-red-600 hover:bg-red-50 transition-colors duration-200"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Déconnexion</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 
   // Mobile/Tablet view
   const mobileLayout = (
-    <div className="flex flex-col h-full bg-slate-50">
-      {/* Header */}
-      <div className="flex-shrink-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 text-white px-4 py-3 border-b border-slate-700 shadow-md">
-        <h1 className="text-base font-black uppercase tracking-wider">
-          {activeView === "calendar" && "📅 Calendrier"}
-          {activeView === "patients" && "👥 Patients"}
-          {activeView === "tasks" && "✅ Tâches"}
-        </h1>
+    <div className="flex flex-col h-full relative">
+      {/* Floating Profile Button */}
+      <div className="absolute bottom-4 right-4 z-40">
+        <div className="relative">
+          <button
+            onClick={() => setProfileOpen(!profileOpen)}
+            className="flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 text-white font-semibold text-lg hover:shadow-xl transition-shadow duration-200"
+          >
+            {(session?.user?.name?.[0] || "U").toUpperCase()}
+          </button>
+
+          {/* Dropdown Menu */}
+          {profileOpen && (
+            <div className="absolute bottom-20 right-0 w-56 bg-white rounded-lg shadow-lg border border-slate-200 overflow-hidden animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-200">
+              {/* Header */}
+              <div className="px-4 py-3 border-b border-slate-200 bg-indigo-50">
+                <p className="text-sm font-semibold text-slate-900">
+                  {session?.user?.name || "Utilisateur"}
+                </p>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  {session?.user?.email || "user@hopital.fr"}
+                </p>
+              </div>
+
+              {/* Menu Items */}
+              <div className="p-2 space-y-1">
+                <button
+                  onClick={() => {
+                    setProfileOpen(false);
+                    router.push("/workstation/profile");
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium text-slate-900 hover:bg-indigo-50 hover:text-indigo-700 transition-colors duration-200"
+                >
+                  <User className="h-4 w-4" />
+                  <span>Mon profil</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setProfileOpen(false);
+                    signOut({ callbackUrl: "/login" });
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium text-red-600 hover:bg-red-50 transition-colors duration-200"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Déconnexion</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Content Area */}
@@ -1166,13 +1264,13 @@ export default function WorkstationPage() {
         )}
         {activeView === "patients" && (
           <div className="flex flex-col h-full bg-white">
-            <div className="flex-shrink-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 text-white px-4 py-3 border-b border-slate-700 shadow-md">
-              <h2 className="text-sm font-bold">Patients du Service</h2>
-              <p className="text-xs text-slate-300 mt-1">
-                {mockPatients.length} patients hospitalisés
+            <div className="flex-shrink-0 px-5 py-4 border-b border-slate-200/70 bg-white">
+              <h2 className="text-base font-semibold text-slate-900">Patients du Service</h2>
+              <p className="text-xs text-slate-500 mt-1">
+                {mockPatients.length} patients
               </p>
             </div>
-            <div className="flex-1 overflow-y-auto divide-y divide-slate-200">
+            <div className="flex-1 overflow-y-auto divide-y divide-slate-200/50">
               {mockPatients.map((patient) => (
                 <PatientListItem
                   key={patient.id}
@@ -1193,11 +1291,11 @@ export default function WorkstationPage() {
       </div>
 
       {/* Floating Action Buttons */}
-      <div className="flex-shrink-0 bg-white border-t border-slate-300 px-3 py-3 flex gap-2 justify-around shadow-lg">
+      <div className="flex-shrink-0 bg-white border-t border-slate-200 px-3 py-3 flex gap-2 justify-around shadow-md">
         <button
           onClick={() => setActiveView("patients")}
           className={cn(
-            "flex-1 py-3 px-3 rounded-lg font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2",
+            "flex-1 py-2.5 px-2 rounded-xl font-semibold text-xs transition-all duration-200 flex items-center justify-center gap-1.5",
             activeView === "patients"
               ? "bg-indigo-600 text-white shadow-md"
               : "bg-slate-100 text-slate-700 hover:bg-slate-200"
@@ -1209,7 +1307,7 @@ export default function WorkstationPage() {
         <button
           onClick={() => setActiveView("calendar")}
           className={cn(
-            "flex-1 py-3 px-3 rounded-lg font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2",
+            "flex-1 py-2.5 px-2 rounded-xl font-semibold text-xs transition-all duration-200 flex items-center justify-center gap-1.5",
             activeView === "calendar"
               ? "bg-indigo-600 text-white shadow-md"
               : "bg-slate-100 text-slate-700 hover:bg-slate-200"
@@ -1221,7 +1319,7 @@ export default function WorkstationPage() {
         <button
           onClick={() => setActiveView("tasks")}
           className={cn(
-            "flex-1 py-3 px-3 rounded-lg font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2",
+            "flex-1 py-2.5 px-2 rounded-xl font-semibold text-xs transition-all duration-200 flex items-center justify-center gap-1.5",
             activeView === "tasks"
               ? "bg-indigo-600 text-white shadow-md"
               : "bg-slate-100 text-slate-700 hover:bg-slate-200"

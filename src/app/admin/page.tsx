@@ -133,25 +133,56 @@ const StatCard = ({
   label,
   value,
   change,
-  gradient,
+  color,
 }: {
   icon: React.ComponentType<{ className: string }>;
   label: string;
   value: string;
   change: string;
-  gradient: string;
-}) => (
-  <div className={`bg-gradient-to-br ${gradient} rounded-lg p-6 text-white shadow-lg`}>
-    <div className="flex items-start justify-between mb-4">
-      <div>
-        <p className="text-sm font-medium opacity-90">{label}</p>
-        <p className="text-3xl font-bold mt-2">{value}</p>
+  color: "teal" | "amber" | "blue";
+}) => {
+  const colorMap = {
+    teal: {
+      iconBg: "bg-teal-50",
+      iconText: "text-teal-600",
+      accentBar: "bg-teal-500",
+    },
+    amber: {
+      iconBg: "bg-amber-50",
+      iconText: "text-amber-600",
+      accentBar: "bg-amber-500",
+    },
+    blue: {
+      iconBg: "bg-blue-50",
+      iconText: "text-blue-600",
+      accentBar: "bg-blue-500",
+    },
+  };
+
+  const colors = colorMap[color];
+
+  return (
+    <div className="bg-white border border-slate-200/80 rounded-[10px] p-6 shadow-[0px_18px_45px_rgba(15,23,42,0.04)] hover:shadow-[0px_24px_55px_rgba(15,23,42,0.08)] transition-all duration-200 relative overflow-hidden">
+      {/* Top accent bar */}
+      <div className={`absolute top-0 left-0 right-0 h-1 w-full ${colors.accentBar}`}></div>
+
+      <div className="pt-2">
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <p className="text-[0.7rem] uppercase tracking-[0.35em] text-slate-500 font-semibold">
+              {label}
+            </p>
+            <p className="text-3xl font-semibold tracking-tight text-slate-900 mt-3">{value}</p>
+          </div>
+          <div className={`p-4 ${colors.iconBg} rounded-2xl`}>
+            <Icon className={`h-6 w-6 ${colors.iconText}`} />
+          </div>
+        </div>
+        <p className="text-xs font-semibold text-emerald-600">{change}</p>
       </div>
-      <Icon className="h-8 w-8 opacity-80" />
     </div>
-    <p className="text-xs opacity-80">{change}</p>
-  </div>
-);
+  );
+};
 
 export default function AdminPage() {
   const totalRevenue = 44400;
@@ -162,52 +193,54 @@ export default function AdminPage() {
   const patientsChange = "+5.2% vs last month";
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10 bg-slate-50">
       {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-indigo-700 to-blue-600">
-          Tableau de Bord
-        </h1>
-        <p className="text-lg text-slate-600">
-          Bienvenue dans le centre de contrôle de votre établissement
+      <div className="space-y-4 pb-8 border-b border-slate-200/70">
+        <div>
+          <h1 className="text-4xl font-semibold text-slate-900 tracking-tight">
+            Tableau de bord
+          </h1>
+        </div>
+        <p className="text-sm font-medium text-slate-600 max-w-2xl">
+          Aperçu complet de votre établissement — Gestion centralisée des revenus, consultations et patient
         </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <StatCard
           icon={DollarSign}
           label="Revenus Totaux"
           value={`${(totalRevenue / 1000).toFixed(1)}k MAD`}
           change={revenueChange}
-          gradient="from-blue-500 to-cyan-500"
+          color="teal"
         />
         <StatCard
           icon={Activity}
           label="Consultations"
           value={totalConsultations.toString()}
           change={consultationsChange}
-          gradient="from-purple-500 to-pink-500"
+          color="amber"
         />
         <StatCard
           icon={Users}
           label="Patients Actifs"
           value={activePatients.toString()}
           change={patientsChange}
-          gradient="from-green-500 to-emerald-500"
+          color="blue"
         />
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Revenue Trend Chart */}
-        <div className="lg:col-span-2 bg-white rounded-lg border border-slate-200 shadow-md p-6">
-          <div className="mb-6">
-            <h2 className="text-lg font-bold text-slate-900">
-              Tendance des Revenus et Gestes
+        <div className="lg:col-span-2 bg-white border border-slate-200/80 rounded-[10px] shadow-[0px_18px_45px_rgba(15,23,42,0.04)] p-6">
+          <div className="mb-8 pb-6 border-b border-slate-200/70">
+            <h2 className="text-lg font-semibold tracking-tight text-slate-900">
+              Tendance Revenus & Gestes
             </h2>
-            <p className="text-sm text-slate-600 mt-1">
-              Revenus (MAD) et nombre de gestes par mois
+            <p className="text-sm font-medium text-slate-600 mt-2">
+              Analyse mensuelle des revenus (MAD) et volume de gestes
             </p>
           </div>
           <ResponsiveContainer width="100%" height={300}>
@@ -246,13 +279,13 @@ export default function AdminPage() {
         </div>
 
         {/* Acts Distribution Pie Chart */}
-        <div className="bg-white rounded-lg border border-slate-200 shadow-md p-6">
-          <div className="mb-6">
-            <h2 className="text-lg font-bold text-slate-900">
-              Distribution des Actes
+        <div className="bg-white border border-slate-200/80 rounded-[10px] shadow-[0px_18px_45px_rgba(15,23,42,0.04)] p-6">
+          <div className="mb-8 pb-6 border-b border-slate-200/70">
+            <h2 className="text-lg font-semibold tracking-tight text-slate-900">
+              Distribution Actes
             </h2>
-            <p className="text-sm text-slate-600 mt-1">
-              Répartition par type
+            <p className="text-sm font-medium text-slate-600 mt-2">
+              Répartition par catégories d'actes
             </p>
           </div>
           <ResponsiveContainer width="100%" height={300}>
@@ -278,39 +311,39 @@ export default function AdminPage() {
       </div>
 
       {/* Tables Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Factures */}
-        <div className="bg-white rounded-lg border border-slate-200 shadow-md overflow-hidden">
-          <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+        <div className="bg-white border border-slate-200/80 rounded-[10px] shadow-[0px_18px_45px_rgba(15,23,42,0.04)] overflow-hidden">
+          <div className="p-6 border-b border-slate-200/70 flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-slate-900">
+              <h2 className="text-lg font-semibold tracking-tight text-slate-900">
                 Factures Récentes
               </h2>
-              <p className="text-sm text-slate-600 mt-1">
-                5 dernières factures
+              <p className="text-sm font-medium text-slate-600 mt-1">
+                5 dernières transactions
               </p>
             </div>
             <a
               href="/admin/finances/rapports"
-              className="text-indigo-600 hover:text-indigo-700 font-semibold text-sm transition-colors whitespace-nowrap ml-4"
+              className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors whitespace-nowrap ml-4"
             >
-              Voir plus →
+              Voir plus
             </a>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gradient-to-r from-slate-100 to-slate-50 border-b border-slate-200">
+              <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold tracking-[0.1em] uppercase text-slate-500">
                     Facture
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold tracking-[0.1em] uppercase text-slate-500">
                     Patient
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold tracking-[0.1em] uppercase text-slate-500">
                     Montant
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold tracking-[0.1em] uppercase text-slate-500">
                     Statut
                   </th>
                 </tr>
@@ -327,25 +360,25 @@ export default function AdminPage() {
                       {facture.patient}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="font-bold text-slate-900">
+                      <span className="font-semibold text-slate-900">
                         {(facture.amount / 1000).toFixed(0)}k MAD
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                        className={`inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-full ${
                           facture.status === "paid"
-                            ? "bg-green-100 text-green-700"
+                            ? "bg-emerald-50 text-emerald-700"
                             : facture.status === "pending"
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-red-100 text-red-700"
+                            ? "bg-amber-50 text-amber-700"
+                            : "bg-red-50 text-red-700"
                         }`}
                       >
                         {facture.status === "paid"
                           ? "Payée"
                           : facture.status === "pending"
-                          ? "En attente"
-                          : "En retard"}
+                          ? "Attente"
+                          : "Retard"}
                       </span>
                     </td>
                   </tr>
@@ -356,40 +389,40 @@ export default function AdminPage() {
         </div>
 
         {/* Recent Consultations */}
-        <div className="bg-white rounded-lg border border-slate-200 shadow-md overflow-hidden">
-          <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+        <div className="bg-white border border-slate-200/80 rounded-[10px] shadow-[0px_18px_45px_rgba(15,23,42,0.04)] overflow-hidden">
+          <div className="p-6 border-b border-slate-200/70 flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-slate-900">
+              <h2 className="text-lg font-semibold tracking-tight text-slate-900">
                 Consultations Récentes
               </h2>
-              <p className="text-sm text-slate-600 mt-1">
+              <p className="text-sm font-medium text-slate-600 mt-1">
                 5 dernières consultations
               </p>
             </div>
             <a
               href="/admin/organization/teams"
-              className="text-indigo-600 hover:text-indigo-700 font-semibold text-sm transition-colors whitespace-nowrap ml-4"
+              className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors whitespace-nowrap ml-4"
             >
-              Voir plus →
+              Voir plus
             </a>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gradient-to-r from-slate-100 to-slate-50 border-b border-slate-200">
+              <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold tracking-[0.1em] uppercase text-slate-500">
                     Patient
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold tracking-[0.1em] uppercase text-slate-500">
                     Médecin
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold tracking-[0.1em] uppercase text-slate-500">
                     Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold tracking-[0.1em] uppercase text-slate-500">
                     Heure
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold tracking-[0.1em] uppercase text-slate-500">
                     Statut
                   </th>
                 </tr>
@@ -414,12 +447,12 @@ export default function AdminPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                        className={`inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-full ${
                           consultation.status === "completed"
-                            ? "bg-green-100 text-green-700"
+                            ? "bg-emerald-50 text-emerald-700"
                             : consultation.status === "ongoing"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-amber-100 text-amber-700"
+                            ? "bg-amber-50 text-amber-700"
+                            : "bg-blue-50 text-blue-700"
                         }`}
                       >
                         {consultation.status === "completed"

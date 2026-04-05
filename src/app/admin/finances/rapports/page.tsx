@@ -12,6 +12,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AdminHeader } from "@/components/admin/admin-header";
 
 interface Facture {
   id: string;
@@ -189,17 +190,10 @@ export default function RapportsPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <FileText className="h-6 w-6 text-indigo-600" />
-          <h1 className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-indigo-700 to-blue-600">
-            Factures
-          </h1>
-        </div>
-        <p className="text-lg text-slate-600 ml-8">
-          Consultez et gérez toutes les factures créées par votre organisation
-        </p>
-      </div>
+      <AdminHeader
+        title="Factures"
+        subtitle="Consultez et gérez toutes les factures créées par votre organisation"
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -349,7 +343,7 @@ export default function RapportsPage() {
       {/* Factures Table */}
       {filteredFactures.length > 0 ? (
         <>
-          <div className="overflow-x-auto rounded-lg border border-slate-200 shadow-md">
+          <div className="overflow-x-auto border-2 border-slate-300 shadow-sm bg-white">
             <table className="w-full">
               <colgroup>
                 <col style={{ width: "15%" }} />
@@ -360,27 +354,27 @@ export default function RapportsPage() {
                 <col style={{ width: "13%" }} />
                 <col style={{ width: "14%" }} />
               </colgroup>
-              <thead className="bg-gradient-to-r from-slate-100 to-slate-50 border-b border-slate-200">
+              <thead className="bg-slate-100 border-b-2 border-slate-300">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-black text-slate-900 uppercase tracking-wider">
                     N° Facture
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-black text-slate-900 uppercase tracking-wider">
                     Description
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-black text-slate-900 uppercase tracking-wider">
                     Montant
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-black text-slate-900 uppercase tracking-wider">
                     Statut
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-black text-slate-900 uppercase tracking-wider">
                     Patient/Référence
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-black text-slate-900 uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-black text-slate-900 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>

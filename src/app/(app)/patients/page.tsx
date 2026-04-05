@@ -64,21 +64,37 @@ const PATIENT_ID_BADGE_CLASS =
   "border border-slate-300 bg-slate-100 text-slate-700 shadow-sm shadow-slate-200/60";
 
 function formatFullDate(dateString: string) {
-  return new Intl.DateTimeFormat("fr-FR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  }).format(new Date(dateString));
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return "Date invalide";
+    }
+    return new Intl.DateTimeFormat("fr-FR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    }).format(date);
+  } catch {
+    return "Date invalide";
+  }
 }
 
 function formatObservationDate(timestamp: string) {
-  return new Intl.DateTimeFormat("fr-FR", {
-    weekday: "long",
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(timestamp));
+  try {
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) {
+      return "Date invalide";
+    }
+    return new Intl.DateTimeFormat("fr-FR", {
+      weekday: "long",
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(date);
+  } catch {
+    return "Date invalide";
+  }
 }
 
 const relativeFormatter = new Intl.RelativeTimeFormat("fr-FR", {
@@ -427,7 +443,7 @@ export default function PatientsPage() {
                     {selectedPatient.pid}
                   </span>
                   <p className="text-xs text-slate-600">
-                    {formatFullDate(selectedPatient.birthDate)} · {selectedPatient.age} ans
+                    {selectedPatient.birthDate ? `${formatFullDate(selectedPatient.birthDate)} · ` : ''}{selectedPatient.age ? `${selectedPatient.age} ans` : '—'}
                   </p>
                 </div>
               </div>
@@ -513,6 +529,14 @@ export default function PatientsPage() {
                 </p>
                 <p className="mt-1 text-sm font-semibold text-slate-800">
                   {selectedPatient.pid}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-500">
+                  Âge
+                </p>
+                <p className="mt-1 text-sm font-semibold text-slate-800">
+                  {selectedPatient.age ? `${selectedPatient.age} ans` : "—"}
                 </p>
               </div>
               <div>
@@ -885,7 +909,7 @@ export default function PatientsPage() {
                               {patient.fullName}
                             </span>
                             <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                              <span>{patient.age} ans</span>
+                              <span>{patient.age ? `${patient.age} ans` : "—"}</span>
                             </div>
                           </div>
                         </td>

@@ -25,6 +25,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { AdminHeader } from "@/components/admin/admin-header";
 
 type TimePeriod = "week" | "month" | "year";
 type ActStatus = "paid" | "pending" | "planned" | "canceled";
@@ -334,12 +335,10 @@ export default function FinancesActsPage() {
   return (
     <div className="space-y-10">
       {/* Header */}
-      <div>
-        <h1 className="text-4xl font-bold text-slate-900">Finances - Actes</h1>
-        <p className="text-slate-600 mt-2">
-          Suivi détaillé des gestes, revenus et consultations
-        </p>
-      </div>
+      <AdminHeader
+        title="Finances - Actes"
+        subtitle="Suivi détaillé des gestes, revenus et consultations"
+      />
 
       {/* Stat Cards - Consultations first */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -509,13 +508,13 @@ export default function FinancesActsPage() {
       </div>
 
       {/* Acts Log Table */}
-      <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-        <CardHeader className="bg-gradient-to-r from-slate-50 to-white px-8 py-6 border-b border-slate-200 flex items-center justify-between">
-          <CardTitle className="text-xl">Journal des Actes</CardTitle>
-          <span className="text-sm text-slate-600">{filteredActLogs.length} actes</span>
-        </CardHeader>
+      <div className="border-2 border-slate-300 overflow-hidden shadow-sm bg-white">
+        <div className="bg-slate-100 border-b-2 border-slate-300 px-8 py-6 flex items-center justify-between">
+          <h2 className="text-xl font-black text-slate-900 uppercase tracking-wide">Journal des Actes</h2>
+          <span className="text-sm font-medium text-slate-600">{filteredActLogs.length} actes</span>
+        </div>
 
-        <CardContent className="p-0">
+        <div>
           {filteredActLogs.length === 0 ? (
             <div className="py-12 flex flex-col items-center justify-center">
               <Zap className="h-12 w-12 text-slate-400 mb-4" />
@@ -527,14 +526,14 @@ export default function FinancesActsPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="px-6 py-4 text-left font-semibold text-slate-700">Réalisateur</th>
-                      <th className="px-6 py-4 text-left font-semibold text-slate-700">Type</th>
-                      <th className="px-6 py-4 text-left font-semibold text-slate-700">Nom de l'acte</th>
-                      <th className="px-6 py-4 text-right font-semibold text-slate-700">Prix</th>
-                      <th className="px-6 py-4 text-left font-semibold text-slate-700">Date & Heure</th>
-                      <th className="px-6 py-4 text-center font-semibold text-slate-700">Statut</th>
-                      <th className="px-6 py-4 text-right font-semibold text-slate-700">Actions</th>
+                    <tr className="bg-slate-100 border-b-2 border-slate-300">
+                      <th className="px-6 py-4 text-left font-black text-slate-900 uppercase tracking-wider">Réalisateur</th>
+                      <th className="px-6 py-4 text-left font-black text-slate-900 uppercase tracking-wider">Type</th>
+                      <th className="px-6 py-4 text-left font-black text-slate-900 uppercase tracking-wider">Nom de l'acte</th>
+                      <th className="px-6 py-4 text-right font-black text-slate-900 uppercase tracking-wider">Prix</th>
+                      <th className="px-6 py-4 text-left font-black text-slate-900 uppercase tracking-wider">Date & Heure</th>
+                      <th className="px-6 py-4 text-center font-black text-slate-900 uppercase tracking-wider">Statut</th>
+                      <th className="px-6 py-4 text-right font-black text-slate-900 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -605,7 +604,7 @@ export default function FinancesActsPage() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between px-8 py-6 border-t border-slate-200 bg-slate-50">
+                <div className="flex items-center justify-between px-8 py-6 border-t-2 border-slate-300 bg-slate-100">
                   <div className="text-sm text-slate-600">
                     Page {currentPage} sur {totalPages}
                   </div>
@@ -635,7 +634,7 @@ export default function FinancesActsPage() {
               )}
             </>
           )}
-        </CardContent>
+        </div>
       </div>
     </div>
   );

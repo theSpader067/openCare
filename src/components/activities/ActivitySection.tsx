@@ -60,6 +60,8 @@ interface ActivitySectionProps {
   onActivityUpdate?: (activities: ActivityItem[]) => void;
   onTouchStart: (e: React.TouchEvent) => void;
   onTouchEnd: (e: React.TouchEvent, id: string) => void;
+  onViewPatientsClick?: () => void;
+  patientsCount?: number;
 }
 
 const formatDateKey = (date: Date) => {
@@ -106,6 +108,8 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
     onActivityUpdate,
     onTouchStart,
     onTouchEnd,
+    onViewPatientsClick,
+    patientsCount,
   }: ActivitySectionProps, ref) {
     const { t } = useLanguage();
     const [activities, setActivities] = useState<ActivityItem[]>([]);
@@ -158,8 +162,18 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
 
   return (
     <>
-      <Card className="flex min-h-0 flex-1 flex-col rounded-[10px] border border-slate-200/80 bg-white shadow-[0px_18px_45px_rgba(15,23,42,0.04)]">
-        <CardHeader className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/70 pb-5">
+      <Card
+        className="flex min-h-0 flex-1 flex-col rounded-[10px] border border-slate-200/80 shadow-[0px_18px_45px_rgba(15,23,42,0.04)] relative overflow-hidden"
+        style={{
+          backgroundImage: 'url(/bg-04.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        {/* Black and white overlay */}
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-[1px] pointer-events-none" style={{ mixBlendMode: 'lighten' }} />
+
+        <CardHeader className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/70 pb-5 relative z-10">
           <div>
             <CardTitle>{t('dashboard.activities.title')}</CardTitle>
             <CardDescription className="text-xs uppercase tracking-[0.2em] text-slate-500">
@@ -167,6 +181,16 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
+            {patientsCount !== undefined && onViewPatientsClick && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                onClick={onViewPatientsClick}
+              >
+                Patients ({patientsCount})
+              </Button>
+            )}
             <Badge
               variant="muted"
               className="rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-xs font-medium uppercase tracking-[0.15em] text-slate-700"
@@ -184,7 +208,7 @@ export const ActivitySection = forwardRef<ActivitySectionRef, ActivitySectionPro
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="flex-1 min-h-0 overflow-hidden pt-6">
+        <CardContent className="flex-1 min-h-0 overflow-hidden pt-6 relative z-10">
           {isLoading ? (
             <div className="flex h-full items-center justify-center">
               <div className="space-y-2 text-center">

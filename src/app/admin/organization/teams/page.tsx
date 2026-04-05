@@ -22,6 +22,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AdminHeader } from "@/components/admin/admin-header";
 import { useState, useMemo } from "react";
 
 interface TeamMember {
@@ -264,40 +265,40 @@ export default function TeamsPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-4xl font-bold text-slate-900">Équipes Médicales</h1>
-            <p className="text-slate-600 mt-2">Gérez vos équipes et les membres du personnel</p>
-          </div>
-          <Button
-            onClick={() => {
-              if (activeTab === "users") {
-                setIsAddUserModal(true);
-              } else {
-                setIsAddTeamModal(true);
-              }
-            }}
-            className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-semibold w-fit"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            {activeTab === "users" ? "Nouvel Utilisateur" : "Nouvelle Équipe"}
-          </Button>
-        </div>
+      <AdminHeader
+        title="Équipes Médicales"
+        subtitle="Gérez vos équipes et les membres du personnel"
+      />
+
+      {/* Action Buttons */}
+      <div className="flex gap-2 mb-4">
+        <Button
+          onClick={() => {
+            if (activeTab === "users") {
+              setIsAddUserModal(true);
+            } else {
+              setIsAddTeamModal(true);
+            }
+          }}
+          className="bg-teal-600 hover:bg-teal-700 text-white font-bold"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          {activeTab === "users" ? "Nouvel Utilisateur" : "Nouvelle Équipe"}
+        </Button>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-0 border-b border-slate-200 bg-white rounded-t-lg">
+      <div className="flex gap-0 border-b-2 border-slate-300 bg-white">
         <button
           onClick={() => {
             setActiveTab("users");
             setCurrentPage(1);
             setSearchTerm("");
           }}
-          className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 font-semibold transition-all border-b-2 ${
+          className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 font-bold uppercase tracking-wide transition-all border-b-2 ${
             activeTab === "users"
-              ? "border-indigo-600 text-indigo-600 bg-indigo-50/50"
-              : "border-transparent text-slate-600 hover:text-slate-900"
+              ? "border-teal-600 text-teal-600 bg-teal-50/30"
+              : "border-transparent text-slate-700 hover:text-slate-900"
           }`}
         >
           <Users className="h-4 w-4" />
@@ -309,10 +310,10 @@ export default function TeamsPage() {
             setCurrentPage(1);
             setSearchTerm("");
           }}
-          className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 font-semibold transition-all border-b-2 ${
+          className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 font-bold uppercase tracking-wide transition-all border-b-2 ${
             activeTab === "teams"
-              ? "border-indigo-600 text-indigo-600 bg-indigo-50/50"
-              : "border-transparent text-slate-600 hover:text-slate-900"
+              ? "border-teal-600 text-teal-600 bg-teal-50/30"
+              : "border-transparent text-slate-700 hover:text-slate-900"
           }`}
         >
           <Shield className="h-4 w-4" />
@@ -418,17 +419,17 @@ export default function TeamsPage() {
               </p>
             </div>
           ) : (
-            <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-lg">
+            <div className="border-2 border-slate-300 overflow-hidden shadow-sm bg-white">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-200">
-                      <th className="px-6 py-4 text-left font-semibold text-slate-700">Utilisateur</th>
-                      <th className="px-6 py-4 text-left font-semibold text-slate-700">Créé le</th>
-                      <th className="px-6 py-4 text-left font-semibold text-slate-700">Contact</th>
-                      <th className="px-6 py-4 text-left font-semibold text-slate-700">Rôle</th>
-                      <th className="px-6 py-4 text-left font-semibold text-slate-700">Équipe</th>
-                      <th className="px-6 py-4 text-right font-semibold text-slate-700">Actions</th>
+                    <tr className="bg-slate-100 border-b-2 border-slate-300">
+                      <th className="px-6 py-4 text-left font-black text-slate-900 uppercase tracking-wider">Utilisateur</th>
+                      <th className="px-6 py-4 text-left font-black text-slate-900 uppercase tracking-wider">Créé le</th>
+                      <th className="px-6 py-4 text-left font-black text-slate-900 uppercase tracking-wider">Contact</th>
+                      <th className="px-6 py-4 text-left font-black text-slate-900 uppercase tracking-wider">Rôle</th>
+                      <th className="px-6 py-4 text-left font-black text-slate-900 uppercase tracking-wider">Équipe</th>
+                      <th className="px-6 py-4 text-right font-black text-slate-900 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -502,7 +503,7 @@ export default function TeamsPage() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 bg-gradient-to-r from-slate-50 to-white">
+                <div className="flex items-center justify-between px-6 py-4 border-t-2 border-slate-300 bg-slate-100">
                   <div className="text-sm text-slate-600">
                     Page {currentPage} sur {totalPages}
                   </div>
@@ -580,13 +581,13 @@ export default function TeamsPage() {
                   <p className="text-sm text-slate-600">Aucune équipe trouvée</p>
                 </div>
               ) : (
-                <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-lg">
+                <div className="border-2 border-slate-300 overflow-hidden shadow-sm bg-white">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-200">
-                        <th className="px-4 py-3 text-left font-semibold text-slate-700">Équipe</th>
-                        <th className="px-4 py-3 text-left font-semibold text-slate-700">Dept</th>
-                        <th className="px-4 py-3 text-center font-semibold text-slate-700">Membres</th>
+                      <tr className="bg-slate-100 border-b-2 border-slate-300">
+                        <th className="px-4 py-3 text-left font-black text-slate-900 uppercase tracking-wider">Équipe</th>
+                        <th className="px-4 py-3 text-left font-black text-slate-900 uppercase tracking-wider">Dept</th>
+                        <th className="px-4 py-3 text-center font-black text-slate-900 uppercase tracking-wider">Membres</th>
                       </tr>
                     </thead>
                   </table>
@@ -599,7 +600,7 @@ export default function TeamsPage() {
                             onClick={() => setSelectedTeam(team)}
                             className={`border-b border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer ${
                               selectedTeam?.id === team.id
-                                ? "bg-indigo-50 border-l-4 border-l-indigo-600"
+                                ? "bg-teal-50 border-l-4 border-l-teal-600"
                                 : index % 2 === 0
                                 ? ""
                                 : "bg-slate-50/30"

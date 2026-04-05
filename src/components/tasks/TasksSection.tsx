@@ -418,7 +418,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
   };
 
   return (
-    <div className="pl-6">
+    <div className="rounded-sm shadow-lg border">
       <Card
         className={cn(
           "flex max-h-fit flex-1 flex-col border-none bg-white/90",
@@ -480,6 +480,7 @@ export const TasksSection = forwardRef<TasksSectionRef, TasksSectionProps>(
               icon={ClipboardList}
               title={t("dashboard.tasks.noTasksRecorded")}
               description={t("tasks.labels.noTasksDesc")}
+              style={{height:'100%'}}
               action={
                 <Button variant="outline" onClick={handleOpenAddTaskModal}>
                   <Plus className="mr-2 h-4 w-4" />

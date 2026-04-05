@@ -2,6 +2,7 @@
 
 import { FileText, Upload, Save, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminHeader } from "@/components/admin/admin-header";
 import { useState } from "react";
 
 interface DocumentTemplate {
@@ -103,14 +104,10 @@ export default function TemplatesPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-4xl font-bold text-slate-900">
-          Modèles de Documents
-        </h1>
-        <p className="text-slate-600">
-          Créez et personnalisez les modèles de vos documents imprimables
-        </p>
-      </div>
+      <AdminHeader
+        title="Modèles de Documents"
+        subtitle="Créez et personnalisez les modèles de vos documents imprimables"
+      />
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">

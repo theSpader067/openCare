@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { AdminHeader } from "@/components/admin/admin-header";
 import { useState } from "react";
 
 interface FormData {
@@ -78,14 +79,13 @@ export default function OrganizationInfoPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header with Hero */}
+      {/* Header */}
+      <AdminHeader
+        title="Organisation"
+        subtitle="Gérez les informations de votre établissement médical"
+      />
+
       <div className="space-y-4">
-        <div>
-          <h1 className="text-4xl font-bold text-slate-900">Organisation</h1>
-          <p className="text-slate-600 mt-2">
-            Gérez les informations de votre établissement médical
-          </p>
-        </div>
 
         {/* Success Alert */}
         {saved && (

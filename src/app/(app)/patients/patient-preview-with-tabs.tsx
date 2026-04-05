@@ -494,13 +494,18 @@ function TreatmentModal({
   const [savingTreatmentId, setSavingTreatmentId] = useState<string | null>(null)
 
   const handleToggleNewFormHour = (hour: number) => {
-    setNewForm(prev => ({
-      ...prev,
-      hours: {
-        ...prev.hours,
-        [hour]: prev.hours[hour] ? undefined : false
+    setNewForm(prev => {
+      const newHours = { ...prev.hours }
+      if (hour in newHours) {
+        delete newHours[hour]
+      } else {
+        newHours[hour] = true
       }
-    }))
+      return {
+        ...prev,
+        hours: newHours
+      }
+    })
   }
 
   const handleToggleCell = (treatmentId: string, hour: number) => {

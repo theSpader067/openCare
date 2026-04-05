@@ -99,11 +99,12 @@ function ResetPasswordContentInner() {
 
   if (tokenValid === null) {
     return (
-      <div className="relative min-h-screen bg-gradient-to-br from-[#0f172a] via-[#312e81] to-[#6d28d9]">
+      <div className="relative min-h-screen bg-cover bg-center" style={{ backgroundImage: 'url(/bg-01.jpg)' }}>
+        <div className="absolute inset-0 bg-black/50" />
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-32 h-80 w-80 rounded-full bg-indigo-400/40 blur-3xl" />
-          <div className="absolute bottom-0 left-8 h-72 w-72 rounded-full bg-rose-500/30 blur-3xl" />
-          <div className="absolute top-1/3 left-1/4 h-64 w-64 rounded-full bg-emerald-400/20 blur-3xl" />
+          <div className="absolute -top-40 -right-32 h-80 w-80 rounded-full bg-cyan-400/30 blur-3xl animate-pulse" style={{ animationDelay: '0s' }} />
+          <div className="absolute bottom-0 left-8 h-72 w-72 rounded-full bg-sky-400/30 blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/3 left-1/4 h-64 w-64 rounded-full bg-blue-400/20 blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
         </div>
         <div className="relative z-10 flex min-h-screen items-center justify-center px-6">
           <div className="text-center text-white">
@@ -116,11 +117,12 @@ function ResetPasswordContentInner() {
 
   if (tokenValid === false) {
     return (
-      <div className="relative min-h-screen bg-gradient-to-br from-[#0f172a] via-[#312e81] to-[#6d28d9]">
+      <div className="relative min-h-screen bg-cover bg-center" style={{ backgroundImage: 'url(/bg-01.jpg)' }}>
+        <div className="absolute inset-0 bg-black/50" />
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-32 h-80 w-80 rounded-full bg-indigo-400/40 blur-3xl" />
-          <div className="absolute bottom-0 left-8 h-72 w-72 rounded-full bg-rose-500/30 blur-3xl" />
-          <div className="absolute top-1/3 left-1/4 h-64 w-64 rounded-full bg-emerald-400/20 blur-3xl" />
+          <div className="absolute -top-40 -right-32 h-80 w-80 rounded-full bg-cyan-400/30 blur-3xl animate-pulse" style={{ animationDelay: '0s' }} />
+          <div className="absolute bottom-0 left-8 h-72 w-72 rounded-full bg-sky-400/30 blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/3 left-1/4 h-64 w-64 rounded-full bg-blue-400/20 blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
         </div>
 
         <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-16">
@@ -157,11 +159,12 @@ function ResetPasswordContentInner() {
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-[#0f172a] via-[#312e81] to-[#6d28d9]">
+    <div className="relative min-h-screen bg-cover bg-center" style={{ backgroundImage: 'url(/bg-01.jpg)' }}>
+      <div className="absolute inset-0 bg-black/50" />
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-32 h-80 w-80 rounded-full bg-indigo-400/40 blur-3xl" />
-        <div className="absolute bottom-0 left-8 h-72 w-72 rounded-full bg-rose-500/30 blur-3xl" />
-        <div className="absolute top-1/3 left-1/4 h-64 w-64 rounded-full bg-emerald-400/20 blur-3xl" />
+        <div className="absolute -top-40 -right-32 h-80 w-80 rounded-full bg-cyan-400/30 blur-3xl animate-pulse" style={{ animationDelay: '0s' }} />
+        <div className="absolute bottom-0 left-8 h-72 w-72 rounded-full bg-sky-400/30 blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/3 left-1/4 h-64 w-64 rounded-full bg-blue-400/20 blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-16">
@@ -305,7 +308,7 @@ export default function ResetPasswordContent() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#312e81] to-[#6d28d9]">
+        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-cyan-500 via-cyan-600 to-sky-500">
           <div className="text-center text-white">
             <h1 className="text-2xl font-bold">Loading...</h1>
           </div>

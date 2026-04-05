@@ -19,11 +19,12 @@ export default function VerifyEmailPendingPage() {
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-[#111827] via-[#1f2937] to-[#312e81]">
+    <div className="relative min-h-screen bg-cover bg-center" style={{ backgroundImage: 'url(/bg-01.jpg)' }}>
+      <div className="absolute inset-0 bg-black/50" />
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-10 left-10 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl" />
-        <div className="absolute bottom-20 right-12 h-72 w-72 rounded-full bg-emerald-500/25 blur-3xl" />
-        <div className="absolute inset-x-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-rose-500/10 blur-3xl" />
+        <div className="absolute -top-40 -right-32 h-80 w-80 rounded-full bg-cyan-400/30 blur-3xl animate-pulse" style={{ animationDelay: '0s' }} />
+        <div className="absolute bottom-0 left-8 h-72 w-72 rounded-full bg-sky-400/30 blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/3 left-1/4 h-64 w-64 rounded-full bg-blue-400/20 blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-16">

@@ -11,10 +11,10 @@ import {
   Users,
   Mail,
   Clock,
-  Toggle2,
   Save,
   ChevronRight,
 } from "lucide-react";
+import { AdminHeader } from "@/components/admin/admin-header";
 
 interface SettingsSection {
   id: string;
@@ -112,7 +112,7 @@ export default function ParametresPage() {
   });
 
   const handleToggle = (key: string) => {
-    setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
+    setSettings((prev:any) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const handleChange = (key: string, value: string) => {
@@ -443,17 +443,10 @@ export default function ParametresPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Settings className="h-6 w-6 text-indigo-600" />
-          <h1 className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-indigo-700 to-blue-600">
-            Paramètres
-          </h1>
-        </div>
-        <p className="text-lg text-slate-600 ml-8">
-          Configurez les paramètres de votre établissement
-        </p>
-      </div>
+      <AdminHeader
+        title="Paramètres"
+        subtitle="Configurez les paramètres de votre établissement"
+      />
 
       {/* Success Message */}
       {saveSuccess && (

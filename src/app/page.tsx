@@ -49,7 +49,7 @@ const heroPillars = [
 
 const heroCreativeBursts = [
   { title: "Flux patient", detail: "12 parcours synchronisés", gradient: "from-cyan-400 to-sky-500" },
-  { title: "Cellule bloc", detail: "3 salles libérées", gradient: "from-fuchsia-400 to-rose-500" },
+  { title: "Cellule bloc", detail: "3 salles libérées", gradient: "from-sky-400 to-cyan-500" },
   { title: "Alertes IA", detail: "5 actions prioritaires", gradient: "from-amber-400 to-orange-500" },
 ];
 
@@ -333,15 +333,15 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#f8f7ff] text-slate-900">
       <header className="relative z-30">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-200/80 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/80 to-transparent" />
         <div className="mx-auto max-w-6xl px-6 pt-6">
-          <div className="flex items-center justify-between gap-4 rounded-3xl border border-indigo-100 bg-white/70 px-5 py-4 shadow-lg shadow-indigo-100 backdrop-blur">
+          <div className="flex items-center justify-between gap-4 rounded-3xl border border-cyan-100 bg-white/70 px-5 py-4 shadow-lg shadow-cyan-100 backdrop-blur">
             <Link href="/" className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#7c3aed] via-[#6366f1] to-[#22d3ee] text-base font-semibold text-white shadow-lg shadow-indigo-300/60">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 via-cyan-600 to-[#22d3ee] text-base font-semibold text-white shadow-lg shadow-cyan-300/60">
                 OC
               </span>
               <div className="flex flex-col">
-                <span className="text-xs font-semibold uppercase tracking-[0.28em] text-indigo-500">
+                <span className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-500">
                   OpenCare
                 </span>
                 <span className="text-sm font-semibold text-slate-800">
@@ -355,10 +355,10 @@ export default function LandingPage() {
                 <a
                   key={href}
                   href={href}
-                  className="group relative inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[#454562] transition hover:text-indigo-600"
+                  className="group relative inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[#454562] transition hover:text-cyan-600"
                 >
                   <span className="relative z-10">{label}</span>
-                  <span className="absolute inset-0 rounded-full bg-indigo-50 opacity-0 transition group-hover:opacity-100" />
+                  <span className="absolute inset-0 rounded-full bg-cyan-50 opacity-0 transition group-hover:opacity-100" />
                 </a>
               ))}
             </div>
@@ -378,7 +378,7 @@ export default function LandingPage() {
 
             <button
               type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-indigo-100 bg-white text-indigo-600 shadow-sm shadow-indigo-100 transition lg:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-100 bg-white text-cyan-600 shadow-sm shadow-cyan-100 transition lg:hidden"
               onClick={() => setIsMenuOpen((previous) => !previous)}
               aria-label="Ouvrir le menu"
             >
@@ -391,7 +391,7 @@ export default function LandingPage() {
           {isMenuOpen ? (
             <motion.div
               key="mobile-nav"
-              className="mx-6 mt-3 rounded-3xl border border-indigo-100 bg-white/95 p-6 text-sm font-medium text-slate-600 shadow-xl shadow-indigo-100 lg:hidden"
+              className="mx-6 mt-3 rounded-3xl border border-cyan-100 bg-white/95 p-6 text-sm font-medium text-slate-600 shadow-xl shadow-cyan-100 lg:hidden"
               initial={{ opacity: 0, y: -12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
@@ -402,7 +402,7 @@ export default function LandingPage() {
                     key={href}
                     href={href}
                     onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center justify-between rounded-2xl border border-transparent px-3 py-2 transition hover:border-indigo-100 hover:bg-indigo-50/70 hover:text-indigo-600"
+                    className="flex items-center justify-between rounded-2xl border border-transparent px-3 py-2 transition hover:border-cyan-100 hover:bg-cyan-50/70 hover:text-cyan-600"
                   >
                     <span>{label}</span>
                     <ChevronRight className="h-4 w-4" />
@@ -430,11 +430,11 @@ export default function LandingPage() {
 
       <main>
         {/* Hero */}
-        <section className="relative overflow-hidden pb-24 pt-16 bg-gradient-to-b from-indigo-50/80 via-purple-50/40 to-transparent">
+        <section className="relative overflow-hidden pb-24 pt-16 bg-gradient-to-b from-cyan-50/80 via-sky-50/40 to-transparent">
           <div className="pointer-events-none absolute inset-0">
-            <div className="absolute -left-40 top-10 h-96 w-96 rounded-full bg-gradient-to-br from-fuchsia-400/40 to-pink-400/30 blur-3xl animate-pulse" />
+            <div className="absolute -left-40 top-10 h-96 w-96 rounded-full bg-gradient-to-br from-sky-400/40 to-cyan-400/30 blur-3xl animate-pulse" />
             <div className="absolute -right-32 -top-20 h-80 w-80 rounded-full bg-gradient-to-bl from-cyan-400/30 to-blue-400/40 blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-            <div className="absolute bottom-[-100px] left-1/3 h-96 w-96 rounded-full bg-gradient-to-t from-violet-400/30 to-purple-400/20 blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+            <div className="absolute bottom-[-100px] left-1/3 h-96 w-96 rounded-full bg-gradient-to-t from-sky-400/30 to-sky-400/20 blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
           </div>
           <div className="relative mx-auto grid max-w-6xl gap-16 px-6 lg:grid-cols-[1.05fr_0.95fr] h-full">
             <motion.div
@@ -444,7 +444,7 @@ export default function LandingPage() {
               variants={containerVariants}
               className="space-y-8"
             >
-              <span className="inline-flex items-center gap-2 rounded-full bg-indigo-100/70 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-indigo-700 shadow-sm shadow-indigo-200">
+              <span className="inline-flex items-center gap-2 rounded-full bg-cyan-100/70 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-700 shadow-sm shadow-cyan-200">
                 <Sparkles className="h-3.5 w-3.5" />
                 {t('hero.badge')}
               </span>
@@ -455,7 +455,7 @@ export default function LandingPage() {
                 {t('hero.description')}
               </p>
               <div className="flex flex-wrap gap-4">
-                <Button size="lg" variant="primary" className="rounded-full px-8 py-3 bg-gradient-to-r from-fuchsia-500 to-purple-600 hover:from-fuchsia-600 hover:to-purple-700 border-0 shadow-lg shadow-fuchsia-400/50">
+                <Button size="lg" variant="primary" className="rounded-full px-8 py-3 bg-gradient-to-r from-sky-500 to-cyan-600 hover:from-sky-600 hover:to-cyan-700 border-0 shadow-lg shadow-cyan-400/50">
                   <Link href="/login" className="flex items-center gap-2">
                     {t('hero.cta')}
                     <ArrowRight className="h-4 w-4" />
@@ -464,7 +464,7 @@ export default function LandingPage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="rounded-full border-indigo-200/80 bg-white/70 px-8 py-3 text-[#1d184f]"
+                  className="rounded-full border-cyan-200/80 bg-white/70 px-8 py-3 text-[#1d184f]"
                   type="button"
                   onClick={() => setShowDemoVideo(true)}
                 >
@@ -483,7 +483,7 @@ export default function LandingPage() {
               variants={containerVariants}
               className="relative h-full"
             >
-              <div className="relative h-full overflow-hidden rounded-[40px] border border-white/30 bg-gradient-to-br from-indigo-400 via-purple-400 to-rose-300 p-8 text-white shadow-[0_15px_60px_rgba(76,29,149,0.4)]">
+              <div className="relative h-full overflow-hidden rounded-[40px] border border-white/30 bg-gradient-to-br from-cyan-500 via-cyan-600 to-sky-500 p-8 text-white shadow-[0_15px_60px_rgba(76,29,149,0.4)]">
                 <motion.div
                   aria-hidden
                   className="absolute -top-12 -right-10 h-48 w-48 rounded-full bg-white/10 blur-3xl"
@@ -492,7 +492,7 @@ export default function LandingPage() {
                 />
                 <motion.div
                   aria-hidden
-                  className="absolute bottom-4 left-0 h-56 w-56 rounded-full bg-fuchsia-400/20 blur-3xl"
+                  className="absolute bottom-4 left-0 h-56 w-56 rounded-full bg-sky-400/20 blur-3xl"
                   animate={{ opacity: [0.2, 0.6, 0.2], y: [0, -12, 0] }}
                   transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
                 />
@@ -528,7 +528,7 @@ export default function LandingPage() {
 
                     <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur p-4 hover:bg-white/15 transition">
                       <div className="flex items-start gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-fuchsia-400 to-rose-500 text-white flex-shrink-0 mt-0.5">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-sky-400 to-cyan-500 text-white flex-shrink-0 mt-0.5">
                           <ShieldCheck className="h-5 w-5" />
                         </div>
                         <div className="min-w-0 flex-1">
@@ -630,7 +630,7 @@ export default function LandingPage() {
             custom={0.1}
             variants={containerVariants}
           >
-            <span className="rounded-full bg-indigo-100 px-4 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-indigo-600">
+            <span className="rounded-full bg-cyan-100 px-4 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-cyan-600">
               {t('about.badge')}
             </span>
             <h2 className="mt-4 text-3xl font-semibold text-[#1d184f]">
@@ -750,7 +750,7 @@ export default function LandingPage() {
                             <input
                               type="text"
                               placeholder="Ex: Vérifier les vitaux du patient"
-                              className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                              className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                             />
                           </div>
 
@@ -758,7 +758,7 @@ export default function LandingPage() {
                           <div>
                             <label className="text-xs font-semibold text-slate-600 uppercase mb-2 block">Type</label>
                             <div className="flex gap-2">
-                              <button className="flex-1 px-3 py-2 rounded-lg bg-purple-100 text-purple-700 text-xs font-semibold border-2 border-purple-300 hover:bg-purple-50">
+                              <button className="flex-1 px-3 py-2 rounded-lg bg-cyan-100 text-cyan-700 text-xs font-semibold border-2 border-cyan-300 hover:bg-cyan-50">
                                 Privée
                               </button>
                               <button className="flex-1 px-3 py-2 rounded-lg bg-slate-100 text-slate-600 text-xs font-semibold border-2 border-slate-200 hover:bg-slate-50">
@@ -773,14 +773,14 @@ export default function LandingPage() {
                             <input
                               type="text"
                               placeholder="Ex: PAT-001"
-                              className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                              className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                             />
                           </div>
 
                           {/* Priority */}
                           <div>
                             <label className="text-xs font-semibold text-slate-600 uppercase mb-2 block">Priorité</label>
-                            <select className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            <select className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
                               <option>Normale</option>
                               <option>Haute</option>
                               <option>Urgente</option>
@@ -790,7 +790,7 @@ export default function LandingPage() {
 
                         {/* Footer - Action Button */}
                         <div className="border-t border-slate-200 p-4 flex-shrink-0 bg-slate-50">
-                          <button className="w-full px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500 text-white text-sm font-semibold hover:shadow-lg transition">
+                          <button className="w-full px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-semibold hover:shadow-lg transition">
                             Créer la tâche
                           </button>
                         </div>
@@ -826,7 +826,7 @@ export default function LandingPage() {
                                 <p className={cn("text-sm font-medium", mockupTasks["task-private"] && "line-through text-slate-400")}>Vérifier l&apos;analgésie</p>
                                 <p className="text-xs text-slate-500 mt-1">Personnel · Vous</p>
                               </div>
-                              <span className="inline-flex px-2 py-1 rounded-full bg-purple-100 text-xs font-semibold text-purple-700 flex-shrink-0">Privée</span>
+                              <span className="inline-flex px-2 py-1 rounded-full bg-cyan-100 text-xs font-semibold text-cyan-700 flex-shrink-0">Privée</span>
                             </button>
 
                             {/* Public Task 1 */}
@@ -887,7 +887,7 @@ export default function LandingPage() {
                         {/* Prompt Text */}
                         {!selectedPatient && (
                           <div className="mb-6 pb-6 border-b border-slate-200 flex items-center justify-center gap-2 text-center">
-                            <Stethoscope className="h-4 w-4 text-indigo-400 flex-shrink-0" />
+                            <Stethoscope className="h-4 w-4 text-cyan-400 flex-shrink-0" />
                             <p className="text-xs text-slate-500">Cliquez sur un patient pour voir les détails</p>
                           </div>
                         )}
@@ -899,7 +899,7 @@ export default function LandingPage() {
                               className={cn(
                                 "w-full text-left p-4 rounded-2xl border-2 transition duration-200 hover:shadow-md",
                                 selectedPatient === patient.id
-                                  ? "border-indigo-400 bg-gradient-to-r from-indigo-50 to-blue-50"
+                                  ? "border-cyan-400 bg-gradient-to-r from-cyan-50 to-blue-50"
                                   : "border-slate-200 bg-white hover:border-slate-300"
                               )}
                             >
@@ -930,7 +930,7 @@ export default function LandingPage() {
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: 400, opacity: 0 }}
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            className="absolute inset-y-0 right-0 w-96 bg-gradient-to-b from-white to-slate-50 border-l-2 border-indigo-200 shadow-2xl flex flex-col overflow-hidden"
+                            className="absolute inset-y-0 right-0 w-96 bg-gradient-to-b from-white to-slate-50 border-l-2 border-cyan-200 shadow-2xl flex flex-col overflow-hidden"
                           >
                             {/* Header */}
                             <div className="bg-gradient-to-r from-[#ec4899] via-[#8b5cf6] to-[#14b8a6] text-white p-6 flex-shrink-0">
@@ -941,7 +941,7 @@ export default function LandingPage() {
                                 <X className="h-5 w-5" />
                               </button>
                               <div>
-                                <p className="text-xs font-semibold text-indigo-100 uppercase tracking-wide">Patient ID</p>
+                                <p className="text-xs font-semibold text-cyan-100 uppercase tracking-wide">Patient ID</p>
                                 <h2 className="text-3xl font-bold mt-1">{selectedPatientData.id}</h2>
                               </div>
                             </div>
@@ -962,9 +962,9 @@ export default function LandingPage() {
                                     {selectedPatientData.status}
                                   </p>
                                 </div>
-                                <div className="bg-indigo-50 border-2 border-indigo-200 rounded-xl p-3">
+                                <div className="bg-cyan-50 border-2 border-cyan-200 rounded-xl p-3">
                                   <p className="text-xs font-semibold text-slate-600 uppercase mb-1">Service</p>
-                                  <p className="text-sm font-bold text-indigo-700">{selectedPatientData.service}</p>
+                                  <p className="text-sm font-bold text-cyan-700">{selectedPatientData.service}</p>
                                 </div>
                               </div>
 
@@ -998,9 +998,9 @@ export default function LandingPage() {
                                     <p className="text-xs text-orange-600 font-semibold">FC</p>
                                     <p className="text-lg font-bold text-orange-700 mt-1">{selectedPatientData.vitals.hr}/min</p>
                                   </div>
-                                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-center">
-                                    <p className="text-xs text-purple-600 font-semibold">TA</p>
-                                    <p className="text-lg font-bold text-purple-700 mt-1">{selectedPatientData.vitals.bp}</p>
+                                  <div className="bg-sky-50 border border-sky-200 rounded-lg p-3 text-center">
+                                    <p className="text-xs text-sky-600 font-semibold">TA</p>
+                                    <p className="text-lg font-bold text-cyan-700 mt-1">{selectedPatientData.vitals.bp}</p>
                                   </div>
                                   <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-3 text-center">
                                     <p className="text-xs text-cyan-600 font-semibold">O₂</p>
@@ -1028,7 +1028,7 @@ export default function LandingPage() {
                                 <div className="space-y-1">
                                   {selectedPatientData.medications.map((med, idx) => (
                                     <div key={idx} className="flex items-center gap-2 bg-slate-100 border border-slate-200 rounded-lg p-3">
-                                      <div className="h-2 w-2 rounded-full bg-indigo-500 flex-shrink-0" />
+                                      <div className="h-2 w-2 rounded-full bg-cyan-500 flex-shrink-0" />
                                       <p className="text-sm text-slate-900">{med}</p>
                                     </div>
                                   ))}
@@ -1039,14 +1039,14 @@ export default function LandingPage() {
                               <div>
                                 <div className="flex items-center justify-between mb-3">
                                   <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Observations cliniques</p>
-                                  <button className="text-xs font-semibold text-indigo-600 hover:text-indigo-700">+ Ajouter</button>
+                                  <button className="text-xs font-semibold text-cyan-600 hover:text-cyan-700">+ Ajouter</button>
                                 </div>
                                 <div className="space-y-3">
                                   {/* Observation 1 */}
-                                  <div className="relative pl-4 pb-4 border-l-2 border-indigo-300">
-                                    <div className="absolute w-3 h-3 bg-indigo-500 rounded-full -left-2 top-1 border-2 border-white" />
-                                    <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
-                                      <p className="text-xs font-semibold text-indigo-700 mb-1">Aujourd'hui - 14:30</p>
+                                  <div className="relative pl-4 pb-4 border-l-2 border-cyan-300">
+                                    <div className="absolute w-3 h-3 bg-cyan-500 rounded-full -left-2 top-1 border-2 border-white" />
+                                    <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-3">
+                                      <p className="text-xs font-semibold text-cyan-700 mb-1">Aujourd'hui - 14:30</p>
                                       <p className="text-sm text-slate-900">Patient conscient et orienté, douleur contrôlée. Pansements secs.</p>
                                     </div>
                                   </div>
@@ -1074,7 +1074,7 @@ export default function LandingPage() {
 
                             {/* Footer Actions */}
                             <div className="border-t border-slate-200 p-6 space-y-3 bg-white flex-shrink-0">
-                              <button className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white text-sm font-semibold hover:shadow-lg transition">
+                              <button className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 text-white text-sm font-semibold hover:shadow-lg transition">
                                 Voir le dossier complet
                               </button>
                               <button
@@ -1120,20 +1120,20 @@ export default function LandingPage() {
                             "p-2 rounded-lg transition relative",
                             isAccepting
                               ? "bg-emerald-100 hover:bg-emerald-200"
-                              : "bg-indigo-100 hover:bg-indigo-200"
+                              : "bg-cyan-100 hover:bg-cyan-200"
                           )}
                           title={isAccepting ? "Accept" : "AI Suggestion"}
                         >
                           {isAccepting ? (
                             <Check className="h-4 w-4 text-emerald-600" />
                           ) : (
-                            <Wand2 className="h-4 w-4 text-indigo-600" />
+                            <Wand2 className="h-4 w-4 text-cyan-600" />
                           )}
                           {showSuggestion && !isAccepting && (
                             <motion.div
                               animate={{ scale: [1, 1.5, 1] }}
                               transition={{ duration: 0.6, repeat: Infinity }}
-                              className="absolute inset-0 rounded-lg border-2 border-indigo-400"
+                              className="absolute inset-0 rounded-lg border-2 border-cyan-400"
                             />
                           )}
                         </motion.button>
@@ -1148,7 +1148,7 @@ export default function LandingPage() {
                         <label className="text-xs font-semibold text-slate-600 uppercase mb-3 block">Observation clinique</label>
 
                         {/* Textarea Container */}
-                        <div className="relative flex-1 border-2 border-slate-200 rounded-xl overflow-hidden bg-white focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100">
+                        <div className="relative flex-1 border-2 border-slate-200 rounded-xl overflow-hidden bg-white focus-within:border-cyan-500 focus-within:ring-2 focus-within:ring-indigo-100">
                           <textarea
                             value={editorText}
                             onChange={(e) => setEditorText(e.target.value)}
@@ -1172,7 +1172,7 @@ export default function LandingPage() {
 
                       {/* Footer */}
                       <div className="border-t border-slate-200 p-6 bg-slate-50 flex-shrink-0">
-                        <button className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white text-sm font-semibold hover:shadow-lg transition">
+                        <button className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 text-white text-sm font-semibold hover:shadow-lg transition">
                           Valider et sauvegarder
                         </button>
                       </div>
@@ -1204,11 +1204,11 @@ export default function LandingPage() {
                         {/* Camera Preview Area */}
                         <div className="flex-1 flex flex-col items-center justify-center p-6 relative">
                           {/* Camera Frame Mockup */}
-                          <div className="w-full max-w-xs aspect-square border-4 border-indigo-300 rounded-2xl bg-white relative overflow-hidden">
+                          <div className="w-full max-w-xs aspect-square border-4 border-cyan-300 rounded-2xl bg-white relative overflow-hidden">
                             {/* Grid overlay */}
                             <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none">
                               {Array.from({ length: 9 }).map((_, i) => (
-                                <div key={i} className="border border-indigo-200/50" />
+                                <div key={i} className="border border-cyan-200/50" />
                               ))}
                             </div>
 
@@ -1232,7 +1232,7 @@ export default function LandingPage() {
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="mt-6 w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg flex items-center justify-center hover:shadow-xl transition"
+                            className="mt-6 w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg flex items-center justify-center hover:shadow-xl transition"
                           >
                             <Circle className="h-8 w-8" />
                           </motion.button>
@@ -1287,7 +1287,7 @@ export default function LandingPage() {
 
                           {/* Action Buttons */}
                           <div className="space-y-2 pt-4 border-t border-slate-200">
-                            <button className="w-full px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold hover:shadow-lg transition">
+                            <button className="w-full px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-sm font-semibold hover:shadow-lg transition">
                               Ajouter à la visite
                             </button>
                             <button className="w-full px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold hover:bg-slate-200 transition">
@@ -1429,10 +1429,10 @@ export default function LandingPage() {
         </section>
 
         {/* Stats */}
-        <section id="stats" className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-24">
+        <section id="stats" className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-sky-900 to-slate-900 py-24">
           <div className="pointer-events-none absolute inset-0">
             <div className="absolute -right-40 -top-40 h-96 w-96 rounded-full bg-gradient-to-br from-cyan-400/20 to-blue-400/10 blur-3xl" />
-            <div className="absolute -left-40 -bottom-40 h-96 w-96 rounded-full bg-gradient-to-tr from-fuchsia-400/20 to-pink-400/10 blur-3xl" />
+            <div className="absolute -left-40 -bottom-40 h-96 w-96 rounded-full bg-gradient-to-tr from-sky-400/20 to-cyan-400/10 blur-3xl" />
           </div>
           <div className="relative mx-auto max-w-6xl px-6">
             <motion.div
@@ -1444,7 +1444,7 @@ export default function LandingPage() {
               variants={containerVariants}
             >
               <div className="space-y-2">
-                <p className="text-xs uppercase tracking-[0.35em] text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">
+                <p className="text-xs uppercase tracking-[0.35em] text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-400">
                   {t('stats.badge')}
                 </p>
                 <h2 className="text-4xl font-bold leading-tight">
@@ -1467,15 +1467,15 @@ export default function LandingPage() {
 
                 const gradients = [
                   "from-cyan-500/30 to-blue-500/20",
-                  "from-fuchsia-500/30 to-pink-500/20",
+                  "from-sky-500/30 to-cyan-500/20",
                   "from-amber-500/30 to-orange-500/20",
                   "from-green-500/30 to-emerald-500/20"
                 ];
-                const borderColors = ["border-cyan-500/30", "border-fuchsia-500/30", "border-amber-500/30", "border-green-500/30"];
-                const shadowColors = ["shadow-cyan-500/30", "shadow-fuchsia-500/30", "shadow-amber-500/30", "shadow-green-500/30"];
+                const borderColors = ["border-cyan-500/30", "border-sky-500/30", "border-amber-500/30", "border-green-500/30"];
+                const shadowColors = ["shadow-cyan-500/30", "shadow-sky-500/30", "shadow-amber-500/30", "shadow-green-500/30"];
                 const accentGradients = [
                   "from-cyan-400 to-blue-500",
-                  "from-fuchsia-400 to-pink-500",
+                  "from-sky-400 to-cyan-500",
                   "from-amber-400 to-orange-500",
                   "from-green-400 to-emerald-500"
                 ];
@@ -1515,7 +1515,7 @@ export default function LandingPage() {
             custom={0.1}
             variants={containerVariants}
           >
-            <span className="rounded-full bg-indigo-100 px-4 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-indigo-600">
+            <span className="rounded-full bg-cyan-100 px-4 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-cyan-600">
               {t('faq.badge')}
             </span>
             <h2 className="mt-4 text-3xl font-semibold text-[#1d184f]">
@@ -1543,7 +1543,7 @@ export default function LandingPage() {
                   key={faqKey}
                   className={cn(
                     "rounded-3xl border border-slate-200 bg-white px-5 py-5 shadow-sm transition",
-                    isOpen && "border-indigo-200 bg-indigo-50/70 shadow-md shadow-indigo-100",
+                    isOpen && "border-cyan-200 bg-cyan-50/70 shadow-md shadow-cyan-100",
                   )}
                 >
                   <button
@@ -1554,8 +1554,8 @@ export default function LandingPage() {
                     <span>{t(`faq.questions.${faqKey}.question`)}</span>
                     <span
                       className={cn(
-                        "flex h-8 w-8 items-center justify-center rounded-full border border-indigo-200 text-indigo-500 transition",
-                        isOpen && "bg-indigo-500 text-white",
+                        "flex h-8 w-8 items-center justify-center rounded-full border border-cyan-200 text-cyan-500 transition",
+                        isOpen && "bg-cyan-500 text-white",
                       )}
                     >
                       {isOpen ? "–" : "+"}
@@ -1590,7 +1590,7 @@ export default function LandingPage() {
               viewport={{ once: true, amount: 0.3 }}
               custom={0.1}
               variants={containerVariants}
-              className="rounded-3xl bg-gradient-to-br from-indigo-500 via-purple-500 to-sky-500 p-8 text-white shadow-2xl shadow-indigo-200/40"
+              className="rounded-3xl bg-gradient-to-br from-cyan-500 via-cyan-500 to-sky-500 p-8 text-white shadow-2xl shadow-cyan-200/40"
             >
               <p className="text-xs uppercase tracking-[0.35em] text-white/80">{t('contact.badge')}</p>
               <h2 className="mt-3 text-3xl font-semibold">
@@ -1646,7 +1646,7 @@ export default function LandingPage() {
                     value={contactFormData.fullName}
                     onChange={(e) => setContactFormData({ ...contactFormData, fullName: e.target.value })}
                     disabled={isSubmittingContact}
-                    className="rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                    className="rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-100 disabled:bg-slate-100 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div className="grid gap-2">
@@ -1661,7 +1661,7 @@ export default function LandingPage() {
                     value={contactFormData.email}
                     onChange={(e) => setContactFormData({ ...contactFormData, email: e.target.value })}
                     disabled={isSubmittingContact}
-                    className="rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                    className="rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-100 disabled:bg-slate-100 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div className="grid gap-2">
@@ -1675,7 +1675,7 @@ export default function LandingPage() {
                     value={contactFormData.specialty}
                     onChange={(e) => setContactFormData({ ...contactFormData, specialty: e.target.value })}
                     disabled={isSubmittingContact}
-                    className="rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                    className="rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-100 disabled:bg-slate-100 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div className="grid gap-2">
@@ -1690,7 +1690,7 @@ export default function LandingPage() {
                     value={contactFormData.message}
                     onChange={(e) => setContactFormData({ ...contactFormData, message: e.target.value })}
                     disabled={isSubmittingContact}
-                    className="rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                    className="rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 shadow-inner focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-100 disabled:bg-slate-100 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -1712,25 +1712,25 @@ export default function LandingPage() {
 
       <footer className="relative overflow-hidden bg-[#0b1120] py-16 text-white">
         <div className="absolute inset-0">
-          <div className="absolute top-0 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-indigo-500/20 blur-3xl" />
+          <div className="absolute top-0 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-cyan-500/20 blur-3xl" />
         </div>
         <div className="relative mx-auto flex max-w-6xl flex-col gap-10 px-6 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-md space-y-4">
             <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/20 text-lg font-semibold text-white shadow-lg shadow-indigo-900/40">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/20 text-lg font-semibold text-white shadow-lg shadow-cyan-900/40">
                 OC
               </span>
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">
+                <p className="text-xs uppercase tracking-[0.3em] text-cyan-200">
                   OpenCare
                 </p>
                 <p className="text-sm font-semibold text-white">{t('footer.subtitle')}</p>
               </div>
             </div>
-            <p className="text-sm text-indigo-200">
+            <p className="text-sm text-cyan-200">
               {t('footer.description')}
             </p>
-            <div className="flex flex-wrap gap-3 text-xs text-indigo-200/80">
+            <div className="flex flex-wrap gap-3 text-xs text-cyan-200/80">
               <span>© {new Date().getFullYear()} {t('footer.copyright')}</span>
               <span>·</span>
               <Link href="#" className="hover:text-white">
@@ -1743,9 +1743,9 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="grid flex-1 gap-6 text-sm text-indigo-200 md:grid-cols-3">
+          <div className="grid flex-1 gap-6 text-sm text-cyan-200 md:grid-cols-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-indigo-300">
+              <p className="text-xs font-semibold uppercase tracking-wide text-cyan-300">
                 {t('footer.sections.platform.title')}
               </p>
               <ul className="mt-4 space-y-2">
@@ -1767,7 +1767,7 @@ export default function LandingPage() {
               </ul>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-indigo-300">
+              <p className="text-xs font-semibold uppercase tracking-wide text-cyan-300">
                 {t('footer.sections.resources.title')}
               </p>
               <ul className="mt-4 space-y-2">
@@ -1789,17 +1789,17 @@ export default function LandingPage() {
               </ul>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-indigo-300">
+              <p className="text-xs font-semibold uppercase tracking-wide text-cyan-300">
                 {t('footer.sections.newsletter.title')}
               </p>
-              <p className="mt-4 text-xs text-indigo-200/80">
+              <p className="mt-4 text-xs text-cyan-200/80">
                 {t('footer.sections.newsletter.description')}
               </p>
               <form className="mt-4 space-y-3">
                 <input
                   type="email"
                   placeholder={t('footer.sections.newsletter.placeholder')}
-                  className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-xs text-white placeholder:text-indigo-200 focus:border-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-200/60"
+                  className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-xs text-white placeholder:text-cyan-200 focus:border-cyan-200 focus:outline-none focus:ring-2 focus:ring-indigo-200/60"
                 />
                 <Button type="submit" variant="primary" size="sm" className="w-full rounded-full">
                   {t('footer.sections.newsletter.subscribe')}

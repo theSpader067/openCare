@@ -217,6 +217,10 @@ export default function DashboardPage() {
     createEmptyPatientForm(),
   );
   const [isMobileToolkitOpen, setIsMobileToolkitOpen] = useState(false);
+  const [isCalendarHovered, setIsCalendarHovered] = useState(false);
+  const [isPatientsSlideOpen, setIsPatientsSlideOpen] = useState(false);
+  const [activitySectionHeight, setActivitySectionHeight] = useState<number>(0);
+  const activityContainerRef = useRef<HTMLDivElement>(null);
   const [isStatsInteracting, setIsStatsInteracting] = useState(false);
 
   const timersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
@@ -287,6 +291,23 @@ export default function DashboardPage() {
     };
 
     loadPatients();
+  }, []);
+
+  // Measure Activity Section height for slide-in panel
+  useEffect(() => {
+    const updateHeight = () => {
+      if (activityContainerRef.current) {
+        setActivitySectionHeight(activityContainerRef.current.offsetHeight);
+      }
+    };
+
+    updateHeight();
+    const resizeObserver = new ResizeObserver(updateHeight);
+    if (activityContainerRef.current) {
+      resizeObserver.observe(activityContainerRef.current);
+    }
+
+    return () => resizeObserver.disconnect();
   }, []);
 
   const selectedDayData = scheduleData? scheduleData[selectedDate] : createEmptyDay();
@@ -724,7 +745,7 @@ export default function DashboardPage() {
     <div
       className={cn(
         plex.className,
-        "relative flex h-full flex-col overflow-x-hidden overflow-y-auto pb-20 text-[#111322] lg:pb-0",
+        "relative flex h-full flex-col overflow-x-hidden overflow-y-auto pb-20 text-[#111322] lg:pb-0 bg-opacity-25",
       )}
     >
       <div className="relative z-10 flex h-full flex-col">
@@ -784,29 +805,46 @@ export default function DashboardPage() {
 
       <div className="mt-6 flex-1 min-h-0 lg:w-full">
         <div className="grid h-full min-h-0 grid-cols-1 gap-7 xl:grid-cols-12">
-          <div className="hidden h-full min-h-0 flex-col gap-6 xl:col-span-3 xl:flex">
-            {renderCalendarCard(undefined, "pt-3")}
-            <TasksSection
-              ref={tasksSectionRef}
-              title={t('dashboard.dashboardPage.dailyInstructions')}
-              showReloadButton={true}
-              onTaskToggle={handleToggleTaskDone}
-              onTaskAdd={handleTaskAdd}
-              onTaskEdit={handleTaskEdit}
-              onTaskDelete={handleTaskDelete}
-              patients={mockPatients}
-              favoriteTasks={mockFavoriteTasks}
-              cardClassName={cn(
-                panelBaseClass,
-                "flex min-h-0 flex-1 flex-col min-h-[500px]",
-              )}
-              headerClassName="flex flex-wrap items-center justify-between gap-3 pb-4"
-              contentClassName="max-h-[22rem] overflow-y-auto pt-0"
-              enableSwipeActions={true}
-            />
+          <div
+            className="hidden h-full min-h-0 xl:col-span-3 xl:flex relative overflow-hidden"
+            onMouseEnter={() => setIsCalendarHovered(true)}
+            onMouseLeave={() => setIsCalendarHovered(false)}
+          >
+            {/* Calendar - positioned absolutely, visible behind tasks */}
+            <div className="absolute inset-0 pt-3 z-0">
+              {renderCalendarCard(undefined, "")}
+            </div>
+
+            {/* Tasks Section - overlays calendar, slides down on hover to reveal calendar */}
+            <div
+              className="absolute left-0 right-0 top-0 transition-transform duration-300 ease-out z-10 cursor-grab active:cursor-grabbing group"
+              style={{
+                height: isCalendarHovered ? 'auto' : '80%',
+                transform: isCalendarHovered ? 'translateY(calc(100% - 20px))' : 'translateY(100px)',
+              }}
+            >
+              <TasksSection
+                ref={tasksSectionRef}
+                title={t('dashboard.dashboardPage.dailyInstructions')}
+                showReloadButton={true}
+                onTaskToggle={handleToggleTaskDone}
+                onTaskAdd={handleTaskAdd}
+                onTaskEdit={handleTaskEdit}
+                onTaskDelete={handleTaskDelete}
+                patients={mockPatients}
+                favoriteTasks={mockFavoriteTasks}
+                cardClassName={cn(
+                  panelBaseClass,
+                  "flex min-h-0 flex-1 flex-col min-h-[500px] !m-0 !p-0 group-hover:shadow-lg transition-shadow",
+                )}
+                headerClassName="flex flex-wrap items-center justify-between gap-3 pb-4"
+                contentClassName="max-h-[22rem] overflow-y-auto pt-0"
+                enableSwipeActions={true}
+              />
+            </div>
           </div>
 
-          <div className="flex xl:col-span-5">
+          <div className="flex xl:col-span-9" ref={activityContainerRef}>
           <ActivitySection
             ref={activitySectionRef}
             selectedDate={selectedDateObj}
@@ -860,10 +898,12 @@ export default function DashboardPage() {
                 setSwipedActivityId(null);
               }
             }}
+            onViewPatientsClick={() => setIsPatientsSlideOpen(true)}
+            patientsCount={servicePatients.length}
           />
           </div>
 
-          <Card className={cn(panelBaseClass, "hidden h-full flex-col xl:col-span-4 xl:flex")}>
+          <Card className={cn(panelBaseClass, "hidden h-full flex-col")}>
             <CardHeader className="flex flex-wrap items-center justify-between gap-3 pb-4">
               <div>
                 <CardTitle>{t('dashboard.dashboardPage.servicePatients')}</CardTitle>
@@ -952,6 +992,104 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
       </div>
+      </div>
+
+      {/* Slide-in panel for Service Patients */}
+      <div
+        className={cn(
+          "fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-white shadow-2xl transition-transform duration-300 ease-out overflow-hidden flex flex-col mt-20",
+          isPatientsSlideOpen ? "translate-x-0" : "translate-x-full"
+        )}
+      >
+
+        <Card className={cn(panelBaseClass, "h-full flex-col rounded-none border-0 shadow-none")}>
+          <CardHeader className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b">
+            <div className="flex-1">
+              <CardTitle>{t('dashboard.dashboardPage.servicePatients')}</CardTitle>
+              <CardDescription className="mt-1">{servicePatients.length} {t(`dashboard.dashboardPage.patient${servicePatients.length === 1 ? 'Singular' : 'Plural'}`)}</CardDescription>
+            </div>
+            <button
+              onClick={() => setIsPatientsSlideOpen(false)}
+              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg hover:bg-slate-100 transition text-slate-500 hover:text-slate-700"
+              aria-label="Close"
+              type="button"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </CardHeader>
+          <CardContent className="flex-1 min-h-0 overflow-hidden pt-4">
+            {isServicePatientsLoading ? (
+              <div className="flex h-full items-center justify-center">
+                <Spinner label={t('dashboard.dashboardPage.loadingPatients')} />
+              </div>
+            ) : servicePatients.length === 0 ? (
+              <EmptyState
+                icon={UsersRound}
+                title={t('dashboard.dashboardPage.noPatients')}
+                description={t('dashboard.dashboardPage.patientsWillAppear')}
+                action={<></>}
+              />
+            ) : (
+              <div className="h-full min-h-0 overflow-y-auto overflow-x-auto">
+                <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
+                  <thead className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b-2 border-slate-300">
+                    <tr>
+                      <th className="px-4 py-3 text-xs font-semibold tracking-[0.2em] text-slate-600 uppercase">
+                        {t('dashboard.dashboardPage.patientTablePatient')}
+                      </th>
+                      <th className="px-4 py-3 text-xs font-semibold tracking-[0.2em] text-slate-600 uppercase">
+                        {t('dashboard.dashboardPage.patientTableDiagnosis')}
+                      </th>
+                      <th className="px-4 py-3 text-xs font-semibold tracking-[0.2em] text-slate-600 uppercase">
+                        {t('dashboard.dashboardPage.patientTableService')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {servicePatients.map((patient) => {
+                      const statusStyles = {
+                        "Pré-op": "bg-yellow-400 text-slate-900",
+                        "Post-op": "bg-sky-400 text-white",
+                        "Surveillance": "bg-violet-500 text-white",
+                        "Rééducation": "bg-teal-500 text-white",
+                      };
+                      return (
+                        <tr
+                          key={patient.id}
+                          className="hover:bg-slate-50/80 transition"
+                        >
+                          <td className="px-4 py-3">
+                            <div className="flex flex-col gap-1">
+                              <span className="text-sm font-bold text-slate-900">
+                                {patient.name}
+                              </span>
+                              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                ID: {patient.pid ?? patient.id}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex flex-col gap-2.5">
+                              <span className="text-sm font-medium text-slate-700">
+                                {patient.diagnosis}
+                              </span>
+                              <div className={cn("inline-flex items-center px-3 py-1 rounded-full text-xs font-bold w-fit shadow-sm", statusStyles[patient.status as keyof typeof statusStyles])}>
+                                {patientStatusMeta[patient.status]?.label || patient.status}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-sm font-medium text-slate-700">
+                            {patient.service}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {!isMobileToolkitOpen ? (

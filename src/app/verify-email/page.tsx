@@ -8,10 +8,11 @@ export default function VerifyEmailPage() {
   const { data: session } = useSession();
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1f2937] to-[#312e81]">
+    <div className="relative min-h-screen bg-cover bg-center" style={{ backgroundImage: 'url(/bg-01.jpg)' }}>
+      <div className="absolute inset-0 bg-black/50" />
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-32 h-80 w-80 rounded-full bg-indigo-400/40 blur-3xl" />
-        <div className="absolute bottom-0 left-8 h-72 w-72 rounded-full bg-rose-500/30 blur-3xl" />
+        <div className="absolute -top-40 -right-32 h-80 w-80 rounded-full bg-cyan-400/30 blur-3xl animate-pulse" style={{ animationDelay: '0s' }} />
+        <div className="absolute bottom-0 left-8 h-72 w-72 rounded-full bg-sky-400/30 blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
       </div>
 
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-16">
